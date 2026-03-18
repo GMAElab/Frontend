@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IC R&D - Dashboard</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="dashboard-layout">
+    <nav class="sidebar">
+        <div class="logo"><span>SGCI</span></div>
+        <ul class="nav-links">
+            <li class="active"><a href="#" id="menuEquipments"><i class="fas fa-microscope"></i> Equipamentos</a></li>
+            <li><a href="#" id="menuProcesses"><i class="fas fa-flask"></i> Processos P&D</a></li>
+            <li><a href="#" id="menuPops"><i class="fas fa-file-contract"></i> POPs</a></li>
+        </ul>
+        <div class="user-info">
+            <p id="userName">Pesquisador</p>
+            <button onclick="api.logout(); window.location.href='index.html'" class="btn-logout">Sair</button>
+        </div>
+    </nav>
+
+    <main class="content">
+        <header class="content-header">
+            <h2 id="pageTitle">Laboratório / Equipamentos</h2>
+            <button class="btn-primary" id="btnAction">+ Novo Item</button>
+        </header>
+
+        <section id="mainDisplay" class="grid-container">
+            <div class="loading-spinner">Carregando dados do laboratório...</div>
+        </section>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
