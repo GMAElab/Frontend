@@ -1,196 +1,182 @@
-/**
- * Equipments View Controller
- * Handles displaying the table and adding new equipments via Modal.
- */
-
-document.addEventListener('viewChanged', (event) => {
-    if (event.detail.view === 'equipments') {
-        renderEquipmentsView();
-    }
+document.addEventListener('viewChanged', (e) => {
+    if (e.detail.view === 'equipments') renderEquipments();
 });
 
-async function renderEquipmentsView() {
-    const mainContent = document.getElementById('dynamic-content');
-    
-    // 1. Renderiza o esqueleto (Header e Tabela)
-    mainContent.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg);">
+async function renderEquipments() {
+    const main = document.getElementById('dynamic-content');
+    main.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
             <div>
-                <h3 style="margin-bottom: 4px;">Laboratory Equipments</h3>
-                <p class="text-muted text-small">Manage all active R&D tools and machines.</p>
+                <h2 style="color:var(--primary);">Laboratory Inventory</h2>
+                <p class="text-muted text-small">Knowledge Management & Asset Tracking</p>
             </div>
-            <button id="btn-add-equipment" class="btn btn-primary">
-                + Add Equipment
-            </button>
+            <button class="btn btn-primary" onclick="openAddEquipmentModal()">+ Register Equipment</button>
         </div>
-        <section class="card">
-            <div id="equipments-container" style="min-height: 200px;">
-                <div class="text-center mt-md text-muted">
-                    <span class="spinner" style="position:relative; display:inline-block; border-color:#ccc; border-top-color:var(--color-primary); margin-right: 8px;"></span> 
-                    Loading equipments...
-                </div>
-            </div>
-        </section>
+        <div id="eq-container" class="card">
+            <div class="text-center p-lg">Loading assets...</div>
+        </div>
     `;
-
-    // 2. Busca os dados no Banco
-    await fetchAndRenderEquipments();
-
-    // 3. Adiciona o evento para abrir o Modal
-    document.getElementById('btn-add-equipment').addEventListener('click', openAddEquipmentModal);
+    loadEquipmentsTable();
 }
 
-// ==========================================
-// LÓGICA DO MODAL DE CADASTRO
-// ==========================================
+async function loadEquipmentsTable() {
+    const container = document.getElementById('eq-container');
+    try {
+        const res = await api.fetchProtected('/equipments/');
+        const data = await res.json();
 
-function openAddEquipmentModal() {
-    // Remove qualquer modal antigo que tenha ficado na tela
-    if (document.getElementById('equipment-modal')) {
-        document.getElementById('equipment-modal').remove();
+        if (data.length === 0) {
+            container.innerHTML = `<p class="text-center text-muted">No equipment registered.</p>`;
+            return;
+        }
+
+        container.innerHTML = `
+            <table>
+                <thead>
+                    <tr>
+                        <th>Asset Name</th>
+                        <th>Status</th>
+                        <th style="text-align:right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${data.map(eq => `
+                        <tr>
+                            <td><strong>${eq.nome}</strong></td>
+                            <td><span class="badge">${eq.status}</span></td>
+                            <td style="text-align:right">
+                                <button class="btn btn-small" onclick="viewDossier(${eq.id})" style="background:#e2e8f0; color:var(--text-main);">View Dossier</button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+    } catch (err) {
+        container.innerHTML = `<p class="text-danger">Error loading equipment list.</p>`;
     }
+}
 
-    // Cria o HTML do Modal
+// --- MODAL DE CADASTRO EXPANDIDO ---
+function openAddEquipmentModal() {
     const modalHTML = `
-        <div id="equipment-modal" class="modal-overlay active" role="dialog" aria-modal="true">
-            <div class="modal">
+        <div id="modal-eq" class="modal-overlay active">
+            <div class="modal" style="max-width: 600px;">
                 <div class="modal-header">
-                    <h3>Register New Equipment</h3>
-                    <button class="btn-close" aria-label="Close modal" onclick="closeEquipmentModal()">&times;</button>
+                    <h3>New Asset Registration</h3>
+                    <button class="btn-close" onclick="closeModal('modal-eq')">&times;</button>
                 </div>
-                
-                <form id="form-add-equipment">
+                <form id="form-new-eq">
                     <div class="input-group">
-                        <label for="eq-name">Equipment Name</label>
-                        <input type="text" id="eq-name" required placeholder="Ex: Microscópio Eletrônico LEQM-01">
+                        <label>Equipment Name *</label>
+                        <input type="text" id="new-name" required placeholder="Ex: Scanning Electron Microscope">
                     </div>
-                    
                     <div class="input-group">
-                        <label for="eq-image">Image URL (Optional)</label>
-                        <input type="url" id="eq-image" placeholder="https://link-da-imagem.com/img.jpg">
+                        <label>General Description</label>
+                        <textarea id="new-desc" rows="3" style="width:100%; border:1px solid var(--border); border-radius:8px; padding:10px; font-family:inherit;"></textarea>
                     </div>
-
-                    <div id="modal-feedback" class="feedback-msg" aria-live="polite"></div>
-                    
-                    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: var(--space-md);">
-                        <button type="button" class="btn" style="background: #e2e8f0; color: var(--text-main);" onclick="closeEquipmentModal()">Cancel</button>
-                        <button type="submit" id="btn-save-eq" class="btn btn-primary">
-                            <span class="btn-text">Save Equipment</span>
-                            <span class="spinner hidden" aria-hidden="true"></span>
-                        </button>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                        <div class="input-group">
+                            <label>Training Video (YouTube URL)</label>
+                            <input type="url" id="new-video" placeholder="https://youtube.com/watch?v=...">
+                        </div>
+                        <div class="input-group">
+                            <label>Manual Link (PDF)</label>
+                            <input type="url" id="new-manual" placeholder="https://drive.google.com/...">
+                        </div>
+                    </div>
+                    <div id="modal-msg" class="feedback-msg"></div>
+                    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:1rem;">
+                        <button type="button" class="btn" onclick="closeModal('modal-eq')">Cancel</button>
+                        <button type="submit" id="btn-save" class="btn btn-primary">Save Asset</button>
                     </div>
                 </form>
             </div>
         </div>
     `;
-
-    // Injeta o modal no final do body
     document.body.insertAdjacentHTML('beforeend', modalHTML);
-
-    // Adiciona o evento de submit ao novo formulário
-    document.getElementById('form-add-equipment').addEventListener('submit', handleAddEquipment);
+    document.getElementById('form-new-eq').addEventListener('submit', handleSaveEquipment);
 }
 
-// Função global para fechar o modal
-window.closeEquipmentModal = function() {
-    const modal = document.getElementById('equipment-modal');
-    if (modal) {
-        modal.classList.remove('active'); // Faz a animação de sumir
-        setTimeout(() => modal.remove(), 300); // Remove do HTML após a animação
+async function handleSaveEquipment(e) {
+    e.preventDefault();
+    UI.setButtonLoading('btn-save', true);
+
+    const payload = {
+        nome: document.getElementById('new-name').value,
+        description: document.getElementById('new-desc').value,
+        video_url: document.getElementById('new-video').value,
+        manual_url: document.getElementById('new-manual').value,
+        status: "active"
+    };
+
+    const res = await api.fetchProtected('/equipments/', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+        UI.showToast('Asset registered successfully', 'success');
+        closeModal('modal-eq');
+        loadEquipmentsTable();
+    } else {
+        UI.showFormFeedback('modal-msg', 'Error saving equipment', true);
+    }
+    UI.setButtonLoading('btn-save', false);
+}
+
+// --- VISUALIZAÇÃO 360º (DOSSIÊ) ---
+async function viewDossier(id) {
+    const res = await api.fetchProtected(`/equipments/${id}`);
+    const eq = await res.json();
+
+    const videoEmbed = eq.video_url ? eq.video_url.replace("watch?v=", "embed/") : null;
+
+    const modalHTML = `
+        <div id="modal-dossier" class="modal-overlay active">
+            <div class="modal" style="max-width: 900px; width:95%;">
+                <div class="modal-header">
+                    <div>
+                        <h3 style="color:var(--primary)">${eq.nome}</h3>
+                        <span class="badge">Asset ID: #${eq.id}</span>
+                    </div>
+                    <button class="btn-close" onclick="closeModal('modal-dossier')">&times;</button>
+                </div>
+                <div class="modal-body" style="display:grid; grid-template-columns: 1.5fr 1fr; gap:30px; padding-top:20px;">
+                    <section>
+                        <h4 class="mb-md">Instrumental Training</h4>
+                        ${videoEmbed ? 
+                            `<iframe width="100%" height="315" src="${videoEmbed}" frameborder="0" allowfullscreen style="border-radius:12px; background:#000;"></iframe>` 
+                            : `<div style="background:#f1f5f9; height:200px; border-radius:12px; display:flex; align-items:center; justify-content:center; color:var(--text-muted);">No training video attached.</div>`}
+                        
+                        <h4 style="margin-top:2rem; margin-bottom:0.5rem;">Technical Description</h4>
+                        <p class="text-muted">${eq.description || 'No technical details provided for this asset.'}</p>
+                    </section>
+                    
+                    <section style="border-left:1px solid var(--border); padding-left:30px;">
+                        <h4 class="mb-md">Resources & SOPs</h4>
+                        <div style="display:flex; flex-direction:column; gap:12px;">
+                            ${eq.manual_url ? `<a href="${eq.manual_url}" target="_blank" class="btn" style="background:#eff6ff; color:var(--primary); justify-content:flex-start;">📄 Download Technical Manual</a>` : ''}
+                            <button class="btn" style="background:#f0fdf4; color:#166534; justify-content:flex-start;" onclick="UI.showToast('Redirecting to SOPs...', 'info')">📋 Linked SOPs (POPs)</button>
+                        </div>
+                        
+                        <div class="card" style="margin-top:2rem; background:#f8fafc; border-style:dashed;">
+                            <h5 style="margin-bottom:8px;">Operational Status</h5>
+                            <p class="text-small">Last maintenance: Not recorded</p>
+                            <p class="text-small">Responsible: Laboratory Manager</p>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+window.closeModal = (id) => {
+    const m = document.getElementById(id);
+    if(m) {
+        m.classList.remove('active');
+        setTimeout(() => m.remove(), 300);
     }
 };
-
-// Dispara quando clica em Salvar
-async function handleAddEquipment(event) {
-    event.preventDefault();
-
-    const name = document.getElementById('eq-name').value.trim();
-    const imageUrl = document.getElementById('eq-image').value.trim();
-
-    UI.showFormFeedback('modal-feedback', '', false);
-    UI.setButtonLoading('btn-save-eq', true);
-
-    try {
-        // O FastAPI (main.py) espera esses dados na URL (Query Parameters)
-        const params = new URLSearchParams();
-        params.append('nome', name);
-        if (imageUrl) params.append('imagem_url', imageUrl);
-
-        // Chama a API com o Token
-        const response = await api.fetchProtected(`/equipments/?${params.toString()}`, {
-            method: 'POST'
-        });
-
-        if (response.ok) {
-            UI.showToast('Equipment added successfully!', 'success');
-            closeEquipmentModal();
-            await fetchAndRenderEquipments(); 
-        } else {
-            const data = await response.json();
-            UI.showFormFeedback('modal-feedback', data.detail || 'Failed to save equipment.', true);
-        }
-    } catch (error) {
-        console.error('Error adding equipment:', error);
-        UI.showFormFeedback('modal-feedback', 'Connection error. Try again.', true);
-    } finally {
-        UI.setButtonLoading('btn-save-eq', false);
-    }
-}
-
-// ==========================================
-// LÓGICA DE BUSCA E MONTAGEM DA TABELA
-// ==========================================
-
-async function fetchAndRenderEquipments() {
-    const container = document.getElementById('equipments-container');
-
-    try {
-        const response = await api.fetchProtected('/equipments/');
-        if (!response.ok) throw new Error('API Error');
-        
-        const equipments = await response.json();
-
-        if (equipments.length === 0) {
-            container.innerHTML = `
-                <div class="text-center" style="padding: var(--space-lg) 0;">
-                    <p class="text-muted mb-md">No equipments found in the inventory.</p>
-                </div>
-            `;
-            return;
-        }
-
-        let tableHTML = `
-            <table style="width: 100%; border-collapse: collapse; text-align: left;">
-                <thead>
-                    <tr style="border-bottom: 2px solid #e2e8f0; color: var(--text-muted);">
-                        <th style="padding: 12px 16px;">ID</th>
-                        <th style="padding: 12px 16px;">Equipment Name</th>
-                        <th style="padding: 12px 16px;">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-
-        equipments.forEach(eq => {
-            tableHTML += `
-                <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.2s;">
-                    <td style="padding: 12px 16px; color: var(--text-muted);">#${eq.id}</td>
-                    <td style="padding: 12px 16px; font-weight: 500;">${eq.nome}</td>
-                    <td style="padding: 12px 16px;">
-                        <span style="background-color: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 99px; font-size: 0.75rem; font-weight: 600;">Active</span>
-                    </td>
-                </tr>
-            `;
-        });
-
-        tableHTML += `</tbody></table>`;
-        container.innerHTML = tableHTML;
-
-    } catch (error) {
-        container.innerHTML = `
-            <div class="text-center text-danger" style="padding: var(--space-md);">
-                Failed to load data. Please refresh the page.
-            </div>
-        `;
-    }
-}

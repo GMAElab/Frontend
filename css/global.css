@@ -1,27 +1,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-    /* Paleta de Cores Premium */
-    --primary: #2563eb;       /* Azul vibrante principal */
+    --primary: #2563eb;    
     --primary-hover: #1d4ed8;
-    --surface: #ffffff;       /* Fundo de cards e header */
-    --background: #f8fafc;    /* Fundo geral (cinza super claro) */
-    --border: #e2e8f0;        /* Linhas divisórias suaves */
-    
-    /* Textos (Alto Contraste) */
-    --text-main: #0f172a;     /* Quase preto para leitura */
-    --text-muted: #64748b;    /* Cinza para subtítulos */
-    
-    /* Sidebar (Menu Lateral) */
-    --sidebar-bg: #0f172a;    /* Escuro e elegante */
+    --surface: #ffffff;       
+    --background: #f8fafc;    
+    --border: #e2e8f0;        
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --sidebar-bg: #0f172a; 
     --sidebar-text: #94a3b8;
     --sidebar-active: #1e293b;
-    
-    /* Feedback */
     --danger: #ef4444;
     --success: #10b981;
-    
-    /* Estrutura */
     --radius-md: 8px;
     --radius-lg: 12px;
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -41,7 +32,6 @@ body {
 a { color: var(--primary); text-decoration: none; font-weight: 500; }
 a:hover { color: var(--primary-hover); }
 
-/* Utilitários Essenciais */
 .text-center { text-align: center; }
 .text-muted { color: var(--text-muted); }
 .text-small { font-size: 0.875rem; }
