@@ -4,7 +4,6 @@
     overflow: hidden;
 }
 
-/* Sidebar (Menu Escuro) */
 .sidebar {
     width: 260px;
     background-color: var(--sidebar-bg);
@@ -43,7 +42,6 @@
     color: white;
 }
 
-/* O item ativo ganha destaque visual claro */
 .nav-item.active {
     background-color: var(--sidebar-active);
     color: white;
@@ -53,7 +51,6 @@
 
 .sidebar-footer { padding: 24px; }
 
-/* Main Area */
 .main-wrapper {
     flex-grow: 1;
     display: flex;
