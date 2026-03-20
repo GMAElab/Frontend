@@ -1,0 +1,78 @@
+/**
+ * Registration Controller
+ * Handles new researcher account requests and client-side validation.
+ */
+
+document.addEventListener('DOMContentLoaded', () => {
+    const registerForm = document.getElementById('register-form');
+    
+    if (!registerForm) return;
+
+    registerForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const name = document.getElementById('nome').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
+
+        // Clear previous feedback
+        UI.showFormFeedback('register-feedback', '', false);
+
+        // --- Client-Side Validation (Error Prevention) ---
+        if (password !== confirmPassword) {
+            UI.showFormFeedback('register-feedback', 'Passwords do not match.', true);
+            document.getElementById('confirm-password').focus();
+            return;
+        }
+
+        if (password.length < 6) {
+            UI.showFormFeedback('register-feedback', 'Password must be at least 6 characters long.', true);
+            document.getElementById('password').focus();
+            return;
+        }
+
+        // Show loading spinner
+        UI.setButtonLoading('btn-register', true);
+
+        try {
+            // Payload structure based on schemas.UsuarioCreate
+            const payload = {
+                nome: name,
+                email: email,
+                senha: password // Note: Check your schemas.py. If it expects 'password' instead of 'senha', change it here.
+            };
+
+            const response = await fetch(`${window.API_URL}/solicitar-register`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Success: Show positive feedback and clear the form
+                UI.showFormFeedback('register-feedback', 'Request sent successfully! Waiting for Admin approval.', false);
+                registerForm.reset(); 
+                
+                // Optional: Redirect the user back to the login page after 3 seconds
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 3000);
+            } else {
+                // Handle API errors (e.g., 400 Email already registered)
+                const errorMessage = data.detail || 'Registration failed. Please try again.';
+                UI.showFormFeedback('register-feedback', errorMessage, true);
+            }
+        } catch (error) {
+            console.error('Registration error:', error);
+            UI.showFormFeedback('register-feedback', 'Connection error. Please try again later.', true);
+        } finally {
+            // Stop loading spinner
+            UI.setButtonLoading('btn-register', false);
+        }
+    });
+});
