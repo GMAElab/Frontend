@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitar Acesso | SGCI LEQM</title>
+    
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/layout.css">
+</head>
+<body class="bg-light">
+    <main class="login-container">
+        
+        <section class="card login-card">
+            <header class="text-center mb-md">
+                <h1 class="text-primary">Novo Pesquisador</h1>
+                <p class="text-muted">Solicitação de acesso ao painel P&D</p>
+            </header>
+
+            <form id="register-form" aria-label="Formulário de Solicitação de Registro">
+                
+                <div class="input-group">
+                    <label for="nome">Nome Completo</label>
+                    <input type="text" id="nome" name="nome" required autocomplete="name" placeholder="Ex: Dr. João Silva">
+                </div>
+
+                <div class="input-group">
+                    <label for="email">E-mail corporativo</label>
+                    <input type="email" id="email" name="email" required autocomplete="email" placeholder="pesquisador@leqm.com">
+                </div>
+
+                <div class="input-group">
+                    <label for="password">Crie uma Senha</label>
+                    <input type="password" id="password" name="password" required autocomplete="new-password" placeholder="Mínimo de 6 caracteres">
+                </div>
+
+                <div class="input-group">
+                    <label for="confirm-password">Confirme sua Senha</label>
+                    <input type="password" id="confirm-password" name="confirm-password" required autocomplete="new-password" placeholder="Repita a senha">
+                </div>
+
+                <div id="register-feedback" class="feedback-msg" aria-live="polite"></div>
+
+                <button type="submit" id="btn-register" class="btn btn-primary btn-block">
+                    <span class="btn-text">Enviar Solicitação</span>
+                    <span class="spinner hidden" aria-hidden="true"></span>
+                </button>
+            </form>
+
+            <footer class="login-footer mt-md text-center">
+                <p class="text-small text-muted">Já possui uma conta? <a href="index.html" id="link-login">Voltar ao Login</a></p>
+            </footer>
+        </section>
+
+    </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/register.js"></script>
+</body>
+</html>
