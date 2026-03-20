@@ -1,56 +1,63 @@
-/* Substitua apenas estas partes no seu css/components.css */
-
-.card {
-    background-color: var(--bg-white);
-    border-radius: var(--border-radius);
-    padding: var(--space-lg);
-    box-shadow: var(--box-shadow);
-    border: 1px solid #e2e8f0; /* Borda super sutil */
-    transition: box-shadow 0.3s ease;
-}
-
-.input-group input {
-    width: 100%;
-    padding: 12px 16px;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-family: var(--font-family);
-    transition: all 0.2s ease;
-    background-color: #f8fafc;
-}
-
-.input-group input:focus {
-    outline: none;
-    border-color: var(--color-primary);
-    background-color: #ffffff;
-    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15); /* Anel de foco suave */
-}
-
-.btn {
-    display: inline-flex;
+/* =========================================
+   MODAIS (Janelas Flutuantes)
+========================================= */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px); /* Efeito de desfoque estilo Apple */
+    display: flex;
     justify-content: center;
     align-items: center;
-    padding: 12px 24px;
-    font-size: 1rem;
-    font-weight: 600;
-    font-family: var(--font-family);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal {
+    background: var(--bg-white);
+    border-radius: var(--border-radius);
+    width: 100%;
+    max-width: 500px;
+    padding: var(--space-lg);
+    box-shadow: var(--box-shadow-hover);
+    transform: translateY(-20px);
+    transition: transform 0.3s ease;
+}
+
+.modal-overlay.active .modal {
+    transform: translateY(0);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-md);
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: var(--space-sm);
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: var(--text-main);
+}
+
+.btn-close {
+    background: none;
     border: none;
-    border-radius: 8px;
+    font-size: 1.5rem;
     cursor: pointer;
-    transition: all 0.2s ease;
-    position: relative;
-    letter-spacing: 0.3px;
+    color: var(--text-muted);
+    transition: color 0.2s;
 }
 
-.btn-primary {
-    background-color: var(--color-primary);
-    color: white;
-    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
-}
-
-.btn-primary:hover:not(:disabled) {
-    background-color: var(--color-primary-hover);
-    transform: translateY(-1px); /* Efeito do botão subindo levemente */
-    box-shadow: 0 6px 8px -1px rgba(37, 99, 235, 0.3);
+.btn-close:hover {
+    color: var(--color-danger);
 }
