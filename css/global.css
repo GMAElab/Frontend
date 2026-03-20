@@ -4,29 +4,22 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-    /* Paleta Tech / Laboratório Moderna */
-    --color-primary: #2563eb; /* Azul vibrante moderno */
+    --color-primary: #2563eb;
     --color-primary-hover: #1d4ed8;
     --color-secondary: #64748b;
     --color-success: #10b981;
     --color-danger: #ef4444;
     --color-warning: #f59e0b;
-    
-    /* Tons de Fundo (Mais suaves) */
-    --bg-light: #f8fafc; /* Fundo geral da página */
-    --bg-white: #ffffff; /* Fundo dos cards */
-    --bg-sidebar: #0f172a; /* Azul muito escuro/elegante para o menu */
-    
-    /* Tons de Texto */
+    --bg-light: #f8fafc;
+    --bg-white: #ffffff; 
+    --bg-sidebar: #0f172a; 
     --text-main: #0f172a;
     --text-muted: #64748b;
     --text-light: #f8fafc;
-
-    /* Espaçamentos e Sombras Premium */
     --space-sm: 0.5rem;
     --space-md: 1.25rem;
     --space-lg: 2rem;
-    --border-radius: 12px; /* Bordas mais arredondadas e modernas */
+    --border-radius: 12px; 
     --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     --box-shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     
@@ -43,13 +36,12 @@ body {
     color: var(--text-main);
     background-color: var(--bg-light);
     line-height: 1.6;
-    -webkit-font-smoothing: antialiased; /* Deixa a fonte mais nítida */
+    -webkit-font-smoothing: antialiased;
 }
 
 a { color: var(--color-primary); text-decoration: none; transition: all 0.2s ease; font-weight: 500;}
 a:hover { color: var(--color-primary-hover); }
 
-/* Classes Utilitárias */
 .text-center { text-align: center; }
 .text-primary { color: var(--color-primary); }
 .text-muted { color: var(--text-muted); }
