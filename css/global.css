@@ -1,51 +1,51 @@
-/* =========================================
-   VÁRIAVEIS GLOBAIS E TIPOGRAFIA PREMIUM
-========================================= */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-    --color-primary: #2563eb;
-    --color-primary-hover: #1d4ed8;
-    --color-secondary: #64748b;
-    --color-success: #10b981;
-    --color-danger: #ef4444;
-    --color-warning: #f59e0b;
-    --bg-light: #f8fafc;
-    --bg-white: #ffffff; 
-    --bg-sidebar: #0f172a; 
-    --text-main: #0f172a;
-    --text-muted: #64748b;
-    --text-light: #f8fafc;
-    --space-sm: 0.5rem;
-    --space-md: 1.25rem;
-    --space-lg: 2rem;
-    --border-radius: 12px; 
-    --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --box-shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    /* Paleta de Cores Premium */
+    --primary: #2563eb;       /* Azul vibrante principal */
+    --primary-hover: #1d4ed8;
+    --surface: #ffffff;       /* Fundo de cards e header */
+    --background: #f8fafc;    /* Fundo geral (cinza super claro) */
+    --border: #e2e8f0;        /* Linhas divisórias suaves */
     
-    --font-family: 'Inter', sans-serif;
+    /* Textos (Alto Contraste) */
+    --text-main: #0f172a;     /* Quase preto para leitura */
+    --text-muted: #64748b;    /* Cinza para subtítulos */
+    
+    /* Sidebar (Menu Lateral) */
+    --sidebar-bg: #0f172a;    /* Escuro e elegante */
+    --sidebar-text: #94a3b8;
+    --sidebar-active: #1e293b;
+    
+    /* Feedback */
+    --danger: #ef4444;
+    --success: #10b981;
+    
+    /* Estrutura */
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
 
-/* =========================================
-   RESET E BASE
-========================================= */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-    font-family: var(--font-family);
+    font-family: 'Inter', sans-serif;
     color: var(--text-main);
-    background-color: var(--bg-light);
+    background-color: var(--background);
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
 }
 
-a { color: var(--color-primary); text-decoration: none; transition: all 0.2s ease; font-weight: 500;}
-a:hover { color: var(--color-primary-hover); }
+a { color: var(--primary); text-decoration: none; font-weight: 500; }
+a:hover { color: var(--primary-hover); }
 
+/* Utilitários Essenciais */
 .text-center { text-align: center; }
-.text-primary { color: var(--color-primary); }
 .text-muted { color: var(--text-muted); }
 .text-small { font-size: 0.875rem; }
-.mb-md { margin-bottom: var(--space-md); }
-.mt-md { margin-top: var(--space-md); }
+.text-danger { color: var(--danger); }
+.mb-md { margin-bottom: 1.25rem; }
+.mt-md { margin-top: 1.25rem; }
 .hidden { display: none !important; }

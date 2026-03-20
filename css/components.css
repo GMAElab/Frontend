@@ -1,63 +1,102 @@
-/* =========================================
-   MODAIS (Janelas Flutuantes)
-========================================= */
-.modal-overlay {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(4px); /* Efeito de desfoque estilo Apple */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
+/* Cards */
+.card {
+    background-color: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
 }
 
-.modal-overlay.active {
-    opacity: 1;
-    visibility: visible;
-}
-
-.modal {
-    background: var(--bg-white);
-    border-radius: var(--border-radius);
+/* Tabelas Premium */
+table {
     width: 100%;
-    max-width: 500px;
-    padding: var(--space-lg);
-    box-shadow: var(--box-shadow-hover);
-    transform: translateY(-20px);
-    transition: transform 0.3s ease;
+    border-collapse: collapse;
+    margin-top: 8px;
 }
 
-.modal-overlay.active .modal {
-    transform: translateY(0);
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--space-md);
-    border-bottom: 1px solid #e2e8f0;
-    padding-bottom: var(--space-sm);
-}
-
-.modal-header h3 {
-    margin: 0;
-    color: var(--text-main);
-}
-
-.btn-close {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
+th {
+    text-align: left;
+    padding: 16px;
+    border-bottom: 2px solid var(--border);
     color: var(--text-muted);
-    transition: color 0.2s;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
-.btn-close:hover {
-    color: var(--color-danger);
+td {
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-main);
+    font-size: 0.95rem;
+    vertical-align: middle;
 }
+
+tr:hover td { background-color: #f8fafc; } /* Destaque ao passar o mouse */
+
+/* Botões Modernos */
+.btn {
+    display: inline-flex; justify-content: center; align-items: center;
+    padding: 10px 18px;
+    font-size: 0.95rem; font-weight: 600;
+    border: none; border-radius: var(--radius-md);
+    cursor: pointer; transition: all 0.2s;
+    font-family: inherit; position: relative;
+}
+
+.btn-primary {
+    background-color: var(--primary); color: white;
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover:not(:disabled) {
+    background-color: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-outline-danger {
+    background-color: transparent; color: var(--danger);
+    border: 1px solid var(--danger);
+}
+.btn-outline-danger:hover { background-color: var(--danger); color: white; }
+
+.btn-icon { background: none; border: none; cursor: pointer; font-size: 1.2rem; }
+
+/* Inputs */
+.input-group { margin-bottom: 1rem; }
+.input-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 0.9rem; }
+.input-group input {
+    width: 100%; padding: 10px 14px;
+    border: 1px solid var(--border); border-radius: var(--radius-md);
+    font-family: inherit; font-size: 0.95rem; transition: all 0.2s;
+}
+.input-group input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); }
+
+/* Modais (Sem alterações radicais, apenas ajustando as cores pro novo padrão) */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.3s ease;
+}
+.modal-overlay.active { opacity: 1; visibility: visible; }
+.modal {
+    background: var(--surface); border-radius: var(--radius-lg);
+    width: 100%; max-width: 500px; padding: 24px;
+    box-shadow: var(--shadow-md); transform: translateY(-20px); transition: transform 0.3s ease;
+}
+.modal-overlay.active .modal { transform: translateY(0); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
+.btn-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); }
+
+/* Toasts & Spinners (Mágica visual mantida) */
+.spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 1000; display: flex; flex-direction: column; gap: 12px; }
+.toast { min-width: 250px; padding: 16px; border-radius: var(--radius-md); color: white; box-shadow: var(--shadow-md); animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; font-weight: 500;}
+.toast.success { background-color: var(--success); }
+.toast.error { background-color: var(--danger); }
+.toast.info { background-color: var(--primary); }
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
