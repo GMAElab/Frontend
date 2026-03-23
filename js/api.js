@@ -1,8 +1,6 @@
-// Configuração da URL base da API
 const API_URL = 'https://api-ic.onrender.com'; 
 
 window.api = {
-    // Gerenciamento de Token
     setToken: (token) => localStorage.setItem('jwt_token', token),
     getToken: () => localStorage.getItem('jwt_token'),
     logout: () => {
@@ -10,7 +8,6 @@ window.api = {
         window.location.href = 'index.html';
     },
 
-    // Wrapper para requisições autenticadas
     fetchProtected: async (endpoint, options = {}) => {
         const token = localStorage.getItem('jwt_token');
         if (!token) {
@@ -18,8 +15,7 @@ window.api = {
             throw new Error('Unauthorized');
         }
 
-        // Normalização de endpoint para evitar barras duplas
-        const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+        const cleanEndpoint = endpoint.replace(/^\/|\/$/g, '');
 
         const headers = {
             'Content-Type': 'application/json',
@@ -27,14 +23,21 @@ window.api = {
             ...(options.headers || {}) 
         };
 
-        const response = await fetch(`${API_URL}/${cleanEndpoint}`, {
-            ...options,
-            headers
-        });
+        try {
+            const response = await fetch(`${API_URL}/${cleanEndpoint}`, {
+                ...options,
+                headers
+            });
 
-        if (response.status === 401) window.api.logout();
-        
-        return response;
+            if (response.status === 401) {
+                window.api.logout();
+            }
+            
+            return response;
+        } catch (error) {
+            console.error("Erro na comunicação com a API:", error);
+            throw error;
+        }
     }
 };
 
