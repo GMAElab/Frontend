@@ -44,7 +44,7 @@ async function loadEquipmentsTable() {
                             <td><strong>${eq.nome}</strong></td>
                             <td><span class="badge">${eq.status}</span></td>
                             <td style="text-align:right">
-                                <button class="btn btn-small" onclick="viewDossier(${eq.id})">View Dossier</button>
+                                <button class="btn btn-small" onclick="viewDossier(${eq.id})">Ver Detalhes</button>
                             </td>
                         </tr>
                     `).join('')}
@@ -56,7 +56,6 @@ async function loadEquipmentsTable() {
     }
 }
 
-// Abre o modal de cadastro com campos estendidos
 function openAddEquipmentModal() {
     const modalHTML = `
         <div id="modal-eq" class="modal-overlay active">
@@ -84,7 +83,6 @@ function openAddEquipmentModal() {
     document.getElementById('form-new-eq').addEventListener('submit', handleSaveEquipment);
 }
 
-// Processa o salvamento do novo equipamento
 async function handleSaveEquipment(e) {
     e.preventDefault();
     UI.setButtonLoading('btn-save', true);
@@ -103,14 +101,13 @@ async function handleSaveEquipment(e) {
     });
 
     if (res.ok) {
-        UI.showToast('Asset registered!', 'success');
+        UI.showToast('Adicionado!', 'success');
         closeModal('modal-eq');
         loadEquipmentsTable();
     }
     UI.setButtonLoading('btn-save', false);
 }
 
-// Abre a visualização detalhada (Dossiê) do equipamento
 async function viewDossier(id) {
     const res = await api.fetchProtected(`equipments/${id}`);
     const eq = await res.json();
