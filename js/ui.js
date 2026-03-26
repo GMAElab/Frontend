@@ -125,7 +125,7 @@ document.addEventListener('viewChanged', (e) => {
                     <h3 style="margin: 0;">Gestão de Dossiês P&D</h3>
                     <p class="text-muted" style="margin-top: 5px;">Mapeamento, acompanhamento e histórico de processos.</p>
                 </div>
-                <button class="btn btn-primary" onclick="openProcessModal()">+ Novo Processo</button>
+                <button id="btn-novo-processo" class="btn btn-primary">+ Novo Processo</button>
             </div>
 
             <div class="card table-card">
@@ -147,6 +147,22 @@ document.addEventListener('viewChanged', (e) => {
                 </div>
             </div>
         `;
+
+        // ==========================================
+        // MÁGICA DE EVENTOS (Evita o "clique fantasma")
+        // ==========================================
+        const btnNovoProcesso = document.getElementById('btn-novo-processo');
+        if (btnNovoProcesso) {
+            btnNovoProcesso.addEventListener('click', () => {
+                console.log("O botão foi clicado via EventListener!");
+                // Chama a função global que definimos no processes.js
+                if (typeof window.openProcessModal === 'function') {
+                    window.openProcessModal();
+                } else {
+                    alert("Aviso: A função do modal não foi encontrada. Faça um Ctrl+F5 para limpar o cache do navegador.");
+                }
+            });
+        }
 
         // Busca os dados no servidor e preenche a tabela
         if (typeof loadProcessesTable === 'function') {
