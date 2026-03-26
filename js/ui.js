@@ -125,7 +125,7 @@ document.addEventListener('viewChanged', (e) => {
                     <h3 style="margin: 0;">Gestão de Dossiês P&D</h3>
                     <p class="text-muted" style="margin-top: 5px;">Mapeamento, acompanhamento e histórico de processos.</p>
                 </div>
-<button id="btn-novo-processo" class="btn btn-primary">+ Novo Processo</button>
+                <button id="btn-novo-processo" class="btn btn-primary">+ Novo Processo</button>
             </div>
 
             <div class="card table-card">
@@ -149,22 +149,29 @@ document.addEventListener('viewChanged', (e) => {
         `;
 
         // ==========================================
-        // MÁGICA DE EVENTOS (Evita o "clique fantasma")
+        // CONFIGURAÇÃO DO BOTÃO NOVO PROCESSO
         // ==========================================
         const btnNovoProcesso = document.getElementById('btn-novo-processo');
         if (btnNovoProcesso) {
             btnNovoProcesso.addEventListener('click', () => {
-                console.log("O botão foi clicado via EventListener!");
-                // Chama a função global que definimos no processes.js
+                console.log("Iniciando abertura do modal...");
+                
                 if (typeof window.openProcessModal === 'function') {
                     window.openProcessModal();
                 } else {
-                    alert("Aviso: A função do modal não foi encontrada. Faça um Ctrl+F5 para limpar o cache do navegador.");
+                    // Fallback de segurança caso o processes.js falhe
+                    const modal = document.getElementById('processModal');
+                    if (modal) {
+                        modal.style.display = 'flex';
+                        modal.style.zIndex = '99999';
+                    } else {
+                        alert("Erro: Estrutura do modal não encontrada no HTML principal.");
+                    }
                 }
             });
         }
 
-        // Busca os dados no servidor e preenche a tabela
+        // Carrega a tabela chamando a função do processes.js
         if (typeof loadProcessesTable === 'function') {
             loadProcessesTable();
         }
