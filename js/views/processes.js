@@ -6,8 +6,10 @@
 function openProcessModal() {
     document.getElementById('processForm').reset();
     document.getElementById('processModal').style.display = 'flex';
+    
     // Resetar para a primeira aba sempre que abrir
-    document.querySelector('.tab-btn').click();
+    const firstTab = document.querySelector('.tab-btn');
+    if (firstTab) firstTab.click();
 }
 
 // Função para fechar o modal
@@ -33,18 +35,19 @@ function openTab(evt, tabName) {
     }
 
     // Mostrar a aba atual e adicionar a classe "active" no botão clicado
-    document.getElementById(tabName).style.display = "block";
+    const targetTab = document.getElementById(tabName);
+    if (targetTab) targetTab.style.display = "block";
+    
     evt.currentTarget.classList.add("active");
     evt.currentTarget.style.fontWeight = "bold";
-    evt.currentTarget.style.borderBottom = "3px solid #0056b3"; // Cor de destaque (ajuste para a cor do seu sistema)
+    evt.currentTarget.style.borderBottom = "3px solid #0056b3"; // Cor de destaque
 }
 
 // Buscar processos do Backend e renderizar na tabela
 async function loadProcessesTable() {
     try {
-        // Assume-se que api.fetchProtected está disponível no seu escopo (como no equipments.js)
-        // Caso use fetch direto, adapte para a sua função de requisição autenticada
-        const response = await fetchProtected('/processes');
+        // CORREÇÃO: Usando API.fetchProtected
+        const response = await API.fetchProtected('/processes');
         
         if (!response.ok) throw new Error('Falha ao carregar processos');
         
@@ -52,35 +55,38 @@ async function loadProcessesTable() {
         renderProcesses(processes);
     } catch (error) {
         console.error("Erro:", error);
-        // Exibir Toast ou alerta de erro aqui
+        if (window.UI) UI.showToast("Erro ao carregar processos", "error");
     }
 }
 
 // Renderizar a tabela no HTML
 function renderProcesses(processes) {
-    const tbody = document.getElementById('processesTableBody'); // Certifique-se que sua tabela tem este ID
+    const tbody = document.getElementById('processesTableBody');
     if (!tbody) return;
 
     tbody.innerHTML = '';
 
     if (processes.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhum processo registado ainda.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px;">Nenhum processo registado ainda.</td></tr>';
         return;
     }
 
     processes.forEach(proc => {
         const row = document.createElement('tr');
         
-        // Formatação simples de data
-        const dataFormatada = new Date(proc.data_registro).toLocaleDateString('pt-PT');
+        // Formatação simples de data para o padrão do Brasil/Portugal
+        const dataFormatada = new Date(proc.data_registro).toLocaleDateString('pt-BR');
+        
+        // Formatar o status tirando o underline e deixando maiúsculo
+        const statusFormatado = proc.status.replace('_', ' ').toUpperCase();
 
         row.innerHTML = `
             <td><strong>${proc.nome_processo}</strong></td>
             <td>${proc.responsavel || 'Não definido'}</td>
-            <td><span class="status-badge status-${proc.status}">${proc.status.replace('_', ' ').toUpperCase()}</span></td>
+            <td><span class="status-badge status-${proc.status}">${statusFormatado}</span></td>
             <td>${dataFormatada}</td>
             <td>
-                <button onclick="viewProcessDetails(${proc.id})" class="btn-icon">👁️ Ver Dossiê</button>
+                <button onclick="viewProcessDetails(${proc.id})" class="btn btn-outline-primary btn-sm">👁️ Ver Dossiê</button>
             </td>
         `;
         tbody.appendChild(row);
@@ -110,7 +116,8 @@ async function handleSaveProcess(event) {
     };
 
     try {
-        const response = await fetchProtected('/processes', {
+        // CORREÇÃO: Usando API.fetchProtected e passando o body convertido em JSON
+        const response = await API.fetchProtected('/processes', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(processData)
@@ -124,24 +131,16 @@ async function handleSaveProcess(event) {
         closeProcessModal();
         loadProcessesTable();
         
-        // Se tiver função de Toast global, chame-a aqui
-        alert("Processo P&D salvo com sucesso!"); 
+        // Exibe o Toast de sucesso usando o seu controlador UI!
+        if (window.UI) UI.showToast("Processo P&D salvo com sucesso!", "success");
 
     } catch (error) {
         console.error("Erro ao salvar:", error);
-        alert("Erro ao comunicar com o servidor. Verifique a consola.");
+        if (window.UI) UI.showToast("Erro ao comunicar com o servidor", "error");
     }
 }
 
 function viewProcessDetails(id) {
-    // Aqui no futuro podemos abrir uma página exclusiva ou modal gigante com os detalhes!
+    // Aqui no futuro faremos um modal para ver o dossiê detalhado
     alert(`Visualizar dossiê completo do processo ID: ${id} (Em desenvolvimento)`);
 }
-
-// Inicializar quando o script for carregado
-document.addEventListener('DOMContentLoaded', () => {
-    // Só carrega a tabela se a View estiver ativa (opcional, dependendo de como funciona o seu ui.js)
-    if (document.getElementById('processesTableBody')) {
-        loadProcessesTable();
-    }
-});
