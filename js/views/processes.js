@@ -47,7 +47,7 @@ function openTab(evt, tabName) {
 async function loadProcessesTable() {
     try {
         // CORREÇÃO: Usando API.fetchProtected
-        const response = await API.fetchProtected('/processes');
+        const response = await api.fetchProtected('/processes');
         
         if (!response.ok) throw new Error('Falha ao carregar processos');
         
@@ -117,7 +117,7 @@ async function handleSaveProcess(event) {
 
     try {
         // CORREÇÃO: Usando API.fetchProtected e passando o body convertido em JSON
-        const response = await API.fetchProtected('/processes', {
+        const response = await api.fetchProtected('/processes', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(processData)
