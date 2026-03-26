@@ -125,8 +125,7 @@ document.addEventListener('viewChanged', (e) => {
                     <h3 style="margin: 0;">Gestão de Dossiês P&D</h3>
                     <p class="text-muted" style="margin-top: 5px;">Mapeamento, acompanhamento e histórico de processos.</p>
                 </div>
-                // Substitua a linha do botão no seu ui.js por esta:
-<button class="btn btn-primary" onclick="alert('O botão está vivo!'); window.openProcessModal();">+ Novo Processo V2</button>
+<button id="btn-novo-processo" class="btn btn-primary">+ Novo Processo</button>
             </div>
 
             <div class="card table-card">

@@ -2,51 +2,56 @@
 // GESTÃO DE PROCESSOS P&D (processes.js)
 // ==========================================
 
-// Função para abrir o modal
-function openProcessModal() {
-    document.getElementById('processForm').reset();
-    document.getElementById('processModal').style.display = 'flex';
+// Função global para abrir o modal com reforço de camadas (Z-Index)
+window.openProcessModal = function() {
+    const modal = document.getElementById('processModal');
+    if (modal) {
+        // Garante que o modal sobreponha sidebar, topbar e conteúdo
+        modal.style.display = 'flex';
+        modal.style.zIndex = '99999'; 
+        modal.style.position = 'fixed';
+    }
     
-    // Resetar para a primeira aba sempre que abrir
+    const form = document.getElementById('processForm');
+    if (form) form.reset();
+
+    // Inicia sempre na primeira aba (Planeamento)
     const firstTab = document.querySelector('.tab-btn');
     if (firstTab) firstTab.click();
-}
+};
 
 // Função para fechar o modal
-function closeProcessModal() {
-    document.getElementById('processModal').style.display = 'none';
+window.closeProcessModal = function() {
+    const modal = document.getElementById('processModal');
+    if (modal) modal.style.display = 'none';
 }
 
-// Lógica das Abas (Tabs)
+// Lógica de navegação entre as abas do formulário
 function openTab(evt, tabName) {
-    // Esconder todo o conteúdo das abas
     const tabContents = document.getElementsByClassName("tab-content");
     for (let i = 0; i < tabContents.length; i++) {
         tabContents[i].style.display = "none";
     }
 
-    // Remover a classe "active" de todos os botões
     const tabBtns = document.getElementsByClassName("tab-btn");
     for (let i = 0; i < tabBtns.length; i++) {
         tabBtns[i].classList.remove("active");
-        // Estilo visual básico para botões inativos
         tabBtns[i].style.fontWeight = "normal";
         tabBtns[i].style.borderBottom = "none";
     }
 
-    // Mostrar a aba atual e adicionar a classe "active" no botão clicado
     const targetTab = document.getElementById(tabName);
     if (targetTab) targetTab.style.display = "block";
     
     evt.currentTarget.classList.add("active");
     evt.currentTarget.style.fontWeight = "bold";
-    evt.currentTarget.style.borderBottom = "3px solid #0056b3"; // Cor de destaque
+    evt.currentTarget.style.borderBottom = "3px solid #0056b3";
 }
 
-// Buscar processos do Backend e renderizar na tabela
+// Busca a lista de processos no Backend
 async function loadProcessesTable() {
     try {
-        // CORREÇÃO: Usando API.fetchProtected
+        // CORREÇÃO: Alterado de 'a.' para 'api.' para consistência com o objeto global
         const response = await api.fetchProtected('/processes');
         
         if (!response.ok) throw new Error('Falha ao carregar processos');
@@ -54,12 +59,12 @@ async function loadProcessesTable() {
         const processes = await response.json();
         renderProcesses(processes);
     } catch (error) {
-        console.error("Erro:", error);
+        console.error("Erro ao carregar tabela:", error);
         if (window.UI) UI.showToast("Erro ao carregar processos", "error");
     }
 }
 
-// Renderizar a tabela no HTML
+// Renderiza as linhas da tabela dinamicamente
 function renderProcesses(processes) {
     const tbody = document.getElementById('processesTableBody');
     if (!tbody) return;
@@ -73,11 +78,7 @@ function renderProcesses(processes) {
 
     processes.forEach(proc => {
         const row = document.createElement('tr');
-        
-        // Formatação simples de data para o padrão do Brasil/Portugal
         const dataFormatada = new Date(proc.data_registro).toLocaleDateString('pt-BR');
-        
-        // Formatar o status tirando o underline e deixando maiúsculo
         const statusFormatado = proc.status.replace('_', ' ').toUpperCase();
 
         row.innerHTML = `
@@ -93,11 +94,10 @@ function renderProcesses(processes) {
     });
 }
 
-// Salvar um novo processo (Envia o "Canvas" para a API)
+// Envia os dados do Canvas P&D para o servidor
 async function handleSaveProcess(event) {
     event.preventDefault();
 
-    // Capturar todos os 14 campos do formulário
     const processData = {
         nome_processo: document.getElementById('proc_nome').value,
         responsavel: document.getElementById('proc_responsavel').value,
@@ -116,22 +116,17 @@ async function handleSaveProcess(event) {
     };
 
     try {
-        // CORREÇÃO: Usando API.fetchProtected e passando o body convertido em JSON
         const response = await api.fetchProtected('/processes', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(processData)
         });
 
-        if (!response.ok) {
-            throw new Error('Falha ao salvar o processo');
-        }
+        if (!response.ok) throw new Error('Falha ao salvar o processo');
 
-        // Sucesso! Fechar modal, limpar e recarregar tabela
         closeProcessModal();
         loadProcessesTable();
         
-        // Exibe o Toast de sucesso usando o seu controlador UI!
         if (window.UI) UI.showToast("Processo P&D salvo com sucesso!", "success");
 
     } catch (error) {
@@ -140,7 +135,7 @@ async function handleSaveProcess(event) {
     }
 }
 
+// Visualização detalhada (Placeholder para futura implementação)
 function viewProcessDetails(id) {
-    // Aqui no futuro faremos um modal para ver o dossiê detalhado
     alert(`Visualizar dossiê completo do processo ID: ${id} (Em desenvolvimento)`);
 }

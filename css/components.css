@@ -120,3 +120,25 @@ textarea:focus {
     border-color: var(--primary) !important;
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
+
+/* Força o Modal a ficar por cima da Sidebar e da Topbar */
+.modal-overlay {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7); /* Fundo escuro para dar contraste */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999 !important; /* O segredo está aqui! */
+}
+
+.modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    z-index: 100000 !important;
+}
