@@ -2,14 +2,18 @@
 // GESTÃO DE PROCESSOS P&D (processes.js)
 // ==========================================
 
-// Função global para abrir o modal com reforço de camadas (Z-Index)
+// Função global para abrir o modal com reforço de camadas
 window.openProcessModal = function() {
+    console.log("--> Função openProcessModal ACIONADA no processes.js"); 
+    
     const modal = document.getElementById('processModal');
     if (modal) {
         // Garante que o modal sobreponha sidebar, topbar e conteúdo
         modal.style.display = 'flex';
         modal.style.zIndex = '99999'; 
         modal.style.position = 'fixed';
+    } else {
+        console.error("ERRO: Elemento 'processModal' não encontrado no HTML!");
     }
     
     const form = document.getElementById('processForm');
@@ -20,14 +24,14 @@ window.openProcessModal = function() {
     if (firstTab) firstTab.click();
 };
 
-// Função para fechar o modal
+// Função global para fechar o modal
 window.closeProcessModal = function() {
     const modal = document.getElementById('processModal');
     if (modal) modal.style.display = 'none';
-}
+};
 
 // Lógica de navegação entre as abas do formulário
-function openTab(evt, tabName) {
+window.openTab = function(evt, tabName) {
     const tabContents = document.getElementsByClassName("tab-content");
     for (let i = 0; i < tabContents.length; i++) {
         tabContents[i].style.display = "none";
@@ -46,16 +50,13 @@ function openTab(evt, tabName) {
     evt.currentTarget.classList.add("active");
     evt.currentTarget.style.fontWeight = "bold";
     evt.currentTarget.style.borderBottom = "3px solid #0056b3";
-}
+};
 
 // Busca a lista de processos no Backend
 async function loadProcessesTable() {
     try {
-        // CORREÇÃO: Alterado de 'a.' para 'api.' para consistência com o objeto global
         const response = await api.fetchProtected('/processes');
-        
         if (!response.ok) throw new Error('Falha ao carregar processos');
-        
         const processes = await response.json();
         renderProcesses(processes);
     } catch (error) {
@@ -68,7 +69,6 @@ async function loadProcessesTable() {
 function renderProcesses(processes) {
     const tbody = document.getElementById('processesTableBody');
     if (!tbody) return;
-
     tbody.innerHTML = '';
 
     if (processes.length === 0) {
@@ -124,18 +124,16 @@ async function handleSaveProcess(event) {
 
         if (!response.ok) throw new Error('Falha ao salvar o processo');
 
-        closeProcessModal();
+        window.closeProcessModal();
         loadProcessesTable();
         
         if (window.UI) UI.showToast("Processo P&D salvo com sucesso!", "success");
-
     } catch (error) {
         console.error("Erro ao salvar:", error);
         if (window.UI) UI.showToast("Erro ao comunicar com o servidor", "error");
     }
 }
 
-// Visualização detalhada (Placeholder para futura implementação)
 function viewProcessDetails(id) {
     alert(`Visualizar dossiê completo do processo ID: ${id} (Em desenvolvimento)`);
 }
