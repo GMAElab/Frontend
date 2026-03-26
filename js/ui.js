@@ -70,7 +70,9 @@ const UI = {
     switchView: (viewName) => {
         const mainContent = document.getElementById('dynamic-content');
         const pageTitle = document.getElementById('current-page-title');
+        
         if (!mainContent) return;
+        
         document.querySelectorAll('.nav-item').forEach(btn => {
             btn.classList.remove('active');
             if (btn.getAttribute('data-view') === viewName) {
@@ -78,7 +80,11 @@ const UI = {
                 if (pageTitle) pageTitle.textContent = btn.textContent;
             }
         });
+        
+        // Coloca o spinner de carregamento temporário
         mainContent.innerHTML = `<div class="text-center mt-md"><span class="spinner" style="position:relative; border-color:#ccc; border-top-color:var(--color-primary)"></span> Carregando...</div>`;
+        
+        // Dispara o evento avisando que a tela mudou
         const event = new CustomEvent('viewChanged', { detail: { view: viewName } });
         document.dispatchEvent(event);
     }
@@ -101,5 +107,50 @@ document.addEventListener('DOMContentLoaded', () => {
         btnMenu.addEventListener('click', () => {
             sidebar.classList.toggle('open');
         });
+    }
+});
+
+// ==========================================
+// ROTEADOR DE TELAS (Injeta o HTML dinâmico)
+// ==========================================
+document.addEventListener('viewChanged', (e) => {
+    const view = e.detail.view;
+    const mainContent = document.getElementById('dynamic-content');
+
+    if (view === 'processes') {
+        // Renderiza a estrutura da tela de Processos
+        mainContent.innerHTML = `
+            <div class="view-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div>
+                    <h3 style="margin: 0;">Gestão de Dossiês P&D</h3>
+                    <p class="text-muted" style="margin-top: 5px;">Mapeamento, acompanhamento e histórico de processos.</p>
+                </div>
+                <button class="btn btn-primary" onclick="openProcessModal()">+ Novo Processo</button>
+            </div>
+
+            <div class="card table-card">
+                <div class="table-responsive">
+                    <table class="data-table" style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #eee; text-align: left;">
+                                <th style="padding: 12px 8px;">Nome do Processo</th>
+                                <th style="padding: 12px 8px;">Responsável</th>
+                                <th style="padding: 12px 8px;">Status</th>
+                                <th style="padding: 12px 8px;">Data de Registro</th>
+                                <th style="padding: 12px 8px;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="processesTableBody">
+                            <tr><td colspan="5" style="text-align: center; padding: 20px;">Carregando processos...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+
+        // Busca os dados no servidor e preenche a tabela
+        if (typeof loadProcessesTable === 'function') {
+            loadProcessesTable();
+        }
     }
 });
