@@ -83,22 +83,30 @@
                             <label style="display: block; font-weight: bold; margin-bottom: 5px;">Visão Geral</label>
                             <textarea id="proc_visao" rows="3" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;"></textarea>
                         </div>
+                        <div class="form-group">
+                            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Equipa Envolvida</label>
+                            <textarea id="proc_equipe" rows="2" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Escopo</label>
+                            <textarea id="proc_escopo" rows="2" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;"></textarea>
+                        </div>
                     </div>
                 </div>
 
                 <div id="tab-execucao" class="tab-content" style="display: none;">
-                    <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                        <div>
-                            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Equipe</label>
-                            <input type="text" id="proc_equipe" class="form-control" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
-                        </div>
-                        <div>
-                            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Escopo</label>
-                            <input type="text" id="proc_escopo" class="form-control" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
-                        </div>
+                    <div class="form-grid" style="display: grid; grid-template-columns: 1fr; gap: 15px;">
                         <div style="grid-column: span 2;">
                             <label style="display: block; font-weight: bold; margin-bottom: 5px;">Definição dos Processos</label>
                             <textarea id="proc_definicao" rows="3" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;"></textarea>
+                        </div>
+                        <div style="grid-column: span 2;">
+                            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Link do Fluxograma (Miro/Lucidchart)</label>
+                            <input type="url" id="proc_fluxograma" class="form-control" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" placeholder="https://...">
+                        </div>
+                        <div style="grid-column: span 2;">
+                            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Detalhamento das Etapas</label>
+                            <textarea id="proc_etapas" rows="5" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" placeholder="Passo a passo da execução..."></textarea>
                         </div>
                     </div>
                 </div>
@@ -106,15 +114,19 @@
                 <div id="tab-resultados" class="tab-content" style="display: none;">
                     <div class="form-grid" style="display: grid; gap: 15px;">
                         <div>
-                            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Resultados Obtidos</label>
-                            <textarea id="proc_resultados" rows="4" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;"></textarea>
+                            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Indicadores de Desempenho / Resultados</label>
+                            <textarea id="proc_indicadores" rows="3" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;"></textarea>
                         </div>
                         <div>
-                            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Anexos (Link)</label>
-                            <input type="text" id="proc_anexos" class="form-control" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Lições Aprendidas / Melhorias</label>
+                            <textarea id="proc_licoes" rows="3" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;"></textarea>
                         </div>
                         <div>
-                            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Status</label>
+                            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Link de Anexos (Drive/Sharepoint)</label>
+                            <input type="url" id="proc_anexos" class="form-control" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" placeholder="https://...">
+                        </div>
+                        <div>
+                            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Status do Processo</label>
                             <select id="proc_status" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
                                 <option value="rascunho">Rascunho</option>
                                 <option value="em_andamento">Em andamento</option>
