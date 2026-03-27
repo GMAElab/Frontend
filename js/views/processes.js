@@ -102,7 +102,7 @@ function renderProcesses(processes) {
             <td><span class="status-badge status-${proc.status}">${statusFormatado}</span></td>
             <td>${dataFormatada}</td>
             <td>
-                <button onclick="viewProcessDetails(${proc.id})" class="btn btn-outline-primary btn-sm">👁️ Ver Dossiê</button>
+                <button onclick="viewProcessDetails(${proc.id})" class="btn btn-outline-primary btn-sm">Detalhes do processo</button>
             </td>
         `;
         tbody.appendChild(row);
