@@ -142,38 +142,61 @@ window.handleSaveEquipment = async function(e) {
  */
 window.viewDossier = async function(id) {
     try {
-        const res = await api.fetchProtected(`equipments/${id}`);
+        // Ajuste na rota: garantindo a barra correta para a API
+        const res = await api.fetchProtected(`equipments/${id}`); 
+        
+        if (!res.ok) throw new Error('Equipamento não encontrado');
+        
         const eq = await res.json();
         
+        // Conversão de URL do YouTube para modo Embed (para funcionar no iframe)
         const videoEmbed = eq.video_url ? eq.video_url.replace("watch?v=", "embed/") : null;
 
-        document.getElementById('dossier-title').textContent = eq.nome;
-        document.getElementById('dossier-body').innerHTML = `
-            <div class="video-section">
-                <h4 style="margin-bottom:12px;">Vídeo de Operação</h4>
-                ${videoEmbed ? 
-                    `<iframe width="100%" height="300" src="${videoEmbed}" frameborder="0" allowfullscreen style="border-radius:8px; border:1px solid #eee;"></iframe>` : 
-                    '<div style="background:#f1f5f9; height:200px; display:flex; align-items:center; justify-content:center; border-radius:8px; color:#64748b;">Nenhum vídeo anexado.</div>'}
-            </div>
-            <div class="info-section">
-                <h4 style="margin-bottom:12px;">Documentação e Detalhes</h4>
-                <div style="background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:15px;">
-                    <p style="font-size:0.9rem; line-height:1.5;">${eq.description || 'Nenhuma descrição técnica informada.'}</p>
-                </div>
-                ${eq.manual_url ? 
-                    `<a href="${eq.manual_url}" target="_blank" class="btn btn-primary" style="width:100%; text-decoration:none;">Acessar Manual Técnico (PDF)</a>` : 
-                    '<p class="text-muted text-center" style="font-size:0.85rem;">Manual não disponível.</p>'}
-            </div>
-        `;
-
+        // Preenchimento dos elementos fixos do dashboard.html
+        const dossierTitle = document.getElementById('dossier-title');
+        const dossierBody = document.getElementById('dossier-body');
         const modalDossier = document.getElementById('modal-dossier');
-        if (modalDossier) modalDossier.style.display = 'flex';
+
+        if (dossierTitle) dossierTitle.textContent = eq.nome;
+        
+        if (dossierBody) {
+            dossierBody.innerHTML = `
+                <div style="padding-right: 15px; border-right: 1px solid #eee;">
+                    <h4 style="margin-bottom:15px; color:var(--primary);">Vídeo de Treinamento</h4>
+                    ${videoEmbed ? 
+                        `<iframe width="100%" height="250" src="${videoEmbed}" frameborder="0" allowfullscreen style="border-radius:8px;"></iframe>` : 
+                        '<div style="background:#f8fafc; height:200px; display:flex; align-items:center; justify-content:center; border-radius:8px; border:1px dashed #cbd5e1; color:#64748b;">Nenhum vídeo disponível</div>'}
+                </div>
+                <div>
+                    <h4 style="margin-bottom:15px; color:var(--primary);">Recursos Técnicos</h4>
+                    <div style="background:#f1f5f9; padding:15px; border-radius:8px; margin-bottom:20px;">
+                        <p style="font-size:0.9rem; line-height:1.5;">${eq.description || 'Nenhuma descrição técnica informada para este ativo.'}</p>
+                    </div>
+                    ${eq.manual_url ? 
+                        `<a href="${eq.manual_url}" target="_blank" class="btn btn-primary" style="width:100%; text-align:center; text-decoration:none; display:inline-block;">Acessar Manual em PDF</a>` : 
+                        '<p class="text-muted text-center" style="font-size:0.85rem;">Manual não disponível no momento.</p>'}
+                </div>
+            `;
+        }
+
+        if (modalDossier) {
+            modalDossier.style.setProperty('display', 'flex', 'important');
+            document.body.style.overflow = 'hidden';
+        }
+
     } catch (err) {
-        UI.showToast('Erro ao carregar dossiê do equipamento', 'error');
+        console.error("Erro no Dossier:", err);
+        if (window.UI) UI.showToast('Erro ao carregar detalhes do equipamento', 'error');
     }
 };
 
+/**
+ * Fecha o modal de detalhes
+ */
 window.closeDossierModal = function() {
     const modal = document.getElementById('modal-dossier');
-    if (modal) modal.style.display = 'none';
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
 };
