@@ -7,8 +7,7 @@ window.openProcessModal = function() {
     
     const modal = document.getElementById('processModal');
     if (modal) {
-        // Altera apenas o display para flex, garantindo o uso do z-index do HTML
-        modal.style.display = 'flex';
+        modal.classList.add('active');
         document.body.style.overflow = 'hidden'; 
     } else {
         console.error("ERRO: Elemento 'processModal' não encontrado no HTML!");
@@ -27,7 +26,7 @@ window.openProcessModal = function() {
 window.closeProcessModal = function() {
     const modal = document.getElementById('processModal');
     if (modal) {
-        modal.style.display = 'none';
+        modal.classList.remove('active');
         document.body.style.overflow = 'auto'; 
     }
 };
