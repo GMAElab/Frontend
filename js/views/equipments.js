@@ -2,13 +2,15 @@
 // GESTÃO DE EQUIPAMENTOS (equipments.js)
 // ==========================================
 
-// Escuta a troca de tela para renderizar a tabela
+// Escuta a troca de tela para renderizar a tabela dinamicamente
 document.addEventListener('viewChanged', (e) => {
-    if (e.detail.view === 'equipments') renderEquipments();
+    if (e.detail.view === 'equipments') {
+        renderEquipments();
+    }
 });
 
 /**
- * Renderiza a estrutura da tela de Equipamentos
+ * Injeta o cabeçalho e o container da tabela na área principal
  */
 async function renderEquipments() {
     const main = document.getElementById('dynamic-content');
@@ -17,45 +19,27 @@ async function renderEquipments() {
     main.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
             <div>
-                <h2 style="color:var(--primary);">EQUIPAMENTOS</h2>
-                <p class="text-muted text-small">Gestão e manutenção de ativos do laboratório.</p>
+                <h2 style="color:var(--primary); text-transform: uppercase;">Equipamentos</h2>
+                <p class="text-muted text-small">Gestão e inventário de ativos laboratoriais.</p>
             </div>
             <button id="btn-novo-equip" class="btn btn-primary">+ Novo Equipamento</button>
         </div>
         <div id="eq-container" class="card">
-            <div class="text-center p-lg">Carregando equipamentos...</div>
+            <div class="text-center p-lg">Carregando inventário...</div>
         </div>
     `;
 
-    // Vincula o clique ao modal fixo do HTML
-    document.getElementById('btn-novo-equip').addEventListener('click', () => window.openAddEquipmentModal());
+    // Vincula o evento de clique ao botão criado acima
+    const btnNovo = document.getElementById('btn-novo-equip');
+    if (btnNovo) {
+        btnNovo.addEventListener('click', () => window.openAddEquipmentModal());
+    }
+
     loadEquipmentsTable();
 }
 
 /**
- * Abre o modal de adição (Usa o modal fixo do dashboard.html)
- */
-window.openAddEquipmentModal = function() {
-    const modal = document.getElementById('modal-eq');
-    if (modal) {
-        modal.style.setProperty('display', 'flex', 'important');
-        document.body.style.overflow = 'hidden';
-    }
-};
-
-/**
- * Fecha o modal de adição
- */
-window.closeEquipModal = function() {
-    const modal = document.getElementById('modal-eq');
-    if (modal) {
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
-    }
-};
-
-/**
- * Carrega os dados da API para a tabela
+ * Busca dados da API e preenche a tabela
  */
 async function loadEquipmentsTable() {
     const container = document.getElementById('eq-container');
@@ -64,15 +48,15 @@ async function loadEquipmentsTable() {
         const data = await res.json();
 
         if (data.length === 0) {
-            container.innerHTML = `<p class="text-center text-muted">Nenhum equipamento registrado.</p>`;
+            container.innerHTML = `<p class="text-center text-muted" style="padding:20px;">Nenhum equipamento registrado no sistema.</p>`;
             return;
         }
 
         container.innerHTML = `
-            <table>
+            <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Equipamento</th>
+                        <th>Nome do Ativo</th>
                         <th>Status</th>
                         <th style="text-align:right">Ações</th>
                     </tr>
@@ -91,16 +75,38 @@ async function loadEquipmentsTable() {
             </table>
         `;
     } catch (err) {
-        container.innerHTML = `<p class="text-danger">Erro ao carregar dados do servidor.</p>`;
+        console.error("Erro ao carregar equipamentos:", err);
+        container.innerHTML = `<p class="text-danger text-center">Falha ao conectar com o servidor de ativos.</p>`;
     }
 }
 
 /**
- * Salva o novo equipamento usando os IDs corretos do HTML
+ * Gerenciamento do Modal (Abertura/Fecho)
+ */
+window.openAddEquipmentModal = function() {
+    const modal = document.getElementById('modal-eq');
+    if (modal) {
+        modal.style.setProperty('display', 'flex', 'important');
+        document.body.style.overflow = 'hidden'; // Trava o scroll da página
+    }
+};
+
+window.closeEquipModal = function() {
+    const modal = document.getElementById('modal-eq');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+};
+
+/**
+ * Salva o Equipamento na API
  */
 window.handleSaveEquipment = async function(e) {
     e.preventDefault();
-    UI.setButtonLoading('btn-save-eq', true);
+    
+    // UI Feedback de carregamento
+    if (window.UI) UI.setButtonLoading('btn-save-eq', true);
 
     const payload = {
         nome: document.getElementById('eq-name').value,
@@ -118,21 +124,21 @@ window.handleSaveEquipment = async function(e) {
         });
 
         if (res.ok) {
-            UI.showToast('Equipamento salvo com sucesso!', 'success');
+            UI.showToast('Equipamento registrado com sucesso!', 'success');
             window.closeEquipModal();
             loadEquipmentsTable();
         } else {
             throw new Error();
         }
     } catch (err) {
-        UI.showToast('Erro ao salvar equipamento', 'error');
+        UI.showToast('Erro ao processar registro', 'error');
     } finally {
-        UI.setButtonLoading('btn-save-eq', false);
+        if (window.UI) UI.setButtonLoading('btn-save-eq', false);
     }
 };
 
 /**
- * Abre o modal de detalhes (Dossier) preenchendo o HTML fixo
+ * Abre o Modal de Detalhes (Dossier)
  */
 window.viewDossier = async function(id) {
     try {
@@ -143,27 +149,30 @@ window.viewDossier = async function(id) {
 
         document.getElementById('dossier-title').textContent = eq.nome;
         document.getElementById('dossier-body').innerHTML = `
-            <div>
-                <h4 style="margin-bottom:10px;">Vídeo de Treinamento</h4>
-                ${videoEmbed ? `<iframe width="100%" height="300" src="${videoEmbed}" frameborder="0" allowfullscreen style="border-radius:8px;"></iframe>` : '<p class="text-muted">Nenhum vídeo disponível.</p>'}
+            <div class="video-section">
+                <h4 style="margin-bottom:12px;">Vídeo de Operação</h4>
+                ${videoEmbed ? 
+                    `<iframe width="100%" height="300" src="${videoEmbed}" frameborder="0" allowfullscreen style="border-radius:8px; border:1px solid #eee;"></iframe>` : 
+                    '<div style="background:#f1f5f9; height:200px; display:flex; align-items:center; justify-content:center; border-radius:8px; color:#64748b;">Nenhum vídeo anexado.</div>'}
             </div>
-            <div>
-                <h4 style="margin-bottom:10px;">Informações Adicionais</h4>
-                <p class="text-small" style="margin-bottom:20px;">${eq.description || 'Sem descrição detalhada.'}</p>
-                ${eq.manual_url ? `<a href="${eq.manual_url}" target="_blank" class="btn btn-primary" style="width:100%;">Acessar Manual Técnico</a>` : '<p class="text-muted">Manual não anexado.</p>'}
+            <div class="info-section">
+                <h4 style="margin-bottom:12px;">Documentação e Detalhes</h4>
+                <div style="background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:15px;">
+                    <p style="font-size:0.9rem; line-height:1.5;">${eq.description || 'Nenhuma descrição técnica informada.'}</p>
+                </div>
+                ${eq.manual_url ? 
+                    `<a href="${eq.manual_url}" target="_blank" class="btn btn-primary" style="width:100%; text-decoration:none;">Acessar Manual Técnico (PDF)</a>` : 
+                    '<p class="text-muted text-center" style="font-size:0.85rem;">Manual não disponível.</p>'}
             </div>
         `;
 
-        const modal = document.getElementById('modal-dossier');
-        if (modal) modal.style.display = 'flex';
+        const modalDossier = document.getElementById('modal-dossier');
+        if (modalDossier) modalDossier.style.display = 'flex';
     } catch (err) {
-        UI.showToast('Erro ao carregar detalhes', 'error');
+        UI.showToast('Erro ao carregar dossiê do equipamento', 'error');
     }
 };
 
-/**
- * Fecha o modal de detalhes
- */
 window.closeDossierModal = function() {
     const modal = document.getElementById('modal-dossier');
     if (modal) modal.style.display = 'none';

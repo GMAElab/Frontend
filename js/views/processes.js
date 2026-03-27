@@ -145,5 +145,5 @@ async function handleSaveProcess(event) {
 }
 
 function viewProcessDetails(id) {
-    alert(`Visualizar dossiê ID: ${id} (Em desenvolvimento)`);
+    alert(`Visualizar processo ID: ${id} (Em desenvolvimento)`);
 }

@@ -122,7 +122,7 @@ document.addEventListener('viewChanged', (e) => {
         mainContent.innerHTML = `
             <div class="view-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <div>
-                    <h3 style="margin: 0;">Gestão de Dossiês P&D</h3>
+                    <h3 style="margin: 0;">Gestão de Processos P&D</h3>
                     <p class="text-muted" style="margin-top: 5px;">Mapeamento, acompanhamento e histórico de processos.</p>
                 </div>
                 <button id="btn-novo-processo" class="btn btn-primary">+ Novo Processo</button>
