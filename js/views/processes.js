@@ -2,16 +2,20 @@
 // GESTÃO DE PROCESSOS P&D (processes.js)
 // ==========================================
 
-// Função global para abrir o modal com reforço de camadas
 window.openProcessModal = function() {
     console.log("--> Função openProcessModal ACIONADA no processes.js"); 
     
     const modal = document.getElementById('processModal');
     if (modal) {
-        // Garante que o modal sobreponha sidebar, topbar e conteúdo
+        // REFORÇO VISUAL EXTREMO: Garante que o modal apareça acima de tudo
         modal.style.display = 'flex';
-        modal.style.zIndex = '99999'; 
+        modal.style.visibility = 'visible';
+        modal.style.opacity = '1';
+        modal.style.zIndex = '999999'; 
         modal.style.position = 'fixed';
+        
+        // Bloqueia o scroll do fundo para melhorar a experiência
+        document.body.style.overflow = 'hidden'; 
     } else {
         console.error("ERRO: Elemento 'processModal' não encontrado no HTML!");
     }
@@ -19,18 +23,19 @@ window.openProcessModal = function() {
     const form = document.getElementById('processForm');
     if (form) form.reset();
 
-    // Inicia sempre na primeira aba (Planeamento)
+    // Inicia na aba de planeamento
     const firstTab = document.querySelector('.tab-btn');
     if (firstTab) firstTab.click();
 };
 
-// Função global para fechar o modal
 window.closeProcessModal = function() {
     const modal = document.getElementById('processModal');
-    if (modal) modal.style.display = 'none';
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto'; // Devolve o scroll
+    }
 };
 
-// Lógica de navegação entre as abas do formulário
 window.openTab = function(evt, tabName) {
     const tabContents = document.getElementsByClassName("tab-content");
     for (let i = 0; i < tabContents.length; i++) {
@@ -52,7 +57,6 @@ window.openTab = function(evt, tabName) {
     evt.currentTarget.style.borderBottom = "3px solid #0056b3";
 };
 
-// Busca a lista de processos no Backend
 async function loadProcessesTable() {
     try {
         const response = await api.fetchProtected('/processes');
@@ -65,7 +69,6 @@ async function loadProcessesTable() {
     }
 }
 
-// Renderiza as linhas da tabela dinamicamente
 function renderProcesses(processes) {
     const tbody = document.getElementById('processesTableBody');
     if (!tbody) return;
@@ -94,7 +97,6 @@ function renderProcesses(processes) {
     });
 }
 
-// Envia os dados do Canvas P&D para o servidor
 async function handleSaveProcess(event) {
     event.preventDefault();
 
