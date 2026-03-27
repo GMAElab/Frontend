@@ -7,23 +7,19 @@ window.openProcessModal = function() {
     
     const modal = document.getElementById('processModal');
     if (modal) {
-        // REFORÇO VISUAL EXTREMO: Garante que o modal apareça acima de tudo
+        // Altera apenas o display para flex, garantindo o uso do z-index do HTML
         modal.style.display = 'flex';
-        modal.style.visibility = 'visible';
-        modal.style.opacity = '1';
-        modal.style.zIndex = '999999'; 
-        modal.style.position = 'fixed';
-        
-        // Bloqueia o scroll do fundo para melhorar a experiência
         document.body.style.overflow = 'hidden'; 
     } else {
         console.error("ERRO: Elemento 'processModal' não encontrado no HTML!");
     }
     
     const form = document.getElementById('processForm');
-    if (form) form.reset();
+    if (form) {
+        form.reset();
+    }
 
-    // Inicia na aba de planeamento
+    // Aciona a aba inicial
     const firstTab = document.querySelector('.tab-btn');
     if (firstTab) firstTab.click();
 };
@@ -32,7 +28,7 @@ window.closeProcessModal = function() {
     const modal = document.getElementById('processModal');
     if (modal) {
         modal.style.display = 'none';
-        document.body.style.overflow = 'auto'; // Devolve o scroll
+        document.body.style.overflow = 'auto'; 
     }
 };
 
@@ -105,16 +101,11 @@ async function handleSaveProcess(event) {
         responsavel: document.getElementById('proc_responsavel').value,
         objetivo_fase: document.getElementById('proc_objetivo').value,
         visao_geral: document.getElementById('proc_visao').value,
-        equipe: document.getElementById('proc_equipe').value,
-        escopo: document.getElementById('proc_escopo').value,
-        definicao_processos: document.getElementById('proc_definicao').value,
-        fluxograma_url: document.getElementById('proc_fluxograma').value,
-        detalhamento_etapas: document.getElementById('proc_etapas').value,
-        indicadores_desempenho: document.getElementById('proc_indicadores').value,
-        melhorias_sugeridas: document.getElementById('proc_melhorias').value,
-        licoes_aprendidas: document.getElementById('proc_licoes').value,
-        anexos_url: document.getElementById('proc_anexos').value,
-        status: document.getElementById('proc_status').value
+        // Adicionados campos que podem estar em falta no seu form simplificado para evitar erro de objeto
+        equipe: document.getElementById('proc_equipe')?.value || "",
+        escopo: document.getElementById('proc_escopo')?.value || "",
+        definicao_processos: document.getElementById('proc_definicao')?.value || "",
+        status: document.getElementById('proc_status')?.value || "rascunho"
     };
 
     try {
