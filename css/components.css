@@ -121,24 +121,47 @@ textarea:focus {
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
-/* Força o Modal a ficar por cima da Sidebar e da Topbar */
 .modal-overlay {
     position: fixed !important;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.7); /* Fundo escuro para dar contraste */
-    display: flex;
+    background: rgba(15, 23, 42, 0.8); /* Fundo levemente mais escuro para destaque */
+    backdrop-filter: blur(4px);
+    display: none; /* O JS controlará o display */
     justify-content: center;
     align-items: center;
-    z-index: 99999 !important; /* O segredo está aqui! */
+    z-index: 99999 !important;
+    opacity: 1 !important;        /* Força a opacidade total */
+    visibility: visible !important; /* Força a visibilidade */
 }
 
 .modal-content {
-    background: white;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    background: var(--surface) !important;
+    padding: 24px;
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-md);
+    position: relative;
     z-index: 100000 !important;
+    color: var(--text-main);
+}
+
+.tab-btn {
+    padding: 10px 15px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: 0.3s;
+}
+
+.tab-btn.active {
+    color: var(--primary);
+    font-weight: 700;
+    border-bottom: 3px solid var(--primary);
 }
