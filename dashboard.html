@@ -50,47 +50,102 @@
     </div>
 
     <div id="processModal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 800px; width: 90%; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); max-height: 90vh; overflow-y: auto; position: relative;">
-            
-            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px;">
-                <h2 style="margin: 0; color: #333;">Mapeamento de Processo P&D</h2>
-                <button type="button" onclick="window.closeProcessModal()" class="close-btn" style="background: none; border: none; font-size: 30px; cursor: pointer; color: #999;">&times;</button>
-            </div>
-            
-            <div class="tabs-nav" style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px;">
-                <button type="button" class="tab-btn active" onclick="window.openTab(event, 'tab-planejamento')" style="padding: 10px; cursor: pointer; border: none; background: none; font-weight: bold;">1. Planeamento</button>
-                <button type="button" class="tab-btn" onclick="window.openTab(event, 'tab-execucao')" style="padding: 10px; cursor: pointer; border: none; background: none;">2. Execução</button>
-                <button type="button" class="tab-btn" onclick="window.openTab(event, 'tab-resultados')" style="padding: 10px; cursor: pointer; border: none; background: none;">3. Resultados & Anexos</button>
-            </div>
+        <div id="processModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999999; justify-content: center; align-items: center;">
+    <div class="modal-content" style="max-width: 800px; width: 95%; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); max-height: 90vh; overflow-y: auto; position: relative;">
+        
+        <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 15px;">
+            <h2 style="margin: 0; color: #333;">Mapeamento de Processo P&D</h2>
+            <button type="button" onclick="window.closeProcessModal()" style="background: none; border: none; font-size: 30px; cursor: pointer; color: #999;">&times;</button>
+        </div>
+        
+        <div class="tabs-nav" style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
+            <button type="button" class="tab-btn active" onclick="window.openTab(event, 'tab-planejamento')" style="padding: 10px; cursor: pointer; border: none; background: none; font-weight: bold;">1. Planeamento</button>
+            <button type="button" class="tab-btn" onclick="window.openTab(event, 'tab-execucao')" style="padding: 10px; cursor: pointer; border: none; background: none;">2. Execução</button>
+            <button type="button" class="tab-btn" onclick="window.openTab(event, 'tab-resultados')" style="padding: 10px; cursor: pointer; border: none; background: none;">3. Resultados & Anexos</button>
+        </div>
 
-            <form id="processForm" onsubmit="handleSaveProcess(event)">
-                <div id="tab-planejamento" class="tab-content" style="display: block;">
-                    <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                        <div class="form-group">
-                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Nome do Processo *</label>
-                            <input type="text" id="proc_nome" required class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
-                        </div>
-                        <div class="form-group">
-                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Responsável</label>
-                            <input type="text" id="proc_responsavel" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
-                        </div>
-                        <div class="form-group" style="grid-column: span 2;">
-                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Objetivo da Fase</label>
-                            <input type="text" id="proc_objetivo" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
-                        </div>
-                        <div class="form-group" style="grid-column: span 2;">
-                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Visão Geral</label>
-                            <textarea id="proc_visao" rows="3" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;"></textarea>
-                        </div>
+        <form id="processForm" onsubmit="handleSaveProcess(event)">
+            
+            <div id="tab-planejamento" class="tab-content" style="display: block;">
+                <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label style="font-weight: bold; display: block; margin-bottom: 5px;">Nome do Processo *</label>
+                        <input type="text" id="proc_nome" required class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: bold; display: block; margin-bottom: 5px;">Responsável</label>
+                        <input type="text" id="proc_responsavel" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label style="font-weight: bold; display: block; margin-bottom: 5px;">Objetivo da Fase</label>
+                        <input type="text" id="proc_objetivo" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label style="font-weight: bold; display: block; margin-bottom: 5px;">Visão Geral</label>
+                        <textarea id="proc_visao" rows="3" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: bold; display: block; margin-bottom: 5px;">Equipa Envolvida</label>
+                        <textarea id="proc_equipe" rows="2" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: bold; display: block; margin-bottom: 5px;">Escopo</label>
+                        <textarea id="proc_escopo" rows="2" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;"></textarea>
                     </div>
                 </div>
+            </div>
 
-                <div class="modal-footer" style="margin-top: 25px; display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #eee; padding-top: 15px;">
-                    <button type="button" onclick="window.closeProcessModal()" class="btn btn-secondary" style="padding: 10px 20px; cursor: pointer;">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" style="padding: 10px 20px; cursor: pointer; background: #0056b3; color: white; border: none; border-radius: 4px; font-weight: bold;">Salvar Processo</button>
+            <div id="tab-execucao" class="tab-content" style="display: none;">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="font-weight: bold; display: block; margin-bottom: 5px;">Definição dos Processos</label>
+                    <textarea id="proc_definicao" rows="3" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;"></textarea>
                 </div>
-            </form>
-        </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="font-weight: bold; display: block; margin-bottom: 5px;">Link do Fluxograma (Miro/Lucid)</label>
+                    <input type="url" id="proc_fluxograma" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" placeholder="https://...">
+                </div>
+                <div class="form-group">
+                    <label style="font-weight: bold; display: block; margin-bottom: 5px;">Detalhamento das Etapas</label>
+                    <textarea id="proc_etapas" rows="5" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" placeholder="Descreva o passo a passo..."></textarea>
+                </div>
+            </div>
+
+            <div id="tab-resultados" class="tab-content" style="display: none;">
+                <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label style="font-weight: bold; display: block; margin-bottom: 5px;">Indicadores de Desempenho</label>
+                        <textarea id="proc_indicadores" rows="2" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: bold; display: block; margin-bottom: 5px;">Melhorias Sugeridas</label>
+                        <textarea id="proc_melhorias" rows="3" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: bold; display: block; margin-bottom: 5px;">Lições Aprendidas</label>
+                        <textarea id="proc_licoes" rows="3" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: bold; display: block; margin-bottom: 5px;">Link de Anexos (Drive/Sharepoint)</label>
+                        <input type="url" id="proc_anexos" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" placeholder="https://...">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: bold; display: block; margin-bottom: 5px;">Status do Processo</label>
+                        <select id="proc_status" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                            <option value="rascunho">Rascunho</option>
+                            <option value="em_andamento">Em Andamento</option>
+                            <option value="concluido">Concluído</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer" style="margin-top: 25px; display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #eee; padding-top: 15px;">
+                <button type="button" onclick="window.closeProcessModal()" class="btn btn-secondary" style="padding: 10px 20px; cursor: pointer;">Cancelar</button>
+                <button type="submit" class="btn btn-primary" style="padding: 10px 20px; cursor: pointer; background: #0056b3; color: white; border: none; border-radius: 4px; font-weight: bold;">Salvar Processo</button>
+            </div>
+        </form>
+    </div>
+</div>
     </div>
 
     <div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 1000000;"></div>
