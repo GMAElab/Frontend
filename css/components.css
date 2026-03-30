@@ -127,14 +127,14 @@ textarea:focus {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(15, 23, 42, 0.8); /* Fundo levemente mais escuro para destaque */
+    background: rgba(15, 23, 42, 0.8);
     backdrop-filter: blur(4px);
-    display: none; /* O JS controlará o display */
+    display: none;
     justify-content: center;
     align-items: center;
     z-index: 99999 !important;
-    opacity: 1 !important;        /* Força a opacidade total */
-    visibility: visible !important; /* Força a visibilidade */
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
 .modal-content {

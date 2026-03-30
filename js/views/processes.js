@@ -1,7 +1,3 @@
-// ==========================================
-// GESTÃO DE PROCESSOS P&D (processes.js)
-// ==========================================
-
 /**
  * Abre o modal de processos e limpa o formulário
  */
@@ -10,12 +6,11 @@ window.openProcessModal = function() {
     
     const modal = document.getElementById('processModal');
     if (modal) {
-        // Altera o display e força visibilidade ignorando travas do CSS
         modal.style.setProperty('display', 'flex', 'important');
         modal.style.setProperty('opacity', '1', 'important');
         modal.style.setProperty('visibility', 'visible', 'important');
         
-        document.body.style.overflow = 'hidden'; // Bloqueia scroll do fundo
+        document.body.style.overflow = 'hidden';
     } else {
         console.error("ERRO: Elemento 'processModal' não encontrado no HTML!");
     }
@@ -23,7 +18,6 @@ window.openProcessModal = function() {
     const form = document.getElementById('processForm');
     if (form) form.reset();
 
-    // Resetar para a primeira aba visualmente
     const firstTab = document.querySelector('.tab-btn');
     if (firstTab) firstTab.click();
 };

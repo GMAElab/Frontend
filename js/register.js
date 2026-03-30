@@ -1,8 +1,3 @@
-/**
- * Registration Controller
- * Handles new researcher account requests and client-side validation.
- */
-
 document.addEventListener('DOMContentLoaded', () => {
     const registerForm = document.getElementById('register-form');
     
