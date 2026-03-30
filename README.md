@@ -26,20 +26,20 @@ Sistema de gestão laboratorial desenvolvido para o laboratório **LEQM**, focad
         ├── equipments.js # Gestão de ativos e dossiers técnicos
         └── processes.js  # Mapeamento P&D (Planejamento, Execução, Resultados)
 
-# 🛠️ Funcionalidades Principais
+🛠️ Funcionalidades Principais
 📦 Gestão de Equipamentos
 Cadastro de Ativos: Registro com descrição técnica, links de manuais e vídeos de treinamento.
 
 Como usar determinado equipamento: Visualização rápida de detalhes e player de vídeo embutido (YouTube) sem sair da tela.
 
-# 🧪 Processos de P&D
+🧪 Processos de P&D
 Fluxo de 3 Etapas: Mapeamento estruturado em Planejamento, Execução e Resultados/Anexos.
 
 Gerenciamento de Dados: Controle de todos os campos técnicos, incluindo indicadores de desempenho e lições aprendidas.
 
 Prevenção de Erros: IDs sincronizados entre HTML e JS para garantir salvamento íntegro e sem erros de null.
 
-# 🔧 Como Rodar
+🔧 Como Rodar
 Clone o repositório.
 
 Certifique-se de que o backend (C# / Python) está ativo.
