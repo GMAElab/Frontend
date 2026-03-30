@@ -1,54 +1,48 @@
-# 🔬 Sistema de Gestão de conhecimento e inovação - Frontend
+# 🔬 Sistema de Gestão de Conhecimento e Inovação - Frontend
 
-Sistema de gestão laboratorial desenvolvido para o laboratório **LEQM**, focado no controle de ativos, processos de Pesquisa e Desenvolvimento (P&D) e Procedimentos Operacionais Padrão (POPs).
+> Sistema de gestão laboratorial desenvolvido exclusivamente para o laboratório **LEQM**. Focado no controle eficiente de ativos, processos de Pesquisa e Desenvolvimento (P&D) e Procedimentos Operacionais Padrão (POPs).
+
+---
 
 ## 🚀 Tecnologias e Padrões
 
-* **Arquitetura SPA (Single Page Application)**: Troca de telas dinâmica sem recarregar a página através do `UI.switchView`.
-* **HTML5 & Acessibilidade**: Interface desenvolvida para ser acessível pela maioria dos dispositivos com acesso a internet
-* **JavaScript Moderno (ES6+)**: Uso de `async/await`, `CustomEvents` e escopo global via `window` para integração modular.
-* **CSS Dinâmico**: Estilização baseada em variáveis e estados controlados via JS para modais e abas.
+Este projeto foi construído priorizando leveza, acessibilidade e ausência de dependências complexas (Vanilla JS):
+
+* **Arquitetura SPA (Single Page Application)**: Navegação fluida e dinâmica sem recarregamento de página, gerenciada nativamente via `UI.switchView`.
+* **HTML5 & Acessibilidade**: Semântica estruturada para garantir compatibilidade e usabilidade na maioria dos dispositivos com acesso à internet.
+* **JavaScript Moderno (ES6+)**: Código assíncrono (`async/await`), integração modular via escopo global (`window`) e comunicação orientada a eventos (`CustomEvents`).
+* **CSS Dinâmico**: Estilização baseada em variáveis CSS (Custom Properties) e estados controlados via JS para renderização de modais e transições de abas.
+
+---
+
+## 🛠️ Funcionalidades Principais
+
+### 📦 Gestão de Equipamentos
+* **Cadastro de Ativos**: Registro detalhado com especificações técnicas, links para manuais e anexos.
+* **Treinamento Integrado**: Visualização rápida de instruções de uso (SOPs) com player de vídeo do YouTube embutido, permitindo capacitação sem sair da plataforma.
+
+### 🧪 Processos de P&D
+* **Fluxo de 3 Etapas**: Mapeamento de processos estruturado metodicamente em **Planejamento**, **Execução** e **Resultados/Anexos**.
+* **Gerenciamento de Dados**: Controle rigoroso de parâmetros técnicos, indicadores de desempenho (KPIs) e registro de lições aprendidas.
+* **Integridade de Dados**: Prevenção de perda de dados através do sincronismo estrito de IDs entre a interface (HTML) e a lógica (JS).
+
+---
 
 ## 📂 Estrutura do Projeto
+
+A arquitetura de pastas foi pensada para manter a separação de responsabilidades (SoC):
 
 ```text
 /
 ├── dashboard.html        # Estrutura principal e esqueletos fixos de modais
 ├── css/
-│   ├── global.css        # Resets, fontes e variáveis de cores
-│   ├── layout.css        # Sidebar, Topbar e grids principais
-│   └── components.css    # Estilo de modais, tabelas e botões
+│   ├── global.css        # Resets, tipografia e variáveis de cores
+│   ├── layout.css        # Estruturação de Sidebar, Topbar e grids
+│   └── components.css    # Estilização de modais, tabelas, botões e cards
 └── js/
-    ├── api.js            # Comunicação centralizada com o Backend
-    ├── ui.js             # Roteador de telas e feedback visual (Toasts)
-    ├── dashboard.js      # Inicialização do sistema e eventos globais
+    ├── api.js            # Camada de serviços e comunicação com o Backend
+    ├── ui.js             # Roteador de telas, manipulação de DOM e Toasts
+    ├── dashboard.js      # Inicialização do sistema e listeners globais
     └── views/
-        ├── equipments.js # Gestão de ativos e dossiers técnicos
-        └── processes.js  # Mapeamento P&D (Planejamento, Execução, Resultados)
-
-## 🛠️ Funcionalidades Principais
-    📦 Gestão de Equipamentos
-    Cadastro de Ativos: Registro com descrição técnica, links de manuais e vídeos de treinamento.
-
-    Como usar determinado equipamento: Visualização rápida de detalhes e player de vídeo embutido (YouTube) sem sair da tela.
-
-## 🧪 Processos de P&D
-    Fluxo de 3 Etapas: Mapeamento estruturado em Planejamento, Execução e Resultados/Anexos.
-
-    Gerenciamento de Dados: Controle de todos os campos técnicos, incluindo indicadores de desempenho e lições aprendidas.
-
-    Prevenção de Erros: IDs sincronizados entre HTML e JS para garantir salvamento íntegro e sem erros de null.
-
-## 🔧 Como Rodar
-    Clone o repositório.
-
-    Certifique-se de que o backend (C# / Python) está ativo.
-
-    Abra o dashboard.html utilizando um servidor local (como Live Server do VS Code).
-
-    Para refletir alterações de código, utilize Ctrl + F5 para limpar o cache do navegador.
-
-## 📝 Notas de Desenvolvimento (Sênior)
-    Resolução de Erros de Null: Todos os seletores document.getElementById foram sincronizados para evitar falhas de leitura de propriedades null.
-
-    Visibilidade de Modais: Implementado uso de style.setProperty('display', 'flex', 'important') para vencer conflitos de cache de CSS.
+        ├── equipments.js # Lógica de gestão de ativos e dossiers técnicos
+        └── processes.js  # Lógica do fluxo de P&D (Planejamento a Resultados)
