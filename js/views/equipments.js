@@ -1,17 +1,13 @@
 // ==========================================
-// GESTÃO DE EQUIPAMENTOS (equipments.js)
+// GESTÃO DOS EQUIPAMENTOS
 // ==========================================
 
-// Escuta a troca de tela para renderizar a tabela dinamicamente
 document.addEventListener('viewChanged', (e) => {
     if (e.detail.view === 'equipments') {
         renderEquipments();
     }
 });
 
-/**
- * Injeta o cabeçalho e o container da tabela na área principal
- */
 async function renderEquipments() {
     const main = document.getElementById('dynamic-content');
     if (!main) return;
@@ -20,7 +16,7 @@ async function renderEquipments() {
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
             <div>
                 <h2 style="color:var(--primary); text-transform: uppercase;">Equipamentos</h2>
-                <p class="text-muted text-small">Gestão e inventário de ativos laboratoriais.</p>
+                <p class="text-muted text-small">Gestão dos equipamentos do laboratório.</p>
             </div>
             <button id="btn-novo-equip" class="btn btn-primary">+ Novo Equipamento</button>
         </div>
@@ -29,7 +25,6 @@ async function renderEquipments() {
         </div>
     `;
 
-    // Vincula o evento de clique ao botão criado acima
     const btnNovo = document.getElementById('btn-novo-equip');
     if (btnNovo) {
         btnNovo.addEventListener('click', () => window.openAddEquipmentModal());
@@ -38,9 +33,7 @@ async function renderEquipments() {
     loadEquipmentsTable();
 }
 
-/**
- * Busca dados da API e preenche a tabela
- */
+
 async function loadEquipmentsTable() {
     const container = document.getElementById('eq-container');
     try {
@@ -56,7 +49,7 @@ async function loadEquipmentsTable() {
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Nome do Ativo</th>
+                        <th>Nome do Equipamento</th>
                         <th>Status</th>
                         <th style="text-align:right">Ações</th>
                     </tr>
@@ -87,7 +80,7 @@ window.openAddEquipmentModal = function() {
     const modal = document.getElementById('modal-eq');
     if (modal) {
         modal.style.setProperty('display', 'flex', 'important');
-        document.body.style.overflow = 'hidden'; // Trava o scroll da página
+        document.body.style.overflow = 'hidden';
     }
 };
 
@@ -99,9 +92,6 @@ window.closeEquipModal = function() {
     }
 };
 
-/**
- * Salva o Equipamento na API
- */
 window.handleSaveEquipment = async function(e) {
     e.preventDefault();
     
@@ -137,22 +127,16 @@ window.handleSaveEquipment = async function(e) {
     }
 };
 
-/**
- * Abre o Modal de Detalhes (Dossier)
- */
 window.viewDossier = async function(id) {
     try {
-        // Ajuste na rota: garantindo a barra correta para a API
         const res = await api.fetchProtected(`equipments/${id}`); 
         
         if (!res.ok) throw new Error('Equipamento não encontrado');
         
         const eq = await res.json();
         
-        // Conversão de URL do YouTube para modo Embed (para funcionar no iframe)
         const videoEmbed = eq.video_url ? eq.video_url.replace("watch?v=", "embed/") : null;
 
-        // Preenchimento dos elementos fixos do dashboard.html
         const dossierTitle = document.getElementById('dossier-title');
         const dossierBody = document.getElementById('dossier-body');
         const modalDossier = document.getElementById('modal-dossier');
@@ -185,7 +169,7 @@ window.viewDossier = async function(id) {
         }
 
     } catch (err) {
-        console.error("Erro no Dossier:", err);
+        console.error("Erro no processo:", err);
         if (window.UI) UI.showToast('Erro ao carregar detalhes do equipamento', 'error');
     }
 };

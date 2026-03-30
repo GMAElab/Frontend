@@ -1,13 +1,8 @@
-/**
- * UI Controller
- * Responsável pelas interações globais de interface (Toasts, Loaders, View Switcher)
- * Aplicação das Heurísticas de Nielsen: Visibilidade do Status e Prevenção de Erros
- */
 const UI = {
     /**
      * Exibe uma notificação flutuante (Toast)
-     * @param {string} message - A mensagem a ser exibida
-     * @param {string} type - 'success', 'error' ou 'info'
+     * @param {string} message 
+     * @param {string} type
      */
     showToast: (message, type = 'info') => {
         const container = document.getElementById('toast-container');
@@ -51,10 +46,11 @@ const UI = {
 
     /**
      * Exibe mensagens de erro/sucesso embaixo de formulários
-     * @param {string} elementId - O ID da div de feedback (ex: 'login-feedback')
-     * @param {string} message - A mensagem
-     * @param {boolean} isError - Define se a cor será vermelha (true) ou verde (false)
+     * @param {string} elementId 
+     * @param {string} message 
+     * @param {boolean} isError 
      */
+     
     showFormFeedback: (elementId, message, isError = true) => {
         const feedbackEl = document.getElementById(elementId);
         if (!feedbackEl) return;
@@ -80,11 +76,7 @@ const UI = {
                 if (pageTitle) pageTitle.textContent = btn.textContent;
             }
         });
-        
-        // Coloca o spinner de carregamento temporário
         mainContent.innerHTML = `<div class="text-center mt-md"><span class="spinner" style="position:relative; border-color:#ccc; border-top-color:var(--color-primary)"></span> Carregando...</div>`;
-        
-        // Dispara o evento avisando que a tela mudou
         const event = new CustomEvent('viewChanged', { detail: { view: viewName } });
         document.dispatchEvent(event);
     }
@@ -110,19 +102,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// ==========================================
-// ROTEADOR DE TELAS (Injeta o HTML dinâmico)
-// ==========================================
+
 document.addEventListener('viewChanged', (e) => {
     const view = e.detail.view;
     const mainContent = document.getElementById('dynamic-content');
 
     if (view === 'processes') {
-        // Renderiza a estrutura da tela de Processos
         mainContent.innerHTML = `
             <div class="view-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <div>
-                    <h3 style="margin: 0;">Gestão de Processos P&D</h3>
+                    <h3 style="margin: 0;">Gestão de Processos</h3>
                     <p class="text-muted" style="margin-top: 5px;">Mapeamento, acompanhamento e histórico de processos.</p>
                 </div>
                 <button id="btn-novo-processo" class="btn btn-primary">+ Novo Processo</button>
@@ -148,9 +137,6 @@ document.addEventListener('viewChanged', (e) => {
             </div>
         `;
 
-        // ==========================================
-        // CONFIGURAÇÃO DO BOTÃO NOVO PROCESSO
-        // ==========================================
         const btnNovoProcesso = document.getElementById('btn-novo-processo');
         if (btnNovoProcesso) {
             btnNovoProcesso.addEventListener('click', () => {
@@ -159,7 +145,6 @@ document.addEventListener('viewChanged', (e) => {
                 if (typeof window.openProcessModal === 'function') {
                     window.openProcessModal();
                 } else {
-                    // Fallback de segurança caso o processes.js falhe
                     const modal = document.getElementById('processModal');
                     if (modal) {
                         modal.style.display = 'flex';
@@ -171,7 +156,6 @@ document.addEventListener('viewChanged', (e) => {
             });
         }
 
-        // Carrega a tabela chamando a função do processes.js
         if (typeof loadProcessesTable === 'function') {
             loadProcessesTable();
         }

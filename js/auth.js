@@ -1,8 +1,3 @@
-/**
- * Authentication Controller
- * Handles the login form submission, API communication, and token storage.
- */
-
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('login-form');
     

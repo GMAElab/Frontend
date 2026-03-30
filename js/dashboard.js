@@ -1,8 +1,3 @@
-/**
- * Dashboard Controller
- * Inicializa a sessão, verifica segurança e carrega dados básicos do perfil.
- */
-
 document.addEventListener('DOMContentLoaded', () => {
 
     const token = api.getToken();
