@@ -157,7 +157,7 @@ window.viewDossier = async function(id) {
                         <p style="font-size:0.9rem; line-height:1.5;">${eq.description || 'Nenhuma descrição técnica informada para este ativo.'}</p>
                     </div>
                     ${eq.manual_url ? 
-                        `<a href="${eq.manual_url}" target="_blank" class="btn btn-primary" style="width:100%; text-align:center; text-decoration:none; display:inline-block;">Acessar Manual em PDF</a>` : 
+                        `<a href="${eq.manual_url}" target="_blank" class="btn btn-primary" style="width:100%; text-align:center; text-decoration:none; display:inline-block;">Acessar POP do equipamento</a>` : 
                         '<p class="text-muted text-center" style="font-size:0.85rem;">Manual não disponível no momento.</p>'}
                 </div>
             `;
