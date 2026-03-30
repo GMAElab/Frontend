@@ -108,36 +108,38 @@ function renderProcesses(processes) {
  */
 async function handleSaveProcess(event) {
     event.preventDefault();
-    const processData = {
-        nome_processo: document.getElementById('proc_nome').value,
-        responsavel: document.getElementById('proc_responsavel').value,
-        objetivo_fase: document.getElementById('proc_objetivo').value,
-        visao_geral: document.getElementById('proc_visao').value,
-        equipe: document.getElementById('proc_equipe').value,
-        escopo: document.getElementById('proc_escopo').value,
-        definicao_processos: document.getElementById('proc_definicao').value,
-        resultados_obtidos: document.getElementById('proc_resultados').value,
-        anexos: document.getElementById('proc_anexos').value,
-        status: document.getElementById('proc_status').value
-    };
-
+    
     try {
+        // CORREÇÃO: Os IDs aqui devem ser IDENTICOS aos do dashboard.html
+        const processData = {
+            nome_processo: document.getElementById('proc-nome').value,
+            responsavel: document.getElementById('proc-resp').value,
+            objetivo_fase: document.getElementById('proc-objetivo').value,
+            visao_geral: document.getElementById('proc-visao').value,
+            equipe: document.getElementById('proc-equipe').value,
+            detalhamento_etapas: document.getElementById('proc-etapas').value,
+            indicadores_desempenho: document.getElementById('proc-indicadores').value,
+            anexos_url: document.getElementById('proc-anexos').value,
+            status: document.getElementById('proc-status').value
+        };
+
         const response = await api.fetchProtected('/processes', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(processData)
         });
-        if (!response.ok) throw new Error('Falha ao salvar');
-        
+
+        if (!response.ok) throw new Error('Erro ao salvar');
+
         window.closeProcessModal();
-        loadProcessesTable();
-        if (window.UI) UI.showToast("Processo salvo com sucesso!", "success");
+        if (typeof loadProcessesTable === 'function') loadProcessesTable();
+        UI.showToast("Processo salvo com sucesso!", "success");
+
     } catch (error) {
         console.error("Erro ao salvar:", error);
-        if (window.UI) UI.showToast("Erro ao comunicar com o servidor", "error");
+        UI.showToast("Falha ao salvar processo. Verifique os campos.", "error");
     }
 }
-
 function viewProcessDetails(id) {
     alert(`Visualizar processo ID: ${id} (Em desenvolvimento)`);
 }

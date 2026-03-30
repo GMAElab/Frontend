@@ -152,7 +152,7 @@ window.viewDossier = async function(id) {
                         '<div style="background:#f8fafc; height:200px; display:flex; align-items:center; justify-content:center; border-radius:8px; border:1px dashed #cbd5e1; color:#64748b;">Nenhum vídeo disponível</div>'}
                 </div>
                 <div>
-                    <h4 style="margin-bottom:15px; color:var(--primary);">Recursos Técnicos</h4>
+                    <h4 style="margin-bottom:15px; color:var(--primary);">Descrição</h4>
                     <div style="background:#f1f5f9; padding:15px; border-radius:8px; margin-bottom:20px;">
                         <p style="font-size:0.9rem; line-height:1.5;">${eq.description || 'Nenhuma descrição técnica informada para este ativo.'}</p>
                     </div>
