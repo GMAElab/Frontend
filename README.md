@@ -27,28 +27,28 @@ Sistema de gestão laboratorial desenvolvido para o laboratório **LEQM**, focad
         └── processes.js  # Mapeamento P&D (Planejamento, Execução, Resultados)
 
 ## 🛠️ Funcionalidades Principais
-📦 Gestão de Equipamentos
-Cadastro de Ativos: Registro com descrição técnica, links de manuais e vídeos de treinamento.
+    📦 Gestão de Equipamentos
+    Cadastro de Ativos: Registro com descrição técnica, links de manuais e vídeos de treinamento.
 
-Como usar determinado equipamento: Visualização rápida de detalhes e player de vídeo embutido (YouTube) sem sair da tela.
+    Como usar determinado equipamento: Visualização rápida de detalhes e player de vídeo embutido (YouTube) sem sair da tela.
 
 ## 🧪 Processos de P&D
-Fluxo de 3 Etapas: Mapeamento estruturado em Planejamento, Execução e Resultados/Anexos.
+    Fluxo de 3 Etapas: Mapeamento estruturado em Planejamento, Execução e Resultados/Anexos.
 
-Gerenciamento de Dados: Controle de todos os campos técnicos, incluindo indicadores de desempenho e lições aprendidas.
+    Gerenciamento de Dados: Controle de todos os campos técnicos, incluindo indicadores de desempenho e lições aprendidas.
 
-Prevenção de Erros: IDs sincronizados entre HTML e JS para garantir salvamento íntegro e sem erros de null.
+    Prevenção de Erros: IDs sincronizados entre HTML e JS para garantir salvamento íntegro e sem erros de null.
 
 ## 🔧 Como Rodar
-Clone o repositório.
+    Clone o repositório.
 
-Certifique-se de que o backend (C# / Python) está ativo.
+    Certifique-se de que o backend (C# / Python) está ativo.
 
-Abra o dashboard.html utilizando um servidor local (como Live Server do VS Code).
+    Abra o dashboard.html utilizando um servidor local (como Live Server do VS Code).
 
-Para refletir alterações de código, utilize Ctrl + F5 para limpar o cache do navegador.
+    Para refletir alterações de código, utilize Ctrl + F5 para limpar o cache do navegador.
 
-# 📝 Notas de Desenvolvimento (Sênior)
-Resolução de Erros de Null: Todos os seletores document.getElementById foram sincronizados para evitar falhas de leitura de propriedades null.
+## 📝 Notas de Desenvolvimento (Sênior)
+    Resolução de Erros de Null: Todos os seletores document.getElementById foram sincronizados para evitar falhas de leitura de propriedades null.
 
-Visibilidade de Modais: Implementado uso de style.setProperty('display', 'flex', 'important') para vencer conflitos de cache de CSS.
+    Visibilidade de Modais: Implementado uso de style.setProperty('display', 'flex', 'important') para vencer conflitos de cache de CSS.
