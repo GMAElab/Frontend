@@ -1,21 +1,21 @@
 # 🔬 Sistema de Gestão de Conhecimento e Inovação - Frontend
 
-> Sistema de gestão laboratorial desenvolvido exclusivamente para o laboratório **LEQM**. Focado no controle eficiente de ativos, processos de Pesquisa e Desenvolvimento (P&D) e Procedimentos Operacionais Padrão (POPs).
+> Sistema de gestão laboratorial desenvolvido para o laboratório **LEQM**. Focado no controle de ativos, processos de Pesquisa e Desenvolvimento (P&D) e Procedimentos Operacionais Padrão (POPs).
 
 ---
 
 ## 🚀 Tecnologias e Padrões
 
-Este projeto foi construído priorizando leveza, acessibilidade e ausência de dependências complexas (Vanilla JS):
+Este projeto foi construído priorizando leveza, acessibilidade e ausência de dependências complexas:
 
 * **Arquitetura SPA (Single Page Application)**: Navegação fluida e dinâmica sem recarregamento de página, gerenciada nativamente via `UI.switchView`.
-* **HTML5 & Acessibilidade**: Semântica estruturada para garantir compatibilidade e usabilidade na maioria dos dispositivos com acesso à internet.
-* **JavaScript Moderno (ES6+)**: Código assíncrono (`async/await`), integração modular via escopo global (`window`) e comunicação orientada a eventos (`CustomEvents`).
-* **CSS Dinâmico**: Estilização baseada em variáveis CSS (Custom Properties) e estados controlados via JS para renderização de modais e transições de abas.
+* **HTML5 & Acessibilidade**: Construído de forma estruturada (semântico) para garantir compatibilidade e usabilidade na maioria dos dispositivos com acesso à internet.
+* **JavaScript Moderno**: Código assíncrono (`async/await`), integração modular via escopo global (`window`) e comunicação orientada a eventos (`CustomEvents`).
+* **CSS Dinâmico**: Estilização baseada em variáveis CSS e estados controlados via JS para renderização de modais e transições de abas.
 
 ---
 
-## 🛠️ Funcionalidades Principais
+## 🛠️ Funcionalidades Implementadas até o momento
 
 ### 📦 Gestão de Equipamentos
 * **Cadastro de Ativos**: Registro detalhado com especificações técnicas, links para manuais e anexos.
