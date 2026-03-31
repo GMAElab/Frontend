@@ -161,3 +161,20 @@ document.addEventListener('viewChanged', (e) => {
         }
     }
 });
+
+const btnMenu = document.getElementById('btn-menu-toggle');
+const sidebar = document.querySelector('.sidebar');
+
+if (btnMenu && sidebar) {
+    btnMenu.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+    });
+}
+
+document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+        if (window.innerWidth <= 991) {
+            sidebar.classList.remove('open');
+        }
+    });
+});
