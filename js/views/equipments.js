@@ -21,7 +21,7 @@ async function renderEquipments() {
             <button id="btn-novo-equip" class="btn btn-primary">+ Novo Equipamento</button>
         </div>
         <div id="eq-container" class="card">
-            <div class="text-center p-lg">Carregando inventário...</div>
+            <div class="text-center p-lg">Carregando equipamentos...</div>
         </div>
     `;
 
