@@ -104,13 +104,12 @@ function renderProcesses(processes) {
 }
 
 /**
- * Salva o processo
+ * Salvar o processo
  */
 async function handleSaveProcess(event) {
     event.preventDefault();
     
     try {
-        // CORREÇÃO: Os IDs aqui devem ser IDENTICOS aos do dashboard.html
         const processData = {
             nome_processo: document.getElementById('proc-nome').value,
             responsavel: document.getElementById('proc-resp').value,

@@ -74,7 +74,7 @@ async function loadEquipmentsTable() {
 }
 
 /**
- * Gerenciamento do Modal (Abertura/Fecho)
+ * Gerenciamento do Modal de Cadastro de Equipamento
  */
 window.openAddEquipmentModal = function() {
     const modal = document.getElementById('modal-eq');
@@ -175,7 +175,7 @@ window.viewDossier = async function(id) {
 };
 
 /**
- * Fecha o modal de detalhes
+ * Fecha o modal
  */
 window.closeDossierModal = function() {
     const modal = document.getElementById('modal-dossier');

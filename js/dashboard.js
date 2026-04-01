@@ -36,22 +36,3 @@ function initializeUserProfile() {
         userAvatar.textContent = savedName.charAt(0).toUpperCase();
     }
 }
-
-/**
- * DEIXAR O SISTEMA SEMPRE ATIVO PARA EVITAR HIBERNAÇÃO DO RENDER (SISTEMA)
- */
-function startKeepAlive() {
-    const INTERVAL = 10 * 60 * 1000; 
-
-    setInterval(async () => {
-        try {
-            console.log("🛰️ LEQM Hub: Mantendo conexão com o servidor ativa...");
-            const response = await fetch(`${window.API_URL}/`); 
-            const data = await response.json();
-            console.log("✅ Servidor respondendo:", data.status);
-        } catch (error) {
-            console.error("⚠️ Falha ao contactar servidor:", error);
-        }
-    }, INTERVAL);
-}
-document.addEventListener('DOMContentLoaded', startKeepAlive);
