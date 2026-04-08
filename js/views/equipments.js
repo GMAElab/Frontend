@@ -1,7 +1,3 @@
-// ==========================================
-// GESTÃO DOS EQUIPAMENTOS
-// ==========================================
-
 document.addEventListener('viewChanged', (e) => {
     if (e.detail.view === 'equipments') {
         renderEquipments();
@@ -73,9 +69,8 @@ async function loadEquipmentsTable() {
     }
 }
 
-/**
- * Gerenciamento do Modal de Cadastro de Equipamento
- */
+// Cadastro de Equipamento
+
 window.openAddEquipmentModal = function() {
     const modal = document.getElementById('modal-eq');
     if (modal) {
@@ -94,10 +89,7 @@ window.closeEquipModal = function() {
 
 window.handleSaveEquipment = async function(e) {
     e.preventDefault();
-    
-    // UI Feedback de carregamento
     if (window.UI) UI.setButtonLoading('btn-save-eq', true);
-
     const payload = {
         nome: document.getElementById('eq-name').value,
         description: document.getElementById('eq-desc').value,
@@ -174,9 +166,7 @@ window.viewDossier = async function(id) {
     }
 };
 
-/**
- * Fecha o modal
- */
+// fecha modal
 window.closeDossierModal = function() {
     const modal = document.getElementById('modal-dossier');
     if (modal) {

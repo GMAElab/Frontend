@@ -61,7 +61,7 @@ const UI = {
 
     /**
      * SPA View Switcher: Troca o conteúdo principal sem recarregar a página
-     * @param {string} viewName - O nome da tela (ex: 'equipments', 'processes')
+     * @param {string} viewName - O nome da tela 
      */
     switchView: (viewName) => {
         const mainContent = document.getElementById('dynamic-content');

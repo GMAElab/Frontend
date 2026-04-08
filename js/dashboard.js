@@ -19,9 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log("Sistema LEQM Hub inicializado com sucesso.");
 });
 
-/**
- * Busca dados do usuário ou extrai do token para exibir a saudação
- */
 function initializeUserProfile() {
     const userGreeting = document.getElementById('user-greeting');
     const userAvatar = document.querySelector('.avatar');

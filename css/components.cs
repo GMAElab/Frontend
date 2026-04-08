@@ -5,7 +5,7 @@
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
     background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(4px); /* Efeito de desfoque estilo Apple */
+    backdrop-filter: blur(4px);
     display: flex;
     justify-content: center;
     align-items: center;

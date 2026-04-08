@@ -44,7 +44,7 @@ window.switchAdminTab = function(tab) {
 };
 
 // ==========================================
-// ABA 1: PEDIDOS PENDENTES (APROVAÇÃO COM ROLES)
+// ABA 1: PEDIDOS PENDENTES 
 // ==========================================
 async function loadPendingRequests(container) {
     try {
@@ -123,7 +123,7 @@ window.handleApproval = async (id, isApproved) => {
 };
 
 // ==========================================
-// ABA 2: USUÁRIOS ATIVOS (VISUALIZAÇÃO)
+// ABA 2: USUÁRIOS ATIVOS 
 // ==========================================
 async function loadActiveUsers(container) {
     try {
@@ -174,7 +174,7 @@ async function loadActiveUsers(container) {
     }
 }
 
-// Exclusão de usuário
+// Excluir user
 window.deleteUser = async (id) => {
     if(!confirm("CUIDADO: Tem certeza que deseja excluir este usuário permanentemente?")) return;
     

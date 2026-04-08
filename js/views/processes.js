@@ -1,6 +1,3 @@
-/**
- * Abre o modal de processos e limpa o formulário
- */
 window.openProcessModal = function() {
     console.log("--> Executando abertura visual do modal..."); 
     
@@ -22,9 +19,6 @@ window.openProcessModal = function() {
     if (firstTab) firstTab.click();
 };
 
-/**
- * Fecha o modal de processos
- */
 window.closeProcessModal = function() {
     const modal = document.getElementById('processModal');
     if (modal) {
@@ -33,9 +27,6 @@ window.closeProcessModal = function() {
     }
 };
 
-/**
- * Navegação entre abas
- */
 window.openTab = function(evt, tabName) {
     const tabContents = document.getElementsByClassName("tab-content");
     for (let i = 0; i < tabContents.length; i++) {
@@ -57,9 +48,6 @@ window.openTab = function(evt, tabName) {
     evt.currentTarget.style.fontWeight = "bold";
 };
 
-/**
- * Carrega a tabela de processos
- */
 async function loadProcessesTable() {
     try {
         const response = await api.fetchProtected('/processes');
@@ -72,9 +60,6 @@ async function loadProcessesTable() {
     }
 }
 
-/**
- * Renderiza os dados na tabela
- */
 function renderProcesses(processes) {
     const tbody = document.getElementById('processesTableBody');
     if (!tbody) return;
@@ -103,9 +88,6 @@ function renderProcesses(processes) {
     });
 }
 
-/**
- * Salvar o processo
- */
 async function handleSaveProcess(event) {
     event.preventDefault();
     

@@ -1,8 +1,3 @@
-/**
- * Equipments View Controller
- * Handles displaying the table and adding new equipments via Modal.
- */
-
 document.addEventListener('viewChanged', (event) => {
     if (event.detail.view === 'equipments') {
         renderEquipmentsView();
@@ -12,7 +7,7 @@ document.addEventListener('viewChanged', (event) => {
 async function renderEquipmentsView() {
     const mainContent = document.getElementById('dynamic-content');
     
-    // 1. Renderiza o esqueleto (Header e Tabela)
+    // 1. Renderiza o esqueleto
     mainContent.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg);">
             <div>
@@ -33,24 +28,18 @@ async function renderEquipmentsView() {
         </section>
     `;
 
-    // 2. Busca os dados no Banco
     await fetchAndRenderEquipments();
-
-    // 3. Adiciona o evento para abrir o Modal
     document.getElementById('btn-add-equipment').addEventListener('click', openAddEquipmentModal);
 }
 
 // ==========================================
-// LÓGICA DO MODAL DE CADASTRO
+// LÓGICA DE CADASTRO
 // ==========================================
 
 function openAddEquipmentModal() {
-    // Remove qualquer modal antigo que tenha ficado na tela
     if (document.getElementById('equipment-modal')) {
         document.getElementById('equipment-modal').remove();
     }
-
-    // Cria o HTML do Modal
     const modalHTML = `
         <div id="equipment-modal" class="modal-overlay active" role="dialog" aria-modal="true">
             <div class="modal">
@@ -84,23 +73,18 @@ function openAddEquipmentModal() {
         </div>
     `;
 
-    // Injeta o modal no final do body
     document.body.insertAdjacentHTML('beforeend', modalHTML);
-
-    // Adiciona o evento de submit ao novo formulário
     document.getElementById('form-add-equipment').addEventListener('submit', handleAddEquipment);
 }
 
-// Função global para fechar o modal
 window.closeEquipmentModal = function() {
     const modal = document.getElementById('equipment-modal');
     if (modal) {
-        modal.classList.remove('active'); // Faz a animação de sumir
-        setTimeout(() => modal.remove(), 300); // Remove do HTML após a animação
+        modal.classList.remove('active');
+        setTimeout(() => modal.remove(), 300);
     }
 };
 
-// Dispara quando clica em Salvar
 async function handleAddEquipment(event) {
     event.preventDefault();
 
@@ -111,12 +95,9 @@ async function handleAddEquipment(event) {
     UI.setButtonLoading('btn-save-eq', true);
 
     try {
-        // O FastAPI (main.py) espera esses dados na URL (Query Parameters)
         const params = new URLSearchParams();
         params.append('nome', name);
         if (imageUrl) params.append('imagem_url', imageUrl);
-
-        // Chama a API com o Token
         const response = await api.fetchProtected(`/equipments/?${params.toString()}`, {
             method: 'POST'
         });
@@ -124,7 +105,6 @@ async function handleAddEquipment(event) {
         if (response.ok) {
             UI.showToast('Equipment added successfully!', 'success');
             closeEquipmentModal();
-            // Recarrega a tabela de forma invisível para mostrar o novo item
             await fetchAndRenderEquipments(); 
         } else {
             const data = await response.json();
