@@ -137,8 +137,8 @@ async function renderPTACoordenador() {
 
         <div style="background: #FAF5FF; border: 1px solid #E9D5FF; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
             <div>
-                <h4 style="color: #6B21A8; margin-bottom: 5px;">IA para a criação do texto de cada tópico para o PTA</h4>
-                <p style="color: #9333EA; font-size: 14px; margin: 0;">Gere um relatório consolidado com textos aprovados.</p>
+                <h4 style="color: #5465ff; margin-bottom: 5px;">IA para a criação do texto de cada tópico para o PTA</h4>
+                <p style="color: #9ba3e9; font-size: 14px; margin: 0;">Gere um relatório consolidado com textos aprovados.</p>
             </div>
             <div style="display: flex; gap: 10px; align-items: center;">
                 <input type="number" id="ia-topico-id" class="form-control" placeholder="ID Tópico" style="width: 100px;">
