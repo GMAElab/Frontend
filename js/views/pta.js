@@ -32,7 +32,6 @@ async function carregarDropdownTopicos(selectId) {
 
         let html = '<option value="">Selecione um tópico...</option>';
         topicos.forEach(t => {
-            // Mostra o nome e o ano, escondendo o ID do usuário!
             html += `<option value="${t.id}">${t.titulo} (${t.ano})</option>`;
         });
         select.innerHTML = html;
@@ -87,7 +86,7 @@ function renderPTAPesquisador() {
                 </div>
                 
                 <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 16px; padding: 12px;">
-                    🚀 Enviar para Avaliação
+                     Enviar para Avaliação
                 </button>
             </form>
         </div>
@@ -204,17 +203,13 @@ async function renderPTACoordenador() {
             <span class="spinner"></span> Buscando...
         </div>
     `;
-
-    // Carrega o dropdown da IA
     carregarDropdownTopicos('ia-topico-id');
     carregarPendenciasChefia();
-    
-    // Configura o formulário de criar tópico
     document.getElementById('form-novo-topico').addEventListener('submit', criarTopicoAction);
 }
 
 // ==========================================
-// AÇÃO: CRIAR TÓPICO (CHEFIA)
+// AÇÃO: CRIAR TÓPICO (Coordenador ou ADMIN)
 // ==========================================
 async function criarTopicoAction(e) {
     e.preventDefault();
@@ -238,7 +233,6 @@ async function criarTopicoAction(e) {
         if (res.ok) {
             window.UI.showToast("Tópico criado com sucesso!", "success");
             e.target.reset();
-            // Recarrega o dropdown da IA para incluir o novo tópico
             carregarDropdownTopicos('ia-topico-id');
         } else {
             window.UI.showToast("Erro ao criar tópico.", "error");
