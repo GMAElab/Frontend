@@ -49,14 +49,14 @@ function renderPTAPesquisador() {
     
     main.innerHTML = `
         <div class="view-header">
-            <h2>Meu Plano de Trabalho Anual (PTA)</h2>
-            <p class="text-muted">Registre seu progresso mensal para avaliação da chefia.</p>
+            <h2>Meu Plano de Trabalho (PTA)</h2>
+            <p class="text-muted">Registre seu progresso mensal.</p>
         </div>
         
-        <div class="card mt-md" style="max-width: 800px;">
-            <h3 style="margin-bottom: 20px; color: #1F2937;">Novo Relato de Progresso</h3>
+        <div class="card mt-md" style="max-width: 800px; margin: 0 auto;">
+            <h3 style="margin-bottom: 20px;">Novo Relato de Progresso</h3>
             <form id="form-pta">
-                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                <div class="grid-layout grid-3-col" style="margin-bottom: 20px;">
                     <div>
                         <label>Tópico de Pesquisa</label>
                         <select id="pta-topico" class="form-control" required></select>
@@ -85,9 +85,7 @@ function renderPTAPesquisador() {
                     <textarea id="pta-descricao" class="form-control" rows="6" placeholder="Descreva os experimentos realizados..." required></textarea>
                 </div>
                 
-                <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 16px; padding: 12px;">
-                     Enviar para Avaliação
-                </button>
+                <button type="submit" class="btn btn-primary">🚀 Enviar para Avaliação</button>
             </form>
         </div>
     `;
@@ -95,7 +93,6 @@ function renderPTAPesquisador() {
     carregarDropdownTopicos('pta-topico');
     document.getElementById('form-pta').addEventListener('submit', enviarRelatorio);
 }
-
 async function enviarRelatorio(e) {
     e.preventDefault();
     const payload = {
@@ -137,21 +134,19 @@ async function enviarRelatorio(e) {
 // ==========================================
 // TELA 2: VISÃO DO COORDENADOR E ADMIN
 // ==========================================
-async function renderPTACoordenador() {
+ async function renderPTACoordenador() {
     const main = document.getElementById('dynamic-content');
     const dataAtual = new Date();
 
     main.innerHTML = `
-        <div class="view-header" style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <h2>Gestão de PTA (Painel da Chefia)</h2>
-                <p class="text-muted">Aprove relatórios, crie tópicos e gere sínteses com IA.</p>
-            </div>
+        <div class="view-header">
+            <h2>Gestão de PTA (Chefia)</h2>
+            <p class="text-muted">Aprove relatórios, crie tópicos e gere sínteses com IA.</p>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px; margin-bottom: 20px;">
+        <div class="grid-layout grid-1-2-col" style="margin-bottom: 20px;">
             <div class="card" style="background: #F8FAFC; border: 1px solid #E2E8F0;">
-                <h4 style="margin-bottom: 15px;"><i class="icon-plus"></i> Adicionar Novo Tópico</h4>
+                <h4 style="margin-bottom: 15px;"><i class="icon-plus"></i> Novo Tópico</h4>
                 <form id="form-novo-topico">
                     <div style="margin-bottom: 10px;">
                         <label>Título do Tópico</label>
@@ -161,32 +156,33 @@ async function renderPTACoordenador() {
                         <label>Ano Vigente</label>
                         <input type="number" id="novo-topico-ano" class="form-control" value="${dataAtual.getFullYear()}" required>
                     </div>
-                    <button type="submit" class="btn btn-primary" style="width: 100%;">Cadastrar Tópico</button>
+                    <button type="submit" class="btn btn-primary">Cadastrar Tópico</button>
                 </form>
             </div>
 
             <div class="card" style="background: #FAF5FF; border: 1px solid #E9D5FF;">
-                <h4 style="color: #5b99f5; margin-bottom: 15px;">✨ Motor de Síntese Acadêmica (IA)</h4>
-                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                <h4 style="color: #6B21A8; margin-bottom: 15px;">✨ Motor de Síntese Acadêmica (IA)</h4>
+                
+                <div class="grid-layout grid-ia-col" style="margin-bottom: 15px;">
                     <div>
-                        <label style="color: #5b99f5; font-size: 12px;">Selecione o Tópico</label>
+                        <label style="color: #6B21A8; font-size: 12px;">Selecione o Tópico</label>
                         <select id="ia-topico-id" class="form-control" style="border-color: #D8B4FE;" required></select>
                     </div>
                     <div>
-                        <label style="color: #5b99f5; font-size: 12px;">Mês</label>
+                        <label style="color: #6B21A8; font-size: 12px;">Mês</label>
                         <input type="number" id="filtro-mes" class="form-control" value="${dataAtual.getMonth() + 1}" style="border-color: #D8B4FE;">
                     </div>
                     <div>
-                        <label style="color: #5b99f5; font-size: 12px;">Ano</label>
+                        <label style="color: #6B21A8; font-size: 12px;">Ano</label>
                         <input type="number" id="filtro-ano" class="form-control" value="${dataAtual.getFullYear()}" style="border-color: #D8B4FE;">
                     </div>
                 </div>
-                <button class="btn btn-primary" onclick="gerarSinteseIA(event)" style="background: #1100ff; border-color: #1100ff; width: 100%;">
+                <button class="btn btn-primary" onclick="gerarSinteseIA(event)" style="background: #9333EA; border-color: #9333EA;">
                     Unificar textos aprovados com a IA
                 </button>
                 
-                <div id="resultado-ia" style="display: none; background: #fff; border-left: 4px solid #1100ff; padding: 15px; margin-top: 15px; border-radius: 4px;">
-                    <strong style="color: #5b99f5;">Relatório Consolidado:</strong>
+                <div id="resultado-ia" style="display: none; background: #fff; border-left: 4px solid #9333EA; padding: 15px; margin-top: 15px; border-radius: 4px;">
+                    <strong style="color: #6B21A8;">Relatório Consolidado:</strong>
                     <p id="texto-ia" style="margin-top: 10px; line-height: 1.6;"></p>
                 </div>
             </div>
@@ -194,8 +190,8 @@ async function renderPTACoordenador() {
 
         <hr style="margin: 30px 0; border: 0; border-top: 1px solid var(--border-light);">
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h3>Relatórios Pendentes de Aprovação</h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+            <h3>Relatórios Pendentes</h3>
             <button class="btn btn-secondary" onclick="carregarPendenciasChefia()"><i class="icon-refresh"></i> Atualizar Fila</button>
         </div>
         
@@ -203,11 +199,11 @@ async function renderPTACoordenador() {
             <span class="spinner"></span> Buscando...
         </div>
     `;
+
     carregarDropdownTopicos('ia-topico-id');
     carregarPendenciasChefia();
     document.getElementById('form-novo-topico').addEventListener('submit', criarTopicoAction);
 }
-
 // ==========================================
 // AÇÃO: CRIAR TÓPICO (Coordenador ou ADMIN)
 // ==========================================
