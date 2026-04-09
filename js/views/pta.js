@@ -2,20 +2,42 @@ document.addEventListener('viewChanged', (e) => {
     if (e.detail.view === 'pta') routerPTA();
 });
 
-// ==========================================
-// ROTEADOR INTELIGENTE DE ACESSO
-// ==========================================
 function routerPTA() {
     const userString = localStorage.getItem('user_data');
     if (!userString) return;
-
     const user = JSON.parse(userString);
     
     if (user.role === 'coordenador' || user.role === 'admin') {
         renderPTACoordenador();
-    }
-    else {
+    } else {
         renderPTAPesquisador();
+    }
+}
+
+// ==========================================
+// FUNÇÃO COMPARTILHADA: CARREGAR TÓPICOS
+// ==========================================
+async function carregarDropdownTopicos(selectId) {
+    const select = document.getElementById(selectId);
+    select.innerHTML = '<option value="">Carregando tópicos...</option>';
+    
+    try {
+        const res = await window.api.fetchProtected('/pta/topicos');
+        const topicos = await res.json();
+        
+        if (topicos.length === 0) {
+            select.innerHTML = '<option value="">Nenhum tópico encontrado</option>';
+            return;
+        }
+
+        let html = '<option value="">Selecione um tópico...</option>';
+        topicos.forEach(t => {
+            // Mostra o nome e o ano, escondendo o ID do usuário!
+            html += `<option value="${t.id}">${t.titulo} (${t.ano})</option>`;
+        });
+        select.innerHTML = html;
+    } catch (err) {
+        select.innerHTML = '<option value="">Erro ao carregar tópicos</option>';
     }
 }
 
@@ -28,24 +50,24 @@ function renderPTAPesquisador() {
     
     main.innerHTML = `
         <div class="view-header">
-            <h2>Plano de Trabalho Anual (PTA)</h2>
-            
+            <h2>Meu Plano de Trabalho Anual (PTA)</h2>
+            <p class="text-muted">Registre seu progresso mensal para avaliação da chefia.</p>
         </div>
         
         <div class="card mt-md" style="max-width: 800px;">
-            <h3 style="margin-bottom: 20px; color: #1F2937;">Preencher PTA</h3>
+            <h3 style="margin-bottom: 20px; color: #1F2937;">Novo Relato de Progresso</h3>
             <form id="form-pta">
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
                     <div>
-                        <label>ID do Tópico</label>
-                        <input type="number" id="pta-topico" class="form-control" value="1" required>
+                        <label>Tópico de Pesquisa</label>
+                        <select id="pta-topico" class="form-control" required></select>
                     </div>
                     <div>
-                        <label>Mês Referência</label>
+                        <label>Mês (1-12)</label>
                         <input type="number" id="pta-mes" class="form-control" value="${dataAtual.getMonth() + 1}" required>
                     </div>
                     <div>
-                        <label>Ano Referência</label>
+                        <label>Ano</label>
                         <input type="number" id="pta-ano" class="form-control" value="${dataAtual.getFullYear()}" required>
                     </div>
                 </div>
@@ -60,17 +82,18 @@ function renderPTAPesquisador() {
                 </div>
                 
                 <div style="margin-bottom: 20px;">
-                    <label>Descrição das Atividades (Relatório Científico)</label>
+                    <label>Descrição das Atividades</label>
                     <textarea id="pta-descricao" class="form-control" rows="6" placeholder="Descreva os experimentos realizados..." required></textarea>
                 </div>
                 
                 <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 16px; padding: 12px;">
-                     Enviar PTA
+                    🚀 Enviar para Avaliação
                 </button>
             </form>
         </div>
     `;
 
+    carregarDropdownTopicos('pta-topico');
     document.getElementById('form-pta').addEventListener('submit', enviarRelatorio);
 }
 
@@ -98,12 +121,11 @@ async function enviarRelatorio(e) {
         });
 
         if (res.ok) {
-            window.UI.showToast("Relatório enviado!", "success");
+            window.UI.showToast("Relatório enviado para a chefia!", "success");
             e.target.reset(); 
             document.getElementById('valor-avanco').innerText = '50%';
         } else {
-            const data = await res.json();
-            window.UI.showToast(data.detail || "Erro ao salvar", "error");
+            window.UI.showToast("Erro ao salvar o relato", "error");
         }
     } catch (err) {
         window.UI.showToast("Falha de conexão.", "error");
@@ -123,43 +145,110 @@ async function renderPTACoordenador() {
     main.innerHTML = `
         <div class="view-header" style="display: flex; justify-content: space-between; align-items: center;">
             <div>
-                <h2>PTA</h2>
-                <p class="text-muted">Relatório mensal para as atividades realizadas</p>
-            </div>
-            <div style="display: flex; gap: 10px;">
-                <input type="number" id="filtro-mes" class="form-control" value="${dataAtual.getMonth() + 1}" style="width: 80px;">
-                <input type="number" id="filtro-ano" class="form-control" value="${dataAtual.getFullYear()}" style="width: 100px;">
-                <button class="btn btn-secondary" onclick="carregarPendenciasChefia()">Filtrar</button>
+                <h2>Gestão de PTA (Painel da Chefia)</h2>
+                <p class="text-muted">Aprove relatórios, crie tópicos e gere sínteses com IA.</p>
             </div>
         </div>
 
-        <hr class="mt-md mb-md" style="border: 0; border-top: 1px solid var(--border-light);">
-
-        <div style="background: #FAF5FF; border: 1px solid #E9D5FF; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <h4 style="color: #5465ff; margin-bottom: 5px;">IA para a criação do texto de cada tópico para o PTA</h4>
-                <p style="color: #9ba3e9; font-size: 14px; margin: 0;">Gere um relatório consolidado com textos aprovados.</p>
+        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px; margin-bottom: 20px;">
+            <div class="card" style="background: #F8FAFC; border: 1px solid #E2E8F0;">
+                <h4 style="margin-bottom: 15px;"><i class="icon-plus"></i> Adicionar Novo Tópico</h4>
+                <form id="form-novo-topico">
+                    <div style="margin-bottom: 10px;">
+                        <label>Título do Tópico</label>
+                        <input type="text" id="novo-topico-titulo" class="form-control" placeholder="Ex: Síntese de Grafeno" required>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label>Ano Vigente</label>
+                        <input type="number" id="novo-topico-ano" class="form-control" value="${dataAtual.getFullYear()}" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Cadastrar Tópico</button>
+                </form>
             </div>
-            <div style="display: flex; gap: 10px; align-items: center;">
-                <input type="number" id="ia-topico-id" class="form-control" placeholder="ID Tópico" style="width: 100px;">
-                <button class="btn btn-primary" onclick="gerarSinteseIA()" style="background: #9333EA; border-color: #9333EA;">
-                    ✨ Unificar textos aprovados com a IA
+
+            <div class="card" style="background: #FAF5FF; border: 1px solid #E9D5FF;">
+                <h4 style="color: #6B21A8; margin-bottom: 15px;">✨ Motor de Síntese Acadêmica (IA)</h4>
+                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                    <div>
+                        <label style="color: #6B21A8; font-size: 12px;">Selecione o Tópico</label>
+                        <select id="ia-topico-id" class="form-control" style="border-color: #D8B4FE;" required></select>
+                    </div>
+                    <div>
+                        <label style="color: #6B21A8; font-size: 12px;">Mês</label>
+                        <input type="number" id="filtro-mes" class="form-control" value="${dataAtual.getMonth() + 1}" style="border-color: #D8B4FE;">
+                    </div>
+                    <div>
+                        <label style="color: #6B21A8; font-size: 12px;">Ano</label>
+                        <input type="number" id="filtro-ano" class="form-control" value="${dataAtual.getFullYear()}" style="border-color: #D8B4FE;">
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="gerarSinteseIA(event)" style="background: #9333EA; border-color: #9333EA; width: 100%;">
+                    Unificar textos aprovados com a IA
                 </button>
+                
+                <div id="resultado-ia" style="display: none; background: #fff; border-left: 4px solid #9333EA; padding: 15px; margin-top: 15px; border-radius: 4px;">
+                    <strong style="color: #6B21A8;">Relatório Consolidado:</strong>
+                    <p id="texto-ia" style="margin-top: 10px; line-height: 1.6;"></p>
+                </div>
             </div>
         </div>
 
-        <div id="resultado-ia" style="display: none; background: hsl(0, 0%, 100%); border-left: 4px solid #9333EA; padding: 15px; margin-bottom: 20px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-            <strong style="color: #6B21A8;">PTA unificado:</strong>
-            <p id="texto-ia" style="margin-top: 10px; line-height: 1.6;"></p>
-        </div>
+        <hr style="margin: 30px 0; border: 0; border-top: 1px solid var(--border-light);">
 
-        <h3>PTAs Pendentes</h3>
-        <div id="lista-pendencias" class="mt-sm">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3>Relatórios Pendentes de Aprovação</h3>
+            <button class="btn btn-secondary" onclick="carregarPendenciasChefia()"><i class="icon-refresh"></i> Atualizar Fila</button>
+        </div>
+        
+        <div id="lista-pendencias">
             <span class="spinner"></span> Buscando...
         </div>
     `;
 
+    // Carrega o dropdown da IA
+    carregarDropdownTopicos('ia-topico-id');
     carregarPendenciasChefia();
+    
+    // Configura o formulário de criar tópico
+    document.getElementById('form-novo-topico').addEventListener('submit', criarTopicoAction);
+}
+
+// ==========================================
+// AÇÃO: CRIAR TÓPICO (CHEFIA)
+// ==========================================
+async function criarTopicoAction(e) {
+    e.preventDefault();
+    const payload = {
+        titulo: document.getElementById('novo-topico-titulo').value,
+        ano: parseInt(document.getElementById('novo-topico-ano').value)
+    };
+
+    const btn = e.target.querySelector('button');
+    const textoOriginal = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner"></span> Salvando...';
+    btn.disabled = true;
+
+    try {
+        const res = await window.api.fetchProtected('/pta/topicos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+            window.UI.showToast("Tópico criado com sucesso!", "success");
+            e.target.reset();
+            // Recarrega o dropdown da IA para incluir o novo tópico
+            carregarDropdownTopicos('ia-topico-id');
+        } else {
+            window.UI.showToast("Erro ao criar tópico.", "error");
+        }
+    } catch (err) {
+        window.UI.showToast("Falha de conexão.", "error");
+    } finally {
+        btn.innerHTML = textoOriginal;
+        btn.disabled = false;
+    }
 }
 
 window.carregarPendenciasChefia = async function() {
@@ -174,7 +263,7 @@ window.carregarPendenciasChefia = async function() {
         const relatorios = await res.json();
 
         if (relatorios.length === 0) {
-            container.innerHTML = '<div class="card"><p class="text-muted">Nenhum pta foi encontrado.</p></div>';
+            container.innerHTML = '<div class="card"><p class="text-muted">Nenhum relatório pendente neste período.</p></div>';
             return;
         }
 
@@ -192,8 +281,8 @@ window.carregarPendenciasChefia = async function() {
                         ${rel.descricao_atividades}
                     </div>
                     <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                        <button class="btn btn-outline-danger" onclick="avaliarRelato(${rel.id}, false)">❌</button>
-                        <button class="btn btn-primary" onclick="avaliarRelato(${rel.id}, true)">✅</button>
+                        <button class="btn btn-outline-danger" onclick="avaliarRelato(${rel.id}, false)">❌ Rejeitar</button>
+                        <button class="btn btn-primary" onclick="avaliarRelato(${rel.id}, true)">✅ Incorporar</button>
                     </div>
                 </div>
             `;
@@ -213,7 +302,7 @@ window.avaliarRelato = async function(id, aprovado) {
         });
 
         if (res.ok) {
-            window.UI.showToast(aprovado ? "Texto incorporado!" : "Devolvido.", "success");
+            window.UI.showToast(aprovado ? "Texto incorporado!" : "Devolvido para ajuste.", "success");
             document.getElementById(`card-relatorio-${id}`).style.display = 'none';
         }
     } catch (err) {
@@ -221,20 +310,21 @@ window.avaliarRelato = async function(id, aprovado) {
     }
 }
 
-window.gerarSinteseIA = async function() {
+window.gerarSinteseIA = async function(event) {
+    const topicoId = document.getElementById('ia-topico-id').value;
     const mes = document.getElementById('filtro-mes').value;
     const ano = document.getElementById('filtro-ano').value;
-    const topicoId = document.getElementById('ia-topico-id').value;
 
     if (!topicoId) {
-        window.UI.showToast("Informe o ID do Tópico", "error");
+        window.UI.showToast("Selecione um tópico na lista.", "error");
         return;
     }
 
     const btn = event.currentTarget;
     const originalText = btn.innerHTML;
-    btn.innerHTML = '<span class="spinner"></span>...';
+    btn.innerHTML = '<span class="spinner"></span> Analisando textos...';
     btn.disabled = true;
+    document.getElementById('resultado-ia').style.display = 'none';
 
     try {
         const res = await window.api.fetchProtected(`/pta/chefia/sintetizar?topico_id=${topicoId}&mes=${mes}&ano=${ano}`, {
@@ -245,12 +335,14 @@ window.gerarSinteseIA = async function() {
         if (res.ok) {
             document.getElementById('resultado-ia').style.display = 'block';
             document.getElementById('texto-ia').innerText = data.sintese;
-            window.UI.showToast("Texto gerado!", "success");
+            if(!data.sintese.includes('⚠️')) {
+                 window.UI.showToast("Síntese gerada com sucesso!", "success");
+            }
         } else {
             window.UI.showToast(data.detail, "error");
         }
     } catch (err) {
-        window.UI.showToast("Falha na criação do texto.", "error");
+        window.UI.showToast("Falha na comunicação com a IA.", "error");
     } finally {
         btn.innerHTML = originalText;
         btn.disabled = false;
