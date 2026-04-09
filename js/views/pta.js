@@ -166,27 +166,27 @@ async function renderPTACoordenador() {
             </div>
 
             <div class="card" style="background: #FAF5FF; border: 1px solid #E9D5FF;">
-                <h4 style="color: #6B21A8; margin-bottom: 15px;">✨ Motor de Síntese Acadêmica (IA)</h4>
+                <h4 style="color: #5b99f5; margin-bottom: 15px;">✨ Motor de Síntese Acadêmica (IA)</h4>
                 <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
                     <div>
-                        <label style="color: #6B21A8; font-size: 12px;">Selecione o Tópico</label>
+                        <label style="color: #5b99f5; font-size: 12px;">Selecione o Tópico</label>
                         <select id="ia-topico-id" class="form-control" style="border-color: #D8B4FE;" required></select>
                     </div>
                     <div>
-                        <label style="color: #6B21A8; font-size: 12px;">Mês</label>
+                        <label style="color: #5b99f5; font-size: 12px;">Mês</label>
                         <input type="number" id="filtro-mes" class="form-control" value="${dataAtual.getMonth() + 1}" style="border-color: #D8B4FE;">
                     </div>
                     <div>
-                        <label style="color: #6B21A8; font-size: 12px;">Ano</label>
+                        <label style="color: #5b99f5; font-size: 12px;">Ano</label>
                         <input type="number" id="filtro-ano" class="form-control" value="${dataAtual.getFullYear()}" style="border-color: #D8B4FE;">
                     </div>
                 </div>
-                <button class="btn btn-primary" onclick="gerarSinteseIA(event)" style="background: #9333EA; border-color: #9333EA; width: 100%;">
+                <button class="btn btn-primary" onclick="gerarSinteseIA(event)" style="background: #1100ff; border-color: #1100ff; width: 100%;">
                     Unificar textos aprovados com a IA
                 </button>
                 
-                <div id="resultado-ia" style="display: none; background: #fff; border-left: 4px solid #9333EA; padding: 15px; margin-top: 15px; border-radius: 4px;">
-                    <strong style="color: #6B21A8;">Relatório Consolidado:</strong>
+                <div id="resultado-ia" style="display: none; background: #fff; border-left: 4px solid #1100ff; padding: 15px; margin-top: 15px; border-radius: 4px;">
+                    <strong style="color: #5b99f5;">Relatório Consolidado:</strong>
                     <p id="texto-ia" style="margin-top: 10px; line-height: 1.6;"></p>
                 </div>
             </div>
