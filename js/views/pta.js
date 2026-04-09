@@ -53,10 +53,11 @@ function renderPTAPesquisador() {
             <p class="text-muted">Registre seu progresso mensal.</p>
         </div>
         
-        <div class="card mt-md" style="max-width: 800px; margin: 0 auto;">
+        <div class="card-responsivo">
             <h3 style="margin-bottom: 20px;">Novo Relato de Progresso</h3>
             <form id="form-pta">
-                <div class="grid-layout grid-3-col" style="margin-bottom: 20px;">
+                
+                <div class="grid-fluida" style="margin-bottom: 20px;">
                     <div>
                         <label>Tópico de Pesquisa</label>
                         <select id="pta-topico" class="form-control" required></select>
@@ -74,9 +75,9 @@ function renderPTAPesquisador() {
                 <div style="margin-bottom: 25px; padding: 15px; background: #F3F4F6; border-radius: 6px;">
                     <label style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                         <span>Avanço no Mês:</span>
-                        <span id="valor-avanco" style="font-weight: bold; color: #2563EB; font-size: 18px;">50%</span>
+                        <span id="valor-avanco" style="font-weight: bold; color: #2563EB;">50%</span>
                     </label>
-                    <input type="range" id="pta-avanco" min="0" max="100" value="50" style="width: 100%; cursor: pointer;" 
+                    <input type="range" id="pta-avanco" min="0" max="100" value="50" style="width: 100%;" 
                            oninput="document.getElementById('valor-avanco').innerText = this.value + '%'">
                 </div>
                 
@@ -93,6 +94,7 @@ function renderPTAPesquisador() {
     carregarDropdownTopicos('pta-topico');
     document.getElementById('form-pta').addEventListener('submit', enviarRelatorio);
 }
+
 async function enviarRelatorio(e) {
     e.preventDefault();
     const payload = {
@@ -134,7 +136,7 @@ async function enviarRelatorio(e) {
 // ==========================================
 // TELA 2: VISÃO DO COORDENADOR E ADMIN
 // ==========================================
- async function renderPTACoordenador() {
+async function renderPTACoordenador() {
     const main = document.getElementById('dynamic-content');
     const dataAtual = new Date();
 
@@ -144,9 +146,10 @@ async function enviarRelatorio(e) {
             <p class="text-muted">Aprove relatórios, crie tópicos e gere sínteses com IA.</p>
         </div>
 
-        <div class="grid-layout grid-1-2-col" style="margin-bottom: 20px;">
-            <div class="card" style="background: #F8FAFC; border: 1px solid #E2E8F0;">
-                <h4 style="margin-bottom: 15px;"><i class="icon-plus"></i> Novo Tópico</h4>
+        <div class="grid-fluida" style="margin-bottom: 20px;">
+            
+            <div class="card-responsivo" style="background: #F8FAFC; border: 1px solid #E2E8F0; margin-bottom: 0;">
+                <h4 style="margin-bottom: 15px;">Adicionar Novo Tópico</h4>
                 <form id="form-novo-topico">
                     <div style="margin-bottom: 10px;">
                         <label>Título do Tópico</label>
@@ -160,25 +163,25 @@ async function enviarRelatorio(e) {
                 </form>
             </div>
 
-            <div class="card" style="background: #FAF5FF; border: 1px solid #E9D5FF;">
-                <h4 style="color: #6B21A8; margin-bottom: 15px;">✨ Motor de Síntese Acadêmica (IA)</h4>
+            <div class="card-responsivo" style="background: #FAF5FF; border: 1px solid #E9D5FF; margin-bottom: 0;">
+                <h4 style="color: #6B21A8; margin-bottom: 15px;">✨ Síntese Acadêmica (IA)</h4>
                 
-                <div class="grid-layout grid-ia-col" style="margin-bottom: 15px;">
+                <div class="grid-fluida" style="margin-bottom: 15px; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));">
                     <div>
-                        <label style="color: #6B21A8; font-size: 12px;">Selecione o Tópico</label>
+                        <label style="color: #6B21A8; font-size: 12px;">Tópico</label>
                         <select id="ia-topico-id" class="form-control" style="border-color: #D8B4FE;" required></select>
                     </div>
                     <div>
-                        <label style="color: #6B21A8; font-size: 12px;">Mês</label>
-                        <input type="number" id="filtro-mes" class="form-control" value="${dataAtual.getMonth() + 1}" style="border-color: #D8B4FE;">
-                    </div>
-                    <div>
-                        <label style="color: #6B21A8; font-size: 12px;">Ano</label>
-                        <input type="number" id="filtro-ano" class="form-control" value="${dataAtual.getFullYear()}" style="border-color: #D8B4FE;">
+                        <label style="color: #6B21A8; font-size: 12px;">Mês / Ano</label>
+                        <div style="display: flex; gap: 5px;">
+                            <input type="number" id="filtro-mes" class="form-control" value="${dataAtual.getMonth() + 1}" style="border-color: #D8B4FE;">
+                            <input type="number" id="filtro-ano" class="form-control" value="${dataAtual.getFullYear()}" style="border-color: #D8B4FE;">
+                        </div>
                     </div>
                 </div>
+                
                 <button class="btn btn-primary" onclick="gerarSinteseIA(event)" style="background: #9333EA; border-color: #9333EA;">
-                    Unificar textos aprovados com a IA
+                    Unificar textos aprovados
                 </button>
                 
                 <div id="resultado-ia" style="display: none; background: #fff; border-left: 4px solid #9333EA; padding: 15px; margin-top: 15px; border-radius: 4px;">
@@ -190,7 +193,7 @@ async function enviarRelatorio(e) {
 
         <hr style="margin: 30px 0; border: 0; border-top: 1px solid var(--border-light);">
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; flex-direction: column; gap: 10px;">
             <h3>Relatórios Pendentes</h3>
             <button class="btn btn-secondary" onclick="carregarPendenciasChefia()"><i class="icon-refresh"></i> Atualizar Fila</button>
         </div>
