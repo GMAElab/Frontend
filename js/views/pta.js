@@ -7,15 +7,13 @@ document.addEventListener('viewChanged', (e) => {
 // ==========================================
 function routerPTA() {
     const userString = localStorage.getItem('user_data');
-    if (!userString) return; // Se não tiver logado, trava.
+    if (!userString) return;
 
     const user = JSON.parse(userString);
     
-    // Se for chefe, mostra a tela de aprovação e IA
     if (user.role === 'coordenador' || user.role === 'admin') {
         renderPTACoordenador();
-    } 
-    // Se for pesquisador/tecnico, mostra a tela de preencher o relatório
+    }
     else {
         renderPTAPesquisador();
     }
@@ -30,12 +28,12 @@ function renderPTAPesquisador() {
     
     main.innerHTML = `
         <div class="view-header">
-            <h2>Meu Plano de Trabalho Anual (PTA)</h2>
-            <p class="text-muted">Registre seu progresso mensal para avaliação da chefia.</p>
+            <h2>Plano de Trabalho Anual (PTA)</h2>
+            
         </div>
         
         <div class="card mt-md" style="max-width: 800px;">
-            <h3 style="margin-bottom: 20px; color: #1F2937;">Novo Relato de Progresso</h3>
+            <h3 style="margin-bottom: 20px; color: #1F2937;">Preencher PTA</h3>
             <form id="form-pta">
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
                     <div>
@@ -67,7 +65,7 @@ function renderPTAPesquisador() {
                 </div>
                 
                 <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 16px; padding: 12px;">
-                    🚀 Enviar para Avaliação da Chefia
+                     Enviar PTA
                 </button>
             </form>
         </div>
@@ -100,7 +98,7 @@ async function enviarRelatorio(e) {
         });
 
         if (res.ok) {
-            window.UI.showToast("Relatório enviado para a chefia!", "success");
+            window.UI.showToast("Relatório enviado!", "success");
             e.target.reset(); 
             document.getElementById('valor-avanco').innerText = '50%';
         } else {
@@ -125,8 +123,8 @@ async function renderPTACoordenador() {
     main.innerHTML = `
         <div class="view-header" style="display: flex; justify-content: space-between; align-items: center;">
             <div>
-                <h2>Aprovação de PTA (Painel da Chefia)</h2>
-                <p class="text-muted">Triagem de relatórios e Síntese por Inteligência Artificial</p>
+                <h2>PTA</h2>
+                <p class="text-muted">Relatório mensal para as atividades realizadas</p>
             </div>
             <div style="display: flex; gap: 10px;">
                 <input type="number" id="filtro-mes" class="form-control" value="${dataAtual.getMonth() + 1}" style="width: 80px;">
@@ -139,23 +137,23 @@ async function renderPTACoordenador() {
 
         <div style="background: #FAF5FF; border: 1px solid #E9D5FF; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
             <div>
-                <h4 style="color: #6B21A8; margin-bottom: 5px;">Motor de Síntese Acadêmica</h4>
+                <h4 style="color: #6B21A8; margin-bottom: 5px;">IA para a criação do texto de cada tópico para o PTA</h4>
                 <p style="color: #9333EA; font-size: 14px; margin: 0;">Gere um relatório consolidado com textos aprovados.</p>
             </div>
             <div style="display: flex; gap: 10px; align-items: center;">
                 <input type="number" id="ia-topico-id" class="form-control" placeholder="ID Tópico" style="width: 100px;">
                 <button class="btn btn-primary" onclick="gerarSinteseIA()" style="background: #9333EA; border-color: #9333EA;">
-                    ✨ Sintetizar com IA
+                    ✨ Unificar textos aprovados com a IA
                 </button>
             </div>
         </div>
 
-        <div id="resultado-ia" style="display: none; background: #fff; border-left: 4px solid #9333EA; padding: 15px; margin-bottom: 20px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-            <strong style="color: #6B21A8;">Relatório Consolidado (IA):</strong>
+        <div id="resultado-ia" style="display: none; background: hsl(0, 0%, 100%); border-left: 4px solid #9333EA; padding: 15px; margin-bottom: 20px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+            <strong style="color: #6B21A8;">PTA unificado:</strong>
             <p id="texto-ia" style="margin-top: 10px; line-height: 1.6;"></p>
         </div>
 
-        <h3>Relatórios Pendentes</h3>
+        <h3>PTAs Pendentes</h3>
         <div id="lista-pendencias" class="mt-sm">
             <span class="spinner"></span> Buscando...
         </div>
@@ -176,7 +174,7 @@ window.carregarPendenciasChefia = async function() {
         const relatorios = await res.json();
 
         if (relatorios.length === 0) {
-            container.innerHTML = '<div class="card"><p class="text-muted">Nenhum relatório pendente.</p></div>';
+            container.innerHTML = '<div class="card"><p class="text-muted">Nenhum pta foi encontrado.</p></div>';
             return;
         }
 
@@ -194,8 +192,8 @@ window.carregarPendenciasChefia = async function() {
                         ${rel.descricao_atividades}
                     </div>
                     <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                        <button class="btn btn-outline-danger" onclick="avaliarRelato(${rel.id}, false)">❌ Rejeitar</button>
-                        <button class="btn btn-primary" onclick="avaliarRelato(${rel.id}, true)">✅ Incorporar</button>
+                        <button class="btn btn-outline-danger" onclick="avaliarRelato(${rel.id}, false)">❌</button>
+                        <button class="btn btn-primary" onclick="avaliarRelato(${rel.id}, true)">✅</button>
                     </div>
                 </div>
             `;
@@ -215,7 +213,7 @@ window.avaliarRelato = async function(id, aprovado) {
         });
 
         if (res.ok) {
-            window.UI.showToast(aprovado ? "Texto incorporado!" : "Devolvido para ajuste.", "success");
+            window.UI.showToast(aprovado ? "Texto incorporado!" : "Devolvido.", "success");
             document.getElementById(`card-relatorio-${id}`).style.display = 'none';
         }
     } catch (err) {
@@ -247,12 +245,12 @@ window.gerarSinteseIA = async function() {
         if (res.ok) {
             document.getElementById('resultado-ia').style.display = 'block';
             document.getElementById('texto-ia').innerText = data.sintese;
-            window.UI.showToast("Síntese gerada!", "success");
+            window.UI.showToast("Texto gerado!", "success");
         } else {
             window.UI.showToast(data.detail, "error");
         }
     } catch (err) {
-        window.UI.showToast("Falha na IA.", "error");
+        window.UI.showToast("Falha na criação do texto.", "error");
     } finally {
         btn.innerHTML = originalText;
         btn.disabled = false;
