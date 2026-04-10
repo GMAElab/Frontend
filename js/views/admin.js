@@ -1,6 +1,23 @@
 document.addEventListener('viewChanged', (e) => {
-    if (e.detail.view === 'admin') renderAdminPanel();
+    if (e.detail.view === 'admin') routerAdmin();
 });
+
+function routerAdmin() {
+    const userString = localStorage.getItem('user_data');
+    if (!userString) return;
+    const user = JSON.parse(userString);
+    if (user.role !== 'admin') {
+        document.getElementById('dynamic-content').innerHTML = `
+            <div class="card-responsivo" style="border-left: 4px solid #EF4444;">
+                <h3 style="color: #DC2626;">Acesso Negado</h3>
+                <p>Esta área é restrita para Administradores do Sistema.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    renderAdminPanel();
+}
 
 function renderAdminPanel() {
     const main = document.getElementById('dynamic-content');
@@ -11,12 +28,12 @@ function renderAdminPanel() {
             <p class="text-muted">Gerencie usuários, permissões e pendências do laboratório.</p>
         </div>
         
-        <div class="tabs-nav mt-md" style="display: flex; gap: 10px; border-bottom: 1px solid var(--border-light); padding-bottom: 10px;">
-            <button class="btn btn-secondary active" id="tab-users" onclick="switchAdminTab('users')">Usuários Ativos</button>
-            <button class="btn btn-secondary" id="tab-pending" onclick="switchAdminTab('pending')">Pedidos Pendentes</button>
+        <div style="display: flex; gap: 10px; border-bottom: 1px solid var(--border-light); padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+            <button class="btn btn-primary" id="tab-pending" onclick="switchAdminTab('pending')" style="flex: 1; min-width: 150px;">Pedidos Pendentes</button>
+            <button class="btn btn-secondary" id="tab-users" onclick="switchAdminTab('users')" style="flex: 1; min-width: 150px;">Usuários Ativos</button>
         </div>
         
-        <div id="admin-tab-content" class="card mt-md">
+        <div id="admin-tab-content">
             <span class="spinner"></span> Carregando conteúdo...
         </div>
     `;
@@ -25,13 +42,13 @@ function renderAdminPanel() {
 }
 
 window.switchAdminTab = function(tab) {
-    document.getElementById('tab-users').classList.remove('btn-primary');
-    document.getElementById('tab-users').classList.add('btn-secondary');
-    document.getElementById('tab-pending').classList.remove('btn-primary');
-    document.getElementById('tab-pending').classList.add('btn-secondary');
-    
-    document.getElementById(`tab-${tab}`).classList.remove('btn-secondary');
-    document.getElementById(`tab-${tab}`).classList.add('btn-primary');
+    document.getElementById('tab-users').className = tab === 'users' ? 'btn btn-primary' : 'btn btn-secondary';
+    document.getElementById('tab-users').style.flex = "1";
+    document.getElementById('tab-users').style.minWidth = "150px";
+
+    document.getElementById('tab-pending').className = tab === 'pending' ? 'btn btn-primary' : 'btn btn-secondary';
+    document.getElementById('tab-pending').style.flex = "1";
+    document.getElementById('tab-pending').style.minWidth = "150px";
 
     const container = document.getElementById('admin-tab-content');
     container.innerHTML = '<span class="spinner"></span> Carregando...';
@@ -44,62 +61,59 @@ window.switchAdminTab = function(tab) {
 };
 
 // ==========================================
-// ABA 1: PEDIDOS PENDENTES 
+// ABA 1: PEDIDOS PENDENTES (Layout em Grid de Cards)
 // ==========================================
 async function loadPendingRequests(container) {
     try {
-        const res = await window.api.fetchProtected('/admin/pedidos-pendentes'); 
+        const res = await window.api.fetchProtected('/admin/pedidos-cadastro'); 
         
         if (!res.ok) throw new Error("Erro na API");
         const requests = await res.json();
 
         if (requests.length === 0) {
-            container.innerHTML = '<p class="text-muted" style="padding: 20px;">Nenhum pedido de registro pendente no momento.</p>';
+            container.innerHTML = `
+                <div class="card-responsivo" style="text-align: center; padding: 40px 20px;">
+                    <p class="text-muted">Nenhum pedido de registro pendente no momento.</p>
+                </div>`;
             return;
         }
 
-        let html = `
-            <div class="table-responsive">
-                <table class="data-table" style="width: 100%; text-align: left; border-collapse: collapse;">
-                    <thead>
-                        <tr style="border-bottom: 2px solid var(--border-light);">
-                            <th style="padding: 12px 8px;">ID</th>
-                            <th style="padding: 12px 8px;">Nome</th>
-                            <th style="padding: 12px 8px;">Email</th>
-                            <th style="padding: 12px 8px;">Atribuir Cargo</th>
-                        </tr>
-                    </thead>
-                    <tbody>`;
+        let html = '<div class="grid-fluida" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">';
 
         requests.forEach(req => {
             html += `
-                <tr style="border-bottom: 1px solid var(--border-light);">
-                    <td style="padding: 12px 8px;">${req.id}</td>
-                    <td style="padding: 12px 8px;">${req.nome}</td>
-                    <td style="padding: 12px 8px;">${req.email}</td>
-                    <td style="padding: 12px 8px;">
-                        <select id="role-select-${req.id}" class="form-control" style="width: 140px; display: inline-block; margin-right: 10px; padding: 6px;">
+                <div class="card-responsivo" style="background: #FAF5FF; border: 1px solid #E9D5FF; margin-bottom: 0;">
+                    <h4 style="margin: 0 0 5px 0;">${req.nome}</h4>
+                    <p style="margin: 0 0 15px 0; font-size: 14px; color: var(--text-muted);">📧 ${req.email}</p>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label style="font-size: 12px; font-weight: bold; color: #6B21A8;">Atribuir Cargo:</label>
+                        <select id="role-select-${req.id}" class="form-control" style="margin-top: 5px;">
                             <option value="pesquisador">Pesquisador</option>
                             <option value="tecnico">Técnico</option>
                             <option value="coordenador">Coordenador</option>
                             <option value="admin">Administrador</option>
                         </select>
-                        <button class="btn btn-primary btn-small" onclick="handleApproval(${req.id}, true)">Aprovar</button>
-                        <button class="btn btn-outline-danger btn-small ml-sm" style="margin-left: 8px;" onclick="handleApproval(${req.id}, false)">Rejeitar</button>
-                    </td>
-                </tr>`;
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-outline-danger" style="flex: 1; padding: 10px;" onclick="handleApproval(${req.id}, false)">Rejeitar</button>
+                        <button class="btn btn-primary" style="flex: 1; padding: 10px; background: #9333EA; border-color: #9333EA;" onclick="handleApproval(${req.id}, true)">✅ Aprovar</button>
+                    </div>
+                </div>`;
         });
 
-        container.innerHTML = html + `</tbody></table></div>`;
+        container.innerHTML = html + '</div>';
     } catch (err) {
-        container.innerHTML = '<p class="text-danger" style="padding: 20px;">Erro ao carregar pendências. Verifique se a rota /admin/pedidos-pendentes existe no backend.</p>';
+        container.innerHTML = '<div class="card-responsivo" style="color: red;">Erro ao carregar pendências. Verifique sua conexão.</div>';
     }
 }
 
 window.handleApproval = async (id, isApproved) => {
+    if(!confirm(isApproved ? "Confirma a APROVAÇÃO deste usuário?" : "Tem certeza que deseja REJEITAR e excluir este pedido?")) return;
+
     try {
         const endpoint = isApproved ? `/aprovar-registro/${id}` : `/rejeitar-registro/${id}`;
-        
         let fetchOptions = { method: 'POST' };
 
         if (isApproved) {
@@ -123,7 +137,7 @@ window.handleApproval = async (id, isApproved) => {
 };
 
 // ==========================================
-// ABA 2: USUÁRIOS ATIVOS 
+// ABA 2: USUÁRIOS ATIVOS (Tabela com proteção mobile)
 // ==========================================
 async function loadActiveUsers(container) {
     try {
@@ -133,50 +147,51 @@ async function loadActiveUsers(container) {
         const users = await res.json();
 
         if (users.length === 0) {
-            container.innerHTML = '<p class="text-muted" style="padding: 20px;">Nenhum usuário cadastrado no sistema.</p>';
+            container.innerHTML = '<div class="card-responsivo"><p class="text-muted">Nenhum usuário cadastrado.</p></div>';
             return;
         }
-
-        let html = `
-            <div class="table-responsive">
-                <table class="data-table" style="width: 100%; text-align: left; border-collapse: collapse;">
-                    <thead>
-                        <tr style="border-bottom: 2px solid var(--border-light);">
-                            <th style="padding: 12px 8px;">ID</th>
-                            <th style="padding: 12px 8px;">Nome</th>
-                            <th style="padding: 12px 8px;">Email</th>
-                            <th style="padding: 12px 8px;">Cargo (Role)</th>
-                            <th style="padding: 12px 8px;">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>`;
+       let html = `
+            <div class="card-responsivo">
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; text-align: left; border-collapse: collapse; min-width: 600px;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-light);">
+                                <th style="padding: 15px 10px; color: var(--text-muted);">ID</th>
+                                <th style="padding: 15px 10px; color: var(--text-muted);">Nome</th>
+                                <th style="padding: 15px 10px; color: var(--text-muted);">Email</th>
+                                <th style="padding: 15px 10px; color: var(--text-muted);">Cargo</th>
+                                <th style="padding: 15px 10px; text-align: right; color: var(--text-muted);">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
 
         users.forEach(user => {
+            const roleBadge = user.role === 'admin' 
+                ? '<span style="background: #FEF08A; color: #854D0E; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;">Admin</span>'
+                : `<span style="background: #DBEAFE; color: #1E40AF; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; text-transform: capitalize;">${user.role}</span>`;
+
+            const acoes = user.role !== 'admin'
+                ? `<button class="btn btn-outline-danger" style="padding: 6px 12px; font-size: 12px;" onclick="deleteUser(${user.id}, '${user.nome}')">Excluir</button>`
+                : `<span style="font-size: 12px; color: var(--text-muted); font-style: italic;">Protegido</span>`;
+
             html += `
                 <tr style="border-bottom: 1px solid var(--border-light);">
-                    <td style="padding: 12px 8px;">${user.id}</td>
-                    <td style="padding: 12px 8px;">${user.nome}</td>
-                    <td style="padding: 12px 8px;">${user.email}</td>
-                    <td style="padding: 12px 8px;">
-                        <span style="background: #E5E7EB; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; text-transform: uppercase;">
-                            ${user.role}
-                        </span>
-                    </td>
-                    <td style="padding: 12px 8px;">
-                        <button class="btn btn-text btn-small" style="color: #DC2626;" onclick="deleteUser(${user.id})">Excluir</button>
-                    </td>
+                    <td style="padding: 15px 10px;">#${user.id}</td>
+                    <td style="padding: 15px 10px; font-weight: bold;">${user.nome}</td>
+                    <td style="padding: 15px 10px;">${user.email}</td>
+                    <td style="padding: 15px 10px;">${roleBadge}</td>
+                    <td style="padding: 15px 10px; text-align: right;">${acoes}</td>
                 </tr>`;
         });
 
-        container.innerHTML = html + `</tbody></table></div>`;
+        container.innerHTML = html + `</tbody></table></div></div>`;
     } catch (err) {
-        container.innerHTML = '<p class="text-danger" style="padding: 20px;">Erro ao carregar usuários. Verifique se a rota /admin/usuarios existe no backend.</p>';
+        container.innerHTML = '<div class="card-responsivo" style="color: red;">Erro ao carregar usuários.</div>';
     }
 }
 
-// Excluir user
-window.deleteUser = async (id) => {
-    if(!confirm("CUIDADO: Tem certeza que deseja excluir este usuário permanentemente?")) return;
+window.deleteUser = async (id, nome) => {
+    if(!confirm(`CUIDADO: Tem certeza que deseja excluir o usuário "${nome}" permanentemente? Essa ação bloqueia o acesso na mesma hora.`)) return;
     
     try {
         const res = await window.api.fetchProtected(`/admin/usuarios/${id}`, { method: 'DELETE' });
@@ -184,7 +199,8 @@ window.deleteUser = async (id) => {
             window.UI.showToast("Usuário excluído com sucesso.", "success");
             switchAdminTab('users');
         } else {
-            window.UI.showToast("Erro ao excluir usuário.", "error");
+            const errData = await res.json();
+            window.UI.showToast(errData.detail || "Erro ao excluir usuário.", "error");
         }
     } catch (err) {
         window.UI.showToast("Falha de conexão.", "error");
