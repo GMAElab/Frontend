@@ -65,10 +65,17 @@ window.switchAdminTab = function(tab) {
 // ==========================================
 async function loadPendingRequests(container) {
     try {
+        console.log("Buscando pedidos pendentes...");
         const res = await window.api.fetchProtected('/admin/pedidos-cadastro'); 
         
-        if (!res.ok) throw new Error("Erro na API");
+        if (!res.ok) {
+            const erroApi = await res.json();
+            console.error("Erro retornado pelo servidor:", erroApi);
+            throw new Error("Erro na API");
+        }
+        
         const requests = await res.json();
+        console.log("Pedidos encontrados:", requests);
 
         if (requests.length === 0) {
             container.innerHTML = `
@@ -105,7 +112,8 @@ async function loadPendingRequests(container) {
 
         container.innerHTML = html + '</div>';
     } catch (err) {
-        container.innerHTML = '<div class="card-responsivo" style="color: red;">Erro ao carregar pendências. Verifique sua conexão.</div>';
+        console.error("Falha catastrófica no JS:", err);
+        container.innerHTML = '<div class="card-responsivo" style="color: red;">Erro ao carregar pendências. Abra o console (F12) para ver o motivo.</div>';
     }
 }
 
