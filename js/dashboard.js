@@ -8,6 +8,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     initializeUserProfile();
+    const userString = localStorage.getItem('user_data');
+    if (userString) {
+        const user = JSON.parse(userString);
+        if (user.role === 'admin') {
+            const btnAdmin = document.getElementById('menu-admin');
+            if (btnAdmin) btnAdmin.style.display = 'block';
+        }
+    }
 
     const btnLogout = document.getElementById('btn-logout');
     if (btnLogout) {
@@ -23,6 +31,7 @@ function initializeUserProfile() {
     const userGreeting = document.getElementById('user-greeting');
     const userAvatar = document.querySelector('.avatar');
 
+    // Tenta pegar o nome do usuário salvo
     const savedName = localStorage.getItem('user_name') || 'Pesquisador';
 
     if (userGreeting) {
