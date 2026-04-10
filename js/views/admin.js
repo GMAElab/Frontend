@@ -65,17 +65,17 @@ window.switchAdminTab = function(tab) {
 // ==========================================
 async function loadPendingRequests(container) {
     try {
-        console.log("Buscando pedidos pendentes...");
+        // 1. Limpa o container e coloca o spinner antes de tentar buscar
+        container.innerHTML = '<div style="text-align:center; padding:20px;"><span class="spinner"></span> Buscando pedidos...</div>';
+
         const res = await window.api.fetchProtected('/admin/pedidos-cadastro'); 
         
         if (!res.ok) {
-            const erroApi = await res.json();
-            console.error("Erro retornado pelo servidor:", erroApi);
-            throw new Error("Erro na API");
+            const errorData = await res.json().catch(() => ({ detail: "Erro desconhecido no servidor" }));
+            throw new Error(errorData.detail || "Falha na comunicação com o servidor.");
         }
         
         const requests = await res.json();
-        console.log("Pedidos encontrados:", requests);
 
         if (requests.length === 0) {
             container.innerHTML = `
@@ -90,8 +90,8 @@ async function loadPendingRequests(container) {
         requests.forEach(req => {
             html += `
                 <div class="card-responsivo" style="background: #FAF5FF; border: 1px solid #E9D5FF; margin-bottom: 0;">
-                    <h4 style="margin: 0 0 5px 0;">${req.nome}</h4>
-                    <p style="margin: 0 0 15px 0; font-size: 14px; color: var(--text-muted);">📧 ${req.email}</p>
+                    <h4 style="margin: 0 0 5px 0;">${escapeHTML(req.nome)}</h4>
+                    <p style="margin: 0 0 15px 0; font-size: 14px; color: var(--text-muted);">📧 ${escapeHTML(req.email)}</p>
                     
                     <div style="margin-bottom: 15px;">
                         <label style="font-size: 12px; font-weight: bold; color: #6B21A8;">Atribuir Cargo:</label>
@@ -112,8 +112,12 @@ async function loadPendingRequests(container) {
 
         container.innerHTML = html + '</div>';
     } catch (err) {
-        console.error("Falha catastrófica no JS:", err);
-        container.innerHTML = '<div class="card-responsivo" style="color: red;">Erro ao carregar pendências. Abra o console (F12) para ver o motivo.</div>';
+        console.error("Erro na carga de pedidos:", err);
+        container.innerHTML = `
+            <div class="card-responsivo" style="border-left: 4px solid #EF4444; color: #DC2626;">
+                <strong>⚠️ Erro de Conexão:</strong><br>
+                O servidor não respondeu corretamente. Verifique se você adicionou o parâmetro 'request: Request' no main.py.
+            </div>`;
     }
 }
 
