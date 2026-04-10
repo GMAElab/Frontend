@@ -49,25 +49,25 @@ function renderPTAPesquisador() {
     
     main.innerHTML = `
         <div class="view-header">
-            <h2>Meu Plano de Trabalho (PTA)</h2>
-            <p class="text-muted">Registre seu progresso mensal.</p>
+            <h2>Plano de Trabalho (PTA)</h2>
+            <p class="text-muted">Progresso mensal do laboratório.</p>
         </div>
         
         <div class="card-responsivo">
-            <h3 style="margin-bottom: 20px;">Novo Relato de Progresso</h3>
+            <h3 style="margin-bottom: 20px;">Novo PTA</h3>
             <form id="form-pta">
                 
                 <div class="grid-fluida" style="margin-bottom: 20px;">
                     <div>
-                        <label>Tópico de Pesquisa</label>
+                        <label>Tópico:</label>
                         <select id="pta-topico" class="form-control" required></select>
                     </div>
                     <div>
-                        <label>Mês (1-12)</label>
+                        <label>Mês:</label>
                         <input type="number" id="pta-mes" class="form-control" value="${dataAtual.getMonth() + 1}" required>
                     </div>
                     <div>
-                        <label>Ano</label>
+                        <label>Ano:</label>
                         <input type="number" id="pta-ano" class="form-control" value="${dataAtual.getFullYear()}" required>
                     </div>
                 </div>
@@ -83,10 +83,10 @@ function renderPTAPesquisador() {
                 
                 <div style="margin-bottom: 20px;">
                     <label>Descrição das Atividades</label>
-                    <textarea id="pta-descricao" class="form-control" rows="6" placeholder="Descreva os experimentos realizados..." required></textarea>
+                    <textarea id="pta-descricao" class="form-control" rows="6" placeholder="Escreva as atividades realizadas no mês..." required></textarea>
                 </div>
                 
-                <button type="submit" class="btn btn-primary">🚀 Enviar para Avaliação</button>
+                <button type="submit" class="btn btn-primary">Enviar PTA</button>
             </form>
         </div>
     `;
@@ -119,11 +119,11 @@ async function enviarRelatorio(e) {
         });
 
         if (res.ok) {
-            window.UI.showToast("Relatório enviado para a chefia!", "success");
+            window.UI.showToast("PTA enviado com sucesso!", "success");
             e.target.reset(); 
             document.getElementById('valor-avanco').innerText = '50%';
         } else {
-            window.UI.showToast("Erro ao salvar o relato", "error");
+            window.UI.showToast("Erro ao salvar o PTA", "error");
         }
     } catch (err) {
         window.UI.showToast("Falha de conexão.", "error");
@@ -142,8 +142,8 @@ async function renderPTACoordenador() {
 
     main.innerHTML = `
         <div class="view-header">
-            <h2>Gestão de PTA (Chefia)</h2>
-            <p class="text-muted">Aprove relatórios, crie tópicos e gere sínteses com IA.</p>
+            <h2>Gestão de PTA</h2>
+            <p class="text-muted">Veja relatórios, crie tópicos e gere textos unificados com IA.</p>
         </div>
 
         <div class="grid-fluida" style="margin-bottom: 20px;">
@@ -164,7 +164,7 @@ async function renderPTACoordenador() {
             </div>
 
             <div class="card-responsivo" style="background: #FAF5FF; border: 1px solid #E9D5FF; margin-bottom: 0;">
-                <h4 style="color: #6B21A8; margin-bottom: 15px;">✨ Síntese Acadêmica (IA)</h4>
+                <h4 style="color: #6B21A8; margin-bottom: 15px;">✨ CRIAR TEXTO (IA)</h4>
                 
                 <div class="grid-fluida" style="margin-bottom: 15px; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));">
                     <div>
@@ -194,7 +194,7 @@ async function renderPTACoordenador() {
         <hr style="margin: 30px 0; border: 0; border-top: 1px solid var(--border-light);">
 
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; flex-direction: column; gap: 10px;">
-            <h3>Relatórios Pendentes</h3>
+            <h3>PTA Pendente</h3>
             <button class="btn btn-secondary" onclick="carregarPendenciasChefia()"><i class="icon-refresh"></i> Atualizar Fila</button>
         </div>
         
@@ -274,8 +274,8 @@ window.carregarPendenciasChefia = async function() {
                         ${rel.descricao_atividades}
                     </div>
                     <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                        <button class="btn btn-outline-danger" onclick="avaliarRelato(${rel.id}, false)">❌ Rejeitar</button>
-                        <button class="btn btn-primary" onclick="avaliarRelato(${rel.id}, true)">✅ Incorporar</button>
+                        <button class="btn btn-outline-danger" onclick="avaliarRelato(${rel.id}, false)">❌</button>
+                        <button class="btn btn-primary" onclick="avaliarRelato(${rel.id}, true)">✅</button>
                     </div>
                 </div>
             `;
@@ -295,7 +295,7 @@ window.avaliarRelato = async function(id, aprovado) {
         });
 
         if (res.ok) {
-            window.UI.showToast(aprovado ? "Texto incorporado!" : "Devolvido para ajuste.", "success");
+            window.UI.showToast(aprovado ? "PTA incorporado!" : "Devolvido para ajuste.", "success");
             document.getElementById(`card-relatorio-${id}`).style.display = 'none';
         }
     } catch (err) {
