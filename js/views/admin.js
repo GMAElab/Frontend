@@ -20,7 +20,7 @@ function routerAdmin() {
 }
 
 // ==========================================
-// 1. TELA PRINCIPAL (MENU DE CARDS)
+// 1. TELA PRINCIPAL
 // ==========================================
 function renderAdminPanel() {
     const container = document.getElementById('dynamic-content');
@@ -32,7 +32,7 @@ function renderAdminPanel() {
         <div class="grid-fluida" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
             <div class="card-responsivo" style="cursor: pointer; border-top: 4px solid #3B82F6;" onclick="openAdminModule('users')">
                 <h3 style="display: flex; align-items: center; gap: 10px;">👥 Usuários</h3>
-                <p class="text-muted">Aprovações pendentes, remoção de contas e gestão de cargos.</p>
+                <p class="text-muted">Aprovações pendentes, remoção de contas e edição de dados.</p>
             </div>
             
             <div class="card-responsivo" style="cursor: pointer; border-top: 4px solid #10B981;" onclick="openAdminModule('lab')">
@@ -47,11 +47,12 @@ function renderAdminPanel() {
 
             <div class="card-responsivo" style="cursor: pointer; border-top: 4px solid #F59E0B;" onclick="openAdminModule('audit')">
                 <h3 style="display: flex; align-items: center; gap: 10px;">👁️ Auditoria e Logs</h3>
-                <p class="text-muted">A caixa preta do sistema. Rastreie quem fez o quê, quando e onde.</p>
+                <p class="text-muted">A caixa preta do sistema. Rastreie quem fez o quê e quando.</p>
             </div>
         </div>
         
         <div id="admin-module-area" style="margin-top: 30px;"></div>
+
         <div id="deep-view-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; backdrop-filter: blur(4px);">
             <div class="card-responsivo fade-in" style="background:#fff; width:90%; max-width:600px; max-height:90vh; overflow-y:auto; position:relative;">
                 <button onclick="closeDeepView()" style="position:absolute; top:15px; right:15px; border:none; background:none; font-size:20px; cursor:pointer;">✖</button>
@@ -71,6 +72,7 @@ function renderAdminPanel() {
 // ==========================================
 window.openAdminModule = function(module) {
     const area = document.getElementById('admin-module-area');
+    
     let title = 'Gestão';
     if (module === 'users') title = 'Gestão de Usuários';
     else if (module === 'lab') title = 'Gestão do Laboratório';
@@ -118,13 +120,12 @@ window.openAdminModule = function(module) {
     else if (module === 'audit') {
         sub.innerHTML = `
             <div class="card-responsivo" style="background: #FFFBEB; border-color: #FCD34D;">
-                <p style="margin: 0; color: #B45309;"><strong>Aviso:</strong> Estes registros são imutáveis. Ninguém, nem o Administrador, pode apagar o histórico de auditoria.</p>
+                <p style="margin: 0; color: #B45309;"><strong>Aviso:</strong> Estes registros são imutáveis. Ninguém pode apagar o histórico de auditoria.</p>
             </div>
             <div id="audit-container"></div>`;
         loadAuditLogs(document.getElementById('audit-container'));
     }
 };
-
 
 // ==========================================
 // 3. MÓDULO: USUÁRIOS
@@ -200,12 +201,13 @@ async function loadActiveUsers(container) {
         html += '<tr style="border-bottom: 1px solid #ccc;"><th>ID</th><th>Nome</th><th>Email</th><th>Cargo</th><th>Ação</th></tr>';
         
         users.forEach(u => {
-           const btn = u.role !== 'admin' ? `
-    <div style="display:flex; gap:5px;">
-        <button class="btn btn-secondary" style="padding: 5px;" onclick="openDeepView('usuarios', ${u.id}, 'Usuário')">✏️ Editar</button>
-        <button class="btn btn-outline-danger" style="padding: 5px;" onclick="adminDelete('usuarios', ${u.id}, 'switchUserTab(&apos;active&apos;)')">🗑️</button>
-    </div>
-` : '<span style="color:#9CA3AF;">Protegido</span>';
+            const btn = u.role !== 'admin' ? `
+                <div style="display:flex; gap:5px;">
+                    <button class="btn btn-secondary" style="padding: 5px;" onclick="openDeepView('usuarios', ${u.id}, 'Usuário')">✏️ Editar</button>
+                    <button class="btn btn-outline-danger" style="padding: 5px;" onclick="adminDelete('usuarios', ${u.id}, 'active')">🗑️ Excluir</button>
+                </div>
+            ` : '<span style="color:#9CA3AF; font-style:italic;">Protegido</span>';
+
             html += `<tr style="border-bottom: 1px solid #eee;">
                 <td style="padding: 10px 0;">#${u.id}</td>
                 <td>${window.escapeHTML(u.nome)}</td>
@@ -215,7 +217,7 @@ async function loadActiveUsers(container) {
             </tr>`;
         });
         container.innerHTML = html + '</table></div>';
-    } catch (err) { container.innerHTML = '<p style="color:red;">Erro.</p>'; }
+    } catch (err) { container.innerHTML = '<p style="color:red;">Erro ao carregar usuários.</p>'; }
 }
 
 
@@ -239,19 +241,18 @@ async function loadAdminEquipments(container) {
         let html = '<div class="card-responsivo"><table style="width:100%; text-align:left;"><tr><th>ID</th><th>Equipamento</th><th>Ação</th></tr>';
         eq.forEach(e => {
             html += `<tr><td style="padding: 10px 0;">#${e.id}</td><td>${window.escapeHTML(e.nome)}</td>
-            <td><button class="btn btn-outline-danger" style="padding: 5px;" onclick="adminDelete('equipments', ${e.id}, 'switchLabTab(&apos;eq&apos;)')">Deletar</button></td></tr>`;
+            <td><button class="btn btn-outline-danger" style="padding: 5px;" onclick="adminDelete('equipments', ${e.id}, 'eq')">🗑️ Deletar</button></td></tr>`;
         });
         container.innerHTML = html + '</table></div>';
     } catch (err) {}
 }
 
 async function loadAdminPops(container) {
-    container.innerHTML = '<span class="spinner"></span>';
     container.innerHTML = `
         <div class="card-responsivo">
             Para excluir POPs, digite o código exato: <br><br>
             <input type="text" id="pop-code" class="form-control" placeholder="Ex: POP-001" style="width: 200px; display: inline-block;">
-            <button class="btn btn-outline-danger" onclick="adminDelete('pops', document.getElementById('pop-code').value, 'switchLabTab(&apos;pop&apos;)')">Excluir POP</button>
+            <button class="btn btn-outline-danger" onclick="adminDelete('pops', document.getElementById('pop-code').value, 'pop')">🗑️ Excluir POP</button>
         </div>
     `;
 }
@@ -276,7 +277,7 @@ async function loadAdminProcesses(container) {
         let html = '<div class="card-responsivo"><table style="width:100%; text-align:left;"><tr><th>ID</th><th>Processo</th><th>Ação</th></tr>';
         procs.forEach(p => {
             html += `<tr><td style="padding: 10px 0;">#${p.id}</td><td>${window.escapeHTML(p.nome_processo)}</td>
-            <td><button class="btn btn-outline-danger" style="padding: 5px;" onclick="adminDelete('processes', ${p.id}, 'switchPdTab(&apos;proc&apos;)')">Deletar</button></td></tr>`;
+            <td><button class="btn btn-outline-danger" style="padding: 5px;" onclick="adminDelete('processes', ${p.id}, 'proc')">🗑️ Deletar</button></td></tr>`;
         });
         container.innerHTML = html + '</table></div>';
     } catch (err) {}
@@ -290,35 +291,14 @@ async function loadAdminPtaTopics(container) {
         let html = '<div class="card-responsivo"><table style="width:100%; text-align:left;"><tr><th>Ano</th><th>Tópico</th><th>Ação</th></tr>';
         tops.forEach(t => {
             html += `<tr><td style="padding: 10px 0;">${t.ano}</td><td>${window.escapeHTML(t.titulo)}</td>
-            <td><button class="btn btn-outline-danger" style="padding: 5px;" onclick="adminDelete('pta/topicos', ${t.id}, 'switchPdTab(&apos;pta&apos;)')">Deletar Tópico</button></td></tr>`;
+            <td><button class="btn btn-outline-danger" style="padding: 5px;" onclick="adminDelete('pta/topicos', ${t.id}, 'pta')">🗑️ Deletar Tópico</button></td></tr>`;
         });
         container.innerHTML = html + '</table></div>';
     } catch (err) {}
 }
 
-window.adminDelete = async (route, id, reloadCallbackFunc) => {
-    if(!id) return;
-    const confirmMsg = `⚠️ ALERTA DE SEGURANÇA ⚠️\n\nVocê está prestes a excluir o item [ ${id} ] do banco de dados.\nEssa ação é IRREVERSÍVEL e apagará todos os dados anexados a ele.\n\nTem certeza absoluta?`;
-    
-    if(!confirm(confirmMsg)) return;
-
-    try {
-        const res = await window.api.fetchProtected(`/admin/${route}/${id}`, { method: 'DELETE' });
-        
-        if (res.ok) {
-            window.UI.showToast("Dado obliterado com sucesso.", "success");
-            eval(reloadCallbackFunc); 
-        } else {
-            const errData = await res.json().catch(() => ({}));
-            window.UI.showToast(errData.detail || "Erro de permissão ou não encontrado.", "error");
-        }
-    } catch (err) {
-        window.UI.showToast("Falha crítica de comunicação com a API.", "error");
-    }
-};
-
 // ==========================================
-// 6. MÓDULO: AUDITORIA E LOGS
+// 6. MÓDULO: AUDITORIA 
 // ==========================================
 async function loadAuditLogs(container) {
     container.innerHTML = '<span class="spinner"></span> Carregando histórico...';
@@ -333,14 +313,11 @@ async function loadAuditLogs(container) {
         }
 
         let html = '<div class="card-responsivo" style="overflow-x: auto;"><table style="width:100%; text-align:left; font-size: 14px;">';
-        html += '<tr style="border-bottom: 2px solid #ccc;"><th>Data/Hora</th><th>Admin ID</th><th>Ação</th><th>Módulo</th><th>Registro Afetado</th><th>Detalhes</th></tr>';
+        html += '<tr style="border-bottom: 2px solid #ccc;"><th>Data/Hora</th><th>Admin ID</th><th>Ação</th><th>Módulo</th><th>Registro</th><th>Detalhes</th></tr>';
         
         logs.forEach(log => {
             const dataFormatada = new Date(log.timestamp).toLocaleString('pt-BR');
-            let corAcao = "#6B7280";
-            if (log.action === "DELETE") corAcao = "#DC2626"; 
-            if (log.action === "UPDATE") corAcao = "#2563EB";
-            if (log.action === "CREATE") corAcao = "#10B981"; 
+            let corAcao = log.action === "DELETE" ? "#DC2626" : log.action === "UPDATE" ? "#2563EB" : "#10B981";
 
             html += `<tr style="border-bottom: 1px solid #eee;">
                 <td style="padding: 12px 5px; white-space: nowrap;">${dataFormatada}</td>
@@ -363,9 +340,8 @@ async function loadAuditLogs(container) {
 }
 
 // ==========================================
-// 7. MOTOR DE VISÃO PROFUNDA E EDIÇÃO (DEEP VIEW)
+// 7. VISÃO COMPLETA DOS DADOS 
 // ==========================================
-
 window.closeDeepView = function() {
     document.getElementById('deep-view-modal').style.display = 'none';
 }
@@ -380,17 +356,13 @@ window.openDeepView = async function(route, id, entityName) {
     modal.style.display = 'flex';
 
     try {
-        // Busca os dados profundos
         const res = await window.api.fetchProtected(`/admin/${route}/${id}`);
         if (!res.ok) throw new Error("Erro ao buscar detalhes.");
         const data = await res.json();
 
-        // Monta o formulário dinamicamente baseado no que o banco retornou
         let html = '';
         for (const [key, value] of Object.entries(data)) {
-            // Ignoramos campos sensíveis que não devem ser editados assim (ex: senhas, hashes)
             if (key === 'senha' || key === 'id') continue;
-            
             html += `
                 <div style="display:flex; flex-direction:column; gap:5px;">
                     <label style="font-size:12px; font-weight:bold; color:var(--text-muted); text-transform:uppercase;">${key}</label>
@@ -399,10 +371,7 @@ window.openDeepView = async function(route, id, entityName) {
             `;
         }
         body.innerHTML = html;
-
-        // Configura o botão de salvar
         saveBtn.onclick = () => saveDeepView(route, id, data);
-
     } catch (err) {
         body.innerHTML = '<p style="color:red;">Erro ao conectar com o banco de dados.</p>';
     }
@@ -412,13 +381,10 @@ async function saveDeepView(route, id, originalData) {
     const payload = {};
     const saveBtn = document.getElementById('dv-save-btn');
     
-    // Coleta todos os valores que foram alterados no modal
     for (const key of Object.keys(originalData)) {
         if (key === 'senha' || key === 'id') continue;
         const input = document.getElementById(`dv-input-${key}`);
-        if (input) {
-            payload[key] = input.value;
-        }
+        if (input) payload[key] = input.value;
     }
 
     saveBtn.innerText = "Salvando...";
@@ -434,7 +400,6 @@ async function saveDeepView(route, id, originalData) {
         if (res.ok) {
             window.UI.showToast("Dados atualizados com sucesso!", "success");
             closeDeepView();
-            // Atualiza a tela que estiver aberta
             if (route === 'usuarios') switchUserTab('active');
         } else {
             const errData = await res.json().catch(() => ({}));
@@ -447,3 +412,30 @@ async function saveDeepView(route, id, originalData) {
         saveBtn.disabled = false;
     }
 }
+
+// ==========================================
+// 8. EXCLUSÃO GLOBAL - TOMAR CUIDADO PQ É IRREVERSÍVEL!
+// ==========================================
+window.adminDelete = async (route, id, tabToReload) => {
+    if(!id) return;
+    const confirmMsg = `⚠️ ALERTA DE SEGURANÇA ⚠️\n\nVocê está prestes a excluir o item [ ${id} ] do banco de dados.\nEssa ação é IRREVERSÍVEL e apagará todos os dados anexados a ele.\n\nTem certeza absoluta?`;
+    
+    if(!confirm(confirmMsg)) return;
+
+    try {
+        const res = await window.api.fetchProtected(`/admin/${route}/${id}`, { method: 'DELETE' });
+        
+        if (res.ok) {
+            window.UI.showToast("Dado obliterado com sucesso.", "success");
+            if (route === 'usuarios') switchUserTab(tabToReload);
+            else if (route === 'equipments' || route === 'pops') switchLabTab(tabToReload);
+            else if (route === 'processes' || route === 'pta/topicos') switchPdTab(tabToReload);
+            
+        } else {
+            const errData = await res.json().catch(() => ({}));
+            window.UI.showToast(errData.detail || "Erro de permissão ou não encontrado.", "error");
+        }
+    } catch (err) {
+        window.UI.showToast("Falha crítica de comunicação com a API.", "error");
+    }
+};
