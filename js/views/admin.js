@@ -20,7 +20,7 @@ function routerAdmin() {
 }
 
 // ==========================================
-// 1. TELA PRINCIPAL
+// 1. TELA PRINCIPAL - DXA CLICAR EM ALGUMAS FUNCOES PRINCIPAIS
 // ==========================================
 function renderAdminPanel() {
     const container = document.getElementById('dynamic-content');
@@ -198,21 +198,36 @@ async function loadActiveUsers(container) {
         const users = await res.json();
         
         let html = '<div class="card-responsivo" style="overflow-x: auto;"><table style="width:100%; text-align:left;">';
-        html += '<tr style="border-bottom: 1px solid #ccc;"><th>ID</th><th>Nome</th><th>Email</th><th>Cargo</th><th>Ação</th></tr>';
+        html += '<tr style="border-bottom: 1px solid #ccc;"><th>ID</th><th>Nome</th><th>Email</th><th>Cargo</th><th>Status</th><th>Ação</th></tr>';
         
         users.forEach(u => {
-            const btn = u.role !== 'admin' ? `
-                <div style="display:flex; gap:5px;">
-                    <button class="btn btn-secondary" style="padding: 5px;" onclick="openDeepView('usuarios', ${u.id}, 'Usuário')">✏️ Editar</button>
-                    <button class="btn btn-outline-danger" style="padding: 5px;" onclick="adminDelete('usuarios', ${u.id}, 'active')">🗑️ Excluir</button>
-                </div>
-            ` : '<span style="color:#9CA3AF; font-style:italic;">Protegido</span>';
+            const isActive = (u.is_active === 1 || u.is_active === true);
+            
+            const statusBadge = isActive 
+                ? '<span style="background: #D1FAE5; color: #065F46; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">🟢 ATIVO</span>'
+                : '<span style="background: #FEE2E2; color: #991B1B; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">🔴 INATIVO</span>';
 
-            html += `<tr style="border-bottom: 1px solid #eee;">
+            let btn = '';
+            if (u.role === 'admin') {
+                btn = '<span style="color:#9CA3AF; font-style:italic;">Protegido</span>';
+            } else if (!isActive) {
+                btn = `<button class="btn btn-secondary" style="padding: 5px;" onclick="openDeepView('usuarios', ${u.id}, 'Usuário')">👁️ Ver Detalhes</button>`;
+            } else {
+                btn = `
+                    <div style="display:flex; gap:5px;">
+                        <button class="btn btn-secondary" style="padding: 5px;" onclick="openDeepView('usuarios', ${u.id}, 'Usuário')">✏️ Editar</button>
+                        <button class="btn btn-outline-danger" style="padding: 5px;" onclick="adminDelete('usuarios', ${u.id}, 'active')">🚫 Bloquear</button>
+                    </div>
+                `;
+            }
+             const rowStyle = !isActive ? 'opacity: 0.6; background-color: #F9FAFB;' : '';
+
+            html += `<tr style="border-bottom: 1px solid #eee; ${rowStyle}">
                 <td style="padding: 10px 0;">#${u.id}</td>
                 <td>${window.escapeHTML(u.nome)}</td>
                 <td>${window.escapeHTML(u.email)}</td>
                 <td><span style="text-transform: capitalize;">${window.escapeHTML(u.role)}</span></td>
+                <td>${statusBadge}</td>
                 <td>${btn}</td>
             </tr>`;
         });
@@ -418,8 +433,9 @@ async function saveDeepView(route, id, originalData) {
 // ==========================================
 window.adminDelete = async (route, id, tabToReload) => {
     if(!id) return;
-    const confirmMsg = `⚠️ ALERTA DE SEGURANÇA ⚠️\n\nVocê está prestes a excluir o item [ ${id} ] do banco de dados.\nEssa ação é IRREVERSÍVEL e apagará todos os dados anexados a ele.\n\nTem certeza absoluta?`;
-    
+    const confirmMsg = route === 'usuarios' 
+    ? `⚠️ ATENÇÃO ⚠️\n\nVocê está prestes a BLOQUEAR o Usuário [ ID: ${id} ].\nEle não poderá mais acessar o sistema, mas o histórico de relatórios dele será mantido.\n\nConfirma o bloqueio?`
+    : `⚠️ ALERTA DE SEGURANÇA ⚠️\n\nVocê está prestes a excluir o item [ ${id} ] do banco de dados.\nEssa ação é IRREVERSÍVEL.\n\nTem certeza absoluta?`;
     if(!confirm(confirmMsg)) return;
 
     try {
