@@ -1,60 +1,81 @@
 document.addEventListener('DOMContentLoaded', () => {
     const registerForm = document.getElementById('register-form');
+    const passwordInput = document.getElementById('password');
+    const feedbackDiv = document.getElementById('register-feedback');
     
-    if (!registerForm) return;
+    if (!registerForm || !passwordInput) return;
+
+    passwordInput.setAttribute('placeholder', 'Ex: Exemplo@2026 (Min. 8 caracteres)');
+
+    passwordInput.addEventListener('input', () => {
+        const pass = passwordInput.value;
+        const requirements = [
+            { regex: /.{8,}/, msg: "Mínimo 8 caracteres" },
+            { regex: /[A-Z]/, msg: "Uma letra maiúscula" },
+            { regex: /[0-9]/, msg: "Um número" },
+            { regex: /[!@#$%^&*]/, msg: "Um caractere especial (@,#,!)" }
+        ];
+
+        const met = requirements.filter(r => r.regex.test(pass));
+        const percent = (met.length / requirements.length) * 100;
+
+        // Estilização dinâmica do alerta
+        if (pass.length === 0) {
+            UI.showFormFeedback('register-feedback', '', false);
+        } else if (percent < 50) {
+            UI.showFormFeedback('register-feedback', 'Senha Fraca: Adicione maiúsculas e símbolos.', true);
+        } else if (percent < 100) {
+            UI.showFormFeedback('register-feedback', 'Senha Média: Quase lá...', false);
+            feedbackDiv.style.color = "#d97706";
+        } else {
+            UI.showFormFeedback('register-feedback', 'Senha Forte e Segura!', false);
+            feedbackDiv.style.color = "#16a34a";
+        }
+    });
 
     registerForm.addEventListener('submit', async (event) => {
         event.preventDefault();
 
         const name = document.getElementById('nome').value.trim();
         const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value;
+        const password = passwordInput.value;
         const confirmPassword = document.getElementById('confirm-password').value;
-        UI.showFormFeedback('register-feedback', '', false);
-        if (password !== confirmPassword) {
-            UI.showFormFeedback('register-feedback', 'Passwords do not match.', true);
-            document.getElementById('confirm-password').focus();
-            return;
-        }
 
-        if (password.length < 6) {
-            UI.showFormFeedback('register-feedback', 'Password must be at least 6 characters long.', true);
-            document.getElementById('password').focus();
+        if (password !== confirmPassword) {
+            UI.showFormFeedback('register-feedback', 'As senhas não coincidem.', true);
             return;
         }
 
         UI.setButtonLoading('btn-register', true);
 
         try {
-            const payload = {
-                nome: name,
-                email: email,
-                senha: password
-            };
+            const payload = { nome: name, email: email, senha: password };
 
             const response = await fetch(`${window.API_URL}/solicitar-register`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                UI.showFormFeedback('register-feedback', 'Request sent successfully! Waiting for Admin approval.', false);
+                UI.showFormFeedback('register-feedback', 'Pedido enviado! Aguarde a aprovação do Admin.', false);
+                feedbackDiv.style.color = "#16a34a";
                 registerForm.reset(); 
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 3000);
+                setTimeout(() => { window.location.href = 'index.html'; }, 3000);
             } else {
-                const errorMessage = data.detail || 'Registration failed. Please try again.';
-                UI.showFormFeedback('register-feedback', errorMessage, true);
+                // TRATAMENTO DO ERRO 422: Mostra a mensagem exata do Python/Pydantic
+                let errorMsg = 'Falha no registro.';
+                if (Array.isArray(data.detail)) {
+                    errorMsg = data.detail[0].msg; // Pega a mensagem do validador do schemas.py
+                } else {
+                    errorMsg = data.detail || errorMsg;
+                }
+                UI.showFormFeedback('register-feedback', `❌ ${errorMsg}`, true);
             }
         } catch (error) {
-            console.error('Registration error:', error);
-            UI.showFormFeedback('register-feedback', 'Connection error. Please try again later.', true);
+            UI.showFormFeedback('register-feedback', 'Erro de conexão. Tente novamente.', true);
         } finally {
             UI.setButtonLoading('btn-register', false);
         }
