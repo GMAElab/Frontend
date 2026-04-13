@@ -32,12 +32,12 @@ function renderAdminPanel() {
         <div class="grid-fluida" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
             <div class="card-responsivo" style="cursor: pointer; border-top: 4px solid #3B82F6;" onclick="openAdminModule('users')">
                 <h3 style="display: flex; align-items: center; gap: 10px;">👥 Usuários</h3>
-                <p class="text-muted">Aprovações pendentes, remoção de contas e edição de dados.</p>
+                <p class="text-muted">Aprovações de novos usuários, remoção de contas e edição de dados dos usuários.</p>
             </div>
             
             <div class="card-responsivo" style="cursor: pointer; border-top: 4px solid #10B981;" onclick="openAdminModule('lab')">
-                <h3 style="display: flex; align-items: center; gap: 10px;">🔬 Equipamentos</h3>
-                <p class="text-muted">Exclusão de Equipamentos e revogação de Procedimentos (POPs).</p>
+                <h3 style="display: flex; align-items: center; gap: 10px;">🔬 Equipamentos e POPS</h3>
+                <p class="text-muted">Controle dos Equipamentos e POPs criados.</p>
             </div>
             
             <div class="card-responsivo" style="cursor: pointer; border-top: 4px solid #8B5CF6;" onclick="openAdminModule('pd')">
@@ -313,7 +313,7 @@ async function loadAdminPtaTopics(container) {
 }
 
 // ==========================================
-// 6. MÓDULO: AUDITORIA (CAIXA PRETA)
+// 6. MÓDULO: AUDITORIA E LOGS
 // ==========================================
 async function loadAuditLogs(container) {
     container.innerHTML = '<span class="spinner"></span> Carregando histórico...';

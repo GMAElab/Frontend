@@ -1,4 +1,4 @@
-window.openProcessModal = function() {
+window.openProcessModal = async function() {
     console.log("--> Executando abertura visual do modal..."); 
     
     const modal = document.getElementById('processModal');
@@ -6,7 +6,6 @@ window.openProcessModal = function() {
         modal.style.setProperty('display', 'flex', 'important');
         modal.style.setProperty('opacity', '1', 'important');
         modal.style.setProperty('visibility', 'visible', 'important');
-        
         document.body.style.overflow = 'hidden';
     } else {
         console.error("ERRO: Elemento 'processModal' não encontrado no HTML!");
@@ -17,6 +16,48 @@ window.openProcessModal = function() {
 
     const firstTab = document.querySelector('.tab-btn');
     if (firstTab) firstTab.click();
+    const userString = localStorage.getItem('user_data');
+    let nomeLogado = '';
+    if (userString) {
+        const user = JSON.parse(userString);
+        nomeLogado = user.nome;
+        const inputResp = document.getElementById('proc-resp');
+        if (inputResp) inputResp.value = nomeLogado;
+    }
+    const equipeInput = document.getElementById('proc-equipe');
+    if (equipeInput) {
+        equipeInput.style.display = 'none';
+        let containerEquipe = document.getElementById('smart-equipe-container');
+        if (!containerEquipe) {
+            containerEquipe = document.createElement('div');
+            containerEquipe.id = 'smart-equipe-container';
+            equipeInput.parentNode.insertBefore(containerEquipe, equipeInput.nextSibling);
+        }
+        
+        containerEquipe.innerHTML = '<span class="spinner" style="width: 15px; height: 15px;"></span> <span style="font-size:13px;">Carregando equipe...</span>';
+
+        try {
+            const res = await window.api.fetchProtected('/usuarios/equipe');
+            if (res.ok) {
+                const equipe = await res.json();
+                let htmlEquipe = '<div style="display:flex; flex-wrap:wrap; gap:8px; margin-top: 10px;">';
+                
+                equipe.forEach(membro => {
+                    if (membro.nome !== nomeLogado) {
+                        htmlEquipe += `
+                        <label style="background: #F3F4F6; color: #374151; padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 5px; border: 1px solid #E5E7EB; user-select: none;">
+                            <input type="checkbox" name="smart_equipe_cb" value="${membro.nome}" style="cursor: pointer;">
+                            ${membro.nome}
+                        </label>`;
+                    }
+                });
+                htmlEquipe += '</div>';
+                containerEquipe.innerHTML = htmlEquipe;
+            }
+        } catch (err) {
+            containerEquipe.innerHTML = '<span style="color:red; font-size: 12px;">Falha ao carregar lista de equipe.</span>';
+        }
+    }
 };
 
 window.closeProcessModal = function() {
@@ -50,13 +91,13 @@ window.openTab = function(evt, tabName) {
 
 async function loadProcessesTable() {
     try {
-        const response = await api.fetchProtected('/processes');
+        const response = await window.api.fetchProtected('/processes');
         if (!response.ok) throw new Error('Falha ao carregar processos');
         const processes = await response.json();
         renderProcesses(processes);
     } catch (error) {
         console.error("Erro ao carregar tabela:", error);
-        if (window.UI) UI.showToast("Erro ao carregar lista de processos", "error");
+        if (window.UI) window.UI.showToast("Erro ao carregar lista de processos", "error");
     }
 }
 
@@ -90,21 +131,25 @@ function renderProcesses(processes) {
 
 async function handleSaveProcess(event) {
     event.preventDefault();
-    
+    const checkboxes = document.querySelectorAll('input[name="smart_equipe_cb"]:checked');
+    const equipeSelecionada = Array.from(checkboxes).map(cb => cb.value).join(', ');
+    const inputTextoOriginal = document.getElementById('proc-equipe').value;
+    const equipeFinal = equipeSelecionada ? equipeSelecionada : inputTextoOriginal;
+
     try {
         const processData = {
             nome_processo: document.getElementById('proc-nome').value,
-            responsavel: document.getElementById('proc-resp').value,
+            responsavel: document.getElementById('proc-resp').value, 
             objetivo_fase: document.getElementById('proc-objetivo').value,
             visao_geral: document.getElementById('proc-visao').value,
-            equipe: document.getElementById('proc-equipe').value,
+            equipe: equipeFinal, 
             detalhamento_etapas: document.getElementById('proc-etapas').value,
             indicadores_desempenho: document.getElementById('proc-indicadores').value,
             anexos_url: document.getElementById('proc-anexos').value,
-            status: document.getElementById('proc-status').value
+            status: document.getElementById('proc-status').value || "Em Desenvolvimento" 
         };
 
-        const response = await api.fetchProtected('/processes', {
+        const response = await window.api.fetchProtected('/processes', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(processData)
@@ -114,13 +159,14 @@ async function handleSaveProcess(event) {
 
         window.closeProcessModal();
         if (typeof loadProcessesTable === 'function') loadProcessesTable();
-        UI.showToast("Processo salvo com sucesso!", "success");
+        window.UI.showToast("Processo salvo com sucesso!", "success");
 
     } catch (error) {
         console.error("Erro ao salvar:", error);
-        UI.showToast("Falha ao salvar processo. Verifique os campos.", "error");
+        window.UI.showToast("Falha ao salvar processo. Verifique os campos.", "error");
     }
 }
+
 function viewProcessDetails(id) {
     alert(`Visualizar processo ID: ${id} (Em desenvolvimento)`);
 }
