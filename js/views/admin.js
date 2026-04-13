@@ -26,8 +26,8 @@ function renderAdminPanel() {
     const container = document.getElementById('dynamic-content');
     container.innerHTML = `
     <div class="admin-container fade-in">
-        <h2 style="margin-bottom: 5px;">👑 Central de Comando</h2>
-        <p class="text-muted" style="margin-bottom: 20px;">Gestão absoluta de acessos, dados e integridade do laboratório.</p>
+        <h2 style="margin-bottom: 5px;">Gestão do sistema</h2>
+        <p class="text-muted" style="margin-bottom: 20px;">Gestão do sistema como um todo</p>
         
         <div class="grid-fluida" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
             <div class="card-responsivo" style="cursor: pointer; border-top: 4px solid #3B82F6;" onclick="openAdminModule('users')">
@@ -36,13 +36,13 @@ function renderAdminPanel() {
             </div>
             
             <div class="card-responsivo" style="cursor: pointer; border-top: 4px solid #10B981;" onclick="openAdminModule('lab')">
-                <h3 style="display: flex; align-items: center; gap: 10px;">🔬 Laboratório</h3>
+                <h3 style="display: flex; align-items: center; gap: 10px;">🔬 Equipamentos</h3>
                 <p class="text-muted">Exclusão de Equipamentos e revogação de Procedimentos (POPs).</p>
             </div>
             
             <div class="card-responsivo" style="cursor: pointer; border-top: 4px solid #8B5CF6;" onclick="openAdminModule('pd')">
-                <h3 style="display: flex; align-items: center; gap: 10px;">📋 P&D e PTA</h3>
-                <p class="text-muted">Controle de Tópicos do Plano Anual e Processos cadastrados.</p>
+                <h3 style="display: flex; align-items: center; gap: 10px;">📋 Processos e PTA</h3>
+                <p class="text-muted">Controle do PTA e dos Processos cadastrados.</p>
             </div>
 
             <div class="card-responsivo" style="cursor: pointer; border-top: 4px solid #F59E0B;" onclick="openAdminModule('audit')">
@@ -313,8 +313,55 @@ async function loadAdminPtaTopics(container) {
 }
 
 // ==========================================
-// 6. MÓDULO: AUDITORIA 
+// 6. MÓDULO: AUDITORIA (CAIXA PRETA)
 // ==========================================
+async function loadAuditLogs(container) {
+    container.innerHTML = '<span class="spinner"></span> Carregando histórico...';
+    try {
+        const res = await window.api.fetchProtected('/admin/logs');
+        if (!res.ok) throw new Error("Erro ao buscar logs");
+        const logs = await res.json();
+
+        if (logs.length === 0) {
+            container.innerHTML = '<div class="card-responsivo"><p class="text-muted">Nenhum evento registrado ainda.</p></div>';
+            return;
+        }
+        window.currentAuditLogs = logs;
+        let html = '<div class="card-responsivo" style="overflow-x: auto;"><table style="width:100%; text-align:left; font-size: 14px;">';
+        html += '<tr style="border-bottom: 2px solid #ccc;"><th>Data/Hora</th><th>Admin ID</th><th>Ação</th><th>Módulo</th><th>Registro</th><th>Detalhes</th></tr>';
+        
+        logs.forEach((log, index) => {
+            const dataFormatada = new Date(log.timestamp).toLocaleString('pt-BR');
+            let corAcao = (log.action === "DELETE" || log.action === "SOFT_DELETE") ? "#DC2626" : log.action === "UPDATE" ? "#2563EB" : "#10B981";
+
+            html += `<tr style="border-bottom: 1px solid #eee;">
+                <td style="padding: 12px 5px; white-space: nowrap;">${dataFormatada}</td>
+                <td style="padding: 12px 5px; font-weight: bold;">#${log.admin_id}</td>
+                <td style="padding: 12px 5px;"><span style="color: ${corAcao}; font-weight: bold;">${log.action}</span></td>
+                <td style="padding: 12px 5px; text-transform: uppercase;">${log.table_name}</td>
+                <td style="padding: 12px 5px;">ID: ${log.record_id}</td>
+                <td style="padding: 12px 5px;">
+                    <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 12px;" onclick="viewLogPayload(${index})">
+                        👁️ Ver Carga
+                    </button>
+                </td>
+            </tr>`;
+        });
+        container.innerHTML = html + '</table></div>';
+    } catch (err) {
+        container.innerHTML = '<div class="card-responsivo" style="color:red;">Falha ao carregar a caixa preta.</div>';
+    }
+}
+
+window.viewLogPayload = function(index) {
+    const log = window.currentAuditLogs[index];
+    if (!log) return;
+
+    const oldData = log.old_data ? JSON.stringify(log.old_data, null, 2) : "Nenhum / Não aplicável";
+    const newData = log.new_data ? JSON.stringify(log.new_data, null, 2) : "Nenhum / Não aplicável";
+
+    alert(`📦 DETALHES DO EVENTO\n\n🔹 DADOS ANTIGOS:\n${oldData}\n\n🔸 DADOS NOVOS:\n${newData}`);
+};
 async function loadAuditLogs(container) {
     container.innerHTML = '<span class="spinner"></span> Carregando histórico...';
     try {
