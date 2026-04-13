@@ -489,7 +489,7 @@ window.adminDelete = async (route, id, tabToReload) => {
         const res = await window.api.fetchProtected(`/admin/${route}/${id}`, { method: 'DELETE' });
         
         if (res.ok) {
-            window.UI.showToast("Dado obliterado com sucesso.", "success");
+            window.UI.showToast("Alteração feita com sucesso! Caso queira ver posteriormente, acesse a aba de logs e auditoria.", "success");
             if (route === 'usuarios') switchUserTab(tabToReload);
             else if (route === 'equipments' || route === 'pops') switchLabTab(tabToReload);
             else if (route === 'processes' || route === 'pta/topicos') switchPdTab(tabToReload);
