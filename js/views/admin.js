@@ -44,9 +44,25 @@ function renderAdminPanel() {
                 <h3 style="display: flex; align-items: center; gap: 10px;">📋 P&D e PTA</h3>
                 <p class="text-muted">Controle de Tópicos do Plano Anual e Processos cadastrados.</p>
             </div>
+
+            <div class="card-responsivo" style="cursor: pointer; border-top: 4px solid #F59E0B;" onclick="openAdminModule('audit')">
+                <h3 style="display: flex; align-items: center; gap: 10px;">👁️ Auditoria e Logs</h3>
+                <p class="text-muted">A caixa preta do sistema. Rastreie quem fez o quê, quando e onde.</p>
+            </div>
         </div>
         
         <div id="admin-module-area" style="margin-top: 30px;"></div>
+        <div id="deep-view-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; backdrop-filter: blur(4px);">
+            <div class="card-responsivo fade-in" style="background:#fff; width:90%; max-width:600px; max-height:90vh; overflow-y:auto; position:relative;">
+                <button onclick="closeDeepView()" style="position:absolute; top:15px; right:15px; border:none; background:none; font-size:20px; cursor:pointer;">✖</button>
+                <h3 id="dv-title" style="margin-top:0; border-bottom:2px solid var(--border-light); padding-bottom:10px;">Detalhes do Registro</h3>
+                <div id="dv-body" style="margin-top:20px; display:flex; flex-direction:column; gap:15px;"></div>
+                <div style="margin-top:25px; display:flex; gap:10px; justify-content:flex-end;">
+                    <button class="btn btn-secondary" onclick="closeDeepView()">Cancelar</button>
+                    <button class="btn btn-primary" id="dv-save-btn">💾 Salvar Alterações</button>
+                </div>
+            </div>
+        </div>
     </div>`;
 }
 
@@ -55,11 +71,16 @@ function renderAdminPanel() {
 // ==========================================
 window.openAdminModule = function(module) {
     const area = document.getElementById('admin-module-area');
-    
+    let title = 'Gestão';
+    if (module === 'users') title = 'Gestão de Usuários';
+    else if (module === 'lab') title = 'Gestão do Laboratório';
+    else if (module === 'pd') title = 'Gestão de P&D';
+    else if (module === 'audit') title = 'Logs de Auditoria';
+
     let html = `
         <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border-light);">
             <button class="btn btn-secondary" onclick="renderAdminPanel()" style="padding: 5px 15px;">⬅ Voltar</button>
-            <h3 style="margin: 0;">${module === 'users' ? 'Gestão de Usuários' : module === 'lab' ? 'Gestão do Laboratório' : 'Gestão de P&D'}</h3>
+            <h3 style="margin: 0;">${title}</h3>
         </div>
         <div id="module-subcontent"></div>
     `;
@@ -94,7 +115,16 @@ window.openAdminModule = function(module) {
             <div id="pd-container"></div>`;
         switchPdTab('proc');
     }
+    else if (module === 'audit') {
+        sub.innerHTML = `
+            <div class="card-responsivo" style="background: #FFFBEB; border-color: #FCD34D;">
+                <p style="margin: 0; color: #B45309;"><strong>Aviso:</strong> Estes registros são imutáveis. Ninguém, nem o Administrador, pode apagar o histórico de auditoria.</p>
+            </div>
+            <div id="audit-container"></div>`;
+        loadAuditLogs(document.getElementById('audit-container'));
+    }
 };
+
 
 // ==========================================
 // 3. MÓDULO: USUÁRIOS
@@ -170,8 +200,12 @@ async function loadActiveUsers(container) {
         html += '<tr style="border-bottom: 1px solid #ccc;"><th>ID</th><th>Nome</th><th>Email</th><th>Cargo</th><th>Ação</th></tr>';
         
         users.forEach(u => {
-            // Nota: Usamos &apos; para evitar conflito de aspas no HTML
-            const btn = u.role !== 'admin' ? `<button class="btn btn-outline-danger" style="padding: 5px;" onclick="adminDelete('usuarios', ${u.id}, 'switchUserTab(&apos;active&apos;)')">Excluir</button>` : 'Protegido';
+           const btn = u.role !== 'admin' ? `
+    <div style="display:flex; gap:5px;">
+        <button class="btn btn-secondary" style="padding: 5px;" onclick="openDeepView('usuarios', ${u.id}, 'Usuário')">✏️ Editar</button>
+        <button class="btn btn-outline-danger" style="padding: 5px;" onclick="adminDelete('usuarios', ${u.id}, 'switchUserTab(&apos;active&apos;)')">🗑️</button>
+    </div>
+` : '<span style="color:#9CA3AF;">Protegido</span>';
             html += `<tr style="border-bottom: 1px solid #eee;">
                 <td style="padding: 10px 0;">#${u.id}</td>
                 <td>${window.escapeHTML(u.nome)}</td>
@@ -262,9 +296,6 @@ async function loadAdminPtaTopics(container) {
     } catch (err) {}
 }
 
-// ==========================================
-// MOTOR DE EXCLUSÃO GLOBAL DE ALTA SEGURANÇA
-// ==========================================
 window.adminDelete = async (route, id, reloadCallbackFunc) => {
     if(!id) return;
     const confirmMsg = `⚠️ ALERTA DE SEGURANÇA ⚠️\n\nVocê está prestes a excluir o item [ ${id} ] do banco de dados.\nEssa ação é IRREVERSÍVEL e apagará todos os dados anexados a ele.\n\nTem certeza absoluta?`;
@@ -285,3 +316,134 @@ window.adminDelete = async (route, id, reloadCallbackFunc) => {
         window.UI.showToast("Falha crítica de comunicação com a API.", "error");
     }
 };
+
+// ==========================================
+// 6. MÓDULO: AUDITORIA E LOGS
+// ==========================================
+async function loadAuditLogs(container) {
+    container.innerHTML = '<span class="spinner"></span> Carregando histórico...';
+    try {
+        const res = await window.api.fetchProtected('/admin/logs');
+        if (!res.ok) throw new Error("Erro ao buscar logs");
+        const logs = await res.json();
+
+        if (logs.length === 0) {
+            container.innerHTML = '<div class="card-responsivo"><p class="text-muted">Nenhum evento registrado ainda.</p></div>';
+            return;
+        }
+
+        let html = '<div class="card-responsivo" style="overflow-x: auto;"><table style="width:100%; text-align:left; font-size: 14px;">';
+        html += '<tr style="border-bottom: 2px solid #ccc;"><th>Data/Hora</th><th>Admin ID</th><th>Ação</th><th>Módulo</th><th>Registro Afetado</th><th>Detalhes</th></tr>';
+        
+        logs.forEach(log => {
+            const dataFormatada = new Date(log.timestamp).toLocaleString('pt-BR');
+            let corAcao = "#6B7280";
+            if (log.action === "DELETE") corAcao = "#DC2626"; 
+            if (log.action === "UPDATE") corAcao = "#2563EB";
+            if (log.action === "CREATE") corAcao = "#10B981"; 
+
+            html += `<tr style="border-bottom: 1px solid #eee;">
+                <td style="padding: 12px 5px; white-space: nowrap;">${dataFormatada}</td>
+                <td style="padding: 12px 5px; font-weight: bold;">#${log.admin_id}</td>
+                <td style="padding: 12px 5px;"><span style="color: ${corAcao}; font-weight: bold;">${log.action}</span></td>
+                <td style="padding: 12px 5px; text-transform: uppercase;">${log.table_name}</td>
+                <td style="padding: 12px 5px;">ID: ${log.record_id}</td>
+                <td style="padding: 12px 5px;">
+                    <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 12px;" 
+                            onclick="alert('Dados Antigos:\\n${escapeHTML(JSON.stringify(log.old_data, null, 2))}\\n\\nDados Novos:\\n${escapeHTML(JSON.stringify(log.new_data, null, 2))}')">
+                        Ver Carga
+                    </button>
+                </td>
+            </tr>`;
+        });
+        container.innerHTML = html + '</table></div>';
+    } catch (err) {
+        container.innerHTML = '<div class="card-responsivo" style="color:red;">Falha ao carregar a caixa preta.</div>';
+    }
+}
+
+// ==========================================
+// 7. MOTOR DE VISÃO PROFUNDA E EDIÇÃO (DEEP VIEW)
+// ==========================================
+
+window.closeDeepView = function() {
+    document.getElementById('deep-view-modal').style.display = 'none';
+}
+
+window.openDeepView = async function(route, id, entityName) {
+    const modal = document.getElementById('deep-view-modal');
+    const body = document.getElementById('dv-body');
+    const saveBtn = document.getElementById('dv-save-btn');
+    
+    document.getElementById('dv-title').innerText = `Editando: ${entityName} #${id}`;
+    body.innerHTML = '<span class="spinner"></span> Carregando dados completos...';
+    modal.style.display = 'flex';
+
+    try {
+        // Busca os dados profundos
+        const res = await window.api.fetchProtected(`/admin/${route}/${id}`);
+        if (!res.ok) throw new Error("Erro ao buscar detalhes.");
+        const data = await res.json();
+
+        // Monta o formulário dinamicamente baseado no que o banco retornou
+        let html = '';
+        for (const [key, value] of Object.entries(data)) {
+            // Ignoramos campos sensíveis que não devem ser editados assim (ex: senhas, hashes)
+            if (key === 'senha' || key === 'id') continue;
+            
+            html += `
+                <div style="display:flex; flex-direction:column; gap:5px;">
+                    <label style="font-size:12px; font-weight:bold; color:var(--text-muted); text-transform:uppercase;">${key}</label>
+                    <input type="text" id="dv-input-${key}" class="form-control" value="${value !== null ? window.escapeHTML(String(value)) : ''}">
+                </div>
+            `;
+        }
+        body.innerHTML = html;
+
+        // Configura o botão de salvar
+        saveBtn.onclick = () => saveDeepView(route, id, data);
+
+    } catch (err) {
+        body.innerHTML = '<p style="color:red;">Erro ao conectar com o banco de dados.</p>';
+    }
+}
+
+async function saveDeepView(route, id, originalData) {
+    const payload = {};
+    const saveBtn = document.getElementById('dv-save-btn');
+    
+    // Coleta todos os valores que foram alterados no modal
+    for (const key of Object.keys(originalData)) {
+        if (key === 'senha' || key === 'id') continue;
+        const input = document.getElementById(`dv-input-${key}`);
+        if (input) {
+            payload[key] = input.value;
+        }
+    }
+
+    saveBtn.innerText = "Salvando...";
+    saveBtn.disabled = true;
+
+    try {
+        const res = await window.api.fetchProtected(`/admin/${route}/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+            window.UI.showToast("Dados atualizados com sucesso!", "success");
+            closeDeepView();
+            // Atualiza a tela que estiver aberta
+            if (route === 'usuarios') switchUserTab('active');
+        } else {
+            const errData = await res.json().catch(() => ({}));
+            window.UI.showToast(errData.detail || "Erro ao salvar.", "error");
+        }
+    } catch (err) {
+        window.UI.showToast("Falha na conexão.", "error");
+    } finally {
+        saveBtn.innerText = "💾 Salvar Alterações";
+        saveBtn.disabled = false;
+    }
+}
