@@ -43,7 +43,7 @@ document.addEventListener('viewChanged', (e) => {
 });
 
 // ==========================================
-// 2. ABERTURA E GERAÇÃO DINÂMICA DO FORMULÁRIO
+// 2. ABERTURA E GERAÇÃO DINÂMICA DO FORMULÁRIO (CRIAR POP)
 // ==========================================
 window.openPopModal = function() {
     const modalAntigo = document.getElementById('popModal');
@@ -53,8 +53,6 @@ window.openPopModal = function() {
     const dataHoje = new Date().toLocaleDateString('pt-BR');
 
     const modalHTML = `
-
-    
     <div id="popModal" class="modal-overlay" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999999; justify-content: center; align-items: center;">
         <div class="modal-content" style="max-width: 850px; width: 95%; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); max-height: 90vh; overflow-y: auto;">
             
@@ -90,6 +88,15 @@ window.openPopModal = function() {
                 <hr style="margin: 20px 0; border-color: #eee;">
                 <h4 style="color: #0056b3; margin-bottom:15px;">Estrutura do Documento</h4>
 
+                <div style="background: #ECFDF5; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #10B981;">
+                    <h4 style="margin: 0 0 10px 0; color: #047857; display:flex; align-items:center; gap:8px;">🪄 Assistente de IA</h4>
+                    <label style="font-size:13px; color:#065F46;">Faça upload do Manual do Equipamento (.pdf) para pré-preencher o formulário abaixo automaticamente:</label>
+                    <div style="display: flex; gap: 10px; margin-top: 10px; align-items: center;">
+                        <input type="file" id="manual-ia" class="form-control" accept=".pdf" style="flex: 1; padding: 8px;">
+                        <button type="button" id="btn-ia" onclick="gerarComIA()" class="btn btn-primary" style="background: #10B981; border: none; font-weight: bold; padding: 8px 15px; cursor: pointer;">✨ Extrair Dados</button>
+                    </div>
+                    <span id="ia-loading" style="display:none; color: #047857; font-size: 12px; margin-top: 10px; font-weight: bold;">⏳ A analisar manual e escrever estrutura... (Isso pode levar de 10 a 20 segundos)</span>
+                </div>
                 <div style="display: flex; flex-direction: column; gap: 15px;">
                     <div><label style="font-weight:bold;">1. Objetivo</label><textarea id="pop-obj" class="form-control" rows="2" style="width:100%; padding:8px;" placeholder="Ex: Estabelecer etapas para operação segura..."></textarea></div>
                     <div><label style="font-weight:bold;">2. Aplicação e Escopo</label><textarea id="pop-escopo" class="form-control" rows="2" style="width:100%; padding:8px;"></textarea></div>
@@ -144,7 +151,7 @@ window.openPopModal = function() {
 };
 
 // ==========================================
-// 3. SALVAR O POP (JSON EMBUTIDO)
+// 3. SALVAR O POP NO BANCO DE DADOS
 // ==========================================
 window.handleSavePop = async function(event) {
     event.preventDefault();
@@ -243,7 +250,7 @@ async function loadPopsTable() {
 }
 
 // ==========================================
-// 5. VISÃO PROFUNDA E GERAÇÃO DE PDF
+// 5. VISÃO DO DOCUMENTO E GERAÇÃO DE PDF
 // ==========================================
 window.viewPopDetails = function(codigo) {
     const pop = window.popsDataList.find(p => p.codigo === codigo);
@@ -274,15 +281,6 @@ window.viewPopDetails = function(codigo) {
                 <button onclick="document.getElementById('pop-document-container').remove()" class="btn btn-secondary" style="padding: 8px 15px; cursor: pointer;">⬅ Fechar</button>
                 <button onclick="gerarPDF('${pop.codigo}')" class="btn btn-primary" style="padding: 8px 15px; background:#DC2626; color:white; border:none; font-weight:bold; cursor:pointer;">🖨️ BAIXAR .PDF OFICIAL</button>
             </div>
-        <div style="background: #ECFDF5; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #10B981;">
-        <h4 style="margin: 0 0 10px 0; color: #047857;">Use o manual para automatizar o preenchimento do POP</h4>
-        <label>Faça upload do Manual do Equipamento (.pdf) para pré-preencher o formulário:</label>
-                <div style="display: flex; gap: 10px; margin-top: 10px;">
-        <input type="file" id="manual-ia" class="form-control" accept=".pdf">
-        <button type="button" onclick="gerarComIA()" class="btn btn-primary" style="background: #10B981; border: none;">Gerar</button>
-                </div>
-                <span id="ia-loading" style="display:none; color: #047857; font-size: 12px; margin-top: 5px;">Analisando...</span>
-        </div>
 
             <div id="conteudo-para-pdf" style="padding: 10px;">
                 <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">
@@ -362,8 +360,9 @@ window.gerarPDF = function(codigo) {
     html2pdf().set(opcoes).from(elemento).save();
     window.UI.showToast("Iniciando download do PDF...", "success");
 };
+
 // ==========================================
-// 6. Pré Preencher POP com IA
+// 6. MOTOR DA INTELIGÊNCIA ARTIFICIAL (GERAR)
 // ==========================================
 window.gerarComIA = async function() {
     const fileInput = document.getElementById('manual-ia');
@@ -378,6 +377,7 @@ window.gerarComIA = async function() {
     const file = fileInput.files[0];
     const formData = new FormData();
     formData.append("file", file);
+    
     if (btn) {
         btn.disabled = true;
         btn.innerText = "⏳ A analisar manual...";
@@ -393,7 +393,7 @@ window.gerarComIA = async function() {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`
-           },
+            },
             body: formData
         });
 
@@ -404,6 +404,7 @@ window.gerarComIA = async function() {
         }
 
         const dados = await res.json();
+        
         if (dados.objetivo) document.getElementById('pop-obj').value = dados.objetivo;
         if (dados.escopo) document.getElementById('pop-escopo').value = dados.escopo;
         if (dados.responsabilidades) document.getElementById('pop-resp-detalhe').value = dados.responsabilidades;
