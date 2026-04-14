@@ -1,4 +1,14 @@
 // ==========================================
+// ROTEADOR DE TELA (O GATILHO)
+// ==========================================
+document.addEventListener('viewChanged', (e) => {
+    if (e.detail.view === 'pops' || e.detail.view === 'pop') {
+        console.log("Tela de POPs aberta! Iniciando busca no banco...");
+        loadPopsTable();
+    }
+});
+
+// ==========================================
 // 1. ABERTURA DO FORMULÁRIO
 // ==========================================
 window.openPopModal = function() {
