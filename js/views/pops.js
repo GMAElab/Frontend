@@ -369,65 +369,66 @@ window.gerarComIA = async function() {
     const btn = document.getElementById('btn-ia');
     const aviso = document.getElementById('ia-loading');
 
+    // 1. Diagnóstico do Token
+    const token = localStorage.getItem('jwt_token');
+    console.log("DEBUG - Chave jwt_token encontrada:", token ? "Sim (Inicia com " + token.substring(0,10) + "...)" : "Não (NULL)");
+
+    if (!token) {
+        window.UI.showToast("Sessão não encontrada. Por favor, faça Logout e Login novamente.", "error");
+        return;
+    }
+
     if (!fileInput || !fileInput.files[0]) {
-        window.UI.showToast("Por favor, anexe o PDF do manual do equipamento primeiro.", "error");
+        window.UI.showToast("Por favor, anexe o PDF do manual primeiro.", "error");
         return;
     }
 
     const file = fileInput.files[0];
     const formData = new FormData();
     formData.append("file", file);
-    
-    if (btn) {
-        btn.disabled = true;
-        btn.innerText = "⏳ A analisar manual...";
-    }
-    if (aviso) {
-        aviso.style.display = "block";
-    }
+
+    if (btn) { btn.disabled = true; btn.innerText = "⏳ Processando..."; }
+    if (aviso) aviso.style.display = "block";
 
     try {
-        const token = localStorage.getItem('jwt_token');
-
-        if (!token) {
-            window.UI.showToast("Sessão inválida. Por favor, faça login novamente.", "error");
-            return;
-        }
+        console.log("DEBUG - Enviando requisição para a IA...");
+        
         const res = await fetch('https://api-ic.onrender.com/ai/gerar-pop', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${token}`
+                // Aqui garantimos que o token vai limpo, sem aspas extras
+                'Authorization': `Bearer ${token.replace(/"/g, '')}` 
             },
             body: formData
         });
 
         if (!res.ok) {
-            const textError = await res.text();
-            console.error("Erro do servidor:", textError);
-            throw new Error(`Erro ${res.status}: O servidor não autorizou ou falhou.`);
+            const errorData = await res.json().catch(() => ({}));
+            console.error("DEBUG - Erro do Servidor:", res.status, errorData);
+            
+            if (res.status === 401) {
+                throw new Error("Sessão expirada ou inválida. Faça login novamente.");
+            }
+            throw new Error(errorData.detail || `Erro ${res.status} no servidor.`);
         }
 
         const dados = await res.json();
-        if (dados.objetivo) document.getElementById('pop-obj').value = dados.objetivo;
-        if (dados.escopo) document.getElementById('pop-escopo').value = dados.escopo;
-        if (dados.responsabilidades) document.getElementById('pop-resp-detalhe').value = dados.responsabilidades;
-        if (dados.materiais) document.getElementById('pop-materiais').value = dados.materiais;
-        if (dados.procedimento) document.getElementById('pop-procedimento').value = dados.procedimento;
-        if (dados.qualidade) document.getElementById('pop-qualidade').value = dados.qualidade;
-        if (dados.seguranca) document.getElementById('pop-seguranca').value = dados.seguranca;
-        if (dados.manutencao) document.getElementById('pop-manutencao').value = dados.manutencao;
-        if (dados.referencias) document.getElementById('pop-referencias').value = dados.referencias;
+        console.log("DEBUG - Dados recebidos da IA com sucesso!");
 
-        window.UI.showToast("✨ IA: Rascunho gerado! Revise antes de salvar.", "success");
+        // Injeção nos campos
+        const campos = ['objetivo', 'escopo', 'responsabilidades', 'materiais', 'procedimento', 'qualidade', 'seguranca', 'manutencao', 'referencias'];
+        campos.forEach(campo => {
+            const el = document.getElementById(`pop-${campo === 'responsabilidades' ? 'resp-detalhe' : campo}`);
+            if (el && dados[campo]) el.value = dados[campo];
+        });
+
+        window.UI.showToast("✨ Rascunho gerado pela IA!", "success");
 
     } catch (err) {
-        console.error("Erro na IA:", err);
+        console.error("Erro final:", err);
         window.UI.showToast(err.message, "error");
     } finally {
-        if (btn) {
-            btn.disabled = false;
-            btn.innerText = "✨ Extrair Dados";
-        }
+        if (btn) { btn.disabled = false; btn.innerText = "✨ Extrair Dados"; }
         if (aviso) aviso.style.display = "none";
     }
 };
