@@ -54,16 +54,7 @@ window.openPopModal = function() {
 
     const modalHTML = `
 
-    <div style="background: #ECFDF5; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #10B981;">
-    <h4 style="margin: 0 0 10px 0; color: #047857;">Use o manual para automatizar o preenchimento do POP</h4>
-    <label>Faça upload do Manual do Equipamento (.pdf) para pré-preencher o formulário:</label>
-    <div style="display: flex; gap: 10px; margin-top: 10px;">
-        <input type="file" id="manual-ia" class="form-control" accept=".pdf">
-        <button type="button" onclick="gerarComIA()" class="btn btn-primary" style="background: #10B981; border: none;">Gerar</button>
-    </div>
-    <span id="ia-loading" style="display:none; color: #047857; font-size: 12px; margin-top: 5px;">Analisando...</span>
-    </div>
-
+    
     <div id="popModal" class="modal-overlay" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999999; justify-content: center; align-items: center;">
         <div class="modal-content" style="max-width: 850px; width: 95%; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); max-height: 90vh; overflow-y: auto;">
             
@@ -283,6 +274,15 @@ window.viewPopDetails = function(codigo) {
                 <button onclick="document.getElementById('pop-document-container').remove()" class="btn btn-secondary" style="padding: 8px 15px; cursor: pointer;">⬅ Fechar</button>
                 <button onclick="gerarPDF('${pop.codigo}')" class="btn btn-primary" style="padding: 8px 15px; background:#DC2626; color:white; border:none; font-weight:bold; cursor:pointer;">🖨️ BAIXAR .PDF OFICIAL</button>
             </div>
+        <div style="background: #ECFDF5; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #10B981;">
+        <h4 style="margin: 0 0 10px 0; color: #047857;">Use o manual para automatizar o preenchimento do POP</h4>
+        <label>Faça upload do Manual do Equipamento (.pdf) para pré-preencher o formulário:</label>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <input type="file" id="manual-ia" class="form-control" accept=".pdf">
+        <button type="button" onclick="gerarComIA()" class="btn btn-primary" style="background: #10B981; border: none;">Gerar</button>
+                </div>
+                <span id="ia-loading" style="display:none; color: #047857; font-size: 12px; margin-top: 5px;">Analisando...</span>
+        </div>
 
             <div id="conteudo-para-pdf" style="padding: 10px;">
                 <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">
