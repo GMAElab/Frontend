@@ -303,7 +303,7 @@ async function loadAdminPtaTopics(container) {
 }
 
 // ==========================================
-// 5. CAIXA PRETA - RESOLVIDO O BUG DO ALERTA
+// 5. LOGS
 // ==========================================
 async function loadAuditLogs(container) {
     container.innerHTML = '<span class="spinner"></span> Carregando histórico...';

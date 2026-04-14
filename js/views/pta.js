@@ -163,7 +163,7 @@ async function renderPTACoordenador() {
                 </form>
             </div>
 
-           /*  <div class="card-responsivo" style="background: #FAF5FF; border: 1px solid #E9D5FF; margin-bottom: 0;">
+            <div class="card-responsivo" style="background: #FAF5FF; border: 1px solid #E9D5FF; margin-bottom: 0;">
                 <h4 style="color: #6B21A8; margin-bottom: 15px;">✨ CRIAR TEXTO (IA)</h4>
                 
                 <div class="grid-fluida" style="margin-bottom: 15px; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));">
@@ -178,8 +178,8 @@ async function renderPTACoordenador() {
                             <input type="number" id="filtro-ano" class="form-control" value="${dataAtual.getFullYear()}" style="border-color: #D8B4FE;">
                         </div>
                     </div>
-                </div>
-            */
+            </div>
+            
                 
                 <button class="btn btn-primary" onclick="gerarSinteseIA(event)" style="background: #9333EA; border-color: #9333EA;">
                     Unificar textos aprovados
