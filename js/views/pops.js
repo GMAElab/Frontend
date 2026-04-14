@@ -1,13 +1,43 @@
 // ==========================================
-// ROTEADOR DE TELA (O GATILHO)
+// ROTEADOR E CONSTRUTOR DE TELA
 // ==========================================
 document.addEventListener('viewChanged', (e) => {
     if (e.detail.view === 'pops' || e.detail.view === 'pop') {
-        console.log("Tela de POPs aberta! Iniciando busca no banco...");
-        loadPopsTable();
+        console.log("Tela de POPs aberta! Iniciando construção...");
+        const container = document.getElementById('dynamic-content');
+        if (!document.getElementById('popsTableBody')) {
+            container.innerHTML = `
+                <div class="admin-container fade-in">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                        <div>
+                            <h2 style="margin-bottom: 5px;">📄 Procedimentos (POPs)</h2>
+                            <p class="text-muted">Base de conhecimento, calibração e padrões do laboratório.</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="window.openPopModal()" style="font-weight: bold; padding: 10px 20px; background: #059669; border: none;">+ Criar Novo POP</button>
+                    </div>
+                    
+                    <div class="card-responsivo" style="overflow-x: auto;">
+                        <table style="width:100%; text-align:left; border-collapse: collapse;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid #ccc;">
+                                    <th style="padding: 12px 10px;">Código</th>
+                                    <th style="padding: 12px 10px;">Título / Equipamento</th>
+                                    <th style="padding: 12px 10px;">Status</th>
+                                    <th style="padding: 12px 10px;">Data de Emissão</th>
+                                    <th style="padding: 12px 10px;">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="popsTableBody">
+                                <tr><td colspan="5" style="text-align:center; padding: 20px;"><span class="spinner"></span> Carregando documentos...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+        if (typeof loadPopsTable === 'function') loadPopsTable();
     }
 });
-
 // ==========================================
 // 1. ABERTURA DO FORMULÁRIO
 // ==========================================
