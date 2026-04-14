@@ -387,19 +387,23 @@ window.gerarComIA = async function() {
     }
 
     try {
-        const res = await window.api.fetchProtected('/ai/gerar-pop', {
+        const token = localStorage.getItem('token') || localStorage.getItem('access_token');
+
+        const res = await fetch('https://api-ic.onrender.com/ai/gerar-pop', {
             method: 'POST',
-            body: formData 
+            headers: {
+                'Authorization': `Bearer ${token}`
+           },
+            body: formData
         });
 
         if (!res.ok) {
-            const err = await res.json();
-            throw new Error(err.detail || "Falha na comunicação com a IA");
+            const textError = await res.text();
+            console.error("Detalhes do erro do servidor:", textError);
+            throw new Error(`Erro ${res.status}: O servidor recusou o arquivo.`);
         }
 
         const dados = await res.json();
-
-        // 4. Injeção de Dados (A Mágica)
         if (dados.objetivo) document.getElementById('pop-obj').value = dados.objetivo;
         if (dados.escopo) document.getElementById('pop-escopo').value = dados.escopo;
         if (dados.responsabilidades) document.getElementById('pop-resp-detalhe').value = dados.responsabilidades;
@@ -414,11 +418,11 @@ window.gerarComIA = async function() {
 
     } catch (err) {
         console.error("Erro na IA:", err);
-        window.UI.showToast("Erro ao ler manual: " + err.message, "error");
+        window.UI.showToast(err.message, "error");
     } finally {
         if (btn) {
             btn.disabled = false;
-            btn.innerText = "Extrair Dados";
+            btn.innerText = "✨ Extrair Dados";
         }
         if (aviso) {
             aviso.style.display = "none";
