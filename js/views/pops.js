@@ -387,8 +387,12 @@ window.gerarComIA = async function() {
     }
 
     try {
-        const token = localStorage.getItem('token') || localStorage.getItem('access_token');
+        const token = localStorage.getItem('jwt_token');
 
+        if (!token) {
+            window.UI.showToast("Sessão inválida. Por favor, faça login novamente.", "error");
+            return;
+        }
         const res = await fetch('https://api-ic.onrender.com/ai/gerar-pop', {
             method: 'POST',
             headers: {
@@ -399,12 +403,11 @@ window.gerarComIA = async function() {
 
         if (!res.ok) {
             const textError = await res.text();
-            console.error("Detalhes do erro do servidor:", textError);
-            throw new Error(`Erro ${res.status}: O servidor recusou o arquivo.`);
+            console.error("Erro do servidor:", textError);
+            throw new Error(`Erro ${res.status}: O servidor não autorizou ou falhou.`);
         }
 
         const dados = await res.json();
-        
         if (dados.objetivo) document.getElementById('pop-obj').value = dados.objetivo;
         if (dados.escopo) document.getElementById('pop-escopo').value = dados.escopo;
         if (dados.responsabilidades) document.getElementById('pop-resp-detalhe').value = dados.responsabilidades;
@@ -415,7 +418,7 @@ window.gerarComIA = async function() {
         if (dados.manutencao) document.getElementById('pop-manutencao').value = dados.manutencao;
         if (dados.referencias) document.getElementById('pop-referencias').value = dados.referencias;
 
-        window.UI.showToast("✨ Rascunho gerado com sucesso! Por favor, revise os dados.", "success");
+        window.UI.showToast("✨ IA: Rascunho gerado! Revise antes de salvar.", "success");
 
     } catch (err) {
         console.error("Erro na IA:", err);
@@ -425,8 +428,6 @@ window.gerarComIA = async function() {
             btn.disabled = false;
             btn.innerText = "✨ Extrair Dados";
         }
-        if (aviso) {
-            aviso.style.display = "none";
-        }
+        if (aviso) aviso.style.display = "none";
     }
 };
