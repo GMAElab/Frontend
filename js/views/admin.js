@@ -25,28 +25,28 @@ function renderAdminPanel() {
     const container = document.getElementById('dynamic-content');
     container.innerHTML = `
     <div class="admin-container fade-in">
-        <h2 style="margin-bottom: 5px;">👑 Central de Comando</h2>
-        <p class="text-muted" style="margin-bottom: 20px;">Gestão absoluta de acessos, dados e integridade do laboratório.</p>
+        <h2 style="margin-bottom: 5px;">Painel de controle do Administrador</h2>
+        <p class="text-muted" style="margin-bottom: 20px;">Gerenciamento de todas as funcionalidades administrativas do sistema.</p>
         
         <div class="grid-fluida" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
             <div class="card-responsivo" style="cursor: pointer; border-top: 4px solid #3B82F6;" onclick="openAdminModule('users')">
                 <h3 style="display: flex; align-items: center; gap: 10px;">👥 Usuários</h3>
-                <p class="text-muted">Aprovações pendentes, bloqueio de contas e edição profunda.</p>
+                <p class="text-muted">Controle de acesso e permissões dos usuários.</p>
             </div>
             
             <div class="card-responsivo" style="cursor: pointer; border-top: 4px solid #10B981;" onclick="openAdminModule('lab')">
                 <h3 style="display: flex; align-items: center; gap: 10px;">🔬 Laboratório</h3>
-                <p class="text-muted">Exclusão de Equipamentos e revogação de Procedimentos (POPs).</p>
+                <p class="text-muted">Controle dos equipamentos e POPs.</p>
             </div>
             
             <div class="card-responsivo" style="cursor: pointer; border-top: 4px solid #8B5CF6;" onclick="openAdminModule('pd')">
                 <h3 style="display: flex; align-items: center; gap: 10px;">📋 P&D e PTA</h3>
-                <p class="text-muted">Controle de Tópicos do Plano Anual e Processos cadastrados.</p>
+                <p class="text-muted">Processos e PTA</p>
             </div>
 
             <div class="card-responsivo" style="cursor: pointer; border-top: 4px solid #F59E0B;" onclick="openAdminModule('audit')">
                 <h3 style="display: flex; align-items: center; gap: 10px;">👁️ Auditoria e Logs</h3>
-                <p class="text-muted">A caixa preta do sistema. Rastreie quem fez o quê e quando.</p>
+                <p class="text-muted">Rastreie quem fez o quê e quando.</p>
             </div>
         </div>
         
