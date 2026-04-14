@@ -53,6 +53,17 @@ window.openPopModal = function() {
     const dataHoje = new Date().toLocaleDateString('pt-BR');
 
     const modalHTML = `
+
+    <div style="background: #ECFDF5; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #10B981;">
+    <h4 style="margin: 0 0 10px 0; color: #047857;">Use o manual para automatizar o preenchimento do POP</h4>
+    <label>Faça upload do Manual do Equipamento (.pdf) para pré-preencher o formulário:</label>
+    <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <input type="file" id="manual-ia" class="form-control" accept=".pdf">
+        <button type="button" onclick="gerarComIA()" class="btn btn-primary" style="background: #10B981; border: none;">Gerar</button>
+    </div>
+    <span id="ia-loading" style="display:none; color: #047857; font-size: 12px; margin-top: 5px;">Analisando...</span>
+    </div>
+
     <div id="popModal" class="modal-overlay" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999999; justify-content: center; align-items: center;">
         <div class="modal-content" style="max-width: 850px; width: 95%; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); max-height: 90vh; overflow-y: auto;">
             
@@ -350,4 +361,58 @@ window.gerarPDF = function(codigo) {
     };
     html2pdf().set(opcoes).from(elemento).save();
     window.UI.showToast("Iniciando download do PDF...", "success");
+};
+// ==========================================
+// 6. MOTOR DE EXTRAÇÃO VIA IA
+// ==========================================
+window.gerarComIA = async function() {
+    const fileInput = document.getElementById('manual-ia');
+    const btn = document.getElementById('btn-ia');
+    const aviso = document.getElementById('ia-loading');
+
+    if (!fileInput || !fileInput.files[0]) {
+        window.UI.showToast("Por favor, anexe o PDF do manual do equipamento primeiro.", "error");
+        return;
+    }
+
+    const file = fileInput.files[0];
+    const formData = new FormData();
+    formData.append("file", file);
+    btn.disabled = true;
+    btn.innerText = "A analisar manual...";
+    aviso.style.display = "block";
+
+    try {
+        const res = await window.api.fetchProtected('/ai/gerar-pop', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.detail || "Falha na comunicação com a IA");
+        }
+
+        const dados = await res.json();
+
+        if (dados.objetivo) document.getElementById('pop-obj').value = dados.objetivo;
+        if (dados.escopo) document.getElementById('pop-escopo').value = dados.escopo;
+        if (dados.responsabilidades) document.getElementById('pop-resp-detalhe').value = dados.responsabilidades;
+        if (dados.materiais) document.getElementById('pop-materiais').value = dados.materiais;
+        if (dados.procedimento) document.getElementById('pop-procedimento').value = dados.procedimento;
+        if (dados.qualidade) document.getElementById('pop-qualidade').value = dados.qualidade;
+        if (dados.seguranca) document.getElementById('pop-seguranca').value = dados.seguranca;
+        if (dados.manutencao) document.getElementById('pop-manutencao').value = dados.manutencao;
+        if (dados.referencias) document.getElementById('pop-referencias').value = dados.referencias;
+
+        window.UI.showToast("Rascunho gerado com sucesso! Por favor, revise os dados.", "success");
+
+    } catch (err) {
+        console.error(err);
+        window.UI.showToast("Erro ao ler manual: " + err.message, "error");
+    } finally {
+        btn.disabled = false;
+        btn.innerText = "Extrair Dados";
+        aviso.style.display = "none";
+    }
 };
