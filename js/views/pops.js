@@ -363,7 +363,7 @@ window.gerarPDF = function(codigo) {
     window.UI.showToast("Iniciando download do PDF...", "success");
 };
 // ==========================================
-// 6. MOTOR DE EXTRAÇÃO VIA IA
+// 6. Pré Preencher POP com IA
 // ==========================================
 window.gerarComIA = async function() {
     const fileInput = document.getElementById('manual-ia');
@@ -378,14 +378,18 @@ window.gerarComIA = async function() {
     const file = fileInput.files[0];
     const formData = new FormData();
     formData.append("file", file);
-    btn.disabled = true;
-    btn.innerText = "A analisar manual...";
-    aviso.style.display = "block";
+    if (btn) {
+        btn.disabled = true;
+        btn.innerText = "⏳ A analisar manual...";
+    }
+    if (aviso) {
+        aviso.style.display = "block";
+    }
 
     try {
         const res = await window.api.fetchProtected('/ai/gerar-pop', {
             method: 'POST',
-            body: formData
+            body: formData 
         });
 
         if (!res.ok) {
@@ -395,6 +399,7 @@ window.gerarComIA = async function() {
 
         const dados = await res.json();
 
+        // 4. Injeção de Dados (A Mágica)
         if (dados.objetivo) document.getElementById('pop-obj').value = dados.objetivo;
         if (dados.escopo) document.getElementById('pop-escopo').value = dados.escopo;
         if (dados.responsabilidades) document.getElementById('pop-resp-detalhe').value = dados.responsabilidades;
@@ -405,14 +410,18 @@ window.gerarComIA = async function() {
         if (dados.manutencao) document.getElementById('pop-manutencao').value = dados.manutencao;
         if (dados.referencias) document.getElementById('pop-referencias').value = dados.referencias;
 
-        window.UI.showToast("Rascunho gerado com sucesso! Por favor, revise os dados.", "success");
+        window.UI.showToast("✨ Rascunho gerado com sucesso! Por favor, revise os dados.", "success");
 
     } catch (err) {
-        console.error(err);
+        console.error("Erro na IA:", err);
         window.UI.showToast("Erro ao ler manual: " + err.message, "error");
     } finally {
-        btn.disabled = false;
-        btn.innerText = "Extrair Dados";
-        aviso.style.display = "none";
+        if (btn) {
+            btn.disabled = false;
+            btn.innerText = "Extrair Dados";
+        }
+        if (aviso) {
+            aviso.style.display = "none";
+        }
     }
 };
