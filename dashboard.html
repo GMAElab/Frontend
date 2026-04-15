@@ -36,10 +36,10 @@
     <div class="main-wrapper">
         <header class="topbar">
             <div class="topbar-left">
-                <h2 id="current-page-title">Dashboard Inicial</h2>
+                <h2 id="current-page-title">Dashboard</h2>
             </div>
             <div class="topbar-right">
-                <span id="user-greeting" style="margin-right: 15px; font-weight: 500;">Olá, Pesquisador</span>
+                <span id="user-greeting" style="margin-right: 15px; font-weight: 500;">(preciso mexer ainda)</span>
                 <div class="avatar" id="user-avatar">P</div>
             </div>
         </header>
@@ -47,7 +47,7 @@
         <main id="dynamic-content" class="content-area">
             <section class="card welcome-card">
                 <h3>Bem-vindo ao sistema de gerenciamento do laboratório LEQM</h3>
-                <p>Selecione um módulo à esquerda para começar.</p>
+                <p>Selecione algum módulo à esquerda para começar.</p>
             </section>
         </main>
     </div>
@@ -56,28 +56,28 @@
         <div class="modal-content" style="max-width: 600px; width: 90%; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
             
             <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px;">
-                <h3 style="margin: 0;">Registrar Novo Equipamento</h3>
+                <h3 style="margin: 0;">+ Novo Equipamento</h3>
                 <button type="button" onclick="window.closeEquipModal()" style="background:none; border:none; font-size:30px; cursor:pointer; color:#999;">&times;</button>
             </div>
             
             <form id="form-new-eq" onsubmit="window.handleSaveEquipment(event)">
                 <div class="input-group" style="margin-bottom: 15px;">
-                    <label for="eq-name" style="display:block; font-weight:bold; margin-bottom:5px;">Nome do Equipamento *</label>
+                    <label for="eq-name" style="display:block; font-weight:bold; margin-bottom:5px;">Nome do Equipamento: *</label>
                     <input type="text" id="eq-name" required placeholder="Ex: Microscópio Óptico" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;">
                 </div>
 
                 <div class="input-group" style="margin-bottom: 15px;">
-                    <label for="eq-desc" style="display:block; font-weight:bold; margin-bottom:5px;">Descrição básica</label>
+                    <label for="eq-desc" style="display:block; font-weight:bold; margin-bottom:5px;">Descrição básica:</label>
                     <textarea id="eq-desc" rows="3" placeholder="Detalhes e especificações..." style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;"></textarea>
                 </div>
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
                     <div class="input-group">
-                        <label for="eq-video" style="display:block; font-weight:bold; margin-bottom:5px;">Vídeo (YouTube URL)</label>
+                        <label for="eq-video" style="display:block; font-weight:bold; margin-bottom:5px;">Vídeo (YouTube URL):</label>
                         <input type="url" id="eq-video" placeholder="https://..." style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;">
                     </div>
                     <div class="input-group">
-                        <label for="eq-manual" style="display:block; font-weight:bold; margin-bottom:5px;">Link do Manual (PDF)</label>
+                        <label for="eq-manual" style="display:block; font-weight:bold; margin-bottom:5px;">POP:</label>
                         <input type="url" id="eq-manual" placeholder="https://..." style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;">
                     </div>
                 </div>
@@ -157,7 +157,7 @@
                             <textarea id="proc-indicadores" rows="3" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;"></textarea>
                         </div>
                         <div>
-                            <label for="proc-anexos">Link de Anexos:</label>
+                            <label for="proc-anexos">Anexos:</label>
                             <input type="url" id="proc-anexos" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
                         </div>
                         <div>

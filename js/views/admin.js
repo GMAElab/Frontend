@@ -25,8 +25,8 @@ function renderAdminPanel() {
     const container = document.getElementById('dynamic-content');
     container.innerHTML = `
     <div class="admin-container fade-in">
-        <h2 style="margin-bottom: 5px;">Painel de controle do Administrador</h2>
-        <p class="text-muted" style="margin-bottom: 20px;">Gerenciamento de todas as funcionalidades administrativas do sistema.</p>
+        <h2 style="margin-bottom: 5px;">Painel de controle Administrador</h2>
+        <p class="text-muted" style="margin-bottom: 20px;">Gerenciamento de todos os módulos do sistema.</p>
         
         <div class="grid-fluida" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
             <div class="card-responsivo" style="cursor: pointer; border-top: 4px solid #3B82F6;" onclick="openAdminModule('users')">
@@ -65,7 +65,6 @@ function renderAdminPanel() {
         </div>
     </div>`;
 }
-
 // ==========================================
 // 2. ROTEADOR DE MÓDULOS
 // ==========================================
@@ -91,8 +90,8 @@ window.openAdminModule = function(module) {
     if (module === 'users') {
         sub.innerHTML = `
             <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <button class="btn btn-primary" id="tab-pending" onclick="switchUserTab('pending')">Pedidos Pendentes</button>
-                <button class="btn btn-secondary" id="tab-active" onclick="switchUserTab('active')">Usuários Ativos</button>
+                <button class="btn btn-primary" id="tab-pending" onclick="switchUserTab('pending')">Pedidos Pendentes:</button>
+                <button class="btn btn-secondary" id="tab-active" onclick="switchUserTab('active')">Usuários Ativos:</button>
             </div>
             <div id="users-container"></div>`;
         switchUserTab('pending');
@@ -100,8 +99,8 @@ window.openAdminModule = function(module) {
     else if (module === 'lab') {
         sub.innerHTML = `
             <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <button class="btn btn-primary" id="tab-eq" onclick="switchLabTab('eq')">Equipamentos</button>
-                <button class="btn btn-secondary" id="tab-pop" onclick="switchLabTab('pop')">POPs</button>
+                <button class="btn btn-primary" id="tab-eq" onclick="switchLabTab('eq')">Equipamentos:</button>
+                <button class="btn btn-secondary" id="tab-pop" onclick="switchLabTab('pop')">POPs:</button>
             </div>
             <div id="lab-container"></div>`;
         switchLabTab('eq');
@@ -109,8 +108,8 @@ window.openAdminModule = function(module) {
     else if (module === 'pd') {
         sub.innerHTML = `
             <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <button class="btn btn-primary" id="tab-proc" onclick="switchPdTab('proc')">Processos</button>
-                <button class="btn btn-secondary" id="tab-pta" onclick="switchPdTab('pta')">Tópicos PTA</button>
+                <button class="btn btn-primary" id="tab-proc" onclick="switchPdTab('proc')">Processos:</button>
+                <button class="btn btn-secondary" id="tab-pta" onclick="switchPdTab('pta')">Tópicos PTA:</button>
             </div>
             <div id="pd-container"></div>`;
         switchPdTab('proc');
@@ -118,13 +117,12 @@ window.openAdminModule = function(module) {
     else if (module === 'audit') {
         sub.innerHTML = `
             <div class="card-responsivo" style="background: #FFFBEB; border-color: #FCD34D;">
-                <p style="margin: 0; color: #B45309;"><strong>Aviso:</strong> Estes registros são imutáveis. Ninguém pode apagar o histórico de auditoria.</p>
+                <p style="margin: 0; color: #B45309;"><strong>Aviso:</strong> Estes registros são permanentes. Ninguém pode apagar o histórico de auditoria.</p>
             </div>
             <div id="audit-container"></div>`;
         loadAuditLogs(document.getElementById('audit-container'));
     }
 };
-
 // ==========================================
 // 3. MÓDULO: USUÁRIOS
 // ==========================================
@@ -156,10 +154,10 @@ async function loadPendingRequests(container) {
                     <h4>${req.nome}</h4>
                     <p class="text-muted" style="font-size: 14px;">${req.email}</p>
                     <select id="role-${req.id}" class="form-control" style="margin: 10px 0;">
-                        <option value="pesquisador">Pesquisador</option>
-                        <option value="tecnico">Técnico</option>
-                        <option value="coordenador">Coordenador</option>
-                        <option value="admin">Administrador</option>
+                        <option value="pesquisador">Pesquisador:</option>
+                        <option value="tecnico">Técnico:</option>
+                        <option value="coordenador">Coordenador:</option>
+                        <option value="admin">Administrador:</option>
                     </select>
                     <div style="display: flex; gap: 10px;">
                         <button class="btn btn-outline-danger" style="flex: 1;" onclick="handleApproval(${req.id}, false)">Rejeitar</button>

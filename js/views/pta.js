@@ -50,7 +50,7 @@ function renderPTAPesquisador() {
     main.innerHTML = `
         <div class="view-header">
             <h2>Plano de Trabalho (PTA)</h2>
-            <p class="text-muted">Progresso mensal do laboratório.</p>
+            <p class="text-muted">PTA</p>
         </div>
         
         <div class="card-responsivo">
@@ -149,14 +149,14 @@ async function renderPTACoordenador() {
         <div class="grid-fluida" style="margin-bottom: 20px;">
             
             <div class="card-responsivo" style="background: #F8FAFC; border: 1px solid #E2E8F0; margin-bottom: 0;">
-                <h4 style="margin-bottom: 15px;">Adicionar Novo Tópico</h4>
+                <h4 style="margin-bottom: 15px;">+ Novo Tópico</h4>
                 <form id="form-novo-topico">
                     <div style="margin-bottom: 10px;">
-                        <label>Título do Tópico</label>
+                        <label>Título do Tópico:</label>
                         <input type="text" id="novo-topico-titulo" class="form-control" placeholder="Ex: Síntese de Grafeno" required>
                     </div>
                     <div style="margin-bottom: 15px;">
-                        <label>Ano Vigente</label>
+                        <label>Ano Vigente:</label>
                         <input type="number" id="novo-topico-ano" class="form-control" value="${dataAtual.getFullYear()}" required>
                     </div>
                     <button type="submit" class="btn btn-primary">Cadastrar Tópico</button>
@@ -168,11 +168,11 @@ async function renderPTACoordenador() {
                 
                 <div class="grid-fluida" style="margin-bottom: 15px; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));">
                     <div>
-                        <label style="color: #6B21A8; font-size: 12px;">Tópico</label>
+                        <label style="color: #6B21A8; font-size: 12px;">Tópico:</label>
                         <select id="ia-topico-id" class="form-control" style="border-color: #D8B4FE;" required></select>
                     </div>
                     <div>
-                        <label style="color: #6B21A8; font-size: 12px;">Mês / Ano</label>
+                        <label style="color: #6B21A8; font-size: 12px;">Mês/Ano:</label>
                         <div style="display: flex; gap: 5px;">
                             <input type="number" id="filtro-mes" class="form-control" value="${dataAtual.getMonth() + 1}" style="border-color: #D8B4FE;">
                             <input type="number" id="filtro-ano" class="form-control" value="${dataAtual.getFullYear()}" style="border-color: #D8B4FE;">
