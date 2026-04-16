@@ -14,7 +14,7 @@ document.addEventListener('viewChanged', (e) => {
                             <h2 style="margin-bottom: 5px;">📄 Procedimentos Operacionais Padrão (POPs)</h2>
                             <p class="text-muted">Procedimentos oficiais documentados sob o padrão GMAE.</p>
                         </div>
-                        <button class="btn btn-primary" onclick="window.openPopModal()" style="font-weight: bold; padding: 10px 20px; border: none; color: #000; cursor: pointer; border-radius: 6px;">+ Criar Novo POP</button>
+                        <button class="btn btn-primary" onclick="window.openPopModal()" style="font-weight: bold; padding: 10px 20px; border: none; color: #fff; cursor: pointer; border-radius: 6px;">+ Criar Novo POP</button>
                     </div>
                     
                     <div class="card-responsivo" style="overflow-x: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
