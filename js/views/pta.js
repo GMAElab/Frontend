@@ -163,30 +163,30 @@ async function renderPTACoordenador() {
                 </form>
             </div>
 
-            <div class="card-responsivo" style="background: #FAF5FF; border: 1px solid #E9D5FF; margin-bottom: 0;">
-                <h4 style="color: #6B21A8; margin-bottom: 15px;">✨ CRIAR TEXTO (IA)</h4>
+            <div class="card-responsivo" style="background: #e7f3ff; border: 1px solid #007bff; margin-bottom: 0;">
+                <h4 style="color: #004080; margin-bottom: 15px;">✨ CRIAR TEXTO (IA)</h4>
                 
                 <div class="grid-fluida" style="margin-bottom: 15px; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));">
                     <div>
-                        <label style="color: #6B21A8; font-size: 12px;">Tópico:</label>
-                        <select id="ia-topico-id" class="form-control" style="border-color: #D8B4FE;" required></select>
+                        <label style="color: #004080; font-size: 12px;">Tópico:</label>
+                        <select id="ia-topico-id" class="form-control" style="border-color: #007bff;" required></select>
                     </div>
                     <div>
-                        <label style="color: #6B21A8; font-size: 12px;">Mês/Ano:</label>
+                        <label style="color: #004080; font-size: 12px;">Mês/Ano:</label>
                         <div style="display: flex; gap: 5px;">
-                            <input type="number" id="filtro-mes" class="form-control" value="${dataAtual.getMonth() + 1}" style="border-color: #D8B4FE;">
-                            <input type="number" id="filtro-ano" class="form-control" value="${dataAtual.getFullYear()}" style="border-color: #D8B4FE;">
+                            <input type="number" id="filtro-mes" class="form-control" value="${dataAtual.getMonth() + 1}" style="border-color: #007bff;">
+                            <input type="number" id="filtro-ano" class="form-control" value="${dataAtual.getFullYear()}" style="border-color: #007bff;">
                         </div>
                     </div>
             </div>
             
                 
-                <button class="btn btn-primary" onclick="gerarSinteseIA(event)" style="background: #9333EA; border-color: #9333EA;">
+                <button class="btn btn-primary" onclick="gerarSinteseIA(event)" style="background: #004080; border-color: #004080;">
                     Unificar textos aprovados
                 </button>
                 
-                <div id="resultado-ia" style="display: none; background: #fff; border-left: 4px solid #9333EA; padding: 15px; margin-top: 15px; border-radius: 4px;">
-                    <strong style="color: #6B21A8;">Relatório Consolidado:</strong>
+                <div id="resultado-ia" style="display: none; background: #fff; border-left: 4px solid #004080; padding: 15px; margin-top: 15px; border-radius: 4px;">
+                    <strong style="color: #004080;">Relatório Consolidado:</strong>
                     <p id="texto-ia" style="margin-top: 10px; line-height: 1.6;"></p>
                 </div>
             </div>

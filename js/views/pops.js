@@ -70,14 +70,14 @@ window.openPopModal = function() {
 
                 <hr style="margin: 20px 0; border-color: #eee;">
                 
-                <div style="background: #f0fdfa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #14b8a6;">
-                    <h4 style="margin: 0 0 10px 0; color: #0f766e; display:flex; align-items:center; gap:8px;">✨ IA: Preenchimento Automático</h4>
-                    <label style="font-size:13px; color:#0f766e;">Faça upload do Manual do Equipamento (.pdf) para pré-preencher a estrutura do POP:</label>
+                <div style="background: #e7f3ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #007bff;">
+                    <h4 style="margin: 0 0 10px 0; color: #004080; display:flex; align-items:center; gap:8px;">✨ IA: Preenchimento Automático</h4>
+                    <label style="font-size:13px; color:#004080;">Faça upload do Manual do Equipamento (.pdf) para pré-preencher a estrutura do POP:</label>
                     <div style="display: flex; gap: 10px; margin-top: 10px; align-items: center;">
                         <input type="file" id="manual-ia" class="form-control" accept=".pdf" style="flex: 1; padding: 8px;">
-                        <button type="button" id="btn-ia" onclick="gerarComIA()" class="btn btn-primary" style="background: #0f766e; border: none; font-weight: bold; padding: 8px 15px; cursor: pointer;">Extrair Dados</button>
+                        <button type="button" id="btn-ia" onclick="gerarComIA()" class="btn btn-primary" style="background: #004080; border: none; font-weight: bold; padding: 8px 15px; cursor: pointer;">Extrair Dados</button>
                     </div>
-                    <span id="ia-loading" style="display:none; color: #0f766e; font-size: 13px; margin-top: 10px; font-weight: bold;">⏳ Lendo manual e escrevendo documento...</span>
+                    <span id="ia-loading" style="display:none; color: #004080; font-size: 13px; margin-top: 10px; font-weight: bold;">⏳ Lendo manual e escrevendo documento...</span>
                 </div>
 
                 <div style="display: flex; flex-direction: column; gap: 15px;">
@@ -96,7 +96,7 @@ window.openPopModal = function() {
                         <input type="file" id="pop-anexos-file" class="form-control" style="width:100%; padding:8px; margin-top:5px;" accept=".pdf, .doc, .docx, .xls, .xlsx, image/*">
                         <input type="hidden" id="pop-anexos-b64">
                         <input type="hidden" id="pop-anexos-meta">
-                        <p id="anexo-status" style="font-size: 13px; color: #059669; font-weight:bold; margin-top: 5px; display: none;">✅ Arquivo anexado com sucesso!</p>
+                        <p id="anexo-status" style="font-size: 13px; color: #004080; font-weight:bold; margin-top: 5px; display: none;">✅ Arquivo anexado com sucesso!</p>
                     </div>
                 </div>
                 

@@ -95,8 +95,8 @@ tr:hover td { background-color: rgba(0, 123, 255, 0.1); }
 .toast.info { background-color: var(--primary); }
 @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 .badge {
-    background: #dcfce7;
-    color: #166534;
+    background: #e7f3ff;
+    color: #004080;
     padding: 4px 12px;
     border-radius: 99px;
     font-size: 0.75rem;
