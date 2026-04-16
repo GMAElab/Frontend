@@ -210,7 +210,7 @@ async function loadPopsTable() {
                     <td style="padding: 12px 10px;"><span style="background: #cff4fc; color: #055160; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight:bold;">ATIVO</span></td>
                     <td style="padding: 12px 10px;">${dataCriacao}</td>
                     <td style="padding: 12px 10px;">
-                        <button onclick="viewPopDetails(this.getAttribute('data-id'))" data-id="${escCodigo}" class="btn btn-outline-primary btn-sm" style="padding: 5px 10px; cursor: pointer; border-color:#0dcaf0; color:#0dcaf0;">📄 Abrir Documento</button>
+                        <button onclick="viewPopDetails(this.getAttribute('data-id'))" data-id="${escCodigo}" class="btn btn-outline-primary btn-sm" style="padding: 5px 10px; cursor: pointer; border-color:#0dcaf0; color:#000;">📄 Abrir Documento</button>
                     </td>
                 </tr>`;
         });
