@@ -315,11 +315,10 @@ async function loadAuditLogs(container) {
             return;
         }
 
-        // SALVA OS LOGS NA MEMÓRIA GLOBAL DO NAVEGADOR
         window.currentAuditLogs = logs;
 
         let html = '<div class="card-responsivo" style="overflow-x: auto;"><table style="width:100%; text-align:left; font-size: 14px;">';
-        html += '<tr style="border-bottom: 2px solid #ccc;"><th>Data/Hora</th><th>Admin ID</th><th>Ação</th><th>Módulo</th><th>Registro</th><th>Detalhes</th></tr>';
+        html += '<tr style="border-bottom: 2px solid #ccc;"><th>Data/Hora</th><th>Usuário</th><th>Ação</th><th>Módulo</th><th>Registro</th><th>Detalhes</th></tr>';
         
         logs.forEach((log, index) => {
             const dataFormatada = new Date(log.timestamp).toLocaleString('pt-BR');
@@ -333,14 +332,14 @@ async function loadAuditLogs(container) {
                 <td style="padding: 12px 5px;">ID: ${log.record_id}</td>
                 <td style="padding: 12px 5px;">
                     <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 12px;" onclick="viewLogPayload(${index})">
-                        👁️ Ver Carga
+                        👁️ Ver detalhes
                     </button>
                 </td>
             </tr>`;
         });
         container.innerHTML = html + '</table></div>';
     } catch (err) {
-        container.innerHTML = '<div class="card-responsivo" style="color:red;">Falha ao carregar a caixa preta.</div>';
+        container.innerHTML = '<div class="card-responsivo" style="color:red;">Falha ao carregar o log.</div>';
     }
 }
 
@@ -349,14 +348,14 @@ window.viewLogPayload = function(index) {
     const log = window.currentAuditLogs[index];
     if (!log) return;
 
-    const oldData = log.old_data ? JSON.stringify(log.old_data, null, 2) : "Nenhum / Não aplicável";
-    const newData = log.new_data ? JSON.stringify(log.new_data, null, 2) : "Nenhum / Não aplicável";
+    const oldData = log.old_data ? JSON.stringify(log.old_data, null, 2) : "Sem detalhes / Não aplicável";
+    const newData = log.new_data ? JSON.stringify(log.new_data, null, 2) : "Sem detalhes / Não aplicável";
 
-    alert(`📦 DETALHES DO EVENTO\n\n🔹 DADOS ANTIGOS:\n${oldData}\n\n🔸 DADOS NOVOS:\n${newData}`);
+    alert(`DETALHES DO EVENTO\n\n🔹 Antes:\n${oldData}\n\n🔸 Atual:\n${newData}`);
 };
 
 // ==========================================
-// 6. MOTOR DE VISÃO PROFUNDA (DEEP VIEW)
+// 6. VISÃO PROFUNDA DO LOG
 // ==========================================
 window.closeDeepView = function() {
     document.getElementById('deep-view-modal').style.display = 'none';
@@ -379,7 +378,6 @@ window.openDeepView = async function(route, id, entityName) {
         let html = '';
         for (const [key, value] of Object.entries(data)) {
             if (key === 'senha' || key === 'id') continue;
-            // Corrige valores nulos para não quebrarem o layout
             const safeValue = value !== null && value !== undefined ? String(value).replace(/"/g, '&quot;') : '';
             html += `
                 <div style="display:flex; flex-direction:column; gap:5px;">
