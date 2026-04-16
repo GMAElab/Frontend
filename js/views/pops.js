@@ -1,5 +1,5 @@
 // ==========================================
-// 1. CONSTRUTOR DE TELA (O GATILHO)
+// 1. CONSTRUÇÃO DA TELA DE POPs
 // ==========================================
 document.addEventListener('viewChanged', (e) => {
     if (e.detail.view === 'pops' || e.detail.view === 'pop') {
@@ -12,8 +12,8 @@ document.addEventListener('viewChanged', (e) => {
                 <div class="admin-container fade-in">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
                         <div>
-                            <h2 style="margin-bottom: 5px;">📄 Procedimentos (POPs)</h2>
-                            <p class="text-muted">Base de conhecimento, calibração e padrões do laboratório.</p>
+                            <h2 style="margin-bottom: 5px;">📄 Procedimentos Operacionais Padrão (POPs)</h2>
+                            <p class="text-muted">Procedimentos Operacionais Padrão para cada equipamento. Temos vídeos e documentações.</p>
                         </div>
                         <button class="btn btn-primary" onclick="window.openPopModal()" style="font-weight: bold; padding: 10px 20px; border: none; color: white; cursor: pointer; border-radius: 6px;">+ Criar Novo POP</button>
                     </div>
