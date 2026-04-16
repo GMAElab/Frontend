@@ -127,7 +127,15 @@ window.viewDossier = async function(id) {
         
         const eq = await res.json();
         
-        const videoEmbed = eq.video_url ? eq.video_url.replace("watch?v=", "embed/") : null;
+        let videoEmbed = null;
+        if (eq.video_url) {
+            if (eq.video_url.includes('playlist?list=')) {
+                const listId = eq.video_url.split('list=')[1].split('&')[0];
+                videoEmbed = `https://www.youtube.com/embed?listType=playlist&list=${listId}`;
+            } else {
+                videoEmbed = eq.video_url.replace("watch?v=", "embed/");
+            }
+        }
 
         const dossierTitle = document.getElementById('dossier-title');
         const dossierBody = document.getElementById('dossier-body');
