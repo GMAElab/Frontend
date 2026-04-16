@@ -12,7 +12,7 @@ document.addEventListener('viewChanged', (e) => {
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
                         <div>
                             <h2 style="margin-bottom: 5px;">📄 Procedimentos Operacionais Padrão (POPs)</h2>
-                            <p class="text-muted">Procedimentos oficiais documentados sob o padrão GMAE.</p>
+                            <p class="text-muted">POPs feitos para os equipamentos do laboratório.</p>
                         </div>
                         <button class="btn btn-primary" onclick="window.openPopModal()" style="font-weight: bold; padding: 10px 20px; border: none; color: #fff; cursor: pointer; border-radius: 6px;">+ Criar Novo POP</button>
                     </div>
