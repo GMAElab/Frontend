@@ -15,7 +15,7 @@ document.addEventListener('viewChanged', (e) => {
                             <h2 style="margin-bottom: 5px;">📄 Procedimentos (POPs)</h2>
                             <p class="text-muted">Base de conhecimento, calibração e padrões do laboratório.</p>
                         </div>
-                        <button class="btn btn-primary" onclick="window.openPopModal()" style="font-weight: bold; padding: 10px 20px; background: #059669; border: none; color: white; cursor: pointer; border-radius: 6px;">+ Criar Novo POP</button>
+                        <button class="btn btn-primary" onclick="window.openPopModal()" style="font-weight: bold; padding: 10px 20px; border: none; color: white; cursor: pointer; border-radius: 6px;">+ Criar Novo POP</button>
                     </div>
                     
                     <div class="card-responsivo" style="overflow-x: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
@@ -396,7 +396,6 @@ window.gerarComIA = async function() {
         const res = await fetch('https://api-ic.onrender.com/ai/gerar-pop', {
             method: 'POST',
             headers: {
-                // Aqui garantimos que o token vai limpo, sem aspas extras
                 'Authorization': `Bearer ${token.replace(/"/g, '')}` 
             },
             body: formData
