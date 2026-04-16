@@ -31,7 +31,7 @@ td {
     vertical-align: middle;
 }
 
-tr:hover td { background-color: #f8fafc; }
+tr:hover td { background-color: rgba(0, 123, 255, 0.1); }
 
 .btn {
     display: inline-flex; justify-content: center; align-items: center;
@@ -178,6 +178,7 @@ html, body {
     max-width: 100vw;
     overflow-x: hidden;
 }
+
 .grid-fluida {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -188,11 +189,12 @@ html, body {
 .card-responsivo {
     width: 100%;
     padding: 20px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
     margin-bottom: 20px;
-    overflow: hidden; 
+    overflow: hidden;
 }
 
 .form-control {
@@ -201,22 +203,54 @@ html, body {
 }
 
 @media (max-width: 768px) {
-    input, select, textarea, button {
-        font-size: 16px !important;
+    .card {
+        padding: 16px;
+        margin: 8px;
     }
+
     .btn {
-        width: 100% !important;
-        padding: 14px !important;
-        margin-top: 10px;
+        width: 100%;
+        padding: 12px;
+        font-size: 1rem;
+        margin-bottom: 8px;
     }
-    .card-relatorio {
-        overflow-wrap: break-word;
-        word-wrap: break-word;
-        hyphens: auto;
+
+    .modal-content {
+        width: 95%;
+        max-width: none;
+        margin: 10px;
+        padding: 16px;
     }
-    .view-header {
-        flex-direction: column;
-        align-items: flex-start !important;
+
+    .grid-fluida {
+        grid-template-columns: 1fr;
         gap: 10px;
+    }
+
+    .card-responsivo {
+        padding: 16px;
+    }
+
+    table {
+        font-size: 0.8rem;
+    }
+
+    th, td {
+        padding: 8px;
+    }
+
+    .input-group input, .input-group textarea {
+        font-size: 16px; /* Prevent zoom on iOS */
+    }
+
+    .toast-container {
+        bottom: 10px;
+        right: 10px;
+        left: 10px;
+    }
+
+    .toast {
+        min-width: auto;
+        width: 100%;
     }
 }

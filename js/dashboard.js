@@ -9,6 +9,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initializeUserProfile();
 
+    // Toggle sidebar for mobile
+    const menuToggle = document.getElementById('menu-toggle');
+    const sidebar = document.querySelector('.sidebar');
+    if (menuToggle && sidebar) {
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+        });
+    }
+
     const userString = localStorage.getItem('user_data');
     if (userString) {
         const user = JSON.parse(userString);

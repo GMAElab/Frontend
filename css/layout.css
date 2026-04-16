@@ -7,15 +7,26 @@
 .sidebar {
     width: 260px;
     background-color: var(--sidebar-bg);
-    border-right: 1px solid rgba(255,255,255,0.1);
+    border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+}
+
+.sidebar.open {
+    transform: translateX(0);
 }
 
 .sidebar-brand {
     padding: 24px;
-    color: white;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    color: var(--text-main);
+    border-bottom: 1px solid var(--border);
     text-align: center;
 }
 
@@ -39,12 +50,12 @@
 
 .nav-item:hover {
     background-color: var(--sidebar-active);
-    color: white;
+    color: var(--text-main);
 }
 
 .nav-item.active {
     background-color: var(--sidebar-active);
-    color: white;
+    color: var(--text-main);
     border-right: 4px solid var(--primary);
     font-weight: 600;
 }
@@ -55,6 +66,7 @@
     flex-grow: 1;
     display: flex;
     flex-direction: column;
+    margin-left: 0;
 }
 
 .topbar {
@@ -65,6 +77,21 @@
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid var(--border);
+}
+
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-main);
 }
 
 .topbar-right { display: flex; align-items: center; gap: 16px; }
@@ -82,4 +109,47 @@
     padding: 32px;
     overflow-y: auto;
     flex-grow: 1;
+}
+
+/* Responsividade */
+@media (min-width: 769px) {
+    .sidebar {
+        position: static;
+        transform: none;
+        width: 260px;
+    }
+    .main-wrapper {
+        margin-left: 0;
+    }
+    .menu-toggle {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        width: 250px;
+    }
+    .main-wrapper {
+        margin-left: 0;
+    }
+    .topbar {
+        padding: 0 16px;
+    }
+    .topbar-left {
+        flex: 1;
+    }
+    .menu-toggle {
+        display: block;
+    }
+    .content-area {
+        padding: 16px;
+    }
+    .sidebar-brand h2 {
+        font-size: 1.2rem;
+    }
+    .nav-item {
+        padding: 16px 24px;
+        font-size: 1rem;
+    }
 }
