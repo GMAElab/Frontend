@@ -55,7 +55,7 @@ window.openPopModal = function() {
         <div class="modal-content" style="max-width: 850px; width: 95%; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); max-height: 90vh; overflow-y: auto;">
             
             <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 15px;">
-                <h2 style="margin: 0; color: #333;">📄 Novo Procedimento Padrão (GMAE)</h2>
+                <h2 style="margin: 0; color: #333;">📄 Novo Procedimento Operacional Padrão (POP)</h2>
                 <button type="button" onclick="document.getElementById('popModal').remove()" style="background:none; border:none; font-size:30px; cursor:pointer; color:#999;">&times;</button>
             </div>
             
@@ -207,10 +207,10 @@ async function loadPopsTable() {
                 <tr style="border-bottom: 1px solid #eee;">
                     <td style="padding: 12px 10px;"><strong>${escCodigo}</strong></td>
                     <td style="padding: 12px 10px;">${escTitulo}</td>
-                    <td style="padding: 12px 10px;"><span style="background: #cff4fc; color: #055160; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight:bold;">ATIVO</span></td>
+                    <td style="padding: 12px 10px;"><span style="background: #e7f3ff; color: #004080; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight:bold;">ATIVO</span></td>
                     <td style="padding: 12px 10px;">${dataCriacao}</td>
                     <td style="padding: 12px 10px;">
-                        <button onclick="viewPopDetails(this.getAttribute('data-id'))" data-id="${escCodigo}" class="btn btn-outline-primary btn-sm" style="padding: 5px 10px; cursor: pointer; border-color:#0dcaf0; color:#000;">📄 Abrir Documento</button>
+                        <button onclick="viewPopDetails(this.getAttribute('data-id'))" data-id="${escCodigo}" class="btn btn-outline-primary btn-sm" style="padding: 5px 10px; cursor: pointer; border-color:#007bff; color:#000;">📄 Abrir Documento</button>
                     </td>
                 </tr>`;
         });
@@ -221,6 +221,14 @@ async function loadPopsTable() {
 // ==========================================
 // 5. O MODELO OFICIAL DO GMAE (.DOCX) -> PDF
 // ==========================================
+
+function formatPopSection(title, content) {
+    return `<div class="pop-sec" style="margin-bottom: 20px; page-break-inside: avoid;">
+                <h4 style="margin: 0 0 8px 0; font-size: 13pt; font-weight: 700; color: #000;">${title}</h4>
+                <p style="margin: 0; white-space: pre-wrap; text-align: justify; color: #111; font-size: 11pt;">${content || 'Não informado.'}</p>
+            </div>`;
+}
+
 window.viewPopDetails = function(codigo) {
     const pop = window.popsDataList.find(p => p.codigo === codigo);
     if (!pop) return;
@@ -228,95 +236,75 @@ window.viewPopDetails = function(codigo) {
     let dados = {};
     try { dados = JSON.parse(pop.descricao); } catch(e) { dados = { objetivo: pop.descricao }; }
 
-    let anexoHTML = `<p style="color:#666; font-style:italic;">Nenhum anexo disponível.</p>`;
+    let anexoHTML = `<p style="color:#000; font-style:italic;">Nenhum anexo disponível.</p>`;
     let fileData = dados.anexo_dados || dados.anexos;
     
     if (fileData && fileData.startsWith('data:')) {
         let isImage = fileData.includes('image/');
         let meta = { name: `Anexo_${pop.codigo}` };
-        try { if(dados.anexo_meta) meta = JSON.parse(dados.anexo_meta); } catch(e) {}
+        try { if (dados.anexo_meta) meta = JSON.parse(dados.anexo_meta); } catch(e) {}
 
         if (isImage) {
-            anexoHTML = `<div style="text-align:center;"><img src="${fileData}" style="max-width: 100%; max-height: 400px; border: 1px solid #ccc; padding: 5px;" alt="Anexo do POP"></div>`;
+            anexoHTML = `<div style="text-align:center;"><img src="${fileData}" style="max-width: 100%; max-height: 400px; border: 1px solid #000; padding: 5px;" alt="Anexo do POP"></div>`;
         } else {
-            anexoHTML = `<a href="${fileData}" download="${meta.name}" style="display:inline-block; padding:10px 20px; background:#f8f9fa; color:#000; text-decoration:none; border: 2px solid #000; border-radius:5px; font-weight:bold;">📎 Baixar Documento Anexo: ${meta.name}</a>`;
+            anexoHTML = `<a href="${fileData}" download="${meta.name}" style="display:inline-block; padding:10px 20px; background:#fff; color:#000; text-decoration:none; border: 2px solid #000; border-radius:5px; font-weight:bold;">📎 Baixar Documento Anexo: ${meta.name}</a>`;
         }
     }
+
+    const renderField = (value) => value ? value : 'Não informado.';
+    const version = dados.versao || '1.0';
 
     const divDocumento = document.createElement('div');
     divDocumento.id = "pop-document-container";
     divDocumento.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10000; display:flex; justify-content:center; overflow-y:auto; padding: 20px;";
     
     divDocumento.innerHTML = `
-        <div style="background:#fff; width:210mm; min-height:297mm; padding: 20mm; position:relative; font-family: Arial, sans-serif; color: #000; box-shadow: 0 0 20px rgba(0,0,0,0.5);">
+        <div style="background:#fff; width:min(1000px, 100%); max-width: 95vw; min-height:auto; padding: 24px; position:relative; font-family: Arial, sans-serif; color: #000; box-shadow: 0 0 40px rgba(0,0,0,0.35); border: 1px solid #000;">
             
-            <div data-html2canvas-ignore="true" style="position: sticky; top: -20px; background: #fff; padding: 15px; margin: -20px -20px 20px -20px; border-bottom: 2px solid #000; display: flex; justify-content: space-between; z-index: 10;">
-                <button onclick="document.getElementById('pop-document-container').remove()" class="btn" style="padding: 8px 15px; cursor: pointer; background:#eee; border:1px solid #ccc; border-radius:4px;">⬅ Fechar Visualização</button>
-                <button onclick="gerarPDF('${pop.codigo}')" class="btn" style="padding: 8px 15px; background:#dc3545; color:white; border:none; font-weight:bold; cursor:pointer; border-radius:4px; box-shadow: 0 2px 4px rgba(220,53,69,0.4);">🖨️ EXPORTAR PDF OFICIAL</button>
+            <div data-html2canvas-ignore="true" style="position: sticky; top: 0; background: #fff; padding: 15px; margin: -24px -24px 20px -24px; border-bottom: 2px solid #000; display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; z-index: 10;">
+                <button onclick="document.getElementById('pop-document-container').remove()" class="btn" style="padding: 8px 15px; cursor: pointer; background:#fff; color:#000; border:1px solid #000; border-radius:4px;">⬅ Fechar Visualização</button>
+                <button onclick="gerarPDF('${pop.codigo}')" class="btn" style="padding: 8px 15px; background:#007bff; color:white; border:none; font-weight:bold; cursor:pointer; border-radius:4px; box-shadow: 0 2px 4px rgba(0,123,255,0.3);">🖨️ EXPORTAR PDF OFICIAL</button>
             </div>
 
             <div id="conteudo-para-pdf" style="padding: 5mm; font-size: 11pt; line-height: 1.5; color: #000;">
-                
-                <div style="text-align: center; margin-bottom: 30px;">
-                    <svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="margin-bottom: 10px;">
-                        <polygon points="50,5 95,25 95,75 50,95 5,75 5,25" fill="none" stroke="#0dcaf0" stroke-width="6"/>
-                        <polygon points="50,15 85,32 85,68 50,85 15,68 15,32" fill="none" stroke="#111" stroke-width="6"/>
-                        <circle cx="50" cy="50" r="10" fill="#0dcaf0"/>
-                    </svg>
-                    <h1 style="margin: 0; font-size: 28px; letter-spacing: 3px; color: #111;">GMAE</h1>
-                    <h3 style="margin: 5px 0 20px 0; font-size: 12px; font-weight: bold; letter-spacing: 1px; color: #0dcaf0;">GRUPO DE PESQUISA EM MATERIAIS ELETROATIVOS</h3>
-                    <h2 style="margin: 0; font-size: 18px; text-decoration: underline;">Procedimento Operacional Padrão (POP)</h2>
+                <div style="text-transform:uppercase; font-size:12px; letter-spacing:1.5px; color:#007bff; font-weight:700; margin-bottom:10px;">Procedimento Operacional Padrão (POP)</div>
+                <h1 style="margin:0 0 12px 0; font-size:26px; color:#000; line-height:1.1;">${renderField(pop.titulo)}</h1>
+
+                <div style="border: 1px solid #000; padding: 16px; border-radius: 10px; margin-bottom: 22px; background: #fff;">
+                    <p style="margin: 0 0 8px 0; font-size: 11pt;"><strong>Título do Procedimento:</strong> ${renderField(pop.titulo)}</p>
+                    <p style="margin: 0 0 8px 0; font-size: 11pt;"><strong>Código do Documento:</strong> ${renderField(pop.codigo)}</p>
+                    <p style="margin: 0 0 8px 0; font-size: 11pt;"><strong>Versão:</strong> ${version}</p>
+                    <p style="margin: 0 0 8px 0; font-size: 11pt;"><strong>Data de Emissão:</strong> ${renderField(dados.data_emissao)}</p>
+                    <p style="margin: 0; font-size: 11pt;"><strong>Responsável:</strong> ${renderField(dados.responsavel)}</p>
                 </div>
 
-                <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 11pt;">
-                    <tr>
-                        <td style="border: 1px solid #000; padding: 8px; width: 50%;"><strong>Título do Procedimento:</strong> <br>${pop.titulo}</td>
-                        <td style="border: 1px solid #000; padding: 8px; width: 50%;"><strong>Código do Documento:</strong> <br>${pop.codigo}</td>
-                    </tr>
-                    <tr>
-                        <td style="border: 1px solid #000; padding: 8px;"><strong>Versão:</strong> ${dados.versao || '1.0'}</td>
-                        <td style="border: 1px solid #000; padding: 8px;"><strong>Data de Emissão:</strong> ${dados.data_emissao || '-'}</td>
-                    </tr>
-                    <tr>
-                        <td colspan="2" style="border: 1px solid #000; padding: 8px;"><strong>Responsável:</strong> ${dados.responsavel || '-'}</td>
-                    </tr>
-                </table>
-
-                <style> 
-                    .pop-sec { margin-bottom: 20px; page-break-inside: avoid; }
-                    .pop-sec h4 { margin: 0 0 5px 0; font-size: 12pt; font-weight: bold; color: #111; }
-                    .pop-sec p { margin: 0; white-space: pre-wrap; text-align: justify; }
-                </style>
-
-                <div class="pop-sec"><h4>1. Objetivo</h4><p>${dados.objetivo || 'Não informado.'}</p></div>
-                <div class="pop-sec"><h4>2. Aplicação e Escopo</h4><p>${dados.escopo || 'Não informado.'}</p></div>
-                <div class="pop-sec"><h4>3. Responsabilidades</h4><p>${dados.responsabilidades || 'Não informado.'}</p></div>
-                <div class="pop-sec"><h4>4. Materiais e Equipamentos Necessários</h4><p>${dados.materiais || 'Não informado.'}</p></div>
-                <div class="pop-sec"><h4>5. Procedimento Operacional</h4><p>${dados.procedimento || 'Não informado.'}</p></div>
-                <div class="pop-sec"><h4>6. Controle de Qualidade</h4><p>${dados.qualidade || 'Não informado.'}</p></div>
-                <div class="pop-sec"><h4>7. Segurança e Riscos</h4><p>${dados.seguranca || 'Não informado.'}</p></div>
-                <div class="pop-sec"><h4>8. Manutenção e Calibração</h4><p>${dados.manutencao || 'Não informado.'}</p></div>
-                <div class="pop-sec"><h4>9. Referências</h4><p>${dados.referencias || 'Não informado.'}</p></div>
-                
-                <div class="pop-sec">
-                    <h4>10. Anexos</h4>
-                    <div style="margin-top: 10px;">${anexoHTML}</div>
+                ${formatPopSection('1. Objetivo', dados.objetivo)}
+                ${formatPopSection('2. Aplicação e Escopo', dados.escopo)}
+                ${formatPopSection('3. Responsabilidades', dados.responsabilidades)}
+                ${formatPopSection('4. Materiais e Equipamentos Necessários', dados.materiais)}
+                ${formatPopSection('5. Procedimento Operacional', dados.procedimento)}
+                ${formatPopSection('6. Controle de Qualidade', dados.qualidade)}
+                ${formatPopSection('7. Segurança e Riscos', dados.seguranca)}
+                ${formatPopSection('8. Manutenção e Calibração', dados.manutencao)}
+                ${formatPopSection('9. Referências', dados.referencias)}
+                <div class="pop-sec" style="margin-bottom: 20px; page-break-inside: avoid;">
+                    <h4 style="margin: 0 0 8px 0; font-size: 13pt; font-weight: 700; color: #000;">10. Anexos</h4>
+                    <div style="padding: 14px 16px; border: 1px solid #000; border-radius: 8px; background: #f7f9ff; color: #111;">${anexoHTML}</div>
                 </div>
-                
-                <div class="pop-sec" style="margin-top: 40px;">
-                    <h4>11. Histórico de Revisões</h4>
+                <div class="pop-sec" style="margin-top: 20px; page-break-inside: avoid;">
+                    <h4 style="margin: 0 0 8px 0; font-size: 13pt; font-weight: 700; color: #000;">11. Histórico de Revisões</h4>
                     <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 10pt; margin-top: 10px;">
-                        <tr style="background:#f0f0f0;">
-                            <th style="border: 1px solid #000; padding: 6px;">Data</th>
-                            <th style="border: 1px solid #000; padding: 6px;">Versão</th>
-                            <th style="border: 1px solid #000; padding: 6px;">Descrição das Alterações</th>
-                            <th style="border: 1px solid #000; padding: 6px;">Responsável</th>
+                        <tr style="background:#e7f3ff;">
+                            <th style="border: 1px solid #000; padding: 8px;">Data</th>
+                            <th style="border: 1px solid #000; padding: 8px;">Versão</th>
+                            <th style="border: 1px solid #000; padding: 8px;">Descrição das Alterações</th>
+                            <th style="border: 1px solid #000; padding: 8px;">Responsável</th>
                         </tr>
                         <tr>
-                            <td style="border: 1px solid #000; padding: 6px;">${dados.data_emissao || '-'}</td>
-                            <td style="border: 1px solid #000; padding: 6px;">${dados.versao || '1.0'}</td>
-                            <td style="border: 1px solid #000; padding: 6px;">Criação do documento oficial</td>
-                            <td style="border: 1px solid #000; padding: 6px;">${dados.responsavel || '-'}</td>
+                            <td style="border: 1px solid #000; padding: 8px;">${renderField(dados.data_emissao)}</td>
+                            <td style="border: 1px solid #000; padding: 8px;">${version}</td>
+                            <td style="border: 1px solid #000; padding: 8px;">Criação do documento oficial</td>
+                            <td style="border: 1px solid #000; padding: 8px;">${renderField(dados.responsavel)}</td>
                         </tr>
                     </table>
                 </div>

@@ -1,0 +1,61 @@
+Procedimento Operacional Padrão (POP)
+Título do Procedimento: [Nome do Equipamento ou Procedimento]Código do Documento: [Código único do documento, se aplicável]Versão: [Número da versão, ex.: 1.0]Data de Emissão: [Data de criação ou revisão]Responsável: [Nome do responsável pela elaboração ou revisão]
+1. Objetivo
+Descreva o propósito do procedimento e o que se espera alcançar com ele.
+Exemplo:
+2. Aplicação e Escopo
+Defina onde e quando o procedimento deve ser aplicado, e quais atividades ou equipamentos ele cobre.
+3. Responsabilidades
+Liste as pessoas ou cargos responsáveis por executar, supervisionar ou revisar o procedimento.
+Operadores do equipamento: [Descrição das responsabilidades]
+Supervisor do laboratório: [Descrição das responsabilidades]
+4. Materiais e Equipamentos Necessários
+Liste todos os materiais, reagentes, equipamentos ou ferramentas necessários para executar o procedimento.
+[Nome do Equipamento]
+[Lista de materiais ou acessórios]
+[EPIs necessários]
+5. Procedimento Operacional
+Descreva, passo a passo, como o equipamento deve ser operado. Inclua detalhes técnicos, configurações e precauções.
+5.1. Preparação:
+Verifique se o equipamento está limpo e em boas condições de uso.
+Confira se todos os materiais necessários estão disponíveis.
+5.2. Operação:
+Ligue o equipamento na tomada e pressione o botão de energia.
+Ajuste as configurações conforme necessário: [Detalhes técnicos].
+Execute o procedimento de calibração, se aplicável.
+Inicie o processo de análise/operação.
+5.3. Finalização:
+Desligue o equipamento seguindo a sequência correta.
+Limpe o equipamento e a área de trabalho.
+Registre os dados obtidos no [Local de registro, ex.: livro de registros].
+6. Controle de Qualidade
+Descreva como a qualidade do procedimento será monitorada e quais padrões devem ser atendidos.
+Realizar calibração do equipamento a cada [período determinado].
+Verificar os resultados com padrões de referência.
+7. Segurança e Riscos
+Liste os riscos associados ao uso do equipamento e as medidas de segurança necessárias.
+Utilizar EPIs: [Lista de EPIs, ex.: luvas, óculos de proteção].
+Evitar contato direto com [substância ou parte do equipamento].
+Em caso de emergência, seguir o procedimento [Referência ao plano de emergência].
+8. Manutenção e Calibração
+Descreva como e quando o equipamento deve ser mantido ou calibrado.
+Realizar limpeza diária após o uso.
+Agendar manutenção preventiva a cada [período determinado].
+9. Referências
+Liste documentos, manuais ou normas técnicas que foram utilizados como base para o procedimento.
+Manual do fabricante do [Nome do Equipamento].
+Norma [Número da norma, se aplicável].
+10. Anexos
+Inclua quaisquer formulários, diagramas, fluxogramas ou imagens que sejam relevantes para o procedimento.
+Fluxograma de operação do equipamento.
+Formulário de registro de uso.
+11. Histórico de Revisões
+Registre as alterações feitas no documento ao longo do tempo.
+Data
+Versão
+Descrição das Alterações
+Responsável
+[Data]
+1.0
+Criação do documento
+[Nome]
