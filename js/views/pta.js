@@ -123,12 +123,25 @@ async function carregarMeusPTAs() {
 
         let html = '';
         relatorios.forEach(rel => {
-            const isAprovado = rel.status === 'consolidado';
-            const statusColor = isAprovado ? 'var(--primary)' : '#64748b';
-            const statusText = isAprovado ? 'Aprovado' : 'Em Avaliação';
-            
+            let statusColor = '#64748b';
+            let statusText = '⏳ Em Avaliação';
+            let bgCard = '#F8FAFC';
+            let borderCard = '#E2E8F0';
+
+            if (rel.status === 'consolidado') {
+                statusColor = 'var(--primary)';
+                statusText = '✅ Aprovado';
+                borderCard = 'var(--primary)';
+            } else if (rel.status === 'rascunho') {
+                statusColor = 'var(--danger)';
+                statusText = '❌ Devolvido (Revisar)';
+                bgCard = '#FEF2F2'; 
+                borderCard = '#FCA5A5';
+            }
+            // ----------------------------------------------------
+
             html += `
-                <div style="border: 1px solid #E2E8F0; border-left: 4px solid ${statusColor}; border-radius: 6px; padding: 15px; background: #F8FAFC;">
+                <div style="border: 1px solid ${borderCard}; border-left: 4px solid ${statusColor}; border-radius: 6px; padding: 15px; background: ${bgCard};">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                         <strong style="color: #334155;">Mês ${rel.mes_referencia}/${rel.ano_referencia}</strong>
                         <span style="font-size: 12px; font-weight: bold; color: ${statusColor}; text-transform: uppercase;">${statusText}</span>
@@ -136,7 +149,7 @@ async function carregarMeusPTAs() {
                     <div style="font-size: 13px; color: #64748B; margin-bottom: 8px;">Tópico ID: ${rel.topico_id}</div>
                     
                     <div style="width: 100%; background: #E2E8F0; border-radius: 4px; height: 8px; margin-bottom: 10px;">
-                        <div style="background: var(--primary); height: 100%; border-radius: 4px; width: ${rel.percentual_avanco}%;"></div>
+                        <div style="background: ${statusColor === '#64748b' ? 'var(--primary)' : statusColor}; height: 100%; border-radius: 4px; width: ${rel.percentual_avanco}%;"></div>
                     </div>
                     
                     <div style="font-size: 13px; color: #475569; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-style: italic;">
@@ -150,7 +163,6 @@ async function carregarMeusPTAs() {
         container.innerHTML = '<p style="color:red;">Erro ao carregar histórico.</p>';
     }
 }
-
 async function enviarRelatorio(e) {
     e.preventDefault();
     const payload = {
@@ -200,7 +212,7 @@ function renderPTACoordenador() {
 
     main.innerHTML = `
         <div class="view-header">
-            <h2>Gestão de PTA e Síntese</h2>
+            <h2>Gestão de PTA</h2>
             <p class="text-muted">Navegue pelo calendário para avaliar relatórios e gerar textos consolidados.</p>
         </div>
 
