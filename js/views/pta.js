@@ -57,7 +57,7 @@ function renderPTAPesquisador() {
         <div class="grid-fluida" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
             
             <div class="card-responsivo" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); align-self: start;">
-                <h3 style="margin-bottom: 20px; color: #1e293b; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">📝 Novo Relatório</h3>
+                <h3 style="margin-bottom: 20px; color: #1e293b; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">Novo Relatório</h3>
                 <form id="form-pta">
                     <div style="margin-bottom: 15px;">
                         <label style="font-weight: bold; font-size: 14px;">Tópico de Pesquisa:</label>
@@ -78,7 +78,7 @@ function renderPTAPesquisador() {
                     <div style="margin-bottom: 25px; padding: 15px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px;">
                         <label style="display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: bold;">
                             <span>Avanço Geral da Pesquisa:</span>
-                            <span id="valor-avanco" style="color: #2563EB;">50%</span>
+                            <span id="valor-avanco" style="color: var(--primary);">50%</span>
                         </label>
                         <input type="range" id="pta-avanco" min="0" max="100" value="50" style="width: 100%; cursor: pointer;" 
                                oninput="document.getElementById('valor-avanco').innerText = this.value + '%'">
@@ -86,17 +86,17 @@ function renderPTAPesquisador() {
                     
                     <div style="margin-bottom: 20px;">
                         <label style="font-weight: bold; font-size: 14px;">Descrição das Atividades no Mês</label>
-                        <textarea id="pta-descricao" class="form-control" rows="6" placeholder="Descreva os experimentos, resultados e artigos lidos neste mês..." required style="width: 100%; padding: 8px;"></textarea>
+                        <textarea id="pta-descricao" class="form-control" rows="6" placeholder="Descreva os experimentos, resultados e atividades..." required style="width: 100%; padding: 8px;"></textarea>
                     </div>
                     
-                    <button type="submit" class="btn btn-primary" style="width: 100%; font-weight: bold; padding: 10px;">📤 Enviar para Chefia</button>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; font-weight: bold; padding: 10px;">Enviar para Chefia</button>
                 </form>
             </div>
 
             <div class="card-responsivo" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); align-self: start;">
-                <h3 style="margin-bottom: 20px; color: #1e293b; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">🕰️ Meus Últimos Envios</h3>
+                <h3 style="margin-bottom: 20px; color: #1e293b; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">Meus Últimos Envios</h3>
                 <div id="meus-ptas-lista" style="display: flex; flex-direction: column; gap: 15px; max-height: 600px; overflow-y: auto; padding-right: 5px;">
-                    <span class="spinner"></span> Carregando seu histórico...
+                    <span class="spinner" style="border-top-color: var(--primary);"></span> Buscando histórico...
                 </div>
             </div>
 
@@ -123,19 +123,20 @@ async function carregarMeusPTAs() {
 
         let html = '';
         relatorios.forEach(rel => {
-            const statusColor = rel.status === 'consolidado' ? '#10B981' : '#F59E0B';
-            const statusText = rel.status === 'consolidado' ? '✅ Aprovado' : '⏳ Em Avaliação';
+            const isAprovado = rel.status === 'consolidado';
+            const statusColor = isAprovado ? 'var(--primary)' : '#64748b';
+            const statusText = isAprovado ? 'Aprovado' : 'Em Avaliação';
             
             html += `
                 <div style="border: 1px solid #E2E8F0; border-left: 4px solid ${statusColor}; border-radius: 6px; padding: 15px; background: #F8FAFC;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                         <strong style="color: #334155;">Mês ${rel.mes_referencia}/${rel.ano_referencia}</strong>
-                        <span style="font-size: 12px; font-weight: bold; color: ${statusColor};">${statusText}</span>
+                        <span style="font-size: 12px; font-weight: bold; color: ${statusColor}; text-transform: uppercase;">${statusText}</span>
                     </div>
                     <div style="font-size: 13px; color: #64748B; margin-bottom: 8px;">Tópico ID: ${rel.topico_id}</div>
                     
                     <div style="width: 100%; background: #E2E8F0; border-radius: 4px; height: 8px; margin-bottom: 10px;">
-                        <div style="background: #3B82F6; height: 100%; border-radius: 4px; width: ${rel.percentual_avanco}%;"></div>
+                        <div style="background: var(--primary); height: 100%; border-radius: 4px; width: ${rel.percentual_avanco}%;"></div>
                     </div>
                     
                     <div style="font-size: 13px; color: #475569; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-style: italic;">
@@ -190,7 +191,7 @@ async function enviarRelatorio(e) {
 }
 
 // ==========================================
-// TELA 2: VISÃO DO ADMIN (CALENDÁRIO INTERATIVO)
+// TELA 2: VISÃO DO ADMIN (CALENDÁRIO & APROVADOS)
 // ==========================================
 function renderPTACoordenador() {
     const main = document.getElementById('dynamic-content');
@@ -200,72 +201,72 @@ function renderPTACoordenador() {
     main.innerHTML = `
         <div class="view-header">
             <h2>Gestão de PTA e Síntese</h2>
-            <p class="text-muted">Crie tópicos e navegue pelo calendário para avaliar relatórios e gerar textos com IA.</p>
+            <p class="text-muted">Navegue pelo calendário para avaliar relatórios e gerar textos consolidados.</p>
         </div>
 
         <div class="grid-admin">
-            <div class="card-responsivo" style="background: white; border-radius: 8px; padding: 20px; border-top: 4px solid #10B981;">
-                <h4 style="margin-bottom: 15px; color: #047857;">+ Novo Tópico de Pesquisa</h4>
+            <div class="card-responsivo" style="background: white; border-radius: 8px; padding: 20px;">
+                <h4 style="margin-bottom: 15px; color: var(--text-main);">Novo Tópico de Pesquisa</h4>
                 <form id="form-novo-topico">
                     <div style="margin-bottom: 10px;">
-                        <label style="font-size: 13px; font-weight:bold;">Título do Tópico:</label>
-                        <input type="text" id="novo-topico-titulo" class="form-control" placeholder="Ex: Síntese de Grafeno" required>
+                        <label style="font-size: 13px; font-weight:600;">Título do Tópico:</label>
+                        <input type="text" id="novo-topico-titulo" class="form-control" required>
                     </div>
                     <div style="margin-bottom: 15px;">
-                        <label style="font-size: 13px; font-weight:bold;">Ano Vigente:</label>
+                        <label style="font-size: 13px; font-weight:600;">Ano Vigente:</label>
                         <input type="number" id="novo-topico-ano" class="form-control" value="${anoAtual}" required>
                     </div>
-                    <button type="submit" class="btn btn-primary" style="background: #10B981; border: none; width: 100%;">Cadastrar Tópico</button>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Cadastrar Tópico</button>
                 </form>
             </div>
 
-            <div class="card-responsivo" style="background: white; border-radius: 8px; padding: 20px; border-top: 4px solid #3B82F6;">
+            <div class="card-responsivo" style="background: white; border-radius: 8px; padding: 20px; border-top: 4px solid var(--primary);">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h4 style="color: #1E3A8A; margin: 0;">📅 Navegação do Ano</h4>
+                    <h4 style="color: var(--primary); margin: 0;">Navegação do Ano</h4>
                     <div style="display: flex; gap: 10px; align-items: center;">
                         <button class="btn btn-sm btn-secondary" onclick="mudarAnoCalendario(-1)">◀</button>
-                        <h3 id="calendario-ano-display" style="margin: 0; min-width: 60px; text-align: center;">${anoAtual}</h3>
+                        <h3 id="calendario-ano-display" style="margin: 0; min-width: 60px; text-align: center; color: var(--text-main);">${anoAtual}</h3>
                         <button class="btn btn-sm btn-secondary" onclick="mudarAnoCalendario(1)">▶</button>
                     </div>
                 </div>
                 
-                <div class="meses-grid" id="grid-meses">
-                    </div>
+                <div class="meses-grid" id="grid-meses"></div>
             </div>
         </div>
 
         <div id="painel-mes-detalhe" class="painel-detalhe">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #F1F5F9; padding-bottom: 15px; margin-bottom: 20px;">
-                <h3 id="painel-titulo" style="margin: 0; color: #0F172A;">Progresso do Mês</h3>
-                <button class="btn btn-sm btn-secondary" onclick="fecharPainelMes()">✖ Fechar</button>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #E2E8F0; padding-bottom: 15px; margin-bottom: 20px;">
+                <h3 id="painel-titulo" style="margin: 0; color: var(--text-main);">Gestão do Mês</h3>
+                <button class="btn btn-sm btn-secondary" onclick="fecharPainelMes()">Fechar Painel</button>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
-                
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
                 <div>
-                    <h4 style="color: #F59E0B; margin-bottom: 15px;">⏳ Relatórios Pendentes</h4>
-                    <div id="lista-pendencias" style="max-height: 400px; overflow-y: auto; padding-right: 5px;">
-                        Clique em um mês para carregar.
-                    </div>
+                    <h4 style="color: #475569; margin-bottom: 15px; font-size: 15px; text-transform: uppercase;">Relatórios Pendentes</h4>
+                    <div id="lista-pendencias" style="max-height: 400px; overflow-y: auto; padding-right: 5px;"></div>
                 </div>
 
-                <div style="background: #F0FDF4; padding: 20px; border-radius: 8px; border: 1px solid #BBF7D0;">
-                    <h4 style="color: #166534; margin-bottom: 10px;">✨ Gerar Síntese (Inteligência Artificial)</h4>
-                    <p style="font-size: 13px; color: #15803D; margin-bottom: 15px;">A IA irá ler todos os relatórios <b>aprovados</b> deste mês e gerar um parágrafo consolidado.</p>
+                <div style="background: #F8FAFC; padding: 20px; border-radius: 8px; border: 1px solid #E2E8F0;">
+                    <h4 style="color: var(--primary); margin-bottom: 10px; font-size: 15px;">Gerar Síntese (Inteligência Artificial)</h4>
+                    <p style="font-size: 13px; color: #64748b; margin-bottom: 15px;">Unifica todos os relatórios <b>aprovados</b> do mês atual.</p>
                     
-                    <label style="font-size: 13px; font-weight:bold; color: #166534;">Escolha o Tópico para resumir:</label>
-                    <select id="ia-topico-id" class="form-control" style="border-color: #22C55E; margin-bottom: 15px;"></select>
+                    <select id="ia-topico-id" class="form-control" style="margin-bottom: 15px; border-color: var(--border);"></select>
                     
-                    <button id="btn-gerar-ia" class="btn btn-primary" onclick="gerarSinteseIA()" style="background: #166534; border: none; width: 100%; font-weight:bold;">
-                        🧠 Unificar textos aprovados
+                    <button id="btn-gerar-ia" class="btn btn-primary" onclick="gerarSinteseIA()" style="width: 100%;">
+                        Processar Textos Aprovados
                     </button>
                     
-                    <div id="resultado-ia" style="display: none; background: white; border-left: 4px solid #166534; padding: 15px; margin-top: 15px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                        <strong style="color: #166534;">Texto Consolidado (Copie e cole no relatório oficial):</strong>
+                    <div id="resultado-ia" style="display: none; background: white; border-left: 4px solid var(--primary); padding: 15px; margin-top: 15px; border-radius: 4px; box-shadow: var(--shadow-sm);">
+                        <strong style="color: var(--primary); font-size: 14px;">Texto Consolidado:</strong>
                         <p id="texto-ia" style="margin-top: 10px; line-height: 1.6; color: #334155; font-size: 14px;"></p>
                     </div>
                 </div>
+            </div>
 
+            <div style="border-top: 1px solid #E2E8F0; padding-top: 25px;">
+                <h4 style="color: var(--text-main); margin-bottom: 15px; font-size: 15px; text-transform: uppercase;">Relatórios Aprovados (Consolidados)</h4>
+                <div id="lista-aprovados" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px;">
+                </div>
             </div>
         </div>
     `;
@@ -277,13 +278,12 @@ function renderPTACoordenador() {
 }
 
 // ==========================================
-// FUNÇÕES DO CALENDÁRIO E PAINEL (ADMIN)
+// FUNÇÕES DO CALENDÁRIO
 // ==========================================
 window.mudarAnoCalendario = function(delta) {
     window.estadoCalendario.ano += delta;
     document.getElementById('calendario-ano-display').innerText = window.estadoCalendario.ano;
-    window.estadoCalendario.mesSelecionado = null; 
-    document.getElementById('painel-mes-detalhe').style.display = 'none';
+    fecharPainelMes();
     renderizarMeses();
 }
 
@@ -307,10 +307,11 @@ window.selecionarMes = function(mes, nomeMes) {
 
     const painel = document.getElementById('painel-mes-detalhe');
     painel.style.display = 'block';
-    document.getElementById('painel-titulo').innerText = `Gestão do Mês: ${nomeMes} / ${window.estadoCalendario.ano}`;
+    document.getElementById('painel-titulo').innerText = `Gestão: ${nomeMes} / ${window.estadoCalendario.ano}`;
     document.getElementById('resultado-ia').style.display = 'none'; 
 
     carregarPendenciasChefia(mes, window.estadoCalendario.ano);
+    carregarAprovadosChefia(mes, window.estadoCalendario.ano);
 }
 
 window.fecharPainelMes = function() {
@@ -319,43 +320,86 @@ window.fecharPainelMes = function() {
     document.querySelectorAll('.mes-card').forEach(el => el.classList.remove('active'));
 }
 
+// ==========================================
+// CARREGAR DADOS DO MÊS (PENDENTES E APROVADOS)
+// ==========================================
 window.carregarPendenciasChefia = async function(mes, ano) {
     const container = document.getElementById('lista-pendencias');
-    container.innerHTML = '<span class="spinner"></span> Buscando relatórios...';
+    container.innerHTML = '<span class="spinner" style="border-top-color: #64748b;"></span> <span style="color: #64748b; font-size: 14px;">Buscando...</span>';
 
     try {
         const res = await window.api.fetchProtected(`/pta/chefia/pendentes?mes=${mes}&ano=${ano}`);
         const relatorios = await res.json();
 
         if (relatorios.length === 0) {
-            container.innerHTML = '<div style="background:#F8FAFC; padding: 20px; border-radius: 6px; text-align:center; color:#94A3B8;">Nenhum relatório aguardando aprovação.</div>';
+            container.innerHTML = '<div style="background:#F8FAFC; padding: 20px; border-radius: 6px; text-align:center; color:#94A3B8; font-size: 14px;">Tudo limpo! Nenhuma pendência.</div>';
             return;
         }
 
         let html = '';
         relatorios.forEach(rel => {
             html += `
-                <div class="card mb-sm" id="card-relatorio-${rel.id}" style="border-left: 4px solid #F59E0B; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 15px;">
+                <div class="card mb-sm" id="card-relatorio-${rel.id}" style="border-left: 3px solid #94A3B8; padding: 15px; margin-bottom: 15px;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span style="font-size: 12px; color: #64748B; font-weight: bold;">Pesquisador ID: ${rel.usuario_id} | Tópico: ${rel.topico_id}</span>
-                        <span style="font-size: 13px; font-weight: bold; color: #2563EB;">Avanco: ${rel.percentual_avanco}%</span>
+                        <span style="font-size: 12px; color: #64748B; font-weight: 600;">Usuário ID: ${rel.usuario_id}</span>
+                        <span class="badge" style="background: #F1F5F9; color: #475569;">Avanco: ${rel.percentual_avanco}%</span>
                     </div>
-                    <div style="background: #F8FAFC; padding: 12px; border-radius: 4px; margin-bottom: 10px; font-size: 13px; color: #334155;">
+                    <div style="background: #F8FAFC; padding: 12px; border-radius: 4px; margin-bottom: 12px; font-size: 13px; color: #334155; line-height: 1.5;">
                         ${rel.descricao_atividades}
                     </div>
-                    <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                        <button class="btn btn-sm" style="background:#FEE2E2; color:#DC2626; border:1px solid #FCA5A5; font-weight:bold;" onclick="avaliarRelato(${rel.id}, false)">Devolver ❌</button>
-                        <button class="btn btn-sm" style="background:#DCFCE7; color:#16A34A; border:1px solid #86EFAC; font-weight:bold;" onclick="avaliarRelato(${rel.id}, true)">Aprovar ✅</button>
+                    <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                        <button class="btn btn-sm btn-secondary" onclick="avaliarRelato(${rel.id}, false)">Devolver</button>
+                        <button class="btn btn-sm btn-primary" onclick="avaliarRelato(${rel.id}, true)">Aprovar</button>
                     </div>
                 </div>
             `;
         });
         container.innerHTML = html;
     } catch (err) {
-        container.innerHTML = '<div style="color:red;">Erro ao carregar dados.</div>';
+        container.innerHTML = '<div style="color:red; font-size: 14px;">Erro ao carregar dados.</div>';
     }
 }
 
+window.carregarAprovadosChefia = async function(mes, ano) {
+    const container = document.getElementById('lista-aprovados');
+    container.innerHTML = '<span class="spinner" style="border-top-color: var(--primary);"></span> <span style="color: var(--primary); font-size: 14px;">Buscando textos aprovados...</span>';
+
+    try {
+        const res = await window.api.fetchProtected(`/pta/chefia/aprovados?mes=${mes}&ano=${ano}`);
+        if (!res.ok) throw new Error("Rota não encontrada");
+        const aprovados = await res.json();
+
+        if (aprovados.length === 0) {
+            container.innerHTML = '<div style="background:#F8FAFC; padding: 20px; border-radius: 6px; text-align:center; color:#94A3B8; font-size: 14px; width: 100%;">Nenhum relatório foi consolidado neste mês ainda.</div>';
+            return;
+        }
+
+        let html = '';
+        aprovados.forEach(rel => {
+            html += `
+                <div style="background: white; border: 1px solid #E2E8F0; border-left: 4px solid var(--primary); border-radius: 6px; padding: 15px; box-shadow: var(--shadow-sm);">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                        <strong style="color: var(--primary); font-size: 14px;">${rel.usuario_nome}</strong>
+                        <span class="badge" style="background: #eff6ff; color: var(--primary);">Avanço: ${rel.percentual_avanco}%</span>
+                    </div>
+                    <div style="font-size: 12px; color: #64748B; margin-bottom: 10px; font-weight: 600; text-transform: uppercase;">
+                        Tópico: ${rel.topico_titulo}
+                    </div>
+                    <div style="font-size: 13px; color: #334155; line-height: 1.6; background: #F8FAFC; padding: 10px; border-radius: 4px;">
+                        ${rel.descricao_atividades}
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    } catch (err) {
+        container.innerHTML = '<div style="color: var(--danger); font-size: 14px;">Não foi possível carregar os aprovados. A rota do backend foi adicionada?</div>';
+    }
+}
+
+// ==========================================
+// AÇÕES DO ADMIN
+// ==========================================
 window.avaliarRelato = async function(id, aprovado) {
     try {
         const res = await window.api.fetchProtected(`/pta/chefia/avaliar/${id}`, {
@@ -365,9 +409,13 @@ window.avaliarRelato = async function(id, aprovado) {
         });
 
         if (res.ok) {
-            window.UI.showToast(aprovado ? "Relatório Aprovado para Síntese!" : "Devolvido para o pesquisador.", "success");
+            window.UI.showToast(aprovado ? "Relatório Aprovado!" : "Devolvido para o pesquisador.", "success");
             const card = document.getElementById(`card-relatorio-${id}`);
             if (card) card.style.display = 'none';
+            
+            if (aprovado) {
+                carregarAprovadosChefia(window.estadoCalendario.mesSelecionado, window.estadoCalendario.ano);
+            }
         }
     } catch (err) {
         window.UI.showToast("Falha ao avaliar.", "error");
@@ -380,17 +428,15 @@ window.gerarSinteseIA = async function() {
     const ano = window.estadoCalendario.ano;
 
     if (!topicoId) {
-        window.UI.showToast("Selecione um tópico na lista acima primeiro.", "error");
-        return;
+        window.UI.showToast("Selecione um tópico na lista acima primeiro.", "error"); return;
     }
     if (!mes) {
-        window.UI.showToast("Erro: Nenhum mês selecionado no calendário.", "error");
-        return;
+        window.UI.showToast("Erro: Nenhum mês selecionado.", "error"); return;
     }
 
     const btn = document.getElementById('btn-gerar-ia');
     const originalText = btn.innerHTML;
-    btn.innerHTML = '<span class="spinner" style="border-color: white transparent transparent transparent;"></span> Analisando...';
+    btn.innerHTML = '<span class="spinner" style="border-color: white transparent transparent transparent;"></span> Processando...';
     btn.disabled = true;
     document.getElementById('resultado-ia').style.display = 'none';
 
@@ -417,9 +463,6 @@ window.gerarSinteseIA = async function() {
     }
 }
 
-// ==========================================
-// AÇÃO: CRIAR TÓPICO (Coordenador ou ADMIN)
-// ==========================================
 async function criarTopicoAction(e) {
     e.preventDefault();
     const payload = {
