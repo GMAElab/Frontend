@@ -4,15 +4,20 @@
     --primary: #007bff;    
     --primary-hover: #0056b3;
     --surface: #ffffff;       
-    --background: #ffffff;    
+    --background: #f8fafc; /* Levemente ajustado para dar contraste com os cards brancos */
     --border: #cccccc;        
     --text-main: #000000;
     --text-muted: #333333;
     --sidebar-bg: #ffffff; 
     --sidebar-text: #000000;
     --sidebar-active: #e7f3ff;
+    
+    /* Cores de Status */
     --danger: #0056b3;
     --success: #007bff;
+    --warning: #f59e0b; /* Adicionado para PTA Pendente */
+    --info: #3b82f6;    /* Adicionado para Seleção do Calendário */
+    
     --radius-md: 8px;
     --radius-lg: 12px;
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -39,3 +44,8 @@ a:hover { color: var(--primary-hover); }
 .mb-md { margin-bottom: 1.25rem; }
 .mt-md { margin-top: 1.25rem; }
 .hidden { display: none !important; }
+ 
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
