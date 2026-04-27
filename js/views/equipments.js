@@ -55,8 +55,9 @@ async function loadEquipmentsTable() {
                         <tr>
                             <td><strong>${eq.nome}</strong></td>
                             <td><span class="badge">${eq.status || 'ativo'}</span></td>
-                            <td style="text-align:right">
+                            <td style="text-align:right; display:flex; gap: 8px; justify-content:flex-end; flex-wrap:wrap;">
                                 <button class="btn btn-small" onclick="window.viewDossier(${eq.id})">Ver Detalhes</button>
+                                <button class="btn btn-small btn-secondary" onclick="openDeepView('equipments', ${eq.id}, 'Equipamento')">Editar</button>
                             </td>
                         </tr>
                     `).join('')}

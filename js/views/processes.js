@@ -121,8 +121,9 @@ function renderProcesses(processes) {
             <td>${proc.responsavel || 'Não definido'}</td>
             <td><span class="status-badge status-${proc.status}">${statusFormatado}</span></td>
             <td>${dataFormatada}</td>
-            <td>
+            <td style="display:flex; gap: 6px; flex-wrap:wrap; justify-content:flex-end;">
                 <button onclick="viewProcessDetails(${proc.id})" class="btn btn-outline-primary btn-sm">Detalhes do processo</button>
+                <button onclick="openDeepView('processes', ${proc.id}, 'Processo')" class="btn btn-secondary btn-sm">✏️ Editar</button>
             </td>
         `;
         tbody.appendChild(row);

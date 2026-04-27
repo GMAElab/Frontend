@@ -209,8 +209,9 @@ async function loadPopsTable() {
                     <td style="padding: 12px 10px;">${escTitulo}</td>
                     <td style="padding: 12px 10px;"><span style="background: #e7f3ff; color: #004080; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight:bold;">ATIVO</span></td>
                     <td style="padding: 12px 10px;">${dataCriacao}</td>
-                    <td style="padding: 12px 10px;">
+                    <td style="padding: 12px 10px; display:flex; gap: 6px; flex-wrap:wrap;">
                         <button onclick="viewPopDetails(this.getAttribute('data-id'))" data-id="${escCodigo}" class="btn btn-outline-primary btn-sm" style="padding: 5px 10px; cursor: pointer; border-color:#007bff; color:#000;">📄 Abrir Documento</button>
+                        <button onclick="openDeepView('pops', ${JSON.stringify(escCodigo)}, 'POP')" class="btn btn-secondary btn-sm" style="padding: 5px 10px;">✏️ Editar</button>
                     </td>
                 </tr>`;
         });
