@@ -66,6 +66,21 @@ tr:hover td { background-color: rgba(0, 123, 255, 0.1); }
 
 .btn-icon { background: none; border: none; cursor: pointer; font-size: 1.2rem; }
 
+/* Badges para Status */
+.badge {
+    display: inline-block;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    border-radius: var(--radius-sm);
+    color: white;
+}
+.badge-success { background-color: var(--success); }
+.badge-danger { background-color: var(--danger); }
+.badge-warning { background-color: var(--warning); color: #000; }
+.badge-info { background-color: var(--info); }
+
 .input-group { margin-bottom: 1rem; }
 .input-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 0.9rem; }
 .input-group input {
