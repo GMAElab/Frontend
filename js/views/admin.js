@@ -254,22 +254,41 @@ async function loadAdminEquipments(container) {
     try {
         const res = await window.api.fetchProtected('/equipments');
         const eq = await res.json();
+        if (!Array.isArray(eq) || eq.length === 0) {
+            container.innerHTML = '<div class="card-responsivo"><p class="text-muted">Nenhum equipamento cadastrado.</p></div>';
+            return;
+        }
+
         let html = '<div class="card-responsivo"><table style="width:100%; text-align:left;"><tr><th>ID</th><th>Equipamento</th><th>Ação</th></tr>';
         eq.forEach(e => {
             html += `<tr><td style="padding: 10px 0;">#${e.id}</td><td>${e.nome}</td>
-            <td><button class="btn btn-outline-danger" style="padding: 5px;" onclick="adminDelete('equipments', ${e.id}, 'eq')">🗑️ Deletar</button></td></tr>`;
+            <td style="padding: 10px 0; display:flex; gap:5px;"><button class="btn btn-secondary" style="padding: 5px;" onclick="openDeepView('equipments', ${e.id}, 'Equipamento')">✏️ Editar</button><button class="btn btn-outline-danger" style="padding: 5px;" onclick="adminDelete('equipments', ${e.id}, 'eq')">🗑️ Deletar</button></td></tr>`;
         });
         container.innerHTML = html + '</table></div>';
-    } catch (err) {}
+    } catch (err) {
+        container.innerHTML = '<div class="card-responsivo"><p class="text-muted">Erro ao carregar equipamentos.</p></div>';
+    }
 }
 
 async function loadAdminPops(container) {
-    container.innerHTML = `
-        <div class="card-responsivo">
-            Para excluir POPs, digite o código exato: <br><br>
-            <input type="text" id="pop-code" class="form-control" placeholder="Ex: POP-001" style="width: 200px; display: inline-block;">
-            <button class="btn btn-outline-danger" onclick="adminDelete('pops', document.getElementById('pop-code').value, 'pop')">🗑️ Excluir POP</button>
-        </div>`;
+    container.innerHTML = '<span class="spinner"></span>';
+    try {
+        const res = await window.api.fetchProtected('/pops');
+        const pops = await res.json();
+        if (!Array.isArray(pops) || pops.length === 0) {
+            container.innerHTML = '<div class="card-responsivo"><p class="text-muted">Nenhum POP disponível.</p></div>';
+            return;
+        }
+
+        let html = '<div class="card-responsivo"><table style="width:100%; text-align:left;"><tr><th>Código</th><th>Título</th><th>Ação</th></tr>';
+        pops.forEach(p => {
+            html += `<tr><td style="padding: 10px 0;">${p.codigo}</td><td>${p.titulo}</td>
+            <td style="padding: 10px 0; display:flex; gap:5px;"><button class="btn btn-secondary" style="padding: 5px;" onclick="openDeepView('pops', ${JSON.stringify(p.codigo)}, 'POP')">✏️ Editar</button><button class="btn btn-outline-danger" style="padding: 5px;" onclick="adminDelete('pops', ${JSON.stringify(p.codigo)}, 'pop')">🗑️ Deletar</button></td></tr>`;
+        });
+        container.innerHTML = html + '</table></div>';
+    } catch (err) {
+        container.innerHTML = '<div class="card-responsivo"><p class="text-muted">Erro ao carregar POPs.</p></div>';
+    }
 }
 
 async function loadAdminProcesses(container) {
@@ -277,13 +296,20 @@ async function loadAdminProcesses(container) {
     try {
         const res = await window.api.fetchProtected('/processes');
         const procs = await res.json();
+        if (!Array.isArray(procs) || procs.length === 0) {
+            container.innerHTML = '<div class="card-responsivo"><p class="text-muted">Nenhum processo cadastrado.</p></div>';
+            return;
+        }
+
         let html = '<div class="card-responsivo"><table style="width:100%; text-align:left;"><tr><th>ID</th><th>Processo</th><th>Ação</th></tr>';
         procs.forEach(p => {
             html += `<tr><td style="padding: 10px 0;">#${p.id}</td><td>${p.nome_processo}</td>
-            <td><button class="btn btn-outline-danger" style="padding: 5px;" onclick="adminDelete('processes', ${p.id}, 'proc')">🗑️ Deletar</button></td></tr>`;
+            <td style="padding: 10px 0; display:flex; gap:5px;"><button class="btn btn-secondary" style="padding: 5px;" onclick="openDeepView('processes', ${p.id}, 'Processo')">✏️ Editar</button><button class="btn btn-outline-danger" style="padding: 5px;" onclick="adminDelete('processes', ${p.id}, 'proc')">🗑️ Deletar</button></td></tr>`;
         });
         container.innerHTML = html + '</table></div>';
-    } catch (err) {}
+    } catch (err) {
+        container.innerHTML = '<div class="card-responsivo"><p class="text-muted">Erro ao carregar processos.</p></div>';
+    }
 }
 
 async function loadAdminPtaTopics(container) {
@@ -291,13 +317,20 @@ async function loadAdminPtaTopics(container) {
     try {
         const res = await window.api.fetchProtected('/pta/topicos');
         const tops = await res.json();
+        if (!Array.isArray(tops) || tops.length === 0) {
+            container.innerHTML = '<div class="card-responsivo"><p class="text-muted">Nenhum tópico PTA cadastrado.</p></div>';
+            return;
+        }
+
         let html = '<div class="card-responsivo"><table style="width:100%; text-align:left;"><tr><th>Ano</th><th>Tópico</th><th>Ação</th></tr>';
         tops.forEach(t => {
             html += `<tr><td style="padding: 10px 0;">${t.ano}</td><td>${t.titulo}</td>
-            <td><button class="btn btn-outline-danger" style="padding: 5px;" onclick="adminDelete('pta/topicos', ${t.id}, 'pta')">🗑️ Deletar Tópico</button></td></tr>`;
+            <td style="padding: 10px 0; display:flex; gap:5px;"><button class="btn btn-secondary" style="padding: 5px;" onclick="openDeepView('pta/topicos', ${t.id}, 'Tópico PTA')">✏️ Editar</button><button class="btn btn-outline-danger" style="padding: 5px;" onclick="adminDelete('pta/topicos', ${t.id}, 'pta')">🗑️ Deletar Tópico</button></td></tr>`;
         });
         container.innerHTML = html + '</table></div>';
-    } catch (err) {}
+    } catch (err) {
+        container.innerHTML = '<div class="card-responsivo"><p class="text-muted">Erro ao carregar tópicos PTA.</p></div>';
+    }
 }
 
 // ==========================================
@@ -365,19 +398,43 @@ window.openDeepView = async function(route, id, entityName) {
     const modal = document.getElementById('deep-view-modal');
     const body = document.getElementById('dv-body');
     const saveBtn = document.getElementById('dv-save-btn');
-    
-    document.getElementById('dv-title').innerText = `Editando: ${entityName} #${id}`;
+
+    const displayId = typeof id === 'string' ? id : `#${id}`;
+    document.getElementById('dv-title').innerText = `Editando: ${entityName} ${displayId}`;
     body.innerHTML = '<span class="spinner"></span> Carregando dados completos...';
     modal.style.display = 'flex';
 
     try {
-        const res = await window.api.fetchProtected(`/admin/${route}/${id}`);
-        if (!res.ok) throw new Error("Erro ao buscar detalhes.");
-        const data = await res.json();
+        let data;
+        if (route === 'usuarios') {
+            const res = await window.api.fetchProtected(`/admin/${route}/${id}`);
+            if (!res.ok) throw new Error("Erro ao buscar detalhes.");
+            data = await res.json();
+        } else if (route === 'pops') {
+            const res = await window.api.fetchProtected(`/pops/${encodeURIComponent(id)}`);
+            if (!res.ok) throw new Error("Erro ao buscar detalhes do POP.");
+            data = await res.json();
+        } else if (route === 'equipments') {
+            const res = await window.api.fetchProtected(`/equipments/${id}`);
+            if (!res.ok) throw new Error("Erro ao buscar detalhes do equipamento.");
+            data = await res.json();
+        } else if (route === 'processes') {
+            const res = await window.api.fetchProtected(`/processes/${id}`);
+            if (!res.ok) throw new Error("Erro ao buscar detalhes do processo.");
+            data = await res.json();
+        } else if (route === 'pta/topicos') {
+            const res = await window.api.fetchProtected('/pta/topicos');
+            if (!res.ok) throw new Error("Erro ao buscar tópicos PTA.");
+            const topics = await res.json();
+            data = topics.find(item => item.id === id);
+            if (!data) throw new Error("Tópico não encontrado.");
+        } else {
+            throw new Error("Rota desconhecida.");
+        }
 
         let html = '';
         for (const [key, value] of Object.entries(data)) {
-            if (key === 'senha' || key === 'id') continue;
+            if (key === 'senha' || key === 'id' || key === 'descricao' || key === 'anexo_dados' || key === 'anexo_meta') continue;
             const safeValue = value !== null && value !== undefined ? String(value).replace(/"/g, '&quot;') : '';
             html += `
                 <div style="display:flex; flex-direction:column; gap:5px;">
@@ -386,19 +443,28 @@ window.openDeepView = async function(route, id, entityName) {
                 </div>
             `;
         }
+
+        if (html.trim() === '') {
+            html = '<p class="text-muted">Não há campos editáveis disponíveis para este registro.</p>';
+            saveBtn.style.display = 'none';
+        } else {
+            saveBtn.style.display = 'inline-flex';
+        }
+
         body.innerHTML = html;
         saveBtn.onclick = () => saveDeepView(route, id, data);
     } catch (err) {
-        body.innerHTML = '<p style="color:red;">Erro ao conectar com o banco de dados.</p>';
+        body.innerHTML = `<p style="color:red;">${err.message || 'Erro ao conectar com o banco de dados.'}</p>`;
+        saveBtn.style.display = 'none';
     }
 }
 
 async function saveDeepView(route, id, originalData) {
     const payload = {};
     const saveBtn = document.getElementById('dv-save-btn');
-    
+
     for (const key of Object.keys(originalData)) {
-        if (key === 'senha' || key === 'id') continue;
+        if (key === 'senha' || key === 'id' || key === 'descricao' || key === 'anexo_dados' || key === 'anexo_meta') continue;
         const input = document.getElementById(`dv-input-${key}`);
         if (input) payload[key] = input.value;
     }
@@ -407,7 +473,15 @@ async function saveDeepView(route, id, originalData) {
     saveBtn.disabled = true;
 
     try {
-        const res = await window.api.fetchProtected(`/admin/${route}/${id}`, {
+        let endpoint;
+        if (route === 'usuarios') endpoint = `/admin/${route}/${id}`;
+        else if (route === 'pops') endpoint = `/pops/${encodeURIComponent(id)}`;
+        else if (route === 'equipments') endpoint = `/equipments/${id}`;
+        else if (route === 'processes') endpoint = `/processes/${id}`;
+        else if (route === 'pta/topicos') endpoint = `/pta/topicos/${id}`;
+        else throw new Error('Rota desconhecida.');
+
+        const res = await window.api.fetchProtected(endpoint, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -417,12 +491,16 @@ async function saveDeepView(route, id, originalData) {
             window.UI.showToast("Dados atualizados com sucesso!", "success");
             closeDeepView();
             if (route === 'usuarios') switchUserTab('active');
+            else if (route === 'equipments') switchLabTab('eq');
+            else if (route === 'pops') switchLabTab('pop');
+            else if (route === 'processes') switchPdTab('proc');
+            else if (route === 'pta/topicos') switchPdTab('pta');
         } else {
             const errData = await res.json().catch(() => ({}));
             window.UI.showToast(errData.detail || "Erro ao salvar.", "error");
         }
     } catch (err) {
-        window.UI.showToast("Falha na conexão.", "error");
+        window.UI.showToast(err.message || "Falha na conexão.", "error");
     } finally {
         saveBtn.innerText = "💾 Salvar Alterações";
         saveBtn.disabled = false;
