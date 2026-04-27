@@ -316,7 +316,7 @@ window.viewPopDetails = function(codigo) {
                 <button onclick="document.getElementById('pop-document-container').remove()" class="btn" style="padding: 8px 15px; cursor: pointer; background:#fff; color:#000; border:1px solid #000; border-radius:4px;">⬅ Fechar Visualização</button>
                 <div style="display:flex; gap: 10px; flex-wrap: wrap;">
                     <button onclick="downloadPopDocx('${pop.codigo}')" class="btn" style="padding: 8px 15px; background:#111; color:white; border:none; font-weight:bold; cursor:pointer; border-radius:4px;">📄 BAIXAR DOCX OFICIAL</button>
-                    <button onclick="gerarPDF('${pop.codigo}')" class="btn" style="padding: 8px 15px; background:#007bff; color:white; border:none; font-weight:bold; cursor:pointer; border-radius:4px; box-shadow: 0 2px 4px rgba(0,123,255,0.3);">🖨️ EXPORTAR PDF OFICIAL</button>
+                    <button onclick="gerarPDF('${pop.codigo}')" class="btn" style="padding: 8px 15px; background:#007bff; color:white; border:none; font-weight:bold; cursor:pointer; border-radius:4px; box-shadow: 0 2px 4px rgba(0,123,255,0.3);">🖨️ EXPORTAR PDF OFICIAL (em desenvolvimento)</button>
                 </div>
             </div>
 
