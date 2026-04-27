@@ -229,6 +229,57 @@ function formatPopSection(title, content) {
             </div>`;
 }
 
+function renderPopDocxTemplate(pop, dados) {
+    const renderField = (value) => value ? value : 'Não informado.';
+    const version = dados.versao || '1.0';
+
+    return `
+        <div style="font-family: Arial, sans-serif; color: #000;">
+            <div style="text-transform: uppercase; font-size: 12px; letter-spacing: 1.5px; color: #007bff; font-weight: 700; margin-bottom: 12px;">Procedimento Operacional Padrão</div>
+            <h1 style="margin: 0 0 12px 0; font-size: 26px; color: #000; line-height: 1.1;">${renderField(pop.titulo)}</h1>
+
+            <div style="border: 1px solid #000; padding: 18px; border-radius: 10px; margin-bottom: 24px; background: #fff;">
+                <p style="margin: 0 0 8px 0; font-size: 11pt;"><strong>Título do Procedimento:</strong> ${renderField(pop.titulo)}</p>
+                <p style="margin: 0 0 8px 0; font-size: 11pt;"><strong>Código do Documento:</strong> ${renderField(pop.codigo)}</p>
+                <p style="margin: 0 0 8px 0; font-size: 11pt;"><strong>Versão:</strong> ${version}</p>
+                <p style="margin: 0 0 8px 0; font-size: 11pt;"><strong>Data de Emissão:</strong> ${renderField(dados.data_emissao)}</p>
+                <p style="margin: 0; font-size: 11pt;"><strong>Responsável:</strong> ${renderField(dados.responsavel)}</p>
+            </div>
+
+            ${formatPopSection('1. Objetivo', dados.objetivo)}
+            ${formatPopSection('2. Aplicação e Escopo', dados.escopo)}
+            ${formatPopSection('3. Responsabilidades', dados.responsabilidades)}
+            ${formatPopSection('4. Materiais e Equipamentos Necessários', dados.materiais)}
+            ${formatPopSection('5. Procedimento Operacional', dados.procedimento)}
+            ${formatPopSection('6. Controle de Qualidade', dados.qualidade)}
+            ${formatPopSection('7. Segurança e Riscos', dados.seguranca)}
+            ${formatPopSection('8. Manutenção e Calibração', dados.manutencao)}
+            ${formatPopSection('9. Referências', dados.referencias)}
+            <div class="pop-sec" style="margin-bottom: 20px; page-break-inside: avoid;">
+                <h4 style="margin: 0 0 8px 0; font-size: 13pt; font-weight: 700; color: #000;">10. Anexos</h4>
+                <div style="padding: 14px 16px; border: 1px solid #000; border-radius: 8px; background: #f7f9ff; color: #111;">${renderField(dados.anexo_dados ? 'Arquivo anexado' : 'Não informado.')}</div>
+            </div>
+            <div class="pop-sec" style="margin-top: 20px; page-break-inside: avoid;">
+                <h4 style="margin: 0 0 8px 0; font-size: 13pt; font-weight: 700; color: #000;">11. Histórico de Revisões</h4>
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 10pt; margin-top: 10px;">
+                    <tr style="background: #e7f3ff;">
+                        <th style="border: 1px solid #000; padding: 8px;">Data</th>
+                        <th style="border: 1px solid #000; padding: 8px;">Versão</th>
+                        <th style="border: 1px solid #000; padding: 8px;">Descrição das Alterações</th>
+                        <th style="border: 1px solid #000; padding: 8px;">Responsável</th>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #000; padding: 8px;">${renderField(dados.data_emissao)}</td>
+                        <td style="border: 1px solid #000; padding: 8px;">${version}</td>
+                        <td style="border: 1px solid #000; padding: 8px;">Criação do documento oficial</td>
+                        <td style="border: 1px solid #000; padding: 8px;">${renderField(dados.responsavel)}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    `;
+}
+
 window.viewPopDetails = function(codigo) {
     const pop = window.popsDataList.find(p => p.codigo === codigo);
     if (!pop) return;
@@ -259,59 +310,48 @@ window.viewPopDetails = function(codigo) {
     divDocumento.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10000; display:flex; justify-content:center; overflow-y:auto; padding: 20px;";
     
     divDocumento.innerHTML = `
-        <div style="background:#fff; width:min(1000px, 100%); max-width: 95vw; min-height:auto; padding: 24px; position:relative; font-family: Arial, sans-serif; color: #000; box-shadow: 0 0 40px rgba(0,0,0,0.35); border: 1px solid #000;">
+        <div style="background:#fff; width:min(1000px, 100%); max-width: 95vw; min-height:auto; padding: 24px; position:relative; color: #000; box-shadow: 0 0 40px rgba(0,0,0,0.35); border: 1px solid #000;">
             
             <div data-html2canvas-ignore="true" style="position: sticky; top: 0; background: #fff; padding: 15px; margin: -24px -24px 20px -24px; border-bottom: 2px solid #000; display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; z-index: 10;">
                 <button onclick="document.getElementById('pop-document-container').remove()" class="btn" style="padding: 8px 15px; cursor: pointer; background:#fff; color:#000; border:1px solid #000; border-radius:4px;">⬅ Fechar Visualização</button>
-                <button onclick="gerarPDF('${pop.codigo}')" class="btn" style="padding: 8px 15px; background:#007bff; color:white; border:none; font-weight:bold; cursor:pointer; border-radius:4px; box-shadow: 0 2px 4px rgba(0,123,255,0.3);">🖨️ EXPORTAR PDF OFICIAL</button>
+                <div style="display:flex; gap: 10px; flex-wrap: wrap;">
+                    <button onclick="downloadPopDocx('${pop.codigo}')" class="btn" style="padding: 8px 15px; background:#111; color:white; border:none; font-weight:bold; cursor:pointer; border-radius:4px;">📄 BAIXAR DOCX OFICIAL</button>
+                    <button onclick="gerarPDF('${pop.codigo}')" class="btn" style="padding: 8px 15px; background:#007bff; color:white; border:none; font-weight:bold; cursor:pointer; border-radius:4px; box-shadow: 0 2px 4px rgba(0,123,255,0.3);">🖨️ EXPORTAR PDF OFICIAL</button>
+                </div>
             </div>
 
             <div id="conteudo-para-pdf" style="padding: 5mm; font-size: 11pt; line-height: 1.5; color: #000;">
-                <div style="text-transform:uppercase; font-size:12px; letter-spacing:1.5px; color:#007bff; font-weight:700; margin-bottom:10px;">Procedimento Operacional Padrão (POP)</div>
-                <h1 style="margin:0 0 12px 0; font-size:26px; color:#000; line-height:1.1;">${renderField(pop.titulo)}</h1>
-
-                <div style="border: 1px solid #000; padding: 16px; border-radius: 10px; margin-bottom: 22px; background: #fff;">
-                    <p style="margin: 0 0 8px 0; font-size: 11pt;"><strong>Título do Procedimento:</strong> ${renderField(pop.titulo)}</p>
-                    <p style="margin: 0 0 8px 0; font-size: 11pt;"><strong>Código do Documento:</strong> ${renderField(pop.codigo)}</p>
-                    <p style="margin: 0 0 8px 0; font-size: 11pt;"><strong>Versão:</strong> ${version}</p>
-                    <p style="margin: 0 0 8px 0; font-size: 11pt;"><strong>Data de Emissão:</strong> ${renderField(dados.data_emissao)}</p>
-                    <p style="margin: 0; font-size: 11pt;"><strong>Responsável:</strong> ${renderField(dados.responsavel)}</p>
-                </div>
-
-                ${formatPopSection('1. Objetivo', dados.objetivo)}
-                ${formatPopSection('2. Aplicação e Escopo', dados.escopo)}
-                ${formatPopSection('3. Responsabilidades', dados.responsabilidades)}
-                ${formatPopSection('4. Materiais e Equipamentos Necessários', dados.materiais)}
-                ${formatPopSection('5. Procedimento Operacional', dados.procedimento)}
-                ${formatPopSection('6. Controle de Qualidade', dados.qualidade)}
-                ${formatPopSection('7. Segurança e Riscos', dados.seguranca)}
-                ${formatPopSection('8. Manutenção e Calibração', dados.manutencao)}
-                ${formatPopSection('9. Referências', dados.referencias)}
-                <div class="pop-sec" style="margin-bottom: 20px; page-break-inside: avoid;">
-                    <h4 style="margin: 0 0 8px 0; font-size: 13pt; font-weight: 700; color: #000;">10. Anexos</h4>
-                    <div style="padding: 14px 16px; border: 1px solid #000; border-radius: 8px; background: #f7f9ff; color: #111;">${anexoHTML}</div>
-                </div>
-                <div class="pop-sec" style="margin-top: 20px; page-break-inside: avoid;">
-                    <h4 style="margin: 0 0 8px 0; font-size: 13pt; font-weight: 700; color: #000;">11. Histórico de Revisões</h4>
-                    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 10pt; margin-top: 10px;">
-                        <tr style="background:#e7f3ff;">
-                            <th style="border: 1px solid #000; padding: 8px;">Data</th>
-                            <th style="border: 1px solid #000; padding: 8px;">Versão</th>
-                            <th style="border: 1px solid #000; padding: 8px;">Descrição das Alterações</th>
-                            <th style="border: 1px solid #000; padding: 8px;">Responsável</th>
-                        </tr>
-                        <tr>
-                            <td style="border: 1px solid #000; padding: 8px;">${renderField(dados.data_emissao)}</td>
-                            <td style="border: 1px solid #000; padding: 8px;">${version}</td>
-                            <td style="border: 1px solid #000; padding: 8px;">Criação do documento oficial</td>
-                            <td style="border: 1px solid #000; padding: 8px;">${renderField(dados.responsavel)}</td>
-                        </tr>
-                    </table>
-                </div>
+                ${renderPopDocxTemplate(pop, dados)}
             </div>
         </div>
     `;
     document.body.appendChild(divDocumento);
+};
+
+window.downloadPopDocx = async function(codigo) {
+    try {
+        const response = await window.api.fetchProtected(`/pops/${codigo}/export-docx`, {
+            method: 'GET',
+            headers: { 'Accept': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }
+        });
+
+        if (!response.ok) {
+            throw new Error('Falha ao gerar o DOCX oficial do POP.');
+        }
+
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `POP_${codigo}.docx`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        window.UI.showToast('Download do DOCX oficial iniciado.', 'success');
+    } catch (err) {
+        window.UI.showToast(err.message || 'Erro ao baixar o DOCX.', 'error');
+    }
 };
 
 window.gerarPDF = function(codigo) {
