@@ -374,7 +374,7 @@ window.gerarPDF = function(codigo) {
     const elemento = document.getElementById('conteudo-para-pdf');
     const opcoes = {
         margin:       10, 
-        filename:     `POP_${codigo}_GMAE.pdf`,
+        filename:     `POP_${codigo}.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  { scale: 2, useCORS: true }, 
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
