@@ -195,16 +195,20 @@ window.viewProcessDetails = async function(id) {
 window.renderProcessDetailsModal = function(proc, atividades) {
     const oldModal = document.getElementById('processDetailsModal');
     if (oldModal) oldModal.remove();
+    let actHtml = atividades.map(a => {
+        const stringDataUTC = a.entry_date.endsWith('Z') ? a.entry_date : a.entry_date + 'Z';
+        const dataLocal = new Date(stringDataUTC);
 
-    // Constrói o HTML do histórico (Notas)
-    let actHtml = atividades.map(a => `
+        return `
         <div style="border-left: 3px solid var(--primary); padding-left: 12px; margin-bottom: 15px;">
-            <div style="font-size: 11px; color: #64748B; font-weight:bold; margin-bottom: 3px;">Data: ${new Date(a.entry_date).toLocaleDateString('pt-BR')} às ${new Date(a.entry_date).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}</div>
+            <div style="font-size: 11px; color: #64748B; font-weight:bold; margin-bottom: 3px;">
+                Data: ${dataLocal.toLocaleDateString('pt-BR')} às ${dataLocal.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
+            </div>
             <strong style="display:block; font-size: 14px; color: #1E293B;">${a.title}</strong>
             <p style="margin: 5px 0 0 0; font-size: 13px; color: #475569;">${a.note}</p>
         </div>
-    `).join('');
-    
+        `;
+    }).join('');
     if(!actHtml) actHtml = '<p style="color:#94A3B8; font-size:13px; text-align:center; padding:20px;">Nenhuma anotação registrada ainda. Crie a primeira abaixo!</p>';
 
     const modalHTML = `
