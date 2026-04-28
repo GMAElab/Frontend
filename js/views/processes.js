@@ -174,7 +174,6 @@ async function handleSaveProcess(event) {
 window.viewProcessDetails = async function(id) {
     window.UI.showToast("Buscando detalhes do processo...", "info");
     try {
-        // 1. Busca os dados do processo
         const resProc = await window.api.fetchProtected(`/processes/${id}`);
         if (!resProc.ok) throw new Error("Erro ao buscar dados do processo.");
         const proc = await resProc.json();
@@ -201,11 +200,11 @@ window.renderProcessDetailsModal = function(proc, atividades) {
 
         return `
         <div style="border-left: 3px solid var(--primary); padding-left: 12px; margin-bottom: 15px;">
-            <div style="font-size: 11px; color: #64748B; font-weight:bold; margin-bottom: 3px;">
+            <div style="font-size: 11px; color: #777f8a; font-weight:bold; margin-bottom: 3px;">
                 Data: ${dataLocal.toLocaleDateString('pt-BR')} às ${dataLocal.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
             </div>
-            <strong style="display:block; font-size: 14px; color: #1E293B;">${a.title}</strong>
-            <p style="margin: 5px 0 0 0; font-size: 13px; color: #475569;">${a.note}</p>
+            <strong style="display:block; font-size: 14px; color: #191f29;">${a.title}</strong>
+            <p style="margin: 5px 0 0 0; font-size: 13px; color: #424850;">${a.note}</p>
         </div>
         `;
     }).join('');
