@@ -122,8 +122,8 @@ function renderProcesses(processes) {
             <td><span class="status-badge status-${proc.status}">${statusFormatado}</span></td>
             <td>${dataFormatada}</td>
             <td style="display:flex; gap: 6px; flex-wrap:wrap; justify-content:flex-end;">
-                <button onclick="viewProcessDetails(${proc.id})" class="btn btn-outline-primary btn-sm">📄 Detalhes e Notas</button>
-                <button onclick="openDeepView('processes', ${proc.id}, 'Processo')" class="btn btn-secondary btn-sm">✏️ Editar</button>
+                <button onclick="viewProcessDetails(${proc.id})" class="btn btn-outline-primary btn-sm">+ DETALHES</button>
+                <button onclick="openDeepView('processes', ${proc.id}, 'Processo')" class="btn btn-secondary btn-sm">Editar</button>
             </td>
         `;
         tbody.appendChild(row);
@@ -199,7 +199,7 @@ window.renderProcessDetailsModal = function(proc, atividades) {
     // Constrói o HTML do histórico (Notas)
     let actHtml = atividades.map(a => `
         <div style="border-left: 3px solid var(--primary); padding-left: 12px; margin-bottom: 15px;">
-            <div style="font-size: 11px; color: #64748B; font-weight:bold; margin-bottom: 3px;">📅 ${new Date(a.entry_date).toLocaleDateString('pt-BR')} às ${new Date(a.entry_date).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}</div>
+            <div style="font-size: 11px; color: #64748B; font-weight:bold; margin-bottom: 3px;">Data: ${new Date(a.entry_date).toLocaleDateString('pt-BR')} às ${new Date(a.entry_date).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}</div>
             <strong style="display:block; font-size: 14px; color: #1E293B;">${a.title}</strong>
             <p style="margin: 5px 0 0 0; font-size: 13px; color: #475569;">${a.note}</p>
         </div>
@@ -241,7 +241,7 @@ window.renderProcessDetailsModal = function(proc, atividades) {
 
                 <div style="flex: 1 1 300px; padding: 25px; background: #F8FAFC;">
                     <h3 style="margin:0 0 20px 0; font-size:16px; color:#0F172A; display:flex; align-items:center; gap:8px;">
-                        <span>📋 Rastreabilidade</span>
+                        <span>Notas Adicionadas pós criação do processo</span>
                     </h3>
 
                     <div style="max-height: 400px; overflow-y:auto; margin-bottom: 25px; padding-right: 5px;">
