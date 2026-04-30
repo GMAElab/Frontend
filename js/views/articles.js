@@ -60,7 +60,7 @@ window.renderizarCards = function(artigos, modo) {
         }
 
         const linkUrl = art.url_pdf || art.url_artigo || '#';
-        const linkTexto = art.url_pdf ? '📥 Baixar PDF Aberto' : '🔗 Ir para a Editora';
+        const linkTexto = art.url_pdf ? '📥 Baixar PDF' : '🔗 Ir para a Editora';
         const botaoLinkHTML = linkUrl !== '#' ? `<a href="${linkUrl}" target="_blank" class="btn" style="background: #007BFF; color: white; border: none; padding: 8px 15px; border-radius: 4px; text-decoration: none; font-weight: bold;">${linkTexto}</a>` : '';
 
         return `
