@@ -1,5 +1,5 @@
 // ==========================================
-// 1. CONSTRUÇÃO DA TELA DE BUSCA
+// 1. CONSTRUÇÃO DA TELA
 // ==========================================
 document.addEventListener('viewChanged', (e) => {
     if (e.detail.view === 'articles') {
@@ -7,19 +7,25 @@ document.addEventListener('viewChanged', (e) => {
         
         container.innerHTML = `
             <div class="admin-container fade-in">
-                <div style="margin-bottom: 20px;">
-                    <h2 style="margin-bottom: 5px;">Artigos</h2>
-                    <p class="text-muted">Pesquise literatura científica global e salve no seu repositório pessoal.</p>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+                    <div>
+                        <h2 style="margin-bottom: 5px; color: #111;">Artigos</h2>
+                        <p style="color: #666; margin: 0;">Pesquise e gerencie artigos científicos.</p>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="prepararBusca()" id="btn-tab-busca" class="btn" style="background: #111; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">🔍 Buscar Artigos</button>
+                        <button onclick="carregarArtigosSalvos()" id="btn-tab-salvos" class="btn" style="background: white; color: #007BFF; border: 2px solid #007BFF; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Salvos</button>
+                    </div>
                 </div>
 
-                <div style="display: flex; gap: 10px; margin-bottom: 25px;">
-                    <input type="text" id="search-input" class="form-control" placeholder="Digite o tema, autores ou palavras-chave (Ex: 2D materials battery)..." style="flex: 1; padding: 12px; font-size: 16px; border-radius: 6px; border: 1px solid #ccc;" onkeypress="if(event.key === 'Enter') pesquisarArtigos()">
-                    <button onclick="pesquisarArtigos()" class="btn btn-primary" style="padding: 12px 25px; font-weight: bold; border-radius: 6px; cursor: pointer; border: none; background: #0056b3; color: white;">🔍 Pesquisar</button>
+                <div id="search-area" style="display: flex; gap: 10px; margin-bottom: 25px;">
+                    <input type="text" id="search-input" placeholder="Digite o tema, autores ou DOI..." style="flex: 1; padding: 12px; font-size: 16px; border-radius: 4px; border: 1px solid #111; outline: none;" onkeypress="if(event.key === 'Enter') pesquisarArtigos()">
+                    <button onclick="pesquisarArtigos()" class="btn" style="padding: 12px 25px; font-weight: bold; border-radius: 4px; cursor: pointer; border: none; background: #007BFF; color: white;">Pesquisar</button>
                 </div>
 
                 <div id="articles-results" style="display: grid; gap: 15px;">
-                    <div style="text-align: center; padding: 40px; color: #999; border: 2px dashed #ddd; border-radius: 8px;">
-                        A busca é conectada ao Semantic Scholar. Digite algo acima para começar.
+                    <div style="text-align: center; padding: 40px; color: #666; border: 1px dashed #111; border-radius: 4px;">
+                        Inicie uma pesquisa ou visualize seus artigos salvos.
                     </div>
                 </div>
             </div>
@@ -28,14 +34,58 @@ document.addEventListener('viewChanged', (e) => {
 });
 
 // ==========================================
-// 2. FUNÇÃO DE PESQUISA
+// 2. FUNÇÕES DE NAVEGAÇÃO E EXIBIÇÃO
+// ==========================================
+window.prepararBusca = function() {
+    document.getElementById('search-area').style.display = 'flex';
+    document.getElementById('btn-tab-busca').style.cssText = "background: #111; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;";
+    document.getElementById('btn-tab-salvos').style.cssText = "background: white; color: #007BFF; border: 2px solid #007BFF; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;";
+    document.getElementById('articles-results').innerHTML = '<div style="text-align: center; padding: 40px; color: #666; border: 1px dashed #111; border-radius: 4px;">Inicie uma pesquisa...</div>';
+};
+
+window.renderizarCards = function(artigos, modo) {
+    const resultsContainer = document.getElementById('articles-results');
+    
+    if (artigos.length === 0) {
+        resultsContainer.innerHTML = '<div style="text-align:center; padding: 30px; color:#111;">Nenhum artigo encontrado.</div>';
+        return;
+    }
+
+    resultsContainer.innerHTML = artigos.map((art, index) => {
+        let botaoAcaoHTML = "";
+        if (modo === 'busca') {
+            botaoAcaoHTML = `<button onclick="salvarArtigo(${index})" class="btn" style="background: white; color: #111; border: 2px solid #111; padding: 8px 15px; border-radius: 4px; font-weight: bold; cursor: pointer;">Salvar Artigo</button>`;
+        } else {
+            botaoAcaoHTML = `<button onclick="removerArtigo(${art.id})" class="btn" style="background: white; color: #d9534f; border: 2px solid #d9534f; padding: 8px 15px; border-radius: 4px; font-weight: bold; cursor: pointer;">✖ Remover dos Salvos</button>`;
+        }
+
+        const linkUrl = art.url_pdf || art.url_artigo || '#';
+        const linkTexto = art.url_pdf ? '📥 Baixar PDF Aberto' : '🔗 Ir para a Editora';
+        const botaoLinkHTML = linkUrl !== '#' ? `<a href="${linkUrl}" target="_blank" class="btn" style="background: #007BFF; color: white; border: none; padding: 8px 15px; border-radius: 4px; text-decoration: none; font-weight: bold;">${linkTexto}</a>` : '';
+
+        return `
+        <div class="article-card" style="background:white; padding:20px; border-radius:4px; border:1px solid #111; box-shadow: 2px 2px 0px rgba(0,0,0,0.1);">
+            <h3 style="margin:0 0 8px 0; color: #111; font-size: 18px;">${art.titulo}</h3>
+            <p style="font-size:13px; color:#666; font-weight: 500;">Nomes: ${art.autores || 'Desconhecido'} | Data da publicação: ${art.ano || 'N/A'}</p>
+            <p style="font-size:14px; margin:12px 0; color: #111; line-height: 1.5; border-left: 3px solid #007BFF; padding-left: 10px;">
+                ${art.resumo ? art.resumo.substring(0, 300) + '...' : '<i style="color:#666;">Sem resumo disponível na base de dados.</i>'}
+            </p>
+            <div style="display:flex; gap:10px; margin-top:15px; flex-wrap: wrap;">
+                ${botaoAcaoHTML}
+                ${botaoLinkHTML}
+            </div>
+        </div>`;
+    }).join('');
+};
+
+// ==========================================
+// 3. COMUNICAÇÃO COM A API (BUSCA E SALVOS)
 // ==========================================
 window.pesquisarArtigos = async function() {
     const query = document.getElementById('search-input').value;
     if (!query) return;
 
-    const resultsContainer = document.getElementById('articles-results');
-    resultsContainer.innerHTML = '<div style="text-align:center; padding: 30px;"><span class="spinner"></span> <p>Buscando em milhares de revistas...</p></div>';
+    document.getElementById('articles-results').innerHTML = '<div style="text-align:center; padding: 30px;"><span class="spinner"></span> <p style="color:#111;">Buscando...</p></div>';
 
     try {
         const res = await window.api.fetchProtected(`/articles/search?query=${encodeURIComponent(query)}`);
@@ -43,38 +93,29 @@ window.pesquisarArtigos = async function() {
 
         const artigos = await res.json();
         window.artigosBuscaCache = artigos; 
-
-        if (artigos.length === 0) {
-            resultsContainer.innerHTML = '<div style="text-align:center; padding: 30px; color:#666;">Nenhum artigo encontrado para esta pesquisa.</div>';
-            return;
-        }
-
-        resultsContainer.innerHTML = artigos.map((art, index) => `
-            <div class="article-card" style="background:white; padding:20px; border-radius:8px; border:1px solid #E2E8F0; box-shadow: 0 2px 4px rgba(0,0,0,0.03);">
-                <h3 style="margin:0 0 8px 0; color: #0F172A; font-size: 18px;">${art.titulo}</h3>
-                <p style="font-size:13px; color:#64748B; font-weight: 500;">👥 ${art.autores || 'Autores desconhecidos'} | 📅 ${art.ano || 'N/A'}</p>
-                <p style="font-size:14px; margin:12px 0; color: #334155; line-height: 1.5;">${art.resumo ? art.resumo.substring(0, 300) + '...' : '<i style="color:#94A3B8;">Sem resumo disponível na base de dados.</i>'}</p>
-
-                <div style="display:flex; gap:10px; margin-top:15px; flex-wrap: wrap;">
-                    
-                    <button onclick="salvarArtigo(${index})" class="btn" style="background: #FFFBEB; color: #D97706; border: 1px solid #FDE68A; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer;">⭐ Salvar no Meu Repositório</button>
-
-                    <a href="${art.url_pdf || art.url_artigo}" target="_blank" class="btn" style="background: ${art.url_pdf ? '#ECFDF5' : '#F8FAFC'}; color: ${art.url_pdf ? '#059669' : '#475569'}; border: 1px solid ${art.url_pdf ? '#A7F3D0' : '#CBD5E1'}; padding: 8px 15px; border-radius: 6px; text-decoration: none; font-weight: bold;">
-                        ${art.url_pdf ? '📥 Baixar PDF Aberto' : '🔗 Ir para a Editora'}
-                    </a>
-                </div>
-            </div>
-        `).join('');
-
+        renderizarCards(artigos, 'busca');
     } catch (err) {
-        resultsContainer.innerHTML = '<div style="text-align:center; padding: 30px; color:red;">Erro ao conectar com a base de dados científica.</div>';
-        window.UI.showToast("Erro na busca científica", "error");
+        document.getElementById('articles-results').innerHTML = '<div style="text-align:center; padding: 30px; color:red;">Erro ao conectar com a base de dados.</div>';
     }
 };
 
-// ==========================================
-// 3. ENVIAR PARA O BANCO DE DADOS (SUPABASE)
-// ==========================================
+window.carregarArtigosSalvos = async function() {
+    document.getElementById('search-area').style.display = 'none';
+    document.getElementById('btn-tab-salvos').style.cssText = "background: #111; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;";
+    document.getElementById('btn-tab-busca').style.cssText = "background: white; color: #007BFF; border: 2px solid #007BFF; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;";
+    
+    document.getElementById('articles-results').innerHTML = '<div style="text-align:center; padding: 30px;"><span class="spinner"></span> <p style="color:#111;">Carregando...</p></div>';
+
+    try {
+        const res = await window.api.fetchProtected('/articles/saved');
+        if (!res.ok) throw new Error("Falha ao carregar salvos");
+        const salvos = await res.json();
+        renderizarCards(salvos, 'salvos');
+    } catch (error) {
+        window.UI.showToast("Erro ao carregar artigos salvos.", "error");
+    }
+};
+
 window.salvarArtigo = async function(index) {
     const artigo = window.artigosBuscaCache[index];
     if (!artigo) return;
@@ -87,9 +128,22 @@ window.salvarArtigo = async function(index) {
         });
 
         if (!res.ok) throw new Error("Falha ao salvar");
-
-        window.UI.showToast("⭐ Artigo salvo com sucesso!", "success");
+        window.UI.showToast("Artigo adicionado aos favoritos!", "success");
     } catch (error) {
-        window.UI.showToast("Erro ao salvar o artigo no banco.", "error");
+        window.UI.showToast("Erro ao salvar o artigo.", "error");
+    }
+};
+
+window.removerArtigo = async function(id) {
+    if(!confirm("Deseja realmente remover este artigo da sua lista?")) return;
+
+    try {
+        const res = await window.api.fetchProtected(`/articles/saved/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error("Falha ao remover");
+        
+        window.UI.showToast("Artigo removido.", "success");
+        carregarArtigosSalvos();
+    } catch (error) {
+        window.UI.showToast("Erro ao remover o artigo.", "error");
     }
 };
