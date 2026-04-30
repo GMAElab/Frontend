@@ -1,5 +1,5 @@
 // ==========================================
-// 1. CONSTRUÇÃO DA TELA
+// 1. CONSTRUÇÃO DA TELA COM FILTROS
 // ==========================================
 document.addEventListener('viewChanged', (e) => {
     if (e.detail.view === 'articles') {
@@ -14,13 +14,33 @@ document.addEventListener('viewChanged', (e) => {
                     </div>
                     <div style="display: flex; gap: 10px;">
                         <button onclick="prepararBusca()" id="btn-tab-busca" class="btn" style="background: #111; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">🔍 Buscar Artigos</button>
-                        <button onclick="carregarArtigosSalvos()" id="btn-tab-salvos" class="btn" style="background: white; color: #007BFF; border: 2px solid #007BFF; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Salvos</button>
+                        <button onclick="carregarArtigosSalvos()" id="btn-tab-salvos" class="btn" style="background: white; color: #007BFF; border: 2px solid #007BFF; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">⭐ Meus Salvos</button>
                     </div>
                 </div>
 
-                <div id="search-area" style="display: flex; gap: 10px; margin-bottom: 25px;">
-                    <input type="text" id="search-input" placeholder="Digite o tema, autores ou DOI..." style="flex: 1; padding: 12px; font-size: 16px; border-radius: 4px; border: 1px solid #111; outline: none;" onkeypress="if(event.key === 'Enter') pesquisarArtigos()">
-                    <button onclick="pesquisarArtigos()" class="btn" style="padding: 12px 25px; font-weight: bold; border-radius: 4px; cursor: pointer; border: none; background: #007BFF; color: white;">Pesquisar</button>
+                <div id="search-area" style="background: #F8FAFC; padding: 15px; border-radius: 6px; border: 1px solid #E2E8F0; margin-bottom: 25px;">
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                        <input type="text" id="search-input" placeholder="Digite o tema, autores ou DOI..." style="flex: 1; padding: 12px; font-size: 16px; border-radius: 4px; border: 1px solid #111; outline: none;" onkeypress="if(event.key === 'Enter') pesquisarArtigos()">
+                        <button onclick="pesquisarArtigos()" class="btn" style="padding: 12px 25px; font-weight: bold; border-radius: 4px; cursor: pointer; border: none; background: #007BFF; color: white;">Pesquisar</button>
+                    </div>
+                    <div style="display: flex; gap: 15px; align-items: center;">
+                        <span style="font-size: 13px; font-weight: bold; color: #111;">Filtros:</span>
+                        <select id="filter-ano" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 13px;">
+                            <option value="">Qualquer data</option>
+                            <option value="2025">Desde 2025</option>
+                            <option value="2023">Desde 2023</option>
+                            <option value="2020">Desde 2020</option>
+                            <option value="2015">Desde 2015</option>
+                        </select>
+                        <select id="filter-sort" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 13px;">
+                            <option value="">Relevância</option>
+                            <option value="recentes">Mais recentes</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="saved-filters-area" style="display: none; margin-bottom: 25px;">
+                    <input type="text" id="filter-saved-input" placeholder="Filtrar salvos por nome do artigo ou autor..." oninput="filtrarSalvosLocalmente()" style="width: 100%; padding: 12px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc; outline: none;">
                 </div>
 
                 <div id="articles-results" style="display: grid; gap: 15px;">
@@ -37,7 +57,8 @@ document.addEventListener('viewChanged', (e) => {
 // 2. FUNÇÕES DE NAVEGAÇÃO E EXIBIÇÃO
 // ==========================================
 window.prepararBusca = function() {
-    document.getElementById('search-area').style.display = 'flex';
+    document.getElementById('search-area').style.display = 'block';
+    document.getElementById('saved-filters-area').style.display = 'none';
     document.getElementById('btn-tab-busca').style.cssText = "background: #111; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;";
     document.getElementById('btn-tab-salvos').style.cssText = "background: white; color: #007BFF; border: 2px solid #007BFF; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;";
     document.getElementById('articles-results').innerHTML = '<div style="text-align: center; padding: 40px; color: #666; border: 1px dashed #111; border-radius: 4px;">Inicie uma pesquisa...</div>';
@@ -47,14 +68,14 @@ window.renderizarCards = function(artigos, modo) {
     const resultsContainer = document.getElementById('articles-results');
     
     if (artigos.length === 0) {
-        resultsContainer.innerHTML = '<div style="text-align:center; padding: 30px; color:#111;">Nenhum artigo encontrado.</div>';
+        resultsContainer.innerHTML = '<div style="text-align:center; padding: 30px; color:#111;">Nenhum artigo encontrado com estes filtros.</div>';
         return;
     }
 
     resultsContainer.innerHTML = artigos.map((art, index) => {
         let botaoAcaoHTML = "";
         if (modo === 'busca') {
-            botaoAcaoHTML = `<button onclick="salvarArtigo(${index})" class="btn" style="background: white; color: #111; border: 2px solid #111; padding: 8px 15px; border-radius: 4px; font-weight: bold; cursor: pointer;">Salvar Artigo</button>`;
+            botaoAcaoHTML = `<button onclick="salvarArtigo(${index})" class="btn" style="background: white; color: #111; border: 2px solid #111; padding: 8px 15px; border-radius: 4px; font-weight: bold; cursor: pointer;">⭐ Salvar Artigo</button>`;
         } else {
             botaoAcaoHTML = `<button onclick="removerArtigo(${art.id})" class="btn" style="background: white; color: #d9534f; border: 2px solid #d9534f; padding: 8px 15px; border-radius: 4px; font-weight: bold; cursor: pointer;">✖ Remover dos Salvos</button>`;
         }
@@ -66,7 +87,7 @@ window.renderizarCards = function(artigos, modo) {
         return `
         <div class="article-card" style="background:white; padding:20px; border-radius:4px; border:1px solid #111; box-shadow: 2px 2px 0px rgba(0,0,0,0.1);">
             <h3 style="margin:0 0 8px 0; color: #111; font-size: 18px;">${art.titulo}</h3>
-            <p style="font-size:13px; color:#666; font-weight: 500;">Nomes: ${art.autores || 'Desconhecido'} | Data da publicação: ${art.ano || 'N/A'}</p>
+            <p style="font-size:13px; color:#666; font-weight: 500;">Nome ${art.autores || 'Desconhecido'} | Data ${art.ano || 'N/A'}</p>
             <p style="font-size:14px; margin:12px 0; color: #111; line-height: 1.5; border-left: 3px solid #007BFF; padding-left: 10px;">
                 ${art.resumo ? art.resumo.substring(0, 300) + '...' : '<i style="color:#666;">Sem resumo disponível na base de dados.</i>'}
             </p>
@@ -79,16 +100,23 @@ window.renderizarCards = function(artigos, modo) {
 };
 
 // ==========================================
-// 3. COMUNICAÇÃO COM A API (BUSCA E SALVOS)
+// 3. COMUNICAÇÃO COM A API E FILTROS LOCAIS
 // ==========================================
 window.pesquisarArtigos = async function() {
     const query = document.getElementById('search-input').value;
     if (!query) return;
 
-    document.getElementById('articles-results').innerHTML = '<div style="text-align:center; padding: 30px;"><span class="spinner"></span> <p style="color:#111;">Buscando...</p></div>';
+    const ano = document.getElementById('filter-ano').value;
+    const sort = document.getElementById('filter-sort').value;
+
+    document.getElementById('articles-results').innerHTML = '<div style="text-align:center; padding: 30px;"><span class="spinner"></span> <p style="color:#111;">Buscando com filtros aplicados...</p></div>';
 
     try {
-        const res = await window.api.fetchProtected(`/articles/search?query=${encodeURIComponent(query)}`);
+        let url = `/articles/search?query=${encodeURIComponent(query)}`;
+        if (ano) url += `&year=${ano}`;
+        if (sort) url += `&sort=${sort}`;
+
+        const res = await window.api.fetchProtected(url);
         if (!res.ok) throw new Error("Erro na requisição");
 
         const artigos = await res.json();
@@ -101,19 +129,38 @@ window.pesquisarArtigos = async function() {
 
 window.carregarArtigosSalvos = async function() {
     document.getElementById('search-area').style.display = 'none';
+    document.getElementById('saved-filters-area').style.display = 'block';
+    document.getElementById('filter-saved-input').value = '';
+    
     document.getElementById('btn-tab-salvos').style.cssText = "background: #111; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;";
     document.getElementById('btn-tab-busca').style.cssText = "background: white; color: #007BFF; border: 2px solid #007BFF; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;";
     
-    document.getElementById('articles-results').innerHTML = '<div style="text-align:center; padding: 30px;"><span class="spinner"></span> <p style="color:#111;">Carregando...</p></div>';
+    document.getElementById('articles-results').innerHTML = '<div style="text-align:center; padding: 30px;"><span class="spinner"></span> <p style="color:#111;">Carregando sua biblioteca...</p></div>';
 
     try {
         const res = await window.api.fetchProtected('/articles/saved');
         if (!res.ok) throw new Error("Falha ao carregar salvos");
         const salvos = await res.json();
+        
+        window.artigosSalvosCache = salvos;
         renderizarCards(salvos, 'salvos');
     } catch (error) {
         window.UI.showToast("Erro ao carregar artigos salvos.", "error");
     }
+};
+
+window.filtrarSalvosLocalmente = function() {
+    const termo = document.getElementById('filter-saved-input').value.toLowerCase();
+    if (!window.artigosSalvosCache) return;
+
+    // Filtra pelo título OU pelo nome dos autores
+    const filtrados = window.artigosSalvosCache.filter(art => {
+        const titulo = (art.titulo || "").toLowerCase();
+        const autores = (art.autores || "").toLowerCase();
+        return titulo.includes(termo) || autores.includes(termo);
+    });
+
+    renderizarCards(filtrados, 'salvos');
 };
 
 window.salvarArtigo = async function(index) {
@@ -128,14 +175,14 @@ window.salvarArtigo = async function(index) {
         });
 
         if (!res.ok) throw new Error("Falha ao salvar");
-        window.UI.showToast("Artigo adicionado aos favoritos!", "success");
+        window.UI.showToast("Artigo adicionado à sua biblioteca!", "success");
     } catch (error) {
         window.UI.showToast("Erro ao salvar o artigo.", "error");
     }
 };
 
 window.removerArtigo = async function(id) {
-    if(!confirm("Deseja realmente remover este artigo da sua lista?")) return;
+    if(!confirm("Deseja realmente remover este artigo da sua biblioteca?")) return;
 
     try {
         const res = await window.api.fetchProtected(`/articles/saved/${id}`, { method: 'DELETE' });
