@@ -14,7 +14,7 @@ document.addEventListener('viewChanged', (e) => {
                     </div>
                     <div style="display: flex; gap: 10px;">
                         <button onclick="prepararBusca()" id="btn-tab-busca" class="btn" style="background: #111; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">🔍 Buscar Artigos</button>
-                        <button onclick="carregarArtigosSalvos()" id="btn-tab-salvos" class="btn" style="background: white; color: #007BFF; border: 2px solid #007BFF; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">⭐ Meus Salvos</button>
+                        <button onclick="carregarArtigosSalvos()" id="btn-tab-salvos" class="btn" style="background: white; color: #007BFF; border: 2px solid #007BFF; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Meus Salvos</button>
                     </div>
                 </div>
 
