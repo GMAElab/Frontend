@@ -1,0 +1,273 @@
+/* ============================================================
+   RESPONSIVE & MOBILE OPTIMIZATIONS
+   Ficheiro complementar para melhor responsividade
+   =========================================================== */
+
+/* Mobile Landscape & Touch Optimizations */
+@media (max-height: 500px) and (orientation: landscape) {
+    .modal-content {
+        max-height: 85vh;
+        overflow-y: auto;
+    }
+    .card {
+        padding: 12px;
+    }
+}
+
+/* Touch-friendly sizing */
+button, input, textarea, select {
+    min-height: 44px;
+    min-width: 44px;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+    min-height: auto;
+    min-width: auto;
+    width: 18px;
+    height: 18px;
+}
+
+/* Better focus states for accessibility */
+button:focus,
+input:focus,
+textarea:focus,
+select:focus {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+/* Prevent zoom on iOS double-tap */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+textarea {
+    font-size: 16px;
+    -webkit-user-select: text;
+    user-select: text;
+}
+
+/* Improve scrolling on mobile */
+body {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+    -webkit-touch-callout: none;
+}
+
+/* Flexbox utility for responsive layouts */
+.flex-responsive {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.flex-responsive > * {
+    flex: 1 1 auto;
+    min-width: 200px;
+}
+
+@media (max-width: 479px) {
+    .flex-responsive > * {
+        min-width: 100%;
+    }
+}
+
+/* Print styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    .card {
+        box-shadow: none;
+        border: 1px solid #ccc;
+        page-break-inside: avoid;
+    }
+}
+
+/* Safe area for notched devices (iPhone X+) */
+@supports (padding: max(0px)) {
+    body {
+        padding-left: max(1rem, env(safe-area-inset-left));
+        padding-right: max(1rem, env(safe-area-inset-right));
+        padding-top: max(1rem, env(safe-area-inset-top));
+        padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
+}
+
+/* Improved table responsiveness on mobile */
+@media (max-width: 640px) {
+    table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+    
+    thead {
+        display: none;
+    }
+    
+    tbody, tr, td {
+        display: block;
+        width: 100%;
+    }
+    
+    tr {
+        margin-bottom: 1rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        overflow: hidden;
+    }
+    
+    td {
+        text-align: right;
+        padding-left: 50%;
+        position: relative;
+        border: none;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    td:before {
+        content: attr(data-label);
+        position: absolute;
+        left: 1rem;
+        font-weight: 600;
+        text-align: left;
+    }
+}
+
+/* Scroll behavior improvements */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Dark mode support (if user prefers) */
+@media (prefers-color-scheme: dark) {
+    /* These will use the CSS variables already defined */
+    /* No changes needed as the app uses CSS variables */
+}
+
+/* Improve form interaction on mobile */
+@media (max-width: 768px) {
+    .input-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    input[type="submit"],
+    button[type="submit"],
+    .btn-block {
+        width: 100%;
+    }
+}
+
+/* Better spacing for stacked layouts */
+@media (max-width: 640px) {
+    .card {
+        margin-bottom: 1rem;
+    }
+}
+
+/* Responsive padding utilities */
+.p-responsive-sm {
+    padding: 0.5rem;
+}
+
+.p-responsive-md {
+    padding: 1rem;
+}
+
+.p-responsive-lg {
+    padding: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .p-responsive-sm {
+        padding: 1rem;
+    }
+    
+    .p-responsive-md {
+        padding: 1.5rem;
+    }
+    
+    .p-responsive-lg {
+        padding: 2rem;
+    }
+}
+
+/* Responsive margin utilities */
+.m-responsive-sm {
+    margin: 0.5rem;
+}
+
+.m-responsive-md {
+    margin: 1rem;
+}
+
+.m-responsive-lg {
+    margin: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .m-responsive-sm {
+        margin: 1rem;
+    }
+    
+    .m-responsive-md {
+        margin: 1.5rem;
+    }
+    
+    .m-responsive-lg {
+        margin: 2rem;
+    }
+}
+
+/* Responsive font sizes */
+.font-responsive-sm {
+    font-size: clamp(0.75rem, 2vw, 0.875rem);
+}
+
+.font-responsive-md {
+    font-size: clamp(0.875rem, 2.5vw, 1rem);
+}
+
+.font-responsive-lg {
+    font-size: clamp(1rem, 3vw, 1.25rem);
+}
+
+/* Grid gap responsive utilities */
+.gap-responsive-sm {
+    gap: 0.5rem;
+}
+
+.gap-responsive-md {
+    gap: 1rem;
+}
+
+.gap-responsive-lg {
+    gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .gap-responsive-sm {
+        gap: 1rem;
+    }
+    
+    .gap-responsive-md {
+        gap: 1.5rem;
+    }
+    
+    .gap-responsive-lg {
+        gap: 2rem;
+    }
+}

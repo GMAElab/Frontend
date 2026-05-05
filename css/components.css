@@ -245,24 +245,119 @@ html, body {
     max-width: 100%;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 479px) {
     .card {
-        padding: 16px;
-        margin: 8px;
+        padding: 12px;
+        margin: 4px;
+        border-radius: var(--radius-md);
     }
 
     .btn {
         width: 100%;
-        padding: 12px;
-        font-size: 1rem;
+        padding: 12px 16px;
+        font-size: 0.95rem;
         margin-bottom: 8px;
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    .btn-small {
+        padding: 8px 12px;
+        font-size: 0.8rem;
+        min-height: 36px;
     }
 
     .modal-content {
-        width: 95%;
-        max-width: none;
+        width: 95% !important;
+        max-width: 100% !important;
+        max-height: 95vh;
         margin: 10px;
-        padding: 16px;
+        padding: 12px;
+        border-radius: var(--radius-md);
+    }
+
+    .modal-overlay {
+        background: rgba(15, 23, 42, 0.9);
+    }
+
+    .grid-fluida, .grid-admin {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .card-responsivo {
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+
+    table {
+        font-size: 0.75rem;
+    }
+
+    th, td {
+        padding: 8px;
+    }
+
+    .input-group label {
+        font-size: 0.85rem;
+        margin-bottom: 0.35rem;
+    }
+
+    .input-group input,
+    .input-group textarea,
+    .form-control {
+        font-size: 16px;
+        padding: 10px;
+        min-height: 40px;
+    }
+
+    .toast-container {
+        bottom: 8px;
+        right: 8px;
+        left: 8px;
+    }
+
+    .toast {
+        min-width: auto;
+        width: 100%;
+        padding: 12px;
+    }
+
+    .meses-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .mes-card {
+        padding: 12px 4px;
+        font-size: 0.8rem;
+    }
+
+    .badge {
+        padding: 3px 8px;
+        font-size: 0.65rem;
+    }
+}
+
+/* Small Devices (480px - 639px) */
+@media (min-width: 480px) and (max-width: 639px) {
+    .card {
+        padding: 14px;
+        margin: 6px;
+    }
+
+    .btn {
+        width: 100%;
+        padding: 10px 14px;
+        font-size: 0.9rem;
+        margin-bottom: 6px;
+        min-height: 40px;
+    }
+
+    .modal-content {
+        width: 90% !important;
+        max-height: 90vh;
+        padding: 14px;
     }
 
     .grid-fluida, .grid-admin {
@@ -270,34 +365,157 @@ html, body {
         gap: 10px;
     }
 
-    .card-responsivo {
-        padding: 16px;
-    }
-
     table {
         font-size: 0.8rem;
     }
 
     th, td {
-        padding: 8px;
+        padding: 10px;
     }
 
-    .input-group input, .input-group textarea, .form-control {
+    .input-group input,
+    .input-group textarea,
+    .form-control {
         font-size: 16px;
+        padding: 10px;
     }
 
-    .toast-container {
-        bottom: 10px;
-        right: 10px;
-        left: 10px;
-    }
-
-    .toast {
-        min-width: auto;
-        width: 100%;
-    }
-    
     .meses-grid {
-        grid-template-columns: repeat(4, 1fr); 
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+}
+
+/* Medium Devices (640px - 767px) */
+@media (min-width: 640px) and (max-width: 767px) {
+    .card {
+        padding: 16px;
+        margin: 8px;
+    }
+
+    .btn {
+        width: auto;
+        padding: 10px 16px;
+        font-size: 0.9rem;
+    }
+
+    .modal-content {
+        width: 85% !important;
+        max-width: 500px;
+        padding: 18px;
+    }
+
+    .grid-fluida, .grid-admin {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    table {
+        font-size: 0.85rem;
+    }
+
+    th, td {
+        padding: 12px;
+    }
+
+    .meses-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+    }
+}
+
+/* Tablets (768px - 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .card {
+        padding: 18px;
+        margin: 10px;
+    }
+
+    .btn {
+        padding: 10px 18px;
+        font-size: 0.95rem;
+    }
+
+    .modal-content {
+        width: 80%;
+        max-width: 600px;
+        padding: 20px;
+    }
+
+    .grid-fluida {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+    }
+
+    .grid-admin {
+        grid-template-columns: 1fr 2fr;
+        gap: 16px;
+    }
+
+    table {
+        font-size: 0.9rem;
+    }
+
+    th, td {
+        padding: 12px;
+    }
+
+    .meses-grid {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 12px;
+    }
+}
+
+/* Large Devices (1024px - 1439px) */
+@media (min-width: 1024px) and (max-width: 1439px) {
+    .card {
+        padding: 20px;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        font-size: 0.95rem;
+    }
+
+    .modal-content {
+        width: 75%;
+        max-width: 700px;
+    }
+
+    .grid-fluida {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+
+    .meses-grid {
+        grid-template-columns: repeat(6, 1fr);
+        gap: 12px;
+    }
+}
+
+/* Extra Large Devices (1440px+) */
+@media (min-width: 1440px) {
+    .card {
+        padding: 24px;
+    }
+
+    .btn {
+        padding: 10px 24px;
+        font-size: 1rem;
+    }
+
+    .modal-content {
+        width: 70%;
+        max-width: 800px;
+    }
+
+    .grid-fluida {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+    }
+
+    .meses-grid {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 15px;
     }
 }
