@@ -36,13 +36,17 @@ async function carregarDropdownTopicos(selectId) {
             html += `<option value="${t.id}">${t.titulo} (${t.ano})</option>`;
         });
         select.innerHTML = html;
+
+        // Se já tivermos o histórico carregado, tenta atualizar o aviso
+        setTimeout(atualizarAvisoUltimoPTA, 300);
+
     } catch (err) {
         select.innerHTML = '<option value="">Erro ao carregar tópicos</option>';
     }
 }
 
 // ==========================================
-// TELA 1: VISÃO DO PESQUISADOR (COM HISTÓRICO)
+// TELA 1: VISÃO DO PESQUISADOR (COM HISTÓRICO E LEMBRETE)
 // ==========================================
 function renderPTAPesquisador() {
     const main = document.getElementById('dynamic-content');
@@ -57,46 +61,54 @@ function renderPTAPesquisador() {
         <div class="grid-fluida" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
             
             <div class="card-responsivo" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); align-self: start;">
-                <h3 style="margin-bottom: 20px; color: #1e293b; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">Novo Relatório</h3>
+                <h3 style="margin-bottom: 20px; color: #111; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">Novo Relatório</h3>
                 <form id="form-pta">
                     <div style="margin-bottom: 15px;">
-                        <label style="font-weight: bold; font-size: 14px;">Tópico de Pesquisa:</label>
-                        <select id="pta-topico" class="form-control" required style="width: 100%; padding: 8px;"></select>
+                        <label style="font-weight: bold; font-size: 14px; color: #111;">Tópico de Pesquisa:</label>
+                        <select id="pta-topico" class="form-control" required style="width: 100%; padding: 8px;" onchange="atualizarAvisoUltimoPTA()"></select>
                     </div>
                     
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                         <div>
-                            <label style="font-weight: bold; font-size: 14px;">Mês:</label>
+                            <label style="font-weight: bold; font-size: 14px; color: #111;">Mês:</label>
                             <input type="number" id="pta-mes" class="form-control" value="${dataAtual.getMonth() + 1}" required style="width: 100%; padding: 8px;">
                         </div>
                         <div>
-                            <label style="font-weight: bold; font-size: 14px;">Ano:</label>
+                            <label style="font-weight: bold; font-size: 14px; color: #111;">Ano:</label>
                             <input type="number" id="pta-ano" class="form-control" value="${dataAtual.getFullYear()}" required style="width: 100%; padding: 8px;">
                         </div>
                     </div>
                     
                     <div style="margin-bottom: 25px; padding: 15px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px;">
-                        <label style="display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: bold;">
+                        <label style="display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: bold; color: #111;">
                             <span>Avanço Geral da Pesquisa:</span>
-                            <span id="valor-avanco" style="color: var(--primary);">50%</span>
+                            <span id="valor-avanco" style="color: #007BFF;">50%</span>
                         </label>
                         <input type="range" id="pta-avanco" min="0" max="100" value="50" style="width: 100%; cursor: pointer;" 
                                oninput="document.getElementById('valor-avanco').innerText = this.value + '%'">
                     </div>
                     
+                    <div id="ultimo-pta-aviso" style="display: none; background: #F8FAFC; border: 1px solid #E2E8F0; border-left: 3px solid #007BFF; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <strong style="color: #111; font-size: 13px;">Último relato deste tópico (Mês <span id="ultimo-pta-mes"></span>):</strong>
+                            <span style="color: #64748b; font-size: 12px; font-weight: 600;">Avanço anterior: <span id="ultimo-pta-avanco"></span>%</span>
+                        </div>
+                        <div id="ultimo-pta-texto" style="color: #475569; font-size: 13px; font-style: italic; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5;"></div>
+                    </div>
+                    
                     <div style="margin-bottom: 20px;">
-                        <label style="font-weight: bold; font-size: 14px;">Descrição das Atividades no Mês</label>
+                        <label style="font-weight: bold; font-size: 14px; color: #111;">Descrição das Atividades no Mês</label>
                         <textarea id="pta-descricao" class="form-control" rows="6" placeholder="Descreva os experimentos, resultados e atividades..." required style="width: 100%; padding: 8px;"></textarea>
                     </div>
                     
-                    <button type="submit" class="btn btn-primary" style="width: 100%; font-weight: bold; padding: 10px;">Enviar PTA</button>
+                    <button type="submit" class="btn" style="width: 100%; font-weight: bold; padding: 12px; background: #111; color: white; border: none; border-radius: 4px; cursor: pointer;">Enviar PTA</button>
                 </form>
             </div>
 
             <div class="card-responsivo" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); align-self: start;">
-                <h3 style="margin-bottom: 20px; color: #1e293b; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">Meus Últimos Envios</h3>
+                <h3 style="margin-bottom: 20px; color: #111; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">Meus Últimos Envios</h3>
                 <div id="meus-ptas-lista" style="display: flex; flex-direction: column; gap: 15px; max-height: 600px; overflow-y: auto; padding-right: 5px;">
-                    <span class="spinner" style="border-top-color: var(--primary);"></span> Buscando histórico...
+                    <span class="spinner" style="border-top-color: #007BFF;"></span> Buscando histórico...
                 </div>
             </div>
 
@@ -107,6 +119,44 @@ function renderPTAPesquisador() {
     carregarMeusPTAs();
     document.getElementById('form-pta').addEventListener('submit', enviarRelatorio);
 }
+
+// ==========================================
+// A MÁGICA: VERIFICA O ÚLTIMO ENVIO E EXIBE
+// ==========================================
+window.atualizarAvisoUltimoPTA = function() {
+    const topicoId = document.getElementById('pta-topico').value;
+    const avisoContainer = document.getElementById('ultimo-pta-aviso');
+    
+    // Se não selecionou tópico ou o cache de relatórios estiver vazio
+    if (!topicoId || !window.meusPtasCache || window.meusPtasCache.length === 0) {
+        if (avisoContainer) avisoContainer.style.display = 'none';
+        return;
+    }
+
+    // A lista window.meusPtasCache já foi ordenada por data (mais recente primeiro).
+    // O .find() vai pegar automaticamente o relato mais recente deste tópico específico.
+    const ultimoRelato = window.meusPtasCache.find(rel => rel.topico_id == parseInt(topicoId));
+
+    if (ultimoRelato) {
+        avisoContainer.style.display = 'block';
+        document.getElementById('ultimo-pta-mes').innerText = `${ultimoRelato.mes_referencia}/${ultimoRelato.ano_referencia}`;
+        document.getElementById('ultimo-pta-texto').innerText = `"${ultimoRelato.descricao_atividades}"`;
+        document.getElementById('ultimo-pta-avanco').innerText = ultimoRelato.percentual_avanco;
+        
+        // Mágica Extra: Ajusta o slider para começar de onde o pesquisador parou
+        const inputAvanco = document.getElementById('pta-avanco');
+        const spanAvanco = document.getElementById('valor-avanco');
+        
+        // Só ajusta sozinho se o slider ainda estiver no valor padrão (50)
+        if (inputAvanco.value === "50") {
+            inputAvanco.value = ultimoRelato.percentual_avanco;
+            spanAvanco.innerText = ultimoRelato.percentual_avanco + '%';
+        }
+    } else {
+        // Se ele nunca relatou nada neste tópico, esconde o aviso
+        avisoContainer.style.display = 'none';
+    }
+};
 
 async function carregarMeusPTAs() {
     const container = document.getElementById('meus-ptas-lista');
@@ -119,7 +169,12 @@ async function carregarMeusPTAs() {
             return;
         }
 
+        // Ordena para garantir que os mais recentes fiquem no topo
         relatorios.sort((a, b) => b.ano_referencia - a.ano_referencia || b.mes_referencia - a.mes_referencia);
+        
+        // SALVA NO CACHE GLOBAL PARA O LEMBRETE INTELIGENTE PODER LER SEM REQUISITAR DE NOVO
+        window.meusPtasCache = relatorios;
+        setTimeout(atualizarAvisoUltimoPTA, 200);
 
         let html = '';
         relatorios.forEach(rel => {
@@ -129,27 +184,26 @@ async function carregarMeusPTAs() {
             let borderCard = '#E2E8F0';
 
             if (rel.status === 'consolidado') {
-                statusColor = 'var(--primary)';
+                statusColor = '#007BFF'; // Azul moderno
                 statusText = '✅ Aprovado';
-                borderCard = 'var(--primary)';
+                borderCard = '#007BFF';
             } else if (rel.status === 'rascunho') {
-                statusColor = 'var(--danger)';
+                statusColor = '#d9534f';
                 statusText = '❌ Devolvido (Revisar)';
                 bgCard = '#FEF2F2'; 
                 borderCard = '#FCA5A5';
             }
-            // ----------------------------------------------------
 
             html += `
                 <div style="border: 1px solid ${borderCard}; border-left: 4px solid ${statusColor}; border-radius: 6px; padding: 15px; background: ${bgCard};">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <strong style="color: #334155;">Mês ${rel.mes_referencia}/${rel.ano_referencia}</strong>
+                        <strong style="color: #111;">Mês ${rel.mes_referencia}/${rel.ano_referencia}</strong>
                         <span style="font-size: 12px; font-weight: bold; color: ${statusColor}; text-transform: uppercase;">${statusText}</span>
                     </div>
                     <div style="font-size: 13px; color: #64748B; margin-bottom: 8px;">Tópico ID: ${rel.topico_id}</div>
                     
                     <div style="width: 100%; background: #E2E8F0; border-radius: 4px; height: 8px; margin-bottom: 10px;">
-                        <div style="background: ${statusColor === '#64748b' ? 'var(--primary)' : statusColor}; height: 100%; border-radius: 4px; width: ${rel.percentual_avanco}%;"></div>
+                        <div style="background: ${statusColor === '#64748b' ? '#111' : statusColor}; height: 100%; border-radius: 4px; width: ${rel.percentual_avanco}%;"></div>
                     </div>
                     
                     <div style="font-size: 13px; color: #475569; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-style: italic;">
@@ -163,6 +217,7 @@ async function carregarMeusPTAs() {
         container.innerHTML = '<p style="color:red;">Erro ao carregar histórico.</p>';
     }
 }
+
 async function enviarRelatorio(e) {
     e.preventDefault();
     const payload = {
@@ -212,33 +267,33 @@ function renderPTACoordenador() {
 
     main.innerHTML = `
         <div class="view-header">
-            <h2>Gestão de PTA</h2>
+            <h2 style="color: #111;">Gestão de PTA</h2>
             <p class="text-muted">Navegue pelo calendário para avaliar relatórios e gerar textos consolidados.</p>
         </div>
 
         <div class="grid-admin">
             <div class="card-responsivo" style="background: white; border-radius: 8px; padding: 20px;">
-                <h4 style="margin-bottom: 15px; color: var(--text-main);">Novo Tópico de Pesquisa</h4>
+                <h4 style="margin-bottom: 15px; color: #111;">Novo Tópico de Pesquisa</h4>
                 <form id="form-novo-topico">
                     <div style="margin-bottom: 10px;">
-                        <label style="font-size: 13px; font-weight:600;">Título do Tópico:</label>
-                        <input type="text" id="novo-topico-titulo" class="form-control" required>
+                        <label style="font-size: 13px; font-weight:600; color: #111;">Título do Tópico:</label>
+                        <input type="text" id="novo-topico-titulo" class="form-control" required style="border: 1px solid #111;">
                     </div>
                     <div style="margin-bottom: 15px;">
-                        <label style="font-size: 13px; font-weight:600;">Ano Vigente:</label>
-                        <input type="number" id="novo-topico-ano" class="form-control" value="${anoAtual}" required>
+                        <label style="font-size: 13px; font-weight:600; color: #111;">Ano Vigente:</label>
+                        <input type="number" id="novo-topico-ano" class="form-control" value="${anoAtual}" required style="border: 1px solid #111;">
                     </div>
-                    <button type="submit" class="btn btn-primary" style="width: 100%;">Cadastrar Tópico</button>
+                    <button type="submit" class="btn" style="width: 100%; background: #111; color: white; font-weight: bold; padding: 10px; border-radius: 4px; border: none; cursor: pointer;">Cadastrar Tópico</button>
                 </form>
             </div>
 
-            <div class="card-responsivo" style="background: white; border-radius: 8px; padding: 20px; border-top: 4px solid var(--primary);">
+            <div class="card-responsivo" style="background: white; border-radius: 8px; padding: 20px; border-top: 4px solid #007BFF;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h4 style="color: var(--primary); margin: 0;">Navegação do Ano</h4>
+                    <h4 style="color: #007BFF; margin: 0;">Navegação do Ano</h4>
                     <div style="display: flex; gap: 10px; align-items: center;">
-                        <button class="btn btn-sm btn-secondary" onclick="mudarAnoCalendario(-1)">◀</button>
-                        <h3 id="calendario-ano-display" style="margin: 0; min-width: 60px; text-align: center; color: var(--text-main);">${anoAtual}</h3>
-                        <button class="btn btn-sm btn-secondary" onclick="mudarAnoCalendario(1)">▶</button>
+                        <button class="btn btn-sm btn-secondary" onclick="mudarAnoCalendario(-1)" style="border: 1px solid #111; color: #111;">◀</button>
+                        <h3 id="calendario-ano-display" style="margin: 0; min-width: 60px; text-align: center; color: #111;">${anoAtual}</h3>
+                        <button class="btn btn-sm btn-secondary" onclick="mudarAnoCalendario(1)" style="border: 1px solid #111; color: #111;">▶</button>
                     </div>
                 </div>
                 
@@ -246,10 +301,10 @@ function renderPTACoordenador() {
             </div>
         </div>
 
-        <div id="painel-mes-detalhe" class="painel-detalhe">
+        <div id="painel-mes-detalhe" class="painel-detalhe" style="display: none; background: white; border: 1px solid #E2E8F0; border-radius: 8px; padding: 20px; margin-top: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #E2E8F0; padding-bottom: 15px; margin-bottom: 20px;">
-                <h3 id="painel-titulo" style="margin: 0; color: var(--text-main);">Gestão do Mês</h3>
-                <button class="btn btn-sm btn-secondary" onclick="fecharPainelMes()">Fechar Painel</button>
+                <h3 id="painel-titulo" style="margin: 0; color: #111;">Gestão do Mês</h3>
+                <button class="btn btn-sm" onclick="fecharPainelMes()" style="background: transparent; color: #111; border: 1px solid #111; cursor: pointer; border-radius: 4px; padding: 5px 10px;">Fechar Painel</button>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
@@ -259,24 +314,24 @@ function renderPTACoordenador() {
                 </div>
 
                 <div style="background: #F8FAFC; padding: 20px; border-radius: 8px; border: 1px solid #E2E8F0;">
-                    <h4 style="color: var(--primary); margin-bottom: 10px; font-size: 15px;">Gerar Síntese (Inteligência Artificial)</h4>
+                    <h4 style="color: #007BFF; margin-bottom: 10px; font-size: 15px;">Gerar Síntese (Inteligência Artificial)</h4>
                     <p style="font-size: 13px; color: #64748b; margin-bottom: 15px;">Unifica todos os relatórios <b>aprovados</b> do mês atual.</p>
                     
-                    <select id="ia-topico-id" class="form-control" style="margin-bottom: 15px; border-color: var(--border);"></select>
+                    <select id="ia-topico-id" class="form-control" style="margin-bottom: 15px; border: 1px solid #111;"></select>
                     
-                    <button id="btn-gerar-ia" class="btn btn-primary" onclick="gerarSinteseIA()" style="width: 100%;">
+                    <button id="btn-gerar-ia" class="btn" onclick="gerarSinteseIA()" style="width: 100%; background: #007BFF; color: white; font-weight: bold; border: none; padding: 10px; border-radius: 4px; cursor: pointer;">
                         Processar Textos Aprovados
                     </button>
                     
-                    <div id="resultado-ia" style="display: none; background: white; border-left: 4px solid var(--primary); padding: 15px; margin-top: 15px; border-radius: 4px; box-shadow: var(--shadow-sm);">
-                        <strong style="color: var(--primary); font-size: 14px;">Texto Consolidado:</strong>
+                    <div id="resultado-ia" style="display: none; background: white; border-left: 4px solid #007BFF; padding: 15px; margin-top: 15px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <strong style="color: #007BFF; font-size: 14px;">Texto Consolidado:</strong>
                         <p id="texto-ia" style="margin-top: 10px; line-height: 1.6; color: #334155; font-size: 14px;"></p>
                     </div>
                 </div>
             </div>
 
             <div style="border-top: 1px solid #E2E8F0; padding-top: 25px;">
-                <h4 style="color: var(--text-main); margin-bottom: 15px; font-size: 15px; text-transform: uppercase;">Relatórios Aprovados (Consolidados)</h4>
+                <h4 style="color: #111; margin-bottom: 15px; font-size: 15px; text-transform: uppercase;">Relatórios Aprovados (Consolidados)</h4>
                 <div id="lista-aprovados" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px;">
                 </div>
             </div>
@@ -360,8 +415,8 @@ window.carregarPendenciasChefia = async function(mes, ano) {
                         ${rel.descricao_atividades}
                     </div>
                     <div style="display: flex; justify-content: flex-end; gap: 8px;">
-                        <button class="btn btn-sm btn-secondary" onclick="avaliarRelato(${rel.id}, false)">Devolver</button>
-                        <button class="btn btn-sm btn-primary" onclick="avaliarRelato(${rel.id}, true)">Aprovar</button>
+                        <button class="btn btn-sm" onclick="avaliarRelato(${rel.id}, false)" style="background: white; border: 1px solid #d9534f; color: #d9534f; cursor: pointer; padding: 5px 10px; border-radius: 4px;">Devolver</button>
+                        <button class="btn btn-sm" onclick="avaliarRelato(${rel.id}, true)" style="background: #007BFF; color: white; border: none; cursor: pointer; padding: 5px 10px; border-radius: 4px;">Aprovar</button>
                     </div>
                 </div>
             `;
@@ -374,7 +429,7 @@ window.carregarPendenciasChefia = async function(mes, ano) {
 
 window.carregarAprovadosChefia = async function(mes, ano) {
     const container = document.getElementById('lista-aprovados');
-    container.innerHTML = '<span class="spinner" style="border-top-color: var(--primary);"></span> <span style="color: var(--primary); font-size: 14px;">Buscando textos aprovados...</span>';
+    container.innerHTML = '<span class="spinner" style="border-top-color: #007BFF;"></span> <span style="color: #007BFF; font-size: 14px;">Buscando textos aprovados...</span>';
 
     try {
         const res = await window.api.fetchProtected(`/pta/chefia/aprovados?mes=${mes}&ano=${ano}`);
@@ -389,10 +444,10 @@ window.carregarAprovadosChefia = async function(mes, ano) {
         let html = '';
         aprovados.forEach(rel => {
             html += `
-                <div style="background: white; border: 1px solid #E2E8F0; border-left: 4px solid var(--primary); border-radius: 6px; padding: 15px; box-shadow: var(--shadow-sm);">
+                <div style="background: white; border: 1px solid #E2E8F0; border-left: 4px solid #007BFF; border-radius: 6px; padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
-                        <strong style="color: var(--primary); font-size: 14px;">${rel.usuario_nome}</strong>
-                        <span class="badge" style="background: #eff6ff; color: var(--primary);">Avanço: ${rel.percentual_avanco}%</span>
+                        <strong style="color: #007BFF; font-size: 14px;">${rel.usuario_nome}</strong>
+                        <span class="badge" style="background: #eff6ff; color: #007BFF;">Avanço: ${rel.percentual_avanco}%</span>
                     </div>
                     <div style="font-size: 12px; color: #64748B; margin-bottom: 10px; font-weight: 600; text-transform: uppercase;">
                         Tópico: ${rel.topico_titulo}
@@ -405,7 +460,7 @@ window.carregarAprovadosChefia = async function(mes, ano) {
         });
         container.innerHTML = html;
     } catch (err) {
-        container.innerHTML = '<div style="color: var(--danger); font-size: 14px;">Não foi possível carregar os aprovados. A rota do backend foi adicionada?</div>';
+        container.innerHTML = '<div style="color: #d9534f; font-size: 14px;">Não foi possível carregar os aprovados. A rota do backend foi adicionada?</div>';
     }
 }
 
