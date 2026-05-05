@@ -2,7 +2,6 @@
     display: flex;
     height: 100vh;
     overflow: hidden;
-    position: relative;
 }
 
 .sidebar {
@@ -22,25 +21,6 @@
 
 .sidebar.open {
     transform: translateX(0);
-}
-
-/* Overlay para fechar o menu ao clicar fora (mobile) */
-.sidebar-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 999;
-    display: none;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.sidebar-overlay.active {
-    display: block;
-    opacity: 1;
 }
 
 .sidebar-brand {
@@ -112,15 +92,6 @@
     font-size: 1.5rem;
     cursor: pointer;
     color: var(--text-main);
-    padding: 4px 8px;
-    min-width: 44px;
-    min-height: 44px;
-    border-radius: 4px;
-    transition: background-color 0.2s;
-}
-
-.menu-toggle:hover {
-    background-color: var(--sidebar-active);
 }
 
 .topbar-right { display: flex; align-items: center; gap: 16px; }
@@ -141,132 +112,11 @@
 }
 
 /* Responsividade */
-/* Extra Small (320px - 479px) */
-@media (max-width: 479px) {
-    .sidebar {
-        width: 70vw;
-        max-width: 260px;
-        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
-    }
-    
-    .sidebar-overlay {
-        display: none;
-    }
-    
-    .sidebar-overlay.active {
-        display: block;
-    }
-    
-    .topbar {
-        height: 56px;
-        padding: 0 12px;
-        gap: 8px;
-        z-index: 1001;
-    }
-    
-    .topbar-left {
-        gap: 8px;
-        flex: 1;
-        min-width: 0;
-    }
-    
-    .topbar-left h2 {
-        font-size: 1rem;
-        margin: 0;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    
-    #user-greeting {
-        display: none !important;
-    }
-    
-    .menu-toggle {
-        display: block;
-        font-size: 1.5rem;
-        flex-shrink: 0;
-    }
-    
-    .content-area {
-        padding: 12px;
-        z-index: 500;
-    }
-    
-    .sidebar-brand {
-        padding: 16px;
-    }
-    
-    .sidebar-brand h2 {
-        font-size: 1rem;
-    }
-    
-    .sidebar-nav {
-        padding: 12px 0;
-    }
-    
-    .nav-item {
-        padding: 12px 16px;
-        font-size: 0.9rem;
-    }
-    
-    .sidebar-footer {
-        padding: 12px;
-    }
-}
-
-/* Small Devices (480px - 639px) */
-@media (min-width: 480px) and (max-width: 639px) {
-    .topbar {
-        height: 56px;
-        padding: 0 12px;
-    }
-    
-    .topbar-left h2 {
-        font-size: 1.1rem;
-    }
-    
-    #user-greeting {
-        display: none !important;
-    }
-    
-    .content-area {
-        padding: 12px;
-    }
-    
-    .sidebar {
-        width: 240px;
-    }
-}
-
-/* Medium Devices (640px - 767px) */
-@media (min-width: 640px) and (max-width: 767px) {
-    .topbar {
-        height: 60px;
-        padding: 0 16px;
-    }
-    
-    #user-greeting {
-        font-size: 0.9rem;
-        margin-right: 10px;
-    }
-    
-    .content-area {
-        padding: 16px;
-    }
-    
-    .sidebar {
-        width: 250px;
-    }
-}
-
-/* Tablets (768px - 1023px) */
-@media (min-width: 768px) {
+@media (min-width: 769px) {
     .sidebar {
         position: static;
         transform: none;
         width: 260px;
-        height: 100vh;
     }
     .main-wrapper {
         margin-left: 0;
@@ -274,34 +124,32 @@
     .menu-toggle {
         display: none;
     }
-    .topbar {
-        height: 64px;
-        padding: 0 24px;
-    }
-    .content-area {
-        padding: 24px;
-    }
 }
 
-/* Large Devices (1024px - 1439px) */
-@media (min-width: 1024px) {
+@media (max-width: 768px) {
+    .sidebar {
+        width: 250px;
+    }
+    .main-wrapper {
+        margin-left: 0;
+    }
     .topbar {
-        padding: 0 32px;
+        padding: 0 16px;
+    }
+    .topbar-left {
+        flex: 1;
+    }
+    .menu-toggle {
+        display: block;
     }
     .content-area {
-        padding: 32px;
+        padding: 16px;
     }
-    .sidebar {
-        width: 260px;
+    .sidebar-brand h2 {
+        font-size: 1.2rem;
     }
-}
-
-/* Extra Large Devices (1440px+) */
-@media (min-width: 1440px) {
-    .sidebar {
-        width: 280px;
-    }
-    .content-area {
-        padding: 40px;
+    .nav-item {
+        padding: 16px 24px;
+        font-size: 1rem;
     }
 }
