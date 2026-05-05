@@ -46,7 +46,7 @@ async function carregarDropdownTopicos(selectId) {
 }
 
 // ==========================================
-// TELA 1: VISÃO DO PESQUISADOR (COM HISTÓRICO E LEMBRETE)
+// VISÃO DO PESQUISADOR (COM HISTÓRICO E LEMBRETE)
 // ==========================================
 function renderPTAPesquisador() {
     const main = document.getElementById('dynamic-content');
@@ -89,11 +89,11 @@ function renderPTAPesquisador() {
                     </div>
                     
                     <div id="ultimo-pta-aviso" style="display: none; background: #F8FAFC; border: 1px solid #E2E8F0; border-left: 3px solid #007BFF; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                             <strong style="color: #111; font-size: 13px;">Último relato deste tópico (Mês <span id="ultimo-pta-mes"></span>):</strong>
                             <span style="color: #64748b; font-size: 12px; font-weight: 600;">Avanço anterior: <span id="ultimo-pta-avanco"></span>%</span>
                         </div>
-                        <div id="ultimo-pta-texto" style="color: #475569; font-size: 13px; font-style: italic; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5;"></div>
+                        <div id="ultimo-pta-texto" style="color: #475569; font-size: 13px; font-style: italic; line-height: 1.6; white-space: pre-wrap; background: #F1F5F9; padding: 10px; border-radius: 4px;"></div>
                     </div>
                     
                     <div style="margin-bottom: 20px;">
@@ -119,7 +119,6 @@ function renderPTAPesquisador() {
     carregarMeusPTAs();
     document.getElementById('form-pta').addEventListener('submit', enviarRelatorio);
 }
-
 // ==========================================
 // A MÁGICA: VERIFICA O ÚLTIMO ENVIO E EXIBE
 // ==========================================
