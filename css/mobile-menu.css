@@ -1,0 +1,222 @@
+/* ========================================================
+   Mobile Menu & Navigation Enhancements
+   Melhorias para menu mobile e navegação em dispositivos pequenos
+   ======================================================== */
+
+/* Garantir que o overlay funciona em todos os breakpoints */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay.active {
+    display: block;
+    opacity: 1;
+}
+
+/* Mobile: Melhorar o sidebar em dispositivos até 768px */
+@media (max-width: 767px) {
+    .sidebar {
+        width: 70vw;
+        max-width: 280px;
+        box-shadow: 2px 0 12px rgba(0, 0, 0, 0.2);
+        overflow-y: auto;
+    }
+    
+    .sidebar.open {
+        transform: translateX(0);
+    }
+    
+    .menu-toggle {
+        display: block !important;
+        font-size: 1.5rem;
+        padding: 6px;
+        cursor: pointer;
+        z-index: 1002;
+    }
+    
+    .menu-toggle:active {
+        background-color: var(--sidebar-active);
+    }
+    
+    /* Garantir que o conteúdo não fica embaixo do sidebar */
+    .content-area {
+        z-index: 500;
+    }
+    
+    .topbar {
+        z-index: 1001;
+    }
+}
+
+/* Extra small phones */
+@media (max-width: 479px) {
+    .sidebar-nav ul {
+        padding: 0;
+    }
+    
+    .nav-item {
+        padding: 14px 16px;
+        font-size: 0.95rem;
+        border: none;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .nav-item:last-child {
+        border-bottom: none;
+    }
+    
+    .nav-item.active {
+        border-right: 4px solid var(--primary);
+        padding-left: 12px;
+    }
+    
+    .sidebar-footer {
+        padding: 12px;
+        border-top: 1px solid var(--border);
+        margin-top: auto;
+    }
+}
+
+/* Tablets (iPad) - show sidebar statically but keep toggle for small tablets */
+@media (min-width: 640px) and (max-width: 767px) {
+    .sidebar {
+        width: 70vw;
+        max-width: 250px;
+    }
+    
+    .menu-toggle {
+        display: block !important;
+    }
+}
+
+/* Desktop: sidebar volta ao normal */
+@media (min-width: 768px) {
+    .sidebar {
+        width: 260px;
+        position: static;
+        transform: none !important;
+        box-shadow: none;
+    }
+    
+    .sidebar-overlay {
+        display: none !important;
+    }
+    
+    .menu-toggle {
+        display: none !important;
+    }
+    
+    .sidebar-overlay.active {
+        display: none !important;
+    }
+}
+
+/* Scroll behavior para sidebar em mobile */
+@media (max-width: 767px) {
+    .sidebar-nav {
+        overflow-y: auto;
+        max-height: calc(100vh - 200px);
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* Touch friendly adjustments */
+@media (hover: none) and (pointer: coarse) {
+    .nav-item {
+        padding: 16px 18px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .nav-item:active {
+        background-color: var(--sidebar-active);
+    }
+    
+    .menu-toggle {
+        min-height: 48px;
+        min-width: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+/* Landscape mode fix */
+@media (max-height: 500px) and (orientation: landscape) {
+    .sidebar {
+        max-height: 100vh;
+        overflow-y: auto;
+    }
+    
+    .sidebar-nav {
+        max-height: calc(100vh - 150px);
+    }
+}
+
+/* Prevent body scroll when menu is open */
+body.menu-open {
+    overflow: hidden;
+}
+
+/* Animation para o sidebar entrar */
+@keyframes slideInMenu {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+.sidebar.open {
+    animation: slideInMenu 0.3s ease forwards;
+}
+
+/* Melhorias de acessibilidade */
+.menu-toggle:focus {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+.nav-item:focus {
+    outline: 2px solid var(--primary);
+    outline-offset: -2px;
+}
+
+/* Garantir que o texto não é truncado */
+.topbar-left h2 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px;
+}
+
+@media (max-width: 479px) {
+    .topbar-left h2 {
+        max-width: 120px;
+        font-size: 1rem;
+    }
+}
+
+/* Estado do menu quando aberto em mobile */
+.sidebar.open + .content-area {
+    pointer-events: none;
+}
+
+/* Suporte para Safe Area Insets (notches) */
+@supports (padding: env(safe-area-inset-left)) {
+    .sidebar {
+        padding-left: max(0px, env(safe-area-inset-left));
+        padding-right: max(0px, env(safe-area-inset-right));
+    }
+}
