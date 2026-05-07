@@ -9,7 +9,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initializeUserProfile();
 
-    // Toggle sidebar for mobile
     const menuToggle = document.getElementById('menu-toggle');
     const sidebar = document.querySelector('.sidebar');
     if (menuToggle && sidebar) {
@@ -48,10 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log("Sistema LEQM Hub inicializado com sucesso.");
 });
 
-// ==========================================
-// FUNÇÕES AUXILIARES GLOBAIS
-// ==========================================
-
+// funções globais
 function initializeUserProfile() {
     const userGreeting = document.getElementById('user-greeting');
     const userAvatar = document.querySelector('.avatar');

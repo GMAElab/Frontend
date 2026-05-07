@@ -70,7 +70,6 @@ async function loadEquipmentsTable() {
     }
 }
 
-// Cadastro de Equipamento
 
 window.openAddEquipmentModal = function() {
     const modal = document.getElementById('modal-eq');
@@ -127,16 +126,8 @@ window.viewDossier = async function(id) {
         if (!res.ok) throw new Error('Equipamento não encontrado');
         
         const eq = await res.json();
-        
-        let videoEmbed = null;
-        if (eq.video_url) {
-            if (eq.video_url.includes('playlist?list=')) {
-                const listId = eq.video_url.split('list=')[1].split('&')[0];
-                videoEmbed = `https://www.youtube.com/embed?listType=playlist&list=${listId}`;
-            } else {
-                videoEmbed = eq.video_url.replace("watch?v=", "embed/");
-            }
-        }
+
+        const videoEmbed = eq.video_url; 
 
         const dossierTitle = document.getElementById('dossier-title');
         const dossierBody = document.getElementById('dossier-body');

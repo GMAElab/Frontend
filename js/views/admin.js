@@ -432,13 +432,27 @@ window.openDeepView = async function(route, id, entityName) {
             throw new Error("Rota desconhecida.");
         }
 
+        const tradutorDeRotulos = {
+            "nome": "Nome",
+            "description": "Descrição",
+            "video_url": "Link do YouTube",
+            "manual_url": "Link do POP",
+            "status": "Status",
+            "titulo": "Título",
+            "is_active": "Ativo? (1 ou 0)",
+            "role": "Cargo"
+        };
+
         let html = '';
         for (const [key, value] of Object.entries(data)) {
             if (key === 'senha' || key === 'id' || key === 'descricao' || key === 'anexo_dados' || key === 'anexo_meta') continue;
             const safeValue = value !== null && value !== undefined ? String(value).replace(/"/g, '&quot;') : '';
+            
+            const labelAmigavel = tradutorDeRotulos[key] || key;
+
             html += `
                 <div style="display:flex; flex-direction:column; gap:5px;">
-                    <label style="font-size:12px; font-weight:bold; color:var(--text-muted); text-transform:uppercase;">${key}</label>
+                    <label style="font-size:12px; font-weight:bold; color:var(--text-muted); text-transform:uppercase;">${labelAmigavel}</label>
                     <input type="text" id="dv-input-${key}" class="form-control" value="${safeValue}">
                 </div>
             `;
