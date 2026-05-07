@@ -192,6 +192,7 @@ async function loadActiveUsers(container) {
         const res = await window.api.fetchProtected('/admin/usuarios'); 
         if (!res.ok) throw new Error("Erro na API");
         const users = await res.json();
+        users.sort((a, b) => a.nome.localeCompare(b.nome));
         
         let html = '<div class="card-responsivo" style="overflow-x: auto;"><table style="width:100%; text-align:left;">';
         html += '<tr style="border-bottom: 1px solid #ccc;"><th>ID</th><th>Nome</th><th>Email</th><th>Cargo</th><th>Status</th><th>Ação</th></tr>';
@@ -254,6 +255,7 @@ async function loadAdminEquipments(container) {
     try {
         const res = await window.api.fetchProtected('/equipments');
         const eq = await res.json();
+        eq.sort((a, b) => a.nome.localeCompare(b.nome));
         if (!Array.isArray(eq) || eq.length === 0) {
             container.innerHTML = '<div class="card-responsivo"><p class="text-muted">Nenhum equipamento cadastrado.</p></div>';
             return;
@@ -275,6 +277,7 @@ async function loadAdminPops(container) {
     try {
         const res = await window.api.fetchProtected('/pops');
         const pops = await res.json();
+        pops.sort((a, b) => a.titulo.localeCompare(b.titulo));
         if (!Array.isArray(pops) || pops.length === 0) {
             container.innerHTML = '<div class="card-responsivo"><p class="text-muted">Nenhum POP disponível.</p></div>';
             return;
@@ -296,6 +299,7 @@ async function loadAdminProcesses(container) {
     try {
         const res = await window.api.fetchProtected('/processes');
         const procs = await res.json();
+        procs.sort((a, b) => b.id - a.id);
         if (!Array.isArray(procs) || procs.length === 0) {
             container.innerHTML = '<div class="card-responsivo"><p class="text-muted">Nenhum processo cadastrado.</p></div>';
             return;
