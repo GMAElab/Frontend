@@ -252,8 +252,11 @@ async function loadPopsTable() {
                     <td style="padding: 12px 10px; display:flex; gap: 6px; flex-wrap:wrap;">
                         <button onclick="viewPopDetails(this.getAttribute('data-id'))" data-id="${escCodigo}" class="btn btn-outline-primary btn-sm" style="padding: 5px 10px; cursor: pointer; border-color:#007bff; color:#000;">📄 Abrir</button>
                         <button onclick="window.openPopModal(this.getAttribute('data-id'))" data-id="${escCodigo}" class="btn btn-secondary btn-sm" style="padding: 5px 10px;">✏️ Editar </button>
-                    </td>
+                        <button onclick="window.removerPopOficial('${pop.codigo}')" class="btn btn-danger btn-sm" style="background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">🗑️ Excluir</button>
+
+                        </td>
                 </tr>`;
+
         });
         tbody.innerHTML = html;
     } catch (error) { 
@@ -425,5 +428,25 @@ window.gerarComIA = async function() {
     } finally {
         if (btn) { btn.disabled = false; btn.innerText = "Extrair Dados"; }
         if (aviso) aviso.style.display = "none";
+    }
+};
+window.removerPopOficial = async function(codigo) {
+    if (!confirm(`Deseja realmente excluir permanentemente o POP ${codigo}?`)) return;
+
+    try {
+        // A rota de admin requer o prefixo /admin conforme seu backend
+        const res = await window.api.fetchProtected(`/pops/admin/${codigo}/`, {
+            method: 'DELETE'
+        });
+
+        if (!res.ok) {
+            const erro = await res.json();
+            throw new Error(erro.detail || "Erro ao excluir.");
+        }
+
+        window.UI.showToast("POP removido com sucesso!", "success");
+        loadPopsTable();
+    } catch (err) {
+        window.UI.showToast(err.message, "error");
     }
 };
