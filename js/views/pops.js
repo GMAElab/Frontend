@@ -3,7 +3,6 @@
 // ==========================================
 document.addEventListener('viewChanged', (e) => {
     if (e.detail.view === 'pops' || e.detail.view === 'pop') {
-        console.log("--> Montando tela de POPs dinamicamente...");
         const container = document.getElementById('dynamic-content');
 
         if (!document.getElementById('popsTableBody')) {
@@ -41,7 +40,7 @@ document.addEventListener('viewChanged', (e) => {
 });
 
 // ==========================================
-// 2. MODAL INTELIGENTE (CRIAR E EDITAR POP)
+// 2. CRIAR E EDITAR POP
 // ==========================================
 window.openPopModal = function(codigoEdicao = null) {
     const modalAntigo = document.getElementById('popModal');
@@ -384,7 +383,7 @@ window.gerarPDF = function(codigo) {
 };
 
 // ==========================================
-// 6. MOTOR IA 
+// 6. IA 
 // ==========================================
 window.gerarComIA = async function() {
     const fileInput = document.getElementById('manual-ia');
@@ -403,13 +402,13 @@ window.gerarComIA = async function() {
     if (aviso) aviso.style.display = "block";
 
     try {
-        const res = await fetch('https://api-ic.onrender.com/ai/gerar-pop', {
+        const res = await fetch(`${window.API_URL}/pops/ai/gerar-pop`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token.replace(/"/g, '')}` },
             body: formData
         });
 
-        if (!res.ok) throw new Error("O Servidor recusou a análise do PDF.");
+        if (!res.ok) throw new Error("O Servidor recusou a análise do PDF. Verifique se a API Key é válida.");
         const dados = await res.json();
         
         const injetar = (idHTML, chave1, chave2) => {
