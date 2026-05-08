@@ -161,55 +161,59 @@ window.handleSavePop = async function(event) {
     event.preventDefault();
     const btn = event.target.querySelector('button[type="submit"]');
     const textoOriginal = btn.innerText;
-    btn.innerText = "Salvando..."; btn.disabled = true;
-
-    const conteudoCompleto = {
-        versao: document.getElementById('pop-versao').value,
-        data_emissao: document.getElementById('pop-data').value,
-        responsavel: document.getElementById('pop-responsavel').value,
-        objetivo: document.getElementById('pop-obj').value,
-        escopo: document.getElementById('pop-escopo').value,
-        responsabilidades: document.getElementById('pop-resp-detalhe').value,
-        materiais: document.getElementById('pop-materiais').value,
-        procedimento: document.getElementById('pop-procedimento').value,
-        qualidade: document.getElementById('pop-qualidade').value,
-        seguranca: document.getElementById('pop-seguranca').value,
-        manutencao: document.getElementById('pop-manutencao').value,
-        referencias: document.getElementById('pop-referencias').value,
-        anexo_dados: document.getElementById('pop-anexos-b64').value,
-        anexo_meta: document.getElementById('pop-anexos-meta').value
-    };
-
-    const popData = {
-        codigo: document.getElementById('pop-codigo').value,
-        titulo: document.getElementById('pop-titulo').value,
-        descricao: JSON.stringify(conteudoCompleto) 
-    };
+    btn.innerText = "Salvando..."; 
+    btn.disabled = true;
 
     try {
+        const conteudoCompleto = {
+            versao: document.getElementById('pop-versao').value,
+            data_emissao: document.getElementById('pop-data').value,
+            responsavel: document.getElementById('pop-responsavel').value,
+            objetivo: document.getElementById('pop-obj').value,
+            escopo: document.getElementById('pop-escopo').value,
+            responsabilidades: document.getElementById('pop-resp-detalhe').value,
+            materiais: document.getElementById('pop-materiais').value,
+            procedimento: document.getElementById('pop-procedimento').value,
+            qualidade: document.getElementById('pop-qualidade').value,
+            seguranca: document.getElementById('pop-seguranca').value,
+            manutencao: document.getElementById('pop-manutencao').value,
+            referencias: document.getElementById('pop-referencias').value,
+            anexo_dados: document.getElementById('pop-anexos-b64').value,
+            anexo_meta: document.getElementById('pop-anexos-meta').value
+        };
+
+        const popData = {
+            codigo: document.getElementById('pop-codigo').value,
+            titulo: document.getElementById('pop-titulo').value,
+            descricao: JSON.stringify(conteudoCompleto) 
+        };
+
         let res;
         if (window.currentEditPopCode) {
-            res = await window.api.fetchProtected(`/pops/${window.currentEditPopCode}`, {
+            res = await window.api.fetchProtected(`/pops/${window.currentEditPopCode}/`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(popData)
             });
         } else {
-            res = await window.api.fetchProtected('/pops', {
+            res = await window.api.fetchProtected('/pops/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(popData)
             });
         }
 
-        if (!res.ok) throw new Error("Erro ao salvar.");
+        if (!res.ok) throw new Error("Erro ao salvar no banco de dados.");
         
         document.getElementById('popModal').remove();
         loadPopsTable();
         window.UI.showToast(window.currentEditPopCode ? "POP atualizado com sucesso!" : "Procedimento salvo com sucesso!", "success");
+
     } catch (err) {
-        window.UI.showToast("Erro ao salvar POP.", "error");
-        btn.innerText = textoOriginal; btn.disabled = false;
+        window.UI.showToast(err.message || "Erro ao salvar POP.", "error");
+    } finally {
+        btn.innerText = textoOriginal; 
+        btn.disabled = false;
     }
 };
 
@@ -218,7 +222,7 @@ window.handleSavePop = async function(event) {
 // ==========================================
 async function loadPopsTable() {
     try {
-        const response = await window.api.fetchProtected('/pops');
+        const response = await window.api.fetchProtected('/pops/');
         if (!response.ok) throw new Error('Falha ao carregar');
         const pops = await response.json();
         window.popsDataList = pops; 
@@ -234,7 +238,10 @@ async function loadPopsTable() {
             const escCodigo = window.escapeHTML ? window.escapeHTML(pop.codigo) : pop.codigo.replace(/'/g, "&apos;");
             const escTitulo = window.escapeHTML ? window.escapeHTML(pop.titulo) : pop.titulo.replace(/'/g, "&apos;");
             let dataCriacao = "N/A";
-            try { const d = JSON.parse(pop.descricao); if(d.data_emissao) dataCriacao = d.data_emissao; } catch(e) {}
+            try { 
+                const d = JSON.parse(pop.descricao); 
+                if(d.data_emissao) dataCriacao = d.data_emissao; 
+            } catch(e) {}
 
             html += `
                 <tr style="border-bottom: 1px solid #eee;">
@@ -244,19 +251,19 @@ async function loadPopsTable() {
                     <td style="padding: 12px 10px;">${dataCriacao}</td>
                     <td style="padding: 12px 10px; display:flex; gap: 6px; flex-wrap:wrap;">
                         <button onclick="viewPopDetails(this.getAttribute('data-id'))" data-id="${escCodigo}" class="btn btn-outline-primary btn-sm" style="padding: 5px 10px; cursor: pointer; border-color:#007bff; color:#000;">📄 Abrir</button>
-                        
                         <button onclick="window.openPopModal(this.getAttribute('data-id'))" data-id="${escCodigo}" class="btn btn-secondary btn-sm" style="padding: 5px 10px;">✏️ Editar </button>
                     </td>
                 </tr>`;
         });
         tbody.innerHTML = html;
-    } catch (error) { window.UI.showToast("Erro ao carregar lista", "error"); }
+    } catch (error) { 
+        window.UI.showToast("Erro ao carregar lista de procedimentos", "error"); 
+    }
 }
 
 // ==========================================
-// 5. O MODELO OFICIAL DO GMAE (.DOCX) -> PDF
+// 5. VISUALIZAÇÃO E DOWNLOAD
 // ==========================================
-
 function formatPopSection(title, content) {
     return `<div class="pop-sec" style="margin-bottom: 20px; page-break-inside: avoid;">
                 <h4 style="margin: 0 0 8px 0; font-size: 13pt; font-weight: 700; color: #000;">${title}</h4>
@@ -294,25 +301,7 @@ function renderPopDocxTemplate(pop, dados) {
                 <h4 style="margin: 0 0 8px 0; font-size: 13pt; font-weight: 700; color: #000;">10. Anexos</h4>
                 <div style="padding: 14px 16px; border: 1px solid #000; border-radius: 8px; background: #f7f9ff; color: #111;">${renderField(dados.anexo_dados ? 'Arquivo anexado' : 'Não informado.')}</div>
             </div>
-            <div class="pop-sec" style="margin-top: 20px; page-break-inside: avoid;">
-                <h4 style="margin: 0 0 8px 0; font-size: 13pt; font-weight: 700; color: #000;">11. Histórico de Revisões</h4>
-                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 10pt; margin-top: 10px;">
-                    <tr style="background: #e7f3ff;">
-                        <th style="border: 1px solid #000; padding: 8px;">Data</th>
-                        <th style="border: 1px solid #000; padding: 8px;">Versão</th>
-                        <th style="border: 1px solid #000; padding: 8px;">Descrição das Alterações</th>
-                        <th style="border: 1px solid #000; padding: 8px;">Responsável</th>
-                    </tr>
-                    <tr>
-                        <td style="border: 1px solid #000; padding: 8px;">${renderField(dados.data_emissao)}</td>
-                        <td style="border: 1px solid #000; padding: 8px;">${version}</td>
-                        <td style="border: 1px solid #000; padding: 8px;">Atualização do documento oficial</td>
-                        <td style="border: 1px solid #000; padding: 8px;">${renderField(dados.responsavel)}</td>
-                    </tr>
-                </table>
-            </div>
-        </div>
-    `;
+        </div>`;
 }
 
 window.viewPopDetails = function(codigo) {
@@ -328,7 +317,6 @@ window.viewPopDetails = function(codigo) {
     
     divDocumento.innerHTML = `
         <div style="background:#fff; width:min(1000px, 100%); max-width: 95vw; min-height:auto; padding: 24px; position:relative; color: #000; box-shadow: 0 0 40px rgba(0,0,0,0.35); border: 1px solid #000;">
-            
             <div data-html2canvas-ignore="true" style="position: sticky; top: 0; background: #fff; padding: 15px; margin: -24px -24px 20px -24px; border-bottom: 2px solid #000; display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; z-index: 10;">
                 <button onclick="document.getElementById('pop-document-container').remove()" class="btn" style="padding: 8px 15px; cursor: pointer; background:#fff; color:#000; border:1px solid #000; border-radius:4px;">⬅ Fechar</button>
                 <div style="display:flex; gap: 10px; flex-wrap: wrap;">
@@ -336,24 +324,20 @@ window.viewPopDetails = function(codigo) {
                     <button onclick="gerarPDF('${pop.codigo}')" class="btn" style="padding: 8px 15px; background:#007bff; color:white; border:none; font-weight:bold; cursor:pointer; border-radius:4px;">🖨️ EXPORTAR PDF</button>
                 </div>
             </div>
-
             <div id="conteudo-para-pdf" style="padding: 5mm; font-size: 11pt; line-height: 1.5; color: #000;">
                 ${renderPopDocxTemplate(pop, dados)}
             </div>
-        </div>
-    `;
+        </div>`;
     document.body.appendChild(divDocumento);
 };
 
 window.downloadPopDocx = async function(codigo) {
     try {
-        const response = await window.api.fetchProtected(`/pops/${codigo}/export-docx`, {
+        const response = await window.api.fetchProtected(`/pops/${codigo}/export-docx/`, {
             method: 'GET',
             headers: { 'Accept': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }
         });
-
         if (!response.ok) throw new Error('Falha ao gerar o DOCX oficial do POP.');
-
         const blob = await response.blob();
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -363,27 +347,27 @@ window.downloadPopDocx = async function(codigo) {
         a.click();
         a.remove();
         URL.revokeObjectURL(url);
-        window.UI.showToast('Download do DOCX oficial iniciado.', 'success');
+        window.UI.showToast('Download concluído.', 'success');
     } catch (err) {
-        window.UI.showToast(err.message || 'Erro ao baixar o DOCX.', 'error');
+        window.UI.showToast(err.message, 'error');
     }
 };
 
 window.gerarPDF = function(codigo) {
     const elemento = document.getElementById('conteudo-para-pdf');
     const opcoes = {
-        margin:       10, 
-        filename:     `POP_${codigo}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true }, 
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        margin: 10, 
+        filename: `POP_${codigo}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true }, 
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
     html2pdf().set(opcoes).from(elemento).save();
-    window.UI.showToast("Iniciando download do PDF...", "success");
+    window.UI.showToast("Gerando PDF oficial...", "success");
 };
 
 // ==========================================
-// 6. IA 
+// 6. INTEGRAÇÃO COM IA
 // ==========================================
 window.gerarComIA = async function() {
     const fileInput = document.getElementById('manual-ia');
@@ -391,24 +375,24 @@ window.gerarComIA = async function() {
     const aviso = document.getElementById('ia-loading');
     const token = localStorage.getItem('jwt_token');
 
-    if (!token) { window.UI.showToast("Sessão inválida. Faça Login novamente.", "error"); return; }
-    if (!fileInput || !fileInput.files[0]) { window.UI.showToast("Anexe o PDF do manual primeiro.", "error"); return; }
+    if (!token) { window.UI.showToast("Sessão expirada. Faça login novamente.", "error"); return; }
+    if (!fileInput || !fileInput.files[0]) { window.UI.showToast("Selecione o PDF do manual.", "error"); return; }
 
     const file = fileInput.files[0];
     const formData = new FormData();
     formData.append("file", file);
 
-    if (btn) { btn.disabled = true; btn.innerText = "⏳ Lendo..."; }
+    if (btn) { btn.disabled = true; btn.innerText = "⏳ Analisando..."; }
     if (aviso) aviso.style.display = "block";
 
     try {
-        const res = await fetch(`${window.API_URL}/pops/ai/gerar-pop`, {
+        const res = await fetch(`${window.API_URL}/pops/ai/gerar-pop/`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token.replace(/"/g, '')}` },
             body: formData
         });
 
-        if (!res.ok) throw new Error("O Servidor recusou a análise do PDF. Verifique se a API Key é válida.");
+        if (!res.ok) throw new Error("A IA não conseguiu ler este PDF específico.");
         const dados = await res.json();
         
         const injetar = (idHTML, chave1, chave2) => {
@@ -427,7 +411,7 @@ window.gerarComIA = async function() {
         injetar('pop-manutencao', 'manutencao', 'Manutencao');
         injetar('pop-referencias', 'referencias', 'Referências');
 
-        window.UI.showToast("✨ Preenchimento Automático Concluído!", "success");
+        window.UI.showToast("✨ Manual analisado com sucesso!", "success");
 
     } catch (err) {
         window.UI.showToast(err.message, "error");
