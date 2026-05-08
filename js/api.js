@@ -15,7 +15,7 @@ window.api = {
             throw new Error('Unauthorized');
         }
 
-        const cleanEndpoint = endpoint.replace(/^\/|\/$/g, '');
+        const cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
 
         const headers = {
             'Content-Type': 'application/json',

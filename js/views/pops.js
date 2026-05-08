@@ -396,10 +396,17 @@ window.gerarComIA = async function() {
         const dados = await res.json();
         
         const injetar = (idHTML, chave1, chave2) => {
-            const el = document.getElementById(idHTML);
-            const valor = dados[chave1] || dados[chave2] || dados[chave1.toLowerCase()] || dados[chave1.toUpperCase()];
-            if (el && valor && valor !== "...") el.value = valor;
-        };
+    const el = document.getElementById(idHTML);
+    let valor = dados[chave1] || dados[chave2] || dados[chave1.toLowerCase()] || dados[chave1.toUpperCase()];
+    
+    if (el && valor && valor !== "...") {
+        if (typeof valor === 'object') {
+            el.value = JSON.stringify(valor, null, 2);
+        } else {
+            el.value = valor;
+        }
+    }
+};
 
         injetar('pop-obj', 'objetivo', 'Objetivo');
         injetar('pop-escopo', 'escopo', 'Escopo');
