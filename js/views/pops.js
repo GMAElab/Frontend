@@ -357,11 +357,10 @@ window.viewPopDetails = function(codigo) {
             
             <div data-html2canvas-ignore="true" style="margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center;">
                 
-                <button onclick="document.getElementById('pop-document-container').remove()" class="btn" style="padding: 10px 20px; cursor: pointer; background:#f5f5f5; color:#333; border:1px solid #ccc; border-radius:6px; font-weight: bold;">⬅ FECHAR (Atualizado!)</button>
+                <button onclick="document.getElementById('pop-document-container').remove()" class="btn" style="padding: 10px 20px; cursor: pointer; background:#f5f5f5; color:#333; border:1px solid #ccc; border-radius:6px; font-weight: bold;">⬅ VOLTAR</button>
                 
                 <div style="display:flex; gap: 10px; flex-wrap: wrap;">
                     <button onclick="downloadPopDocx('${pop.codigo}')" class="btn" style="padding: 10px 20px; background:#111; color:white; border:none; font-weight:bold; cursor:pointer; border-radius:6px;">📄 BAIXAR .DOCX</button>
-                    <button onclick="gerarPDF('${pop.codigo}')" class="btn" style="padding: 10px 20px; background:#007bff; color:white; border:none; font-weight:bold; cursor:pointer; border-radius:6px;">🖨️ EXPORTAR PDF</button>
                 </div>
             </div>
 
