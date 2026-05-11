@@ -277,10 +277,11 @@ function formatPopSection(title, content) {
 function renderPopDocxTemplate(pop, dados) {
     const renderField = (value) => {
         if (!value) return 'Não informado.';
+        if (value === '[object Object]') return '⚠️ Dados corrompidos. Edite o POP e passe a IA novamente.';
         if (typeof value === 'object') return JSON.stringify(value, null, 2).replace(/[\{\}\[\]"]/g, '');
         return value;
     };
-
+    
     const version = dados.versao || '1.0';
 
     return `
@@ -348,13 +349,16 @@ window.viewPopDetails = function(codigo) {
 
     const divDocumento = document.createElement('div');
     divDocumento.id = "pop-document-container";
-    divDocumento.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10000; overflow-y:auto; padding: 40px 20px; box-sizing: border-box;";
+
+    divDocumento.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10000; overflow-y:auto; padding: 40px 20px; box-sizing: border-box; display: block;";
     
     divDocumento.innerHTML = `
-        <div style="background:#fff; width: 100%; max-width: 850px; margin: 0 auto; padding: 40px; position:relative; color: #000; box-shadow: 0 0 40px rgba(0,0,0,0.35); box-sizing: border-box;">
+        <div style="background:#fff; width: 100%; max-width: 850px; margin: 0 auto; padding: 40px; position:relative; color: #000; box-shadow: 0 0 40px rgba(0,0,0,0.5); box-sizing: border-box; min-height: 100%;">
             
             <div data-html2canvas-ignore="true" style="margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center;">
-                <button onclick="document.getElementById('pop-document-container').remove()" class="btn" style="padding: 10px 20px; cursor: pointer; background:#f5f5f5; color:#333; border:1px solid #ccc; border-radius:6px; font-weight: bold;">⬅ Voltar</button>
+                
+                <button onclick="document.getElementById('pop-document-container').remove()" class="btn" style="padding: 10px 20px; cursor: pointer; background:#f5f5f5; color:#333; border:1px solid #ccc; border-radius:6px; font-weight: bold;">⬅ FECHAR (Atualizado!)</button>
+                
                 <div style="display:flex; gap: 10px; flex-wrap: wrap;">
                     <button onclick="downloadPopDocx('${pop.codigo}')" class="btn" style="padding: 10px 20px; background:#111; color:white; border:none; font-weight:bold; cursor:pointer; border-radius:6px;">📄 BAIXAR .DOCX</button>
                     <button onclick="gerarPDF('${pop.codigo}')" class="btn" style="padding: 10px 20px; background:#007bff; color:white; border:none; font-weight:bold; cursor:pointer; border-radius:6px;">🖨️ EXPORTAR PDF</button>
