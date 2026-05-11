@@ -393,7 +393,7 @@ window.gerarComIA = async function() {
             body: formData
         });
 
-        if (!res.ok) throw new Error("A IA não conseguiu ler este PDF específico.");
+        if (!res.ok) throw new Error("A IA não conseguiu ler este PDF.");
         const dados = await res.json();
         
         const injetar = (idHTML, chave1, chave2) => {
@@ -408,7 +408,6 @@ window.gerarComIA = async function() {
         }
     }
 };
-
         injetar('pop-obj', 'objetivo', 'Objetivo');
         injetar('pop-escopo', 'escopo', 'Escopo');
         injetar('pop-resp-detalhe', 'responsabilidades', 'Responsabilidades');
@@ -419,7 +418,7 @@ window.gerarComIA = async function() {
         injetar('pop-manutencao', 'manutencao', 'Manutencao');
         injetar('pop-referencias', 'referencias', 'Referências');
 
-        window.UI.showToast("✨ Manual analisado com sucesso!", "success");
+        window.UI.showToast("Análise feita com sucesso!", "success");
 
     } catch (err) {
         window.UI.showToast(err.message, "error");
@@ -432,7 +431,6 @@ window.removerPopOficial = async function(codigo) {
     if (!confirm(`Deseja realmente excluir permanentemente o POP ${codigo}?`)) return;
 
     try {
-        // A rota de admin requer o prefixo /admin conforme seu backend
         const res = await window.api.fetchProtected(`/pops/admin/${codigo}/`, {
             method: 'DELETE'
         });
