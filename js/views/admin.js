@@ -369,7 +369,7 @@ async function loadAuditLogs(container) {
                 <td style="padding: 12px 5px;">ID: ${log.record_id}</td>
                 <td style="padding: 12px 5px;">
                     <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 12px;" onclick="viewLogPayload(${index})">
-                        👁️ Ver detalhes
+                         Ver detalhes
                     </button>
                 </td>
             </tr>`;
@@ -380,7 +380,7 @@ async function loadAuditLogs(container) {
     }
 }
 
-// FUNÇÃO SEGURA PARA LER OS DADOS
+// FUNÇÃO PARA LER OS DADOS
 window.viewLogPayload = function(index) {
     const log = window.currentAuditLogs[index];
     if (!log) return;
@@ -392,7 +392,7 @@ window.viewLogPayload = function(index) {
 };
 
 // ==========================================
-// 6. VISÃO PROFUNDA DO LOG
+// 6. DETALHES LOG
 // ==========================================
 window.closeDeepView = function() {
     document.getElementById('deep-view-modal').style.display = 'none';
