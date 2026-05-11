@@ -286,12 +286,8 @@ function renderPopDocxTemplate(pop, dados) {
 
     return `
         <div style="font-family: Arial, sans-serif; color: #000; width: 100%; max-width: 100%; box-sizing: border-box; overflow-x: hidden;">
-            
-            <div style="text-align: center; margin-bottom: 20px;">
-                <img src="img/logo_gmae.png" alt="Logo GMAE" style="max-width: 180px; display: block; margin: 0 auto;">
-            </div>
 
-            <h2 style="text-align: center; font-size: 16pt; margin-bottom: 20px; color: #000; font-weight: bold;">Procedimento Operacional Padrão (POP)</h2>
+            <h2 style="text-align: center; font-size: 16pt; margin-bottom: 20px; color: #000; font-weight: bold;">Prévia do Procedimento Operacional Padrão (POP)</h2>
 
             <div style="margin-bottom: 25px; line-height: 1.6; font-size: 11pt; word-wrap: break-word;">
                 <strong>Título do Procedimento:</strong> ${renderField(pop.titulo)}<br>
