@@ -43,11 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     configurarMenuLateral();
-
-    console.log("Sistema LEQM Hub inicializado com sucesso.");
 });
 
-// funções globais
 function initializeUserProfile() {
     const userGreeting = document.getElementById('user-greeting');
     const userAvatar = document.querySelector('.avatar');
@@ -87,7 +84,6 @@ function configurarMenuLateral() {
     }
 }
 
-// segurança
 
 window.escapeHTML = function(str) {
     if (str === null || str === undefined) return '';
