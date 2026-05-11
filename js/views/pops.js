@@ -319,7 +319,7 @@ function renderPopDocxTemplate(pop, dados) {
                         <tr style="background: #f9f9f9;">
                             <th style="border: 1px solid #000; padding: 8px;">Data</th>
                             <th style="border: 1px solid #000; padding: 8px;">Versão</th>
-                            <th style="border: 1px solid #000; padding: 8px;">Descrição das Alterações</th>
+                            <th style="border: 1px solid #000; padding: 8px;">Descrição das Atividades</th>
                             <th style="border: 1px solid #000; padding: 8px;">Responsável</th>
                         </tr>
                     </thead>
