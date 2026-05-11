@@ -536,9 +536,16 @@ window.adminDelete = async (route, id, tabToReload) => {
         : `⚠️ ALERTA DE SEGURANÇA ⚠️\n\nVocê está prestes a excluir o item [ ${id} ].\nEssa ação é IRREVERSÍVEL.\n\nTem certeza absoluta?`;
     
     if(!confirm(confirmMsg)) return;
+    
+    let endpoint = '';
+    if (route === 'usuarios') endpoint = `/admin/usuarios/${id}`;
+    else if (route === 'equipments') endpoint = `/equipments/admin/${id}`;
+    else if (route === 'pops') endpoint = `/pops/admin/${id}`;
+    else if (route === 'processes') endpoint = `/processes/admin/${id}`;
+    else if (route === 'pta/topicos') endpoint = `/pta/admin/topicos/${id}`;
 
     try {
-        const res = await window.api.fetchProtected(`/admin/${route}/${id}`, { method: 'DELETE' });
+        const res = await window.api.fetchProtected(endpoint, { method: 'DELETE' });
         
         if (res.ok) {
             window.UI.showToast("Ação realizada com sucesso.", "success");
@@ -546,10 +553,11 @@ window.adminDelete = async (route, id, tabToReload) => {
             else if (route === 'equipments' || route === 'pops') switchLabTab(tabToReload);
             else if (route === 'processes' || route === 'pta/topicos') switchPdTab(tabToReload);
         } else {
-            const errData = await res.json().catch(() => ({}));
-            window.UI.showToast(errData.detail || "Erro de permissão.", "error");
+            const data = await res.json();
+            window.UI.showToast(data.detail || "Erro ao excluir o item.", "error");
         }
-    } catch (err) {
-        window.UI.showToast("Falha de comunicação com a API.", "error");
+    } catch (error) {
+        window.UI.showToast("Erro de comunicação com o servidor.", "error");
+        console.error("Erro no adminDelete:", error);
     }
-};
+}
