@@ -95,10 +95,10 @@ window.renderizarCards = function(artigos, modo) {
 
         return `
         <div class="article-card" style="background:white; padding:20px; border-radius:4px; border:1px solid #111; box-shadow: 2px 2px 0px rgba(0,0,0,0.1);">
-            <h3 style="margin:0 0 8px 0; color: #111; font-size: 18px;">${art.titulo}</h3>
-            <p style="font-size:13px; color:#666; font-weight: 500;">Autores: ${art.autores || 'Desconhecido'} | Publicação: ${art.ano || 'N/A'}</p>
+            <h3 style="margin:0 0 8px 0; color: #111; font-size: 18px;">${window.escapeHTML(art.titulo)}</h3>
+            <p style="font-size:13px; color:#666; font-weight: 500;">Autores: ${window.escapeHTML(art.autores || 'Desconhecido')} | Publicação: ${window.escapeHTML(art.ano || 'N/A')}</p>
             <p style="font-size:14px; margin:12px 0; color: #111; line-height: 1.5; border-left: 3px solid #007BFF; padding-left: 10px;">
-                ${art.resumo ? art.resumo.substring(0, 300) + '...' : '<i style="color:#666;">Sem resumo disponível na base de dados.</i>'}
+                ${art.resumo ? window.escapeHTML(art.resumo).substring(0, 300) + '...' : '<i style="color:#666;">Sem resumo disponível na base de dados.</i>'}
             </p>
             <div style="display:flex; gap:10px; margin-top:15px; flex-wrap: wrap;">
                 ${botaoAcaoHTML}

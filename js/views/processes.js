@@ -117,8 +117,8 @@ function renderProcesses(processes) {
         const statusFormatado = (proc.status || 'rascunho').replace('_', ' ').toUpperCase();
 
         row.innerHTML = `
-            <td><strong>${proc.nome_processo}</strong></td>
-            <td>${proc.responsavel || 'Não definido'}</td>
+            <td><strong>${window.escapeHTML(proc.nome_processo)}</strong></td>
+            <td>${window.escapeHTML(proc.responsavel || 'Não definido')}</td>
             <td><span class="status-badge status-${proc.status}">${statusFormatado}</span></td>
             <td>${dataFormatada}</td>
             <td style="display:flex; gap: 6px; flex-wrap:wrap; justify-content:flex-end;">
@@ -203,8 +203,8 @@ window.renderProcessDetailsModal = function(proc, atividades) {
             <div style="font-size: 11px; color: #777f8a; font-weight:bold; margin-bottom: 3px;">
                 Data: ${dataLocal.toLocaleDateString('pt-BR')} às ${dataLocal.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
             </div>
-            <strong style="display:block; font-size: 14px; color: #191f29;">${a.title}</strong>
-            <p style="margin: 5px 0 0 0; font-size: 13px; color: #424850;">${a.note}</p>
+            <strong style="display:block; font-size: 14px; color: #191f29;">${window.escapeHTML(a.title)}</strong>
+            <p style="margin: 5px 0 0 0; font-size: 13px; color: #424850;">${window.escapeHTML(a.note)}</p>
         </div>
         `;
     }).join('');
@@ -216,8 +216,8 @@ window.renderProcessDetailsModal = function(proc, atividades) {
 
             <div style="width: 100%; padding: 20px 25px; border-bottom: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: white; z-index: 10;">
                 <div>
-                    <h2 style="margin:0; color:#0F172A; font-size: 20px;">${proc.nome_processo || 'Processo Sem Nome'}</h2>
-                    <span style="font-size: 13px; color: #64748B;">Responsável: <strong>${proc.responsavel || 'N/A'}</strong> | Equipe: ${proc.equipe || 'N/A'}</span>
+                    <h2 style="margin:0; color:#0F172A; font-size: 20px;">${window.escapeHTML(proc.nome_processo || 'Processo Sem Nome')}</h2>
+<span style="font-size: 13px; color: #64748B;">Responsável: <strong>${window.escapeHTML(proc.responsavel || 'N/A')}</strong> | Equipe: ${window.escapeHTML(proc.equipe || 'N/A')}</span>   
                 </div>
                 <div style="display:flex; align-items:center; gap: 15px;">
                     <span class="badge" style="background: #e7f3ff; color: #004080; padding: 6px 12px; border-radius: 6px; font-weight:bold;">${(proc.status || 'RASCUNHO').toUpperCase()}</span>
@@ -230,16 +230,16 @@ window.renderProcessDetailsModal = function(proc, atividades) {
                 <div style="flex: 2 1 400px; padding: 25px; border-right: 1px solid #E2E8F0;">
                     
                     <h4 style="color:#1E293B; margin-bottom: 8px; font-size: 14px;">Visão Geral</h4>
-                    <div style="background:#F8FAFC; padding:15px; border-radius:8px; font-size:13px; color: #334155; margin-bottom:20px;">${proc.visao_geral || 'Nenhuma visão geral definida.'}</div>
+                    <div style="background:#F8FAFC; padding:15px; border-radius:8px; font-size:13px; color: #334155; margin-bottom:20px;">${window.escapeHTML(proc.visao_geral || 'Nenhuma visão geral definida.')}</div>
 
                     <h4 style="color:#1E293B; margin-bottom: 8px; font-size: 14px;">Objetivo da Fase</h4>
-                    <div style="background:#F8FAFC; padding:15px; border-radius:8px; font-size:13px; color: #334155; margin-bottom:20px;">${proc.objetivo_fase || 'Nenhum objetivo definido.'}</div>
+                    <div style="background:#F8FAFC; padding:15px; border-radius:8px; font-size:13px; color: #334155; margin-bottom:20px;">${window.escapeHTML(proc.objetivo_fase || 'Nenhum objetivo definido.')}</div>
 
                     <h4 style="color:#1E293B; margin-bottom: 8px; font-size: 14px;">Detalhamento das Etapas</h4>
-                    <div style="background:#F8FAFC; padding:15px; border-radius:8px; font-size:13px; color: #334155; margin-bottom:20px; white-space:pre-wrap;">${proc.detalhamento_etapas || 'Nenhuma etapa registrada.'}</div>
+                    <div style="background:#F8FAFC; padding:15px; border-radius:8px; font-size:13px; color: #334155; margin-bottom:20px; white-space:pre-wrap;">${window.escapeHTML(proc.detalhamento_etapas || 'Nenhuma etapa registrada.')}</div>
 
                     <h4 style="color:#1E293B; margin-bottom: 8px; font-size: 14px;">Indicadores de Desempenho</h4>
-                    <div style="background:#F8FAFC; padding:15px; border-radius:8px; font-size:13px; color: #334155; margin-bottom:20px; white-space:pre-wrap;">${proc.indicadores_desempenho || 'Nenhum indicador registrado.'}</div>
+                    <div style="background:#F8FAFC; padding:15px; border-radius:8px; font-size:13px; color: #334155; margin-bottom:20px; white-space:pre-wrap;">${window.escapeHTML(proc.indicadores_desempenho || 'Nenhum indicador registrado.')}</div>
                 </div>
 
                 <div style="flex: 1 1 300px; padding: 25px; background: #F8FAFC;">

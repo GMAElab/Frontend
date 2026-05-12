@@ -126,14 +126,10 @@ window.atualizarAvisoUltimoPTA = function() {
     const topicoId = document.getElementById('pta-topico').value;
     const avisoContainer = document.getElementById('ultimo-pta-aviso');
     
-    // Se não selecionou tópico ou o cache de relatórios estiver vazio
     if (!topicoId || !window.meusPtasCache || window.meusPtasCache.length === 0) {
         if (avisoContainer) avisoContainer.style.display = 'none';
         return;
     }
-
-    // A lista window.meusPtasCache já foi ordenada por data (mais recente primeiro).
-    // O .find() vai pegar automaticamente o relato mais recente deste tópico específico.
     const ultimoRelato = window.meusPtasCache.find(rel => rel.topico_id == parseInt(topicoId));
 
     if (ultimoRelato) {
@@ -445,14 +441,14 @@ window.carregarAprovadosChefia = async function(mes, ano) {
             html += `
                 <div style="background: white; border: 1px solid #E2E8F0; border-left: 4px solid #007BFF; border-radius: 6px; padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
-                        <strong style="color: #007BFF; font-size: 14px;">${rel.usuario_nome}</strong>
+                        <strong style="color: #007BFF; font-size: 14px;">${window.escapeHTML(rel.usuario_nome)}</strong>
                         <span class="badge" style="background: #eff6ff; color: #007BFF;">Avanço: ${rel.percentual_avanco}%</span>
                     </div>
                     <div style="font-size: 12px; color: #64748B; margin-bottom: 10px; font-weight: 600; text-transform: uppercase;">
-                        Tópico: ${rel.topico_titulo}
+                        Tópico: ${window.escapeHTML(rel.topico_titulo)}
                     </div>
                     <div style="font-size: 13px; color: #334155; line-height: 1.6; background: #F8FAFC; padding: 10px; border-radius: 4px;">
-                        ${rel.descricao_atividades}
+                     ${window.escapeHTML(rel.descricao_atividades)}
                     </div>
                 </div>
             `;

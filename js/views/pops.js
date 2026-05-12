@@ -276,10 +276,11 @@ function formatPopSection(title, content) {
 
 function renderPopDocxTemplate(pop, dados) {
     const renderField = (value) => {
-        if (!value) return 'Não informado.';
-        if (value === '[object Object]') return '⚠️ Dados corrompidos. Edite o POP e passe a IA novamente.';
-        if (typeof value === 'object') return JSON.stringify(value, null, 2).replace(/[\{\}\[\]"]/g, '');
-        return value;
+    if (!value) return 'Não informado.';
+    if (value === '[object Object]') return '⚠️ Dados corrompidos. Edite o POP e passe a IA novamente.';
+    
+    let strValue = typeof value === 'object' ? JSON.stringify(value, null, 2).replace(/[\{\}\[\]"]/g, '') : String(value);
+    return window.escapeHTML(strValue);
     };
     
     const version = dados.versao || '1.0';

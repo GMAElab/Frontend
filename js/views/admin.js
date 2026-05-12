@@ -19,7 +19,7 @@ function routerAdmin() {
 }
 
 // ==========================================
-// 1. TELA PRINCIPAL (MENU DE CARDS)
+// 1. TELA PRINCIPAL
 // ==========================================
 function renderAdminPanel() {
     const container = document.getElementById('dynamic-content');
@@ -151,8 +151,8 @@ async function loadPendingRequests(container) {
         requests.forEach(req => {
             html += `
                 <div class="card-responsivo">
-                    <h4>${req.nome}</h4>
-                    <p class="text-muted" style="font-size: 14px;">${req.email}</p>
+                    <h4>${window.escapeHTML(req.nome)}</h4>
+                        <p class="text-muted" style="font-size: 14px;">${window.escapeHTML(req.email)}</p>
                     <select id="role-${req.id}" class="form-control" style="margin: 10px 0;">
                         <option value="pesquisador">Pesquisador:</option>
                         <option value="tecnico">Técnico:</option>
@@ -221,9 +221,9 @@ async function loadActiveUsers(container) {
 
             html += `<tr style="border-bottom: 1px solid #eee; ${rowStyle}">
                 <td style="padding: 10px 0;">#${u.id}</td>
-                <td>${u.nome}</td>
-                <td>${u.email}</td>
-                <td><span style="text-transform: capitalize;">${u.role}</span></td>
+                <td>${window.escapeHTML(u.nome)}</td>
+                <td>${window.escapeHTML(u.email)}</td>
+                <td><span style="text-transform: capitalize;">${window.escapeHTML(u.role)}</span></td>
                 <td>${statusBadge}</td>
                 <td>${btn}</td>
             </tr>`;
@@ -263,7 +263,7 @@ async function loadAdminEquipments(container) {
 
         let html = '<div class="card-responsivo"><table style="width:100%; text-align:left;"><tr><th>ID</th><th>Equipamento</th><th>Ação</th></tr>';
         eq.forEach(e => {
-            html += `<tr><td style="padding: 10px 0;">#${e.id}</td><td>${e.nome}</td>
+            html += `<tr><td style="padding: 10px 0;">#${e.id}</td><td>${window.escapeHTML(e.nome)}</td>
             <td style="padding: 10px 0; display:flex; gap:5px;"><button class="btn btn-secondary" style="padding: 5px;" onclick="openDeepView('equipments', ${e.id}, 'Equipamento')">✏️ Editar</button><button class="btn btn-outline-danger" style="padding: 5px;" onclick="adminDelete('equipments', ${e.id}, 'eq')">🗑️ Deletar</button></td></tr>`;
         });
         container.innerHTML = html + '</table></div>';
@@ -285,8 +285,8 @@ async function loadAdminPops(container) {
 
         let html = '<div class="card-responsivo"><table style="width:100%; text-align:left;"><tr><th>Código</th><th>Título</th><th>Ação</th></tr>';
         pops.forEach(p => {
-            html += `<tr><td style="padding: 10px 0;">${p.codigo}</td><td>${p.titulo}</td>
-            <td style="padding: 10px 0; display:flex; gap:5px;"><button class="btn btn-secondary" style="padding: 5px;" onclick="openDeepView('pops', ${JSON.stringify(p.codigo)}, 'POP')">✏️ Editar</button><button class="btn btn-outline-danger" style="padding: 5px;" onclick="adminDelete('pops', ${JSON.stringify(p.codigo)}, 'pop')">🗑️ Deletar</button></td></tr>`;
+            html += `<tr><td style="padding: 10px 0;">${window.escapeHTML(p.codigo)}</td><td>${window.escapeHTML(p.titulo)}</td>
+            <td style="padding: 10px 0; display:flex; gap:5px;"><button class="btn btn-secondary" style="padding: 5px;" onclick="openDeepView('pops', ${JSON.stringify(window.escapeHTML(p.codigo))}, 'POP')">✏️ Editar</button><button class="btn btn-outline-danger" style="padding: 5px;" onclick="adminDelete('pops', ${JSON.stringify(window.escapeHTML(p.codigo))}, 'pop')">🗑️ Deletar</button></td></tr>`;
         });
         container.innerHTML = html + '</table></div>';
     } catch (err) {
@@ -307,7 +307,7 @@ async function loadAdminProcesses(container) {
 
         let html = '<div class="card-responsivo"><table style="width:100%; text-align:left;"><tr><th>ID</th><th>Processo</th><th>Ação</th></tr>';
         procs.forEach(p => {
-            html += `<tr><td style="padding: 10px 0;">#${p.id}</td><td>${p.nome_processo}</td>
+            html += `<tr><td style="padding: 10px 0;">#${p.id}</td><td>${window.escapeHTML(p.nome_processo)}</td>
             <td style="padding: 10px 0; display:flex; gap:5px;"><button class="btn btn-secondary" style="padding: 5px;" onclick="openDeepView('processes', ${p.id}, 'Processo')">✏️ Editar</button><button class="btn btn-outline-danger" style="padding: 5px;" onclick="adminDelete('processes', ${p.id}, 'proc')">🗑️ Deletar</button></td></tr>`;
         });
         container.innerHTML = html + '</table></div>';
@@ -328,7 +328,7 @@ async function loadAdminPtaTopics(container) {
 
         let html = '<div class="card-responsivo"><table style="width:100%; text-align:left;"><tr><th>Ano</th><th>Tópico</th><th>Ação</th></tr>';
         tops.forEach(t => {
-            html += `<tr><td style="padding: 10px 0;">${t.ano}</td><td>${t.titulo}</td>
+            html += `<tr><td style="padding: 10px 0;">${t.ano}</td><td>${window.escapeHTML(t.titulo)}</td>
             <td style="padding: 10px 0; display:flex; gap:5px;"><button class="btn btn-secondary" style="padding: 5px;" onclick="openDeepView('pta/topicos', ${t.id}, 'Tópico PTA')">✏️ Editar</button><button class="btn btn-outline-danger" style="padding: 5px;" onclick="adminDelete('pta/topicos', ${t.id}, 'pta')">🗑️ Deletar Tópico</button></td></tr>`;
         });
         container.innerHTML = html + '</table></div>';
@@ -380,7 +380,7 @@ async function loadAuditLogs(container) {
     }
 }
 
-// FUNÇÃO PARA LER OS DADOS
+// LER OS DADOS
 window.viewLogPayload = function(index) {
     const log = window.currentAuditLogs[index];
     if (!log) return;
@@ -526,7 +526,7 @@ async function saveDeepView(route, id, originalData) {
 }
 
 // ==========================================
-// 7. MOTOR DE EXCLUSÃO E BLOQUEIO
+// 7. EXCLUSÃO E BLOQUEIO
 // ==========================================
 window.adminDelete = async (route, id, tabToReload) => {
     if(!id) return;

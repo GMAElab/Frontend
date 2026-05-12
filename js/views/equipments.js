@@ -53,7 +53,7 @@ async function loadEquipmentsTable() {
                 <tbody>
                     ${data.map(eq => `
                         <tr>
-                            <td><strong>${eq.nome}</strong></td>
+                            <td><strong>${window.escapeHTML(eq.nome)}</strong></td>
                             <td><span class="badge">${eq.status || 'ativo'}</span></td>
                             <td style="text-align:right; display:flex; gap: 8px; justify-content:flex-end; flex-wrap:wrap;">
                                 <button class="btn btn-small" onclick="window.viewDossier(${eq.id})">Ver Detalhes</button>
@@ -127,7 +127,7 @@ window.viewDossier = async function(id) {
         
         const eq = await res.json();
 
-        const videoEmbed = eq.video_url; 
+        const videoEmbed = window.escapeHTML(eq.video_url); 
 
         const dossierTitle = document.getElementById('dossier-title');
         const dossierBody = document.getElementById('dossier-body');
@@ -146,10 +146,10 @@ window.viewDossier = async function(id) {
                 <div>
                     <h4 style="margin-bottom:15px; color:var(--primary);">Descrição</h4>
                     <div style="background:#f1f5f9; padding:15px; border-radius:8px; margin-bottom:20px;">
-                        <p style="font-size:0.9rem; line-height:1.5;">${eq.description || 'Nenhuma descrição técnica informada para este ativo.'}</p>
+                        <p style="font-size:0.9rem; line-height:1.5;">${window.escapeHTML(eq.description || 'Nenhuma descrição técnica informada para este ativo.')}</p>
                     </div>
                     ${eq.manual_url ? 
-                        `<a href="${eq.manual_url}" target="_blank" class="btn btn-primary" style="width:100%; text-align:center; text-decoration:none; display:inline-block;">Acessar POP do equipamento</a>` : 
+                        `<a href="${window.escapeHTML(eq.manual_url)}" target="_blank" class="btn btn-primary" style="width:100%; text-align:center; text-decoration:none; display:inline-block;">Acessar POP do equipamento</a>` : 
                         '<p class="text-muted text-center" style="font-size:0.85rem;">Manual não disponível no momento.</p>'}
                 </div>
             `;
