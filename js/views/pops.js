@@ -113,7 +113,7 @@ window.openPopModal = function(codigoEdicao = null) {
                     <div><label style="font-weight:bold;">9. Referências</label><textarea id="pop-referencias" class="form-control" rows="2" style="width:100%; padding:8px;">${dadosEdit.referencias || ''}</textarea></div>
                     
                     <div style="background: #F9FAFB; padding: 15px; border: 1px dashed #D1D5DB; border-radius: 8px;">
-                        <label style="font-weight:bold;">10. Anexos (PDF, DOCX, XLSX, Imagens - Máx 3MB)</label>
+                        <label style="font-weight:bold;">10. Anexos (PDF, DOCX, XLSX, Imagens - Máx 10MB)</label>
                         <input type="file" id="pop-anexos-file" class="form-control" style="width:100%; padding:8px; margin-top:5px;" accept=".pdf, .doc, .docx, .xls, .xlsx, image/*">
                         <input type="hidden" id="pop-anexos-b64" value="${escapeQuote(dadosEdit.anexo_dados || '')}">
                         <input type="hidden" id="pop-anexos-meta" value="${escapeQuote(dadosEdit.anexo_meta || '')}">
@@ -134,21 +134,45 @@ window.openPopModal = function(codigoEdicao = null) {
     setTimeout(() => {
         const fileInput = document.getElementById('pop-anexos-file');
         if (fileInput) {
-            fileInput.addEventListener('change', function(e) {
+            fileInput.addEventListener('change', async function(e) {
                 const file = e.target.files[0];
                 if (!file) return;
-                if (file.size > 3 * 1024 * 1024) {
-                    window.UI.showToast("Arquivo muito grande! Máximo de 3MB.", "error");
+                if (file.size > 10 * 1024 * 1024) {
+                    window.UI.showToast("Arquivo muito grande! Máximo de 10MB.", "error");
                     this.value = ''; return;
                 }
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    document.getElementById('pop-anexos-b64').value = event.target.result;
-                    document.getElementById('pop-anexos-meta').value = JSON.stringify({ name: file.name, type: file.type });
-                    document.getElementById('anexo-status').style.display = 'block';
-                    document.getElementById('anexo-status').innerText = '✅ Novo arquivo anexado!';
-                };
-                reader.readAsDataURL(file);
+                
+                const statusText = document.getElementById('anexo-status');
+                statusText.style.display = 'block';
+                statusText.innerText = '⏳ Fazendo upload para o servidor...';
+                statusText.style.color = '#F59E0B'; 
+
+                const formData = new FormData();
+                formData.append("file", file);
+
+                try {
+                    const token = window.api.getToken();
+                    const res = await fetch(`${window.API_URL}/upload-anexo`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}` }, 
+                        body: formData
+                    });
+
+                    if (!res.ok) throw new Error("Erro ao fazer upload do anexo");
+        
+                    const data = await res.json();
+        
+                    document.getElementById('pop-anexos-b64').value = data.url_arquivo; 
+                    document.getElementById('pop-anexos-meta').value = JSON.stringify({ name: data.nome_original });
+        
+                    statusText.innerText = '✅ Arquivo salvo no servidor com sucesso!';
+                    statusText.style.color = '#10B981';
+
+                } catch (err) {
+                    statusText.innerText = '❌ Falha no upload. Tente novamente.';
+                    statusText.style.color = '#DC2626';
+                    window.UI.showToast("Falha ao anexar arquivo.", "error");
+                }
             });
         }
     }, 100);
@@ -253,8 +277,7 @@ async function loadPopsTable() {
                         <button onclick="viewPopDetails(this.getAttribute('data-id'))" data-id="${escCodigo}" class="btn btn-outline-primary btn-sm" style="padding: 5px 10px; cursor: pointer; border-color:#007bff; color:#000;">📄 Abrir</button>
                         <button onclick="window.openPopModal(this.getAttribute('data-id'))" data-id="${escCodigo}" class="btn btn-secondary btn-sm" style="padding: 5px 10px;">✏️ Editar </button>
                         <button onclick="window.removerPopOficial('${pop.codigo}')" class="btn btn-danger btn-sm" style="background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">🗑️ Excluir</button>
-
-                        </td>
+                    </td>
                 </tr>`;
 
         });
@@ -276,11 +299,11 @@ function formatPopSection(title, content) {
 
 function renderPopDocxTemplate(pop, dados) {
     const renderField = (value) => {
-    if (!value) return 'Não informado.';
-    if (value === '[object Object]') return '⚠️ Dados corrompidos. Edite o POP e passe a IA novamente.';
-    
-    let strValue = typeof value === 'object' ? JSON.stringify(value, null, 2).replace(/[\{\}\[\]"]/g, '') : String(value);
-    return window.escapeHTML(strValue);
+        if (!value) return 'Não informado.';
+        if (value === '[object Object]') return '⚠️ Dados corrompidos. Edite o POP e passe a IA novamente.';
+        
+        let strValue = typeof value === 'object' ? JSON.stringify(value, null, 2).replace(/[\{\}\[\]"]/g, '') : String(value);
+        return window.escapeHTML(strValue);
     };
     
     const version = dados.versao || '1.0';
@@ -310,7 +333,11 @@ function renderPopDocxTemplate(pop, dados) {
             
             <div class="pop-sec" style="margin-bottom: 15px; width: 100%; max-width: 100%;">
                 <h4 style="margin: 0 0 5px 0; font-size: 12pt; font-weight: bold; color: #000;">10. Anexos</h4>
-                <div style="margin: 0; font-size: 11pt; color: #000;">${renderField(dados.anexo_dados ? 'Arquivo em anexo no sistema eletrônico.' : 'Não informado.')}</div>
+                <div style="margin: 0; font-size: 11pt; color: #000;">
+                    ${dados.anexo_dados 
+                        ? `<a href="${window.API_URL}${dados.anexo_dados}" target="_blank" style="display: inline-block; padding: 8px 15px; background: #004080; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; font-family: Arial;">📥 Baixar Anexo Oficial</a>` 
+                        : 'Não informado.'}
+                </div>
             </div>
 
             <div class="pop-sec" style="margin-top: 25px; width: 100%; max-width: 100%; overflow-x: auto;">
@@ -398,17 +425,18 @@ window.gerarComIA = async function() {
         const dados = await res.json();
         
         const injetar = (idHTML, chave1, chave2) => {
-    const el = document.getElementById(idHTML);
-    let valor = dados[chave1] || dados[chave2] || dados[chave1.toLowerCase()] || dados[chave1.toUpperCase()];
-    
-    if (el && valor && valor !== "...") {
-        if (typeof valor === 'object') {
-            el.value = JSON.stringify(valor, null, 2);
-        } else {
-            el.value = valor;
-        }
-    }
-};
+            const el = document.getElementById(idHTML);
+            let valor = dados[chave1] || dados[chave2] || dados[chave1.toLowerCase()] || dados[chave1.toUpperCase()];
+            
+            if (el && valor && valor !== "...") {
+                if (typeof valor === 'object') {
+                    el.value = JSON.stringify(valor, null, 2);
+                } else {
+                    el.value = valor;
+                }
+            }
+        };
+        
         injetar('pop-obj', 'objetivo', 'Objetivo');
         injetar('pop-escopo', 'escopo', 'Escopo');
         injetar('pop-resp-detalhe', 'responsabilidades', 'Responsabilidades');
@@ -428,6 +456,7 @@ window.gerarComIA = async function() {
         if (aviso) aviso.style.display = "none";
     }
 };
+
 window.removerPopOficial = async function(codigo) {
     if (!confirm(`Deseja realmente excluir permanentemente o POP ${codigo}?`)) return;
 
