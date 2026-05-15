@@ -1,8 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    const token = window.api ? window.api.getToken() : localStorage.getItem('access_token'); 
-    if (!token) {
-        console.warn("Acesso negado: Token não encontrado. Redirecionando...");
+    const userStringLocal = localStorage.getItem('user_data'); 
+    if (!userStringLocal) {
         window.location.href = 'index.html';
         return;
     }
@@ -83,7 +82,6 @@ function configurarMenuLateral() {
         sidebar.classList.add('collapsed');
     }
 }
-
 
 window.escapeHTML = function(str) {
     if (str === null || str === undefined) return '';

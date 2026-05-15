@@ -1,16 +1,24 @@
-const API_URL = 'https://api-ic.onrender.com'; 
+const API_URL = 'https://api-ic.onrender.com';
 
 window.api = {
-    setToken: (token) => localStorage.setItem('jwt_token', token),
-    getToken: () => localStorage.getItem('jwt_token'),
-    logout: () => {
-        localStorage.removeItem('jwt_token');
+    setToken: () => {},
+    
+    getToken: () => localStorage.getItem('user_data') ? 'cookie_active' : null,
+    
+    logout: async () => {
+        try {
+            await fetch(`${API_URL}/logout`, {
+                method: 'POST',
+                credentials: 'include'
+            });
+        } catch (e) {
+        }
+        localStorage.removeItem('user_data');
         window.location.href = 'index.html';
     },
 
     fetchProtected: async (endpoint, options = {}) => {
-        const token = window.api.getToken();
-        if (!token) {
+        if (!window.api.getToken()) {
             window.api.logout();
             throw new Error('Unauthorized');
         }
@@ -19,42 +27,41 @@ window.api = {
 
         const headers = {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
             ...(options.headers || {}) 
         };
 
-        try {
-            let response = await fetch(`${API_URL}/${cleanEndpoint}`, {
-                ...options,
-                headers
-            });
-            if (response.status === 401) {
-                console.warn("Token expirado! Pausando requisição e iniciando revalidação silenciosa...");
-                const novoToken = await window.api.reauthSilencioso();
+        const fetchOptions = {
+            ...options,
+            headers,
+            credentials: 'include' 
+        };
 
-                if (novoToken) {
-                    headers['Authorization'] = `Bearer ${novoToken}`;
-                    response = await fetch(`${API_URL}/${cleanEndpoint}`, {
-                        ...options,
-                        headers
-                    });
+        try {
+            let response = await fetch(`${API_URL}/${cleanEndpoint}`, fetchOptions);
+            
+            if (response.status === 401) {
+                const sucesso = await window.api.reauthSilencioso();
+
+                if (sucesso) {
+                    response = await fetch(`${API_URL}/${cleanEndpoint}`, fetchOptions);
                 } else {
                     window.api.logout();
-                    throw new Error('Sessão expirada permanentemente.');
+                    throw new Error('Unauthorized');
                 }
             }
             
             return response;
         } catch (error) {
-            console.error("Erro na comunicação com a API:", error);
             throw error;
         }
     },
+    
     reauthSilencioso: () => {
         return new Promise((resolve) => {
             const userDataStr = localStorage.getItem('user_data');
-            if (!userDataStr) { resolve(null); return; }
+            if (!userDataStr) { resolve(false); return; }
             const user = JSON.parse(userDataStr);
+            
             const modalHtml = `
             <div id="reauth-modal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999999; display:flex; justify-content:center; align-items:center;">
                 <div style="background:white; padding:30px; border-radius:8px; width:90%; max-width:400px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
@@ -82,7 +89,7 @@ window.api = {
             passInput.focus();
             btnCancel.onclick = () => {
                 modal.remove();
-                resolve(null);
+                resolve(false);
             };
 
             btnConfirm.onclick = async () => {
@@ -98,15 +105,14 @@ window.api = {
                     const res = await fetch(`${API_URL}/login`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        credentials: 'include',
                         body: formData
                     });
 
                     if (res.ok) {
-                        const data = await res.json();
-                        window.api.setToken(data.access_token);
                         modal.remove();
                         if(window.UI) window.UI.showToast("Sessão renovada! O sistema vai concluir o salvamento agora.", "success");
-                        resolve(data.access_token);
+                        resolve(true);
                     } else {
                         errorMsg.style.display = 'block';
                         btnConfirm.innerText = "Destravar Sessão";
@@ -115,7 +121,6 @@ window.api = {
                         passInput.focus();
                     }
                 } catch(e) {
-                    errorMsg.innerText = "Erro de conexão com o servidor.";
                     errorMsg.style.display = 'block';
                     btnConfirm.innerText = "Destravar Sessão";
                     btnConfirm.disabled = false;
