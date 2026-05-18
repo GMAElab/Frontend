@@ -58,8 +58,8 @@ window.api = {
             
             if (response.status === 401) {
                 const tempoDeUso = Date.now() - APP_START_TIME;
-
-                if (tempoDeUso < 5000) {
+                
+                if (tempoDeUso < 3000) {
                     window.api.exibirModalErroCookies();
                     throw new Error('Cookies bloqueados pelo navegador.');
                 }
@@ -68,6 +68,11 @@ window.api = {
 
                 if (sucesso) {
                     response = await fetch(`${API_URL}/${cleanEndpoint}`, fetchOptions);
+                    
+                    if (response.status === 401) {
+                        window.api.exibirModalErroCookies();
+                        throw new Error('Cookies bloqueados ativamente pelo navegador.');
+                    }
                 } else {
                     window.api.logout();
                     throw new Error('Unauthorized');
