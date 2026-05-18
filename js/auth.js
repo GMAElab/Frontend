@@ -62,10 +62,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
 
                 if (response.ok) {
+                    const verifyResponse = await fetch(`${window.API_URL}/usuarios/equipe`, {
+                        method: 'GET',
+                        credentials: 'include'
+                    });
+
+                    if (verifyResponse.status === 401) {
+                        if (window.api && window.api.exibirModalErroCookies) {
+                            window.api.exibirModalErroCookies();
+                        } else {
+                            UI.showFormFeedback('login-feedback', 'Acesso negado: Seu navegador bloqueou os cookies de segurança.', true);
+                        }
+                        return; 
+                    }
+
                     localStorage.setItem('user_data', JSON.stringify(data.user));
                     window.location.href = 'dashboard.html';
                 } else {
-                    const errorMessage = data.detail || 'Invalid credentials. Please try again.';
+                    const errorMessage = data.detail || 'Credenciais inválidas. Tente novamente.';
                     UI.showFormFeedback('login-feedback', errorMessage, true);
                 }
             } catch (error) {
