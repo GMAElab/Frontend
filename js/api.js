@@ -46,10 +46,14 @@ window.api = {
         }
 
         const cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
+        const isFormData = options.body instanceof FormData;
 
         const fetchOptions = {
             ...options,
-            headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+            headers: { 
+                ...(isFormData ? {} : { 'Content-Type': 'application/json' }), 
+                ...(options.headers || {}) 
+            },
             credentials: 'include' 
         };
 
