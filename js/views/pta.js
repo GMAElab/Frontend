@@ -123,6 +123,9 @@ function renderPTAPesquisador() {
 // A MÁGICA: VERIFICA O ÚLTIMO ENVIO E EXIBE
 // ==========================================
 window.atualizarAvisoUltimoPTA = function() {
+    const topicoElement = document.getElementById('pta-topico');
+    if (!topicoElement) return;
+    
     const topicoId = document.getElementById('pta-topico').value;
     const avisoContainer = document.getElementById('ultimo-pta-aviso');
     
