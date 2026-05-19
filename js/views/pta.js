@@ -266,7 +266,8 @@ function renderPTACoordenador() {
             <p class="text-muted">Navegue pelo calendário para avaliar relatórios e gerar textos consolidados.</p>
         </div>
 
-        <div class="grid-admin">
+        <div class="grid-admin" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+            
             <div class="card-responsivo" style="background: white; border-radius: 8px; padding: 20px;">
                 <h4 style="margin-bottom: 15px; color: #111;">Novo Tópico de Pesquisa</h4>
                 <form id="form-novo-topico">
@@ -282,7 +283,23 @@ function renderPTACoordenador() {
                 </form>
             </div>
 
-            <div class="card-responsivo" style="background: white; border-radius: 8px; padding: 20px; border-top: 4px solid #007BFF;">
+            <div class="card-responsivo" style="background: white; border-radius: 8px; padding: 20px; border-top: 4px solid #10b981;">
+                <h4 style="margin-bottom: 10px; color: #111;">Importar Histórico (Matriz .xlsx)</h4>
+                <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">Migre a planilha unificada antiga para o sistema individual.</p>
+                <form id="form-importar-pta">
+                    <div style="margin-bottom: 10px;">
+                        <label style="font-size: 13px; font-weight:600; color: #111;">Ano de Referência:</label>
+                        <input type="number" id="import-pta-ano" class="form-control" value="${anoAtual}" required style="border: 1px solid #111;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="font-size: 13px; font-weight:600; color: #111;">Arquivo Excel:</label>
+                        <input type="file" id="import-pta-arquivo" accept=".xlsx, .xls" class="form-control" required style="border: 1px solid #111; padding: 5px; width: 100%;">
+                    </div>
+                    <button type="submit" class="btn" style="width: 100%; background: #10b981; color: white; font-weight: bold; padding: 10px; border-radius: 4px; border: none; cursor: pointer;">Processar Planilha</button>
+                </form>
+            </div>
+
+            <div class="card-responsivo" style="background: white; border-radius: 8px; padding: 20px; border-top: 4px solid #007BFF; grid-column: 1 / -1;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <h4 style="color: #007BFF; margin: 0;">Navegação do Ano</h4>
                     <div style="display: flex; gap: 10px; align-items: center;">
@@ -333,12 +350,14 @@ function renderPTACoordenador() {
         </div>
     `;
 
+    // Conectando os eventos aos formulários recém-desenhados
     document.getElementById('form-novo-topico').addEventListener('submit', criarTopicoAction);
+    document.getElementById('form-importar-pta').addEventListener('submit', importarMatrizPTAAction); // NOVO EVENTO
+
     window.estadoCalendario = { ano: anoAtual, mesSelecionado: null };
     renderizarMeses();
     carregarDropdownTopicos('ia-topico-id'); 
 }
-
 // ==========================================
 // FUNÇÕES DO CALENDÁRIO
 // ==========================================
@@ -556,5 +575,59 @@ async function criarTopicoAction(e) {
     } finally {
         btn.innerHTML = textoOriginal;
         btn.disabled = false;
+    }
+}
+// ==========================================
+// IMPORTAÇÃO DE HISTÓRICO EM LOTE
+// ==========================================
+async function importarMatrizPTAAction(e) {
+    e.preventDefault();
+
+    const arquivoInput = document.getElementById('import-pta-arquivo');
+    const anoInput = document.getElementById('import-pta-ano');
+    const btn = e.target.querySelector('button');
+    
+    if (arquivoInput.files.length === 0) {
+        window.UI.showToast("Selecione um arquivo Excel.", "error");
+        return;
+    }
+
+    const arquivo = arquivoInput.files[0];
+    const ano = anoInput.value;
+
+    const formData = new FormData();
+    formData.append('file', arquivo);
+    formData.append('ano', ano);
+
+    const textoOriginal = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner" style="border-color: white transparent transparent transparent;"></span> Processando...';
+    btn.disabled = true;
+    btn.style.backgroundColor = '#94a3b8';
+
+    try {
+        const res = await window.api.fetchProtected('/pta/import-history', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            window.UI.showToast(data.mensagem || "Importação concluída!", "success");
+            e.target.reset();
+            carregarDropdownTopicos('ia-topico-id'); 
+            if (window.estadoCalendario.mesSelecionado) {
+                carregarAprovadosChefia(window.estadoCalendario.mesSelecionado, window.estadoCalendario.ano);
+            }
+        } else {
+            window.UI.showToast(data.detail || "Erro ao processar planilha.", "error");
+        }
+    } catch (err) {
+        window.UI.showToast("Falha na comunicação com o servidor.", "error");
+    } finally {
+        // Restaura o botão
+        btn.innerHTML = textoOriginal;
+        btn.disabled = false;
+        btn.style.backgroundColor = '#10b981';
     }
 }
