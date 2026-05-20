@@ -36,8 +36,6 @@ async function carregarDropdownTopicos(selectId) {
             html += `<option value="${t.id}">${t.titulo} (${t.ano})</option>`;
         });
         select.innerHTML = html;
-
-        // Se já tivermos o histórico carregado, tenta atualizar o aviso
         setTimeout(atualizarAvisoUltimoPTA, 300);
 
     } catch (err) {
@@ -141,17 +139,14 @@ window.atualizarAvisoUltimoPTA = function() {
         document.getElementById('ultimo-pta-texto').innerText = `"${ultimoRelato.descricao_atividades}"`;
         document.getElementById('ultimo-pta-avanco').innerText = ultimoRelato.percentual_avanco;
         
-        // Mágica Extra: Ajusta o slider para começar de onde o pesquisador parou
         const inputAvanco = document.getElementById('pta-avanco');
         const spanAvanco = document.getElementById('valor-avanco');
         
-        // Só ajusta sozinho se o slider ainda estiver no valor padrão (50)
         if (inputAvanco.value === "50") {
             inputAvanco.value = ultimoRelato.percentual_avanco;
             spanAvanco.innerText = ultimoRelato.percentual_avanco + '%';
         }
     } else {
-        // Se ele nunca relatou nada neste tópico, esconde o aviso
         avisoContainer.style.display = 'none';
     }
 };
@@ -167,10 +162,8 @@ async function carregarMeusPTAs() {
             return;
         }
 
-        // Ordena para garantir que os mais recentes fiquem no topo
         relatorios.sort((a, b) => b.ano_referencia - a.ano_referencia || b.mes_referencia - a.mes_referencia);
         
-        // SALVA NO CACHE GLOBAL PARA O LEMBRETE INTELIGENTE PODER LER SEM REQUISITAR DE NOVO
         window.meusPtasCache = relatorios;
         setTimeout(atualizarAvisoUltimoPTA, 200);
 
@@ -182,7 +175,7 @@ async function carregarMeusPTAs() {
             let borderCard = '#E2E8F0';
 
             if (rel.status === 'consolidado') {
-                statusColor = '#007BFF'; // Azul moderno
+                statusColor = '#007BFF'; 
                 statusText = '✅ Aprovado';
                 borderCard = '#007BFF';
             } else if (rel.status === 'rascunho') {
@@ -256,7 +249,7 @@ async function enviarRelatorio(e) {
 }
 
 // ==========================================
-// TELA 2: VISÃO DO ADMIN (CALENDÁRIO & APROVADOS)
+// TELA 2: VISÃO DO ADMIN 
 // ==========================================
 function renderPTACoordenador() {
     const main = document.getElementById('dynamic-content');
@@ -353,7 +346,6 @@ function renderPTACoordenador() {
         </div>
     `;
 
-    // Conectando os eventos aos formulários recém-desenhados
     document.getElementById('form-novo-topico').addEventListener('submit', criarTopicoAction);
     document.getElementById('form-importar-pta').addEventListener('submit', importarMatrizPTAAction); // NOVO EVENTO
 
@@ -405,7 +397,7 @@ window.fecharPainelMes = function() {
 }
 
 // ==========================================
-// CARREGAR DADOS DO MÊS (PENDENTES E APROVADOS)
+// CARREGAR DADOS DO MÊS
 // ==========================================
 window.carregarPendenciasChefia = async function(mes, ano) {
     const container = document.getElementById('lista-pendencias');
@@ -628,9 +620,8 @@ async function importarMatrizPTAAction(e) {
     } catch (err) {
         window.UI.showToast("Falha na comunicação com o servidor.", "error");
     } finally {
-        // Restaura o botão
         btn.innerHTML = textoOriginal;
         btn.disabled = false;
-        btn.style.backgroundColor = '#10b981';
-    }
+        btn.style.backgroundColor = '#00a0fd';
+    }rgb(16, 131, 170);
 }
