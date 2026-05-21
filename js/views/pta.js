@@ -478,9 +478,21 @@ window.carregarAprovadosChefia = async function(mes, ano) {
             container.innerHTML = '<div style="background:#F8FAFC; padding: 20px; border-radius: 6px; text-align:center; color:#94A3B8; font-size: 14px; width: 100%;">Nenhum relatório foi consolidado neste mês ainda.</div>';
             return;
         }
+        const mapaRelatorios = new Map();
+
+        aprovados.forEach(rel => {
+            const chave = rel.descricao_atividades.trim();
+            if (!mapaRelatorios.has(chave)) {
+                mapaRelatorios.set(chave, rel);
+            }
+        
+        });
+
+        const aprovadosDeduplicados = Array.from(mapaRelatorios.values());
+        // ==========================================================
 
         let html = '';
-        aprovados.forEach(rel => {
+        aprovadosDeduplicados.forEach(rel => {
             html += `
                 <div style="background: white; border: 1px solid #E2E8F0; border-left: 4px solid #007BFF; border-radius: 6px; padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">

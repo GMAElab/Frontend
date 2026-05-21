@@ -311,13 +311,23 @@ async function loadAdminPtaTopics(container) {
     try {
         const res = await window.api.fetchProtected('/pta/topicos');
         const tops = await res.json();
-        if (!Array.isArray(tops) || tops.length === 0) {
+        const topicosUnicos = [];
+        const titulosVistos = new Set();
+        
+        tops.forEach(t => {
+            if (!titulosVistos.has(t.titulo)) {
+                topicosUnicos.push(t);
+                titulosVistos.add(t.titulo);
+            }
+        });
+
+        if (topicosUnicos.length === 0) {
             container.innerHTML = '<div class="card-responsivo"><p class="text-muted">Nenhum tópico PTA cadastrado.</p></div>';
             return;
         }
 
         let html = '<div class="card-responsivo"><table style="width:100%; text-align:left;"><tr><th>Ano</th><th>Tópico</th><th>Ação</th></tr>';
-        tops.forEach(t => {
+        topicosUnicos.forEach(t => {
             html += `<tr><td style="padding: 10px 0;">${t.ano}</td><td>${window.escapeHTML(t.titulo)}</td>
             <td style="padding: 10px 0; display:flex; gap:5px;"><button class="btn btn-secondary" style="padding: 5px;" onclick="openDeepView('pta/topicos', ${t.id}, 'Tópico PTA')">✏️ Editar</button><button class="btn btn-outline-danger" style="padding: 5px;" onclick="adminDelete('pta/topicos', ${t.id}, 'pta')">🗑️ Deletar Tópico</button></td></tr>`;
         });
