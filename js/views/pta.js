@@ -124,13 +124,17 @@ window.atualizarAvisoUltimoPTA = function() {
     const topicoElement = document.getElementById('pta-topico');
     if (!topicoElement) return;
     
-    const topicoId = document.getElementById('pta-topico').value;
+    const topicoId = topicoElement.value;
     const avisoContainer = document.getElementById('ultimo-pta-aviso');
+    const inputAvanco = document.getElementById('pta-avanco');
+    const spanAvanco = document.getElementById('valor-avanco');
     
     if (!topicoId || !window.meusPtasCache || window.meusPtasCache.length === 0) {
         if (avisoContainer) avisoContainer.style.display = 'none';
+        if (inputAvanco) inputAvanco.min = 0; 
         return;
     }
+    
     const ultimoRelato = window.meusPtasCache.find(rel => rel.topico_id == parseInt(topicoId));
 
     if (ultimoRelato) {
@@ -138,19 +142,18 @@ window.atualizarAvisoUltimoPTA = function() {
         document.getElementById('ultimo-pta-mes').innerText = `${ultimoRelato.mes_referencia}/${ultimoRelato.ano_referencia}`;
         document.getElementById('ultimo-pta-texto').innerText = `"${ultimoRelato.descricao_atividades}"`;
         document.getElementById('ultimo-pta-avanco').innerText = ultimoRelato.percentual_avanco;
+        inputAvanco.min = ultimoRelato.percentual_avanco;
         
-        const inputAvanco = document.getElementById('pta-avanco');
-        const spanAvanco = document.getElementById('valor-avanco');
-        
-        if (inputAvanco.value === "50") {
+        if (parseInt(inputAvanco.value) < ultimoRelato.percentual_avanco) {
             inputAvanco.value = ultimoRelato.percentual_avanco;
             spanAvanco.innerText = ultimoRelato.percentual_avanco + '%';
         }
+        
     } else {
         avisoContainer.style.display = 'none';
+        inputAvanco.min = 0;
     }
 };
-
 async function carregarMeusPTAs() {
     const container = document.getElementById('meus-ptas-lista');
     try {
@@ -185,13 +188,33 @@ async function carregarMeusPTAs() {
                 borderCard = '#FCA5A5';
             }
 
+            let nomeTopicoFormatado = `Tópico ID: ${rel.topico_id}`;
+            const selectTopico = document.getElementById('pta-topico');
+            if (selectTopico) {
+                const opt = Array.from(selectTopico.options).find(o => o.value == rel.topico_id);
+                if (opt) {
+                    nomeTopicoFormatado = opt.text;
+                }
+            }
             html += `
-                <div style="border: 1px solid ${borderCard}; border-left: 4px solid ${statusColor}; border-radius: 6px; padding: 15px; background: ${bgCard};">
+                <div style="border: 1px solid ${borderCard}; border-left: 4px solid ${statusColor}; border-radius: 6px; padding: 15px; background: ${bgCard}; cursor: pointer; transition: transform 0.1s ease-in-out;"
+                     title="Dê um duplo clique para abrir os detalhes completos"
+                     ondblclick="abrirModalDetalhesPTA(this)"
+                     data-topico="${encodeURIComponent(nomeTopicoFormatado)}"
+                     data-mes="Mês ${rel.mes_referencia}/${rel.ano_referencia}"
+                     data-avanco="${rel.percentual_avanco}%"
+                     data-descricao="${encodeURIComponent(rel.descricao_atividades)}"
+                     onmouseover="this.style.transform='scale(1.02)'" 
+                     onmouseout="this.style.transform='scale(1)'">
+                     
                     <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                         <strong style="color: #111;">Mês ${rel.mes_referencia}/${rel.ano_referencia}</strong>
                         <span style="font-size: 12px; font-weight: bold; color: ${statusColor}; text-transform: uppercase;">${statusText}</span>
                     </div>
-                    <div style="font-size: 13px; color: #64748B; margin-bottom: 8px;">Tópico ID: ${rel.topico_id}</div>
+                    
+                    <div style="font-size: 13px; color: #64748B; margin-bottom: 8px; font-weight: 600;">
+                        ${nomeTopicoFormatado}
+                    </div>
                     
                     <div style="width: 100%; background: #E2E8F0; border-radius: 4px; height: 8px; margin-bottom: 10px;">
                         <div style="background: ${statusColor === '#64748b' ? '#111' : statusColor}; height: 100%; border-radius: 4px; width: ${rel.percentual_avanco}%;"></div>
@@ -625,3 +648,30 @@ async function importarMatrizPTAAction(e) {
         btn.style.backgroundColor = '#00a0fd';
     }rgb(16, 131, 170);
 }
+
+// ==========================================
+// Detalhes do mês enviado na direita quando usuário comum
+// ==========================================
+window.abrirModalDetalhesPTA = function(elemento) {
+    const topico = decodeURIComponent(elemento.getAttribute('data-topico'));
+    const mes = elemento.getAttribute('data-mes');
+    const avanco = elemento.getAttribute('data-avanco');
+    const descricao = decodeURIComponent(elemento.getAttribute('data-descricao'));
+
+    document.getElementById('modal-detalhes-topico').innerText = topico;
+    document.getElementById('modal-detalhes-mes').innerText = mes;
+    document.getElementById('modal-detalhes-avanco').innerText = avanco;
+    document.getElementById('modal-detalhes-descricao').innerText = descricao;
+    document.getElementById('pta-detalhes-modal').style.display = 'flex';
+};
+
+window.fecharModalDetalhesPTA = function() {
+    document.getElementById('pta-detalhes-modal').style.display = 'none';
+};
+
+window.addEventListener('click', function(e) {
+    const modal = document.getElementById('pta-detalhes-modal');
+    if (e.target === modal) {
+        fecharModalDetalhesPTA();
+    }
+});
