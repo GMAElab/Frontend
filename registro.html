@@ -6,18 +6,15 @@
     <title>Solicitar Acesso | SGCI LEQM</title>
     
     <link rel="stylesheet" href="css/global.css">
-    <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
 </head>
-<body class="bg-light">
+<body>
     <main class="login-container">
         
         <section class="card login-card">
             <header class="text-center mb-md">
-                <h1 class="text-primary">Novo Usuário<picture>
-                    <source media="(min-width: )" srcset="">
-                    <img src="" alt="">
-                </picture></h1>
+                <h1 class="text-primary">Novo Investigador</h1>
                 <p class="text-muted">Solicitação de acesso ao painel P&D</p>
             </header>
 
@@ -29,21 +26,21 @@
                 </div>
 
                 <div class="input-group">
-                    <label for="email">E-mail</label>
+                    <label for="email">E-mail Corporativo</label>
                     <input type="email" id="email" name="email" required autocomplete="email" placeholder="pesquisador@leqm.com">
                 </div>
 
                 <div class="input-group">
-                    <label for="password">Crie uma Senha</label>
+                    <label for="password">Criar Palavra-passe</label>
                     <input type="password" id="password" name="password" required autocomplete="new-password" placeholder="Mínimo de 8 caracteres">
-                    <small style="color: var(--text-muted); display: block; margin-top: 5px;">
-                    A senha deve conter: 8+ caracteres, Letra Maiúscula, Número e Símbolo.
+                    <small style="color: var(--text-muted); display: block; margin-top: 6px; line-height: 1.4;">
+                        Requisitos: 8+ caracteres, uma letra maiúscula, um número e um símbolo.
                     </small>
                 </div>
 
                 <div class="input-group">
-                    <label for="confirm-password">Confirme sua Senha</label>
-                    <input type="password" id="confirm-password" name="confirm-password" required autocomplete="new-password" placeholder="Repita a senha">
+                    <label for="confirm-password">Confirmar Palavra-passe</label>
+                    <input type="password" id="confirm-password" name="confirm-password" required autocomplete="new-password" placeholder="Repita a palavra-passe">
                 </div>
 
                 <div id="register-feedback" class="feedback-msg" aria-live="polite"></div>
@@ -55,7 +52,7 @@
             </form>
 
             <footer class="login-footer mt-md text-center">
-                <p class="text-small text-muted">Já possui uma conta? <a href="index.html" id="link-login">Voltar ao Login</a></p>
+                <p class="text-small text-muted">Já tem uma conta? <a href="index.html" id="link-login">Voltar ao Login</a></p>
             </footer>
         </section>
 

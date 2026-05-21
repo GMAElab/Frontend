@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SGCI - GMAE</title>
+    <title>SGCI - LEQM</title>
     
     <link rel="stylesheet" href="css/global.css">
     <link rel="stylesheet" href="css/layout.css">
@@ -13,7 +13,7 @@
     
     <aside class="sidebar">
         <div class="sidebar-brand">
-            <h2>SGCI - GMAE</h2>
+            <h2>SGCI - LEQM</h2>
         </div>
         
         <nav class="sidebar-nav">
@@ -22,9 +22,9 @@
                 <li><button class="nav-item" data-view="equipments">Equipamentos</button></li>
                 <li><button class="nav-item" data-view="processes">Mapeamento de Processos</button></li>
                 <li><button class="nav-item" data-view="pops">POPs</button></li>
-                <li><button class="nav-item" data-view="pta">PTA </button></li>
+                <li><button class="nav-item" data-view="pta">Plano de Trabalho (PTA)</button></li>
                 <li><button class="nav-item" data-view="articles">Artigos</button></li>
-                <li id="menu-admin" style="display: none;"><button class="nav-item" data-view="admin">Admin</button></li>
+                <li id="menu-admin" style="display: none;"><button class="nav-item" data-view="admin">Administração</button></li>
             </ul>
         </nav>
         
@@ -37,147 +37,146 @@
         <header class="topbar">
             <div class="topbar-left">
                 <button class="menu-toggle" id="menu-toggle">☰</button>
-                <h2 id="current-page-title">Dashboard</h2>
+                <h2 id="current-page-title" style="margin: 0; font-size: 1.25rem;">Dashboard</h2>
             </div>
             <div class="topbar-right">
-                <span id="user-greeting" style="margin-right: 15px; font-weight: 500;">(preciso mexer ainda)</span>
+                <span id="user-greeting" style="margin-right: 15px; font-weight: 500; font-size: 14px; color: var(--text-muted);">Carregando...</span>
                 <div class="avatar" id="user-avatar">P</div>
             </div>
         </header>
 
         <main id="dynamic-content" class="content-area">
             <section class="card welcome-card">
-                <h3>Bem-vindo ao sistema de gerenciamento do laboratório LEQM</h3>
-                <p>Selecione algum módulo à esquerda para começar.</p>
+                <h3>Bem-vindo ao SGCI LEQM</h3>
+                <p>Selecione um módulo no menu lateral para começar o seu trabalho.</p>
             </section>
         </main>
     </div>
 
-    <div id="modal-eq" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999999; justify-content: center; align-items: center;">
-        <div class="modal-content" style="max-width: 600px; width: 90%; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+    <div id="modal-eq" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(4px); z-index: 999999; justify-content: center; align-items: center;">
+        <div class="modal-content" style="max-width: 600px; width: 90%; background: var(--bg-surface); padding: 32px; border-radius: 16px; box-shadow: var(--shadow-lg); border: 1px solid var(--border-color);">
             
-            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px;">
-                <h3 style="margin: 0;">+ Novo Equipamento</h3>
-                <button type="button" onclick="window.closeEquipModal()" style="background:none; border:none; font-size:30px; cursor:pointer; color:#999;">&times;</button>
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid var(--border-color); padding-bottom: 16px;">
+                <h3 style="margin: 0; font-size: 18px;">+ Novo Equipamento</h3>
+                <button type="button" onclick="window.closeEquipModal()" style="background:none; border:none; font-size:28px; cursor:pointer; color:var(--text-muted); line-height: 1;">&times;</button>
             </div>
             
             <form id="form-new-eq" onsubmit="window.handleSaveEquipment(event)">
-                <div class="input-group" style="margin-bottom: 15px;">
-                    <label for="eq-name" style="display:block; font-weight:bold; margin-bottom:5px;">Nome do Equipamento: *</label>
-                    <input type="text" id="eq-name" required placeholder="Ex: Microscópio Óptico" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;">
+                <div class="input-group">
+                    <label for="eq-name">Nome do Equipamento *</label>
+                    <input type="text" id="eq-name" class="form-control" required placeholder="Ex: Microscópio Eletrónico de Varrimento">
                 </div>
 
-                <div class="input-group" style="margin-bottom: 15px;">
-                    <label for="eq-desc" style="display:block; font-weight:bold; margin-bottom:5px;">Descrição básica:</label>
-                    <textarea id="eq-desc" rows="3" placeholder="Detalhes e especificações..." style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;"></textarea>
+                <div class="input-group">
+                    <label for="eq-desc">Descrição básica</label>
+                    <textarea id="eq-desc" class="form-control" rows="3" placeholder="Detalhes técnicos e especificações..."></textarea>
                 </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
                     <div class="input-group">
-                        <label for="eq-video" style="display:block; font-weight:bold; margin-bottom:5px;">Vídeo (YouTube URL):</label>
-                        <input type="url" id="eq-video" placeholder="https://..." style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;">
+                        <label for="eq-video">Vídeo (YouTube URL)</label>
+                        <input type="url" id="eq-video" class="form-control" placeholder="https://...">
                     </div>
                     <div class="input-group">
-                        <label for="eq-manual" style="display:block; font-weight:bold; margin-bottom:5px;">POP:</label>
-                        <input type="url" id="eq-manual" placeholder="https://..." style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;">
+                        <label for="eq-manual">Procedimento (POP URL)</label>
+                        <input type="url" id="eq-manual" class="form-control" placeholder="https://...">
                     </div>
                 </div>
 
-                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px; border-top: 1px solid #eee; padding-top: 15px;">
-                    <button type="button" onclick="window.closeEquipModal()" style="padding:10px 20px; background:#eee; border:none; border-radius:4px; cursor:pointer;">Cancelar</button>
-                    <button type="submit" id="btn-save-eq" class="btn btn-primary" style="padding:10px 20px; background:var(--primary); color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">Salvar Equipamento</button>
+                <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                    <button type="button" onclick="window.closeEquipModal()" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" id="btn-save-eq" class="btn btn-primary">Salvar Equipamento</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div id="modal-dossier" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999999; justify-content: center; align-items: center;">
-        <div class="modal-content" style="max-width: 850px; width: 90%; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px;">
-                <h3 id="dossier-title" style="margin:0;">Carregando...</h3>
-                <button type="button" onclick="window.closeDossierModal()" style="background:none; border:none; font-size:30px; cursor:pointer; color:#999;">&times;</button>
+    <div id="modal-dossier" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(4px); z-index: 999999; justify-content: center; align-items: center;">
+        <div class="modal-content" style="max-width: 850px; width: 90%; background: var(--bg-surface); padding: 32px; border-radius: 16px; box-shadow: var(--shadow-lg); border: 1px solid var(--border-color);">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid var(--border-color); padding-bottom: 16px;">
+                <h3 id="dossier-title" style="margin:0; font-size: 18px;">Carregando Detalhes...</h3>
+                <button type="button" onclick="window.closeDossierModal()" style="background:none; border:none; font-size:28px; cursor:pointer; color:var(--text-muted); line-height: 1;">&times;</button>
             </div>
-            <div id="dossier-body" style="display:grid; grid-template-columns: 1.5fr 1fr; gap:25px;">
-                </div>
+            <div id="dossier-body" style="display:grid; grid-template-columns: 1.5fr 1fr; gap:24px;"></div>
         </div>
     </div>
 
-    <div id="deep-view-modal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.65); z-index: 999999; justify-content: center; align-items: center; padding: 20px; overflow-y: auto;">
-        <div class="modal-content" style="max-width: 720px; width: 100%; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
-            <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:10px;">
-                <h3 id="dv-title" style="margin:0;">Editar Registro</h3>
-                <button type="button" onclick="window.closeDeepView()" style="background:none; border:none; font-size:28px; cursor:pointer; color:#999;">&times;</button>
+    <div id="deep-view-modal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(4px); z-index: 999999; justify-content: center; align-items: center; padding: 20px; overflow-y: auto;">
+        <div class="modal-content" style="max-width: 720px; width: 100%; background: var(--bg-surface); padding: 32px; border-radius: 16px; box-shadow: var(--shadow-lg); border: 1px solid var(--border-color);">
+            <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; border-bottom: 1px solid var(--border-color); padding-bottom:16px;">
+                <h3 id="dv-title" style="margin:0; font-size: 18px;">Editar Registo</h3>
+                <button type="button" onclick="window.closeDeepView()" style="background:none; border:none; font-size:28px; cursor:pointer; color:var(--text-muted); line-height: 1;">&times;</button>
             </div>
             <div id="dv-body" style="display:flex; flex-direction:column; gap:16px;"></div>
-            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
-                <button class="btn btn-secondary" onclick="window.closeDeepView()" style="padding:10px 18px;">Cancelar</button>
-                <button class="btn btn-primary" id="dv-save-btn" style="padding:10px 18px;">💾 Salvar Alterações</button>
+            <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                <button class="btn btn-secondary" onclick="window.closeDeepView()">Cancelar</button>
+                <button class="btn btn-primary" id="dv-save-btn">💾 Salvar Alterações</button>
             </div>
         </div>
     </div>
 
-    <div id="processModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999999; justify-content: center; align-items: center;">
-        <div class="modal-content" style="max-width: 850px; width: 95%; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); max-height: 90vh; overflow-y: auto;">
+    <div id="processModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(4px); z-index: 999999; justify-content: center; align-items: center; padding: 20px;">
+        <div class="modal-content" style="max-width: 850px; width: 100%; background: var(--bg-surface); padding: 32px; border-radius: 16px; box-shadow: var(--shadow-lg); border: 1px solid var(--border-color); max-height: 90vh; overflow-y: auto;">
             
-            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 15px;">
-                <h2 style="margin: 0; color: #333;">Mapeamento de Processo P&D</h2>
-                <button type="button" onclick="window.closeProcessModal()" style="background:none; border:none; font-size:30px; cursor:pointer; color:#999;">&times;</button>
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid var(--border-color); padding-bottom: 16px;">
+                <h3 style="margin: 0; font-size: 18px;">Mapeamento de Processo P&D</h3>
+                <button type="button" onclick="window.closeProcessModal()" style="background:none; border:none; font-size:28px; cursor:pointer; color:var(--text-muted); line-height: 1;">&times;</button>
             </div>
             
-            <div class="tabs-nav" style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
-                <button type="button" class="tab-btn active" onclick="window.openTab(event, 'tab-planejamento')" style="padding:10px; cursor:pointer; border:none; background:none; font-weight:bold;">1. Planejamento</button>
-                <button type="button" class="tab-btn" onclick="window.openTab(event, 'tab-execucao')" style="padding:10px; cursor:pointer; border:none; background:none;">2. Execução</button>
-                <button type="button" class="tab-btn" onclick="window.openTab(event, 'tab-resultados')" style="padding:10px; cursor:pointer; border:none; background:none;">3. Resultados & Anexos</button>
+            <div class="tabs-nav" style="display: flex; gap: 10px; margin-bottom: 24px; border-bottom: 1px solid var(--border-color); padding-bottom: 0;">
+                <button type="button" class="tab-btn active" onclick="window.openTab(event, 'tab-planejamento')" style="padding:12px 16px; cursor:pointer; border:none; background:none; font-weight:600; font-size: 14px; margin-bottom: -1px;">1. Planeamento</button>
+                <button type="button" class="tab-btn" onclick="window.openTab(event, 'tab-execucao')" style="padding:12px 16px; cursor:pointer; border:none; background:none; font-size: 14px; margin-bottom: -1px;">2. Execução</button>
+                <button type="button" class="tab-btn" onclick="window.openTab(event, 'tab-resultados')" style="padding:12px 16px; cursor:pointer; border:none; background:none; font-size: 14px; margin-bottom: -1px;">3. Resultados & Anexos</button>
             </div>
 
             <form id="processForm" onsubmit="window.handleSaveProcess(event)">
                 <div id="tab-planejamento" class="tab-content" style="display: block;">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                         <div class="input-group">
-                            <label for="proc-nome">Nome do Processo: *</label>
-                            <input type="text" id="proc-nome" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                            <label for="proc-nome">Nome do Processo *</label>
+                            <input type="text" id="proc-nome" class="form-control" required>
                         </div>
                         <div class="input-group">
-                            <label for="proc-resp">Responsável:</label>
-                            <input type="text" id="proc-resp" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                            <label for="proc-resp">Responsável</label>
+                            <input type="text" id="proc-resp" class="form-control">
                         </div>
-                        <div style="grid-column: span 2;">
-                            <label for="proc-objetivo">Objetivo da Fase:</label>
-                            <input type="text" id="proc-objetivo" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                        <div class="input-group" style="grid-column: span 2;">
+                            <label for="proc-objetivo">Objetivo da Fase</label>
+                            <input type="text" id="proc-objetivo" class="form-control">
                         </div>
-                        <div style="grid-column: span 2;">
-                            <label for="proc-visao">Visão Geral:</label>
-                            <textarea id="proc-visao" rows="3" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;"></textarea>
+                        <div class="input-group" style="grid-column: span 2;">
+                            <label for="proc-visao">Visão Geral</label>
+                            <textarea id="proc-visao" class="form-control" rows="3"></textarea>
                         </div>
                     </div>
                 </div>
 
                 <div id="tab-execucao" class="tab-content" style="display: none;">
-                    <div style="display: grid; gap: 15px;">
-                        <div>
-                            <label for="proc-equipe">Equipe Envolvida:</label>
-                            <input type="text" id="proc-equipe" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                    <div style="display: grid; gap: 16px;">
+                        <div class="input-group">
+                            <label for="proc-equipe">Equipe Envolvida</label>
+                            <input type="text" id="proc-equipe" class="form-control">
                         </div>
-                        <div>       
-                            <label for="proc-etapas">Detalhamento das Etapas:</label>
-                            <textarea id="proc-etapas" rows="5" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" placeholder="Passo 1, Passo 2..."></textarea>
+                        <div class="input-group">       
+                            <label for="proc-etapas">Detalhamento das Etapas</label>
+                            <textarea id="proc-etapas" class="form-control" rows="5" placeholder="Passo 1, Passo 2..."></textarea>
                         </div>
                     </div>
                 </div>
 
                 <div id="tab-resultados" class="tab-content" style="display: none;">
-                    <div style="display: grid; gap: 15px;">
-                        <div>
-                            <label for="proc-indicadores">Indicadores e Resultados:</label>
-                            <textarea id="proc-indicadores" rows="3" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;"></textarea>
+                    <div style="display: grid; gap: 16px;">
+                        <div class="input-group">
+                            <label for="proc-indicadores">Indicadores e Resultados</label>
+                            <textarea id="proc-indicadores" class="form-control" rows="3"></textarea>
                         </div>
-                        <div>
-                            <label for="proc-anexos">Anexos:</label>
-                            <input type="url" id="proc-anexos" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                        <div class="input-group">
+                            <label for="proc-anexos">Anexos (Link Externo)</label>
+                            <input type="url" id="proc-anexos" class="form-control">
                         </div>
-                        <div>
-                            <label for="proc-status">Status Final:</label>
-                            <select id="proc-status" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc;">
+                        <div class="input-group">
+                            <label for="proc-status">Status Final</label>
+                            <select id="proc-status" class="form-control">
                                 <option value="rascunho">RASCUNHO</option>
                                 <option value="em_andamento">EM ANDAMENTO</option>
                                 <option value="concluido">CONCLUÍDO</option>
@@ -186,20 +185,20 @@
                     </div>
                 </div>
 
-                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:25px; border-top: 1px solid #eee; padding-top: 20px;">
-                    <button type="button" onclick="window.closeProcessModal()" style="padding:10px 20px; background:#eee; border:none; border-radius:4px; cursor:pointer;">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" style="padding:10px 20px; background:var(--primary); color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">Salvar Processo</button>
+                <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:32px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                    <button type="button" onclick="window.closeProcessModal()" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Processo</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div id="popModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999999; justify-content: center; align-items: center;">
-        <div class="modal-content" style="max-width: 850px; width: 95%; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); max-height: 90vh; overflow-y: auto;">
+    <div id="popModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(4px); z-index: 999999; justify-content: center; align-items: center; padding: 20px;">
+        <div class="modal-content" style="max-width: 850px; width: 100%; background: var(--bg-surface); padding: 32px; border-radius: 16px; box-shadow: var(--shadow-lg); border: 1px solid var(--border-color); max-height: 90vh; overflow-y: auto;">
             
-            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 15px;">
-                <h2 style="margin: 0; color: #333;"> POP</h2>
-                <button type="button" onclick="window.closePopModal()" style="background:none; border:none; font-size:30px; cursor:pointer; color:#999;">&times;</button>
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid var(--border-color); padding-bottom: 16px;">
+                <h3 style="margin: 0; font-size: 18px;">Procedimento Operacional (POP)</h3>
+                <button type="button" onclick="window.closePopModal()" style="background:none; border:none; font-size:28px; cursor:pointer; color:var(--text-muted); line-height: 1;">&times;</button>
             </div>
             
             <form id="popForm"></form>
@@ -207,47 +206,10 @@
         </div>
     </div>
 
-    <div id="pta-detalhes-modal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.65); z-index: 999999; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
-        <div class="modal-content" style="background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 600px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15); position: relative; animation: fadeIn 0.2s ease-out;">
-            
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #E5E7EB; padding-bottom: 15px; margin-bottom: 20px;">
-                <h3 style="color: #111827; font-size: 18px; font-weight: 700; margin: 0;">Detalhes do Relatório</h3>
-                <button type="button" onclick="fecharModalDetalhesPTA()" style="background: none; border: none; font-size: 28px; color: #9CA3AF; cursor: pointer; line-height: 1;">&times;</button>
-            </div>
-
-            <div style="display: flex; flex-direction: column; gap: 16px;">
-                <div>
-                    <label style="font-size: 12px; text-transform: uppercase; color: #6B7280; font-weight: 600; letter-spacing: 0.05em;">Tópico de Pesquisa</label>
-                    <div id="modal-detalhes-topico" style="color: #1F2937; font-weight: 600; font-size: 15px; background: #F9FAFB; padding: 12px; border-radius: 6px; border: 1px solid #E5E7EB; margin-top: 4px;"></div>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                    <div>
-                        <label style="font-size: 12px; text-transform: uppercase; color: #6B7280; font-weight: 600; letter-spacing: 0.05em;">Referência</label>
-                        <div id="modal-detalhes-mes" style="color: #1F2937; font-weight: 500; background: #F9FAFB; padding: 12px; border-radius: 6px; border: 1px solid #E5E7EB; margin-top: 4px;"></div>
-                    </div>
-                    <div>
-                        <label style="font-size: 12px; text-transform: uppercase; color: #6B7280; font-weight: 600; letter-spacing: 0.05em;">Avanço Geral</label>
-                        <div id="modal-detalhes-avanco" style="color: #10B981; font-weight: 700; background: #F0FDF4; padding: 12px; border-radius: 6px; border: 1px solid #DCFCE7; margin-top: 4px;"></div>
-                    </div>
-                </div>
-
-                <div>
-                    <label style="font-size: 12px; text-transform: uppercase; color: #6B7280; font-weight: 600; letter-spacing: 0.05em;">Descrição das Atividades</label>
-                    <div id="modal-detalhes-descricao" style="color: #4B5563; font-size: 14px; background: #F9FAFB; padding: 15px; border-radius: 6px; border: 1px solid #E5E7EB; margin-top: 4px; max-height: 250px; overflow-y: auto; white-space: pre-wrap; line-height: 1.6; text-align: justify;"></div>
-                </div>
-            </div>
-
-            <div style="margin-top: 25px; display: flex; justify-content: flex-end;">
-                <button onclick="fecharModalDetalhesPTA()" class="btn" style="padding: 10px 20px; background: #111; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px;">Fechar Visualização</button>
-            </div>
+    <div id="pta-detalhes-modal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.5); z-index: 999999; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
         </div>
-    </div>
-    <style>@keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }</style>
 
-
-    <div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 1000000;"></div>
-    
+    <div id="toast-container" style="position: fixed; bottom: 24px; right: 24px; z-index: 1000000; display: flex; flex-direction: column; gap: 10px;"></div>
     
     <script src="js/api.js"></script>
     <script src="js/ui.js"></script>
