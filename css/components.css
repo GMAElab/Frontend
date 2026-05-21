@@ -73,7 +73,7 @@
 }
 
 /* ==========================================
-   Formulários e Inputs
+   FORMS & INPUTS (Soft UI)
    ========================================== */
 .input-group {
     margin-bottom: 20px;
@@ -90,6 +90,8 @@ label {
 
 .form-control, 
 input[type="text"], 
+input[type="email"], 
+input[type="password"], 
 input[type="number"], 
 input[type="url"], 
 input[type="file"], 
@@ -118,12 +120,6 @@ textarea:focus {
 .form-control::placeholder {
     color: #94A3B8;
 }
-
-textarea {
-    resize: vertical;
-    min-height: 100px;
-}
-
 /* ==========================================
    BADGES & STATUS
    ========================================== */

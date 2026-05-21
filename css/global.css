@@ -85,3 +85,6 @@ a:hover {
 ::-webkit-scrollbar-thumb:hover {
     background: #94A3B8;
 }
+.hidden { 
+    display: none !important; 
+}
