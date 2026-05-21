@@ -308,8 +308,8 @@ function renderPTACoordenador() {
             </div>
 
             <div class="card-responsivo" style="background: white; border-radius: 8px; padding: 20px; border-top: 4px solid #10b981;">
-                <h4 style="margin-bottom: 10px; color: #111;">Importar Histórico (Matriz .xlsx)</h4>
-                <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">Migre a planilha unificada antiga para o sistema individual.</p>
+                <h4 style="margin-bottom: 10px; color: #111;">Importar Histórico (Arquivo em .xlsx)</h4>
+                <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">Traga dados da planilha para cá.</p>
                 <form id="form-importar-pta">
                     <div style="margin-bottom: 10px;">
                         <label style="font-size: 13px; font-weight:600; color: #111;">Ano de Referência:</label>

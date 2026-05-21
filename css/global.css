@@ -5,9 +5,9 @@
    ========================================== */
 :root {
     /* Cores Principais */
-    --primary: #4F46E5;
-    --primary-hover: #4338CA;
-    --primary-light: #EEF2FF;
+    --primary: #2563EB;      
+    --primary-hover: #1D4ED8; 
+    --primary-light: #EFF6FF;
     
     /* Cores de Fundo e Superfície */
     --bg-body: #F8FAFC;
@@ -32,7 +32,7 @@
     
     /* Animações e Foco (Acessibilidade) */
     --transition: all 0.2s ease-in-out;
-    --focus-ring: 0 0 0 3px rgba(79, 70, 229, 0.2);
+    --focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.2);
 }
 
 /* ==========================================
