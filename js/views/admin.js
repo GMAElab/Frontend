@@ -25,50 +25,35 @@ function renderAdminPanel() {
     const container = document.getElementById('dynamic-content');
     container.innerHTML = `
     <div class="admin-container fade-in">
-        <div class="view-header">
-            <h2>Painel de Controle Administrador</h2>
+        <div class="view-header" style="margin-bottom: 25px;">
+            <h2>Painel de controle Administrador</h2>
             <p class="text-muted">Gerenciamento de todos os módulos do sistema.</p>
         </div>
         
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-top: 25px;">
-            
-            <div class="admin-card" onclick="openAdminModule('users')" style="border-top-color: var(--primary);">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px;">
+            <div class="admin-card" onclick="openAdminModule('users')">
                 <h3>👥 Usuários</h3>
                 <p>Controle de acesso e permissões dos usuários.</p>
             </div>
             
-            <div class="admin-card" onclick="openAdminModule('lab')" style="border-top-color: var(--success);">
+            <div class="admin-card" onclick="openAdminModule('lab')">
                 <h3>🔬 Laboratório</h3>
                 <p>Controle dos equipamentos e POPs.</p>
             </div>
             
-            <div class="admin-card" onclick="openAdminModule('pd')" style="border-top-color: #8B5CF6;">
+            <div class="admin-card" onclick="openAdminModule('pd')">
                 <h3>📋 P&D e PTA</h3>
-                <p>Processos e plano de trabalho.</p>
+                <p>Processos e PTA</p>
             </div>
 
-            <div class="admin-card" onclick="openAdminModule('audit')" style="border-top-color: var(--warning);">
+            <div class="admin-card" onclick="openAdminModule('audit')">
                 <h3>👁️ Auditoria e Logs</h3>
                 <p>Rastreie quem fez o quê e quando.</p>
             </div>
         </div>
         
         <div id="admin-module-area" style="margin-top: 30px;"></div>
-
-        <div id="deep-view-modal" class="modal-overlay" style="display: none;">
-            <div class="modal-content">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                    <h3 id="dv-title" style="margin:0;">Detalhes do Registro</h3>
-                    <button type="button" onclick="closeDeepView()" style="background:none; border:none; font-size:28px; cursor:pointer; color:var(--text-muted);">&times;</button>
-                </div>
-                <div id="dv-body" style="display:flex; flex-direction:column; gap:16px;"></div>
-                <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px; border-top:1px solid var(--border-color); padding-top:20px;">
-                    <button class="btn btn-secondary" onclick="closeDeepView()">Cancelar</button>
-                    <button class="btn btn-primary" id="dv-save-btn">💾 Salvar Alterações</button>
-                </div>
-            </div>
-        </div>
-    </div>`;
+        </div>`;
 }
 // ==========================================
 // 2. ROTEADOR DE MÓDULOS
