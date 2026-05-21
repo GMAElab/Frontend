@@ -117,6 +117,7 @@ function renderPTAPesquisador() {
     carregarMeusPTAs();
     document.getElementById('form-pta').addEventListener('submit', enviarRelatorio);
 }
+
 // ==========================================
 // A MÁGICA: VERIFICA O ÚLTIMO ENVIO E EXIBE
 // ==========================================
@@ -142,6 +143,7 @@ window.atualizarAvisoUltimoPTA = function() {
         document.getElementById('ultimo-pta-mes').innerText = `${ultimoRelato.mes_referencia}/${ultimoRelato.ano_referencia}`;
         document.getElementById('ultimo-pta-texto').innerText = `"${ultimoRelato.descricao_atividades}"`;
         document.getElementById('ultimo-pta-avanco').innerText = ultimoRelato.percentual_avanco;
+        
         inputAvanco.min = ultimoRelato.percentual_avanco;
         
         if (parseInt(inputAvanco.value) < ultimoRelato.percentual_avanco) {
@@ -154,6 +156,7 @@ window.atualizarAvisoUltimoPTA = function() {
         inputAvanco.min = 0;
     }
 };
+
 async function carregarMeusPTAs() {
     const container = document.getElementById('meus-ptas-lista');
     try {
@@ -196,14 +199,16 @@ async function carregarMeusPTAs() {
                     nomeTopicoFormatado = opt.text;
                 }
             }
+            
+            // Adicionado fallback de segurança no encodeURIComponent
             html += `
                 <div style="border: 1px solid ${borderCard}; border-left: 4px solid ${statusColor}; border-radius: 6px; padding: 15px; background: ${bgCard}; cursor: pointer; transition: transform 0.1s ease-in-out;"
                      title="Dê um duplo clique para abrir os detalhes completos"
                      ondblclick="abrirModalDetalhesPTA(this)"
-                     data-topico="${encodeURIComponent(nomeTopicoFormatado)}"
+                     data-topico="${encodeURIComponent(nomeTopicoFormatado || 'Sem título')}"
                      data-mes="Mês ${rel.mes_referencia}/${rel.ano_referencia}"
                      data-avanco="${rel.percentual_avanco}%"
-                     data-descricao="${encodeURIComponent(rel.descricao_atividades)}"
+                     data-descricao="${encodeURIComponent(rel.descricao_atividades || 'Nenhuma descrição fornecida.')}"
                      onmouseover="this.style.transform='scale(1.02)'" 
                      onmouseout="this.style.transform='scale(1)'">
                      
@@ -370,12 +375,13 @@ function renderPTACoordenador() {
     `;
 
     document.getElementById('form-novo-topico').addEventListener('submit', criarTopicoAction);
-    document.getElementById('form-importar-pta').addEventListener('submit', importarMatrizPTAAction); // NOVO EVENTO
+    document.getElementById('form-importar-pta').addEventListener('submit', importarMatrizPTAAction);
 
     window.estadoCalendario = { ano: anoAtual, mesSelecionado: null };
     renderizarMeses();
     carregarDropdownTopicos('ia-topico-id'); 
 }
+
 // ==========================================
 // FUNÇÕES DO CALENDÁRIO
 // ==========================================
@@ -595,6 +601,7 @@ async function criarTopicoAction(e) {
         btn.disabled = false;
     }
 }
+
 // ==========================================
 // IMPORTAÇÃO DE HISTÓRICO EM LOTE
 // ==========================================
@@ -646,7 +653,7 @@ async function importarMatrizPTAAction(e) {
         btn.innerHTML = textoOriginal;
         btn.disabled = false;
         btn.style.backgroundColor = '#00a0fd';
-    }rgb(16, 131, 170);
+    }
 }
 
 // ==========================================
