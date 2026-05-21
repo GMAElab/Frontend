@@ -25,39 +25,44 @@ function renderAdminPanel() {
     const container = document.getElementById('dynamic-content');
     container.innerHTML = `
     <div class="admin-container fade-in">
-        <h2 style="margin-bottom: 5px;">Painel de controle Administrador</h2>
-        <p class="text-muted" style="margin-bottom: 20px;">Gerenciamento de todos os módulos do sistema.</p>
+        <div class="view-header">
+            <h2>Painel de Controle Administrador</h2>
+            <p class="text-muted">Gerenciamento de todos os módulos do sistema.</p>
+        </div>
         
-        <div class="grid-fluida" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
-            <div class="card-responsivo" style="cursor: pointer; border-top: 4px solid #3B82F6;" onclick="openAdminModule('users')">
-                <h3 style="display: flex; align-items: center; gap: 10px;">👥 Usuários</h3>
-                <p class="text-muted">Controle de acesso e permissões dos usuários.</p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-top: 25px;">
+            
+            <div class="admin-card" onclick="openAdminModule('users')" style="border-top-color: var(--primary);">
+                <h3>👥 Usuários</h3>
+                <p>Controle de acesso e permissões dos usuários.</p>
             </div>
             
-            <div class="card-responsivo" style="cursor: pointer; border-top: 4px solid #10B981;" onclick="openAdminModule('lab')">
-                <h3 style="display: flex; align-items: center; gap: 10px;">🔬 Laboratório</h3>
-                <p class="text-muted">Controle dos equipamentos e POPs.</p>
+            <div class="admin-card" onclick="openAdminModule('lab')" style="border-top-color: var(--success);">
+                <h3>🔬 Laboratório</h3>
+                <p>Controle dos equipamentos e POPs.</p>
             </div>
             
-            <div class="card-responsivo" style="cursor: pointer; border-top: 4px solid #8B5CF6;" onclick="openAdminModule('pd')">
-                <h3 style="display: flex; align-items: center; gap: 10px;">📋 P&D e PTA</h3>
-                <p class="text-muted">Processos e PTA</p>
+            <div class="admin-card" onclick="openAdminModule('pd')" style="border-top-color: #8B5CF6;">
+                <h3>📋 P&D e PTA</h3>
+                <p>Processos e plano de trabalho.</p>
             </div>
 
-            <div class="card-responsivo" style="cursor: pointer; border-top: 4px solid #F59E0B;" onclick="openAdminModule('audit')">
-                <h3 style="display: flex; align-items: center; gap: 10px;">👁️ Auditoria e Logs</h3>
-                <p class="text-muted">Rastreie quem fez o quê e quando.</p>
+            <div class="admin-card" onclick="openAdminModule('audit')" style="border-top-color: var(--warning);">
+                <h3>👁️ Auditoria e Logs</h3>
+                <p>Rastreie quem fez o quê e quando.</p>
             </div>
         </div>
         
         <div id="admin-module-area" style="margin-top: 30px;"></div>
 
-        <div id="deep-view-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; backdrop-filter: blur(4px);">
-            <div class="card-responsivo fade-in" style="background:#fff; width:90%; max-width:600px; max-height:90vh; overflow-y:auto; position:relative;">
-                <button onclick="closeDeepView()" style="position:absolute; top:15px; right:15px; border:none; background:none; font-size:20px; cursor:pointer;">✖</button>
-                <h3 id="dv-title" style="margin-top:0; border-bottom:2px solid var(--border-light); padding-bottom:10px;">Detalhes do Registro</h3>
-                <div id="dv-body" style="margin-top:20px; display:flex; flex-direction:column; gap:15px;"></div>
-                <div style="margin-top:25px; display:flex; gap:10px; justify-content:flex-end;">
+        <div id="deep-view-modal" class="modal-overlay" style="display: none;">
+            <div class="modal-content">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <h3 id="dv-title" style="margin:0;">Detalhes do Registro</h3>
+                    <button type="button" onclick="closeDeepView()" style="background:none; border:none; font-size:28px; cursor:pointer; color:var(--text-muted);">&times;</button>
+                </div>
+                <div id="dv-body" style="display:flex; flex-direction:column; gap:16px;"></div>
+                <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px; border-top:1px solid var(--border-color); padding-top:20px;">
                     <button class="btn btn-secondary" onclick="closeDeepView()">Cancelar</button>
                     <button class="btn btn-primary" id="dv-save-btn">💾 Salvar Alterações</button>
                 </div>

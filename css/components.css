@@ -286,7 +286,7 @@ tbody tr:hover {
 .admin-card {
     background: var(--bg-surface);
     border: 1px solid var(--border-color);
-    border-top: 4px solid var(--primary); /* A linha colorida no topo do cartão */
+    border-top: 4px solid var(--primary); 
     border-radius: 12px;
     padding: 24px;
     cursor: pointer;
@@ -313,7 +313,7 @@ tbody tr:hover {
 }
 
 .admin-card:hover {
-    transform: translateY(-4px); /* Efeito de levitar */
+    transform: translateY(-4px);
     box-shadow: var(--shadow-md);
-    border-color: var(--primary); /* A borda inteira fica azul */
+    border-color: var(--primary);
 }
