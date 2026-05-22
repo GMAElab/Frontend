@@ -582,23 +582,32 @@ window.iniciarSetup2FA = async function() {
         document.getElementById('modal-setup-2fa').style.display = 'flex';
         document.getElementById('2fa-step-1').classList.remove('hidden');
         document.getElementById('2fa-step-2').classList.add('hidden');
+        
         document.getElementById('secret-text').innerText = data.secret;
-        const qrContainer = document.getElementById('qrcode-container');
-        qrContainer.innerHTML = ''; 
-        new QRCode(qrContainer, {
-            text: data.qr_uri,
-            width: 200,
-            height: 200,
-            colorDark : "#000000",
-            colorLight : "#ffffff",
-            correctLevel : QRCode.CorrectLevel.M
-        });
+        
+        setTimeout(() => {
+            const qrContainer = document.getElementById('qrcode-container');
+            qrContainer.innerHTML = ''; 
+
+            if (typeof QRCode !== "undefined") {
+                new QRCode(qrContainer, {
+                    text: data.qr_uri,
+                    width: 200,
+                    height: 200,
+                    colorDark : "#000000",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.M
+                });
+            } else {
+                console.error("Biblioteca QRCode não carregada!");
+            }
+        }, 100);
         
     } catch (err) {
+        console.error(err);
         window.UI.showToast("Erro de comunicação com o servidor.", "error");
     }
 };
-
 window.fecharSetup2FA = function() {
     document.getElementById('modal-setup-2fa').style.display = 'none';
 };
