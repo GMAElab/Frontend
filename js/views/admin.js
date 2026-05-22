@@ -625,36 +625,40 @@ window.voltarPasso2FA = function() {
 };
 
 window.confirmarAtivacao2FA = async function() {
-    const codigo = document.getElementById('codigo-confirmacao-2fa').value.trim();
-    if (codigo.length < 6) {
-        window.UI.showToast("Introduza os 6 dígitos completos.", "warning");
+    const codigoInput = document.getElementById('codigo-confirmacao-2fa');
+    const codigo = codigoInput.value.trim();
+    
+    if (codigo.length !== 6) {
+        window.UI.showToast("O código deve ter 6 dígitos.", "warning");
         return;
     }
 
     const btn = document.getElementById('btn-confirmar-2fa');
-    const originalText = btn.innerText;
     btn.disabled = true;
     btn.innerText = 'Validando...';
 
     try {
+        const payload = { codigo: codigo }; 
+        
         const res = await window.api.fetchProtected('/2fa/confirmar', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ codigo: codigo })
+            body: JSON.stringify(payload)
         });
 
         const data = await res.json();
 
         if (res.ok) {
-            window.UI.showToast("2FA Ativado com Sucesso! A sua conta está segura.", "success");
+            window.UI.showToast("2FA Ativado com Sucesso!", "success");
             fecharSetup2FA();
         } else {
-            window.UI.showToast(data.detail || "Código incorreto. Tente novamente.", "error");
+            console.error("Erro 422:", data);
+            window.UI.showToast(data.detail || "Erro ao validar código.", "error");
         }
     } catch (err) {
-        window.UI.showToast("Erro na validação do código.", "error");
+        window.UI.showToast("Erro de comunicação.", "error");
     } finally {
         btn.disabled = false;
-        btn.innerText = originalText;
+        btn.innerText = 'Ativar Proteção 2FA';
     }
 };
