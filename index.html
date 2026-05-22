@@ -14,31 +14,47 @@
         
         <section class="card login-card">
             <header class="text-center mb-md">
-                <h1 class="text-primary">SGCI GMAE</h1>
-                <p class="text-muted">Controle dos dados do laboratório</p>
+                <h1 class="text-primary">SGCI - Gestão</h1>
+                <p class="text-muted">Laboratório LEQM</p>
             </header>
 
             <form id="login-form" aria-label="Formulário de Autenticação">
                 <div class="input-group">
-                    <label for="email">E-mail</label>
+                    <label for="email">E-mail:</label>
                     <input type="email" id="email" name="email" required autocomplete="username" placeholder="pesquisador@leqm.com">
                 </div>
-
                 <div class="input-group">
-                    <label for="password">Senha</label>
+                    <label for="password">Senha:</label>
                     <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="••••••••">
                 </div>
-
                 <div id="login-feedback" class="feedback-msg" aria-live="polite"></div>
-
                 <button type="submit" id="btn-login" class="btn btn-primary btn-block">
                     <span class="btn-text">Entrar</span>
                     <span class="spinner hidden" aria-hidden="true"></span>
                 </button>
             </form>
 
+            <form id="2fa-form" class="hidden" aria-label="Autenticação em Duas Etapas">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <span style="font-size: 40px;">📱</span>
+                    <h3 style="color: var(--text-main); margin-top: 10px;">Verificação de Segurança</h3>
+                    <p class="text-muted text-small">Abra o seu aplicativo Autenticador (Google/Authy) e introduza o código de 6 dígitos.</p>
+                </div>
+                
+                <div class="input-group">
+                    <input type="text" id="codigo-2fa" maxlength="6" required autocomplete="off" placeholder="000 000" style="text-align: center; font-size: 28px; letter-spacing: 8px; font-weight: bold;">
+                </div>
+                
+                <div id="2fa-feedback" class="feedback-msg" aria-live="polite"></div>
+                <button type="submit" id="btn-2fa" class="btn btn-primary btn-block">
+                    <span class="btn-text">Validar Código</span>
+                    <span class="spinner hidden" aria-hidden="true"></span>
+                </button>
+                <button type="button" class="btn btn-secondary btn-block mt-md" onclick="window.location.reload()" style="margin-top: 10px;">Voltar</button>
+            </form>
+
             <footer class="login-footer mt-md text-center">
-                <p class="text-small text-muted">Ainda não tem acesso? <a href="registro.html" id="link-register">Solicitar conta</a></p>
+                <p class="text-small text-muted">Ainda não possui acesso? <a href="registro.html" id="link-register">Solicitar conta</a></p>
             </footer>
         </section>
 

@@ -1,3 +1,5 @@
+let tempUserIdPara2FA = null; 
+
 function verificarBloqueioDeCookies() {
     try {
         document.cookie = "teste_cookies=1; SameSite=None; Secure";
@@ -35,6 +37,10 @@ function exibirAvisoCookies() {
 
 document.addEventListener('DOMContentLoaded', () => {
     verificarBloqueioDeCookies();
+    
+    // ==========================================
+    // 1. FLUXO DE LOGIN NORMAL
+    // ==========================================
     const loginForm = document.getElementById('login-form');
     
     if (loginForm) {
@@ -62,6 +68,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
 
                 if (response.ok) {
+                    
+                    // --- INTERCEPTAÇÃO DO 2FA ---
+                    if (data.requires_2fa) {
+                        tempUserIdPara2FA = data.temp_user_id; 
+                        document.getElementById('login-form').classList.add('hidden');
+                        document.getElementById('2fa-form').classList.remove('hidden');
+                        document.getElementById('codigo-2fa').focus();
+                        return; 
+                    }
+                    
+                    // --- LOGIN NORMAL SEM 2FA ---
                     const verifyResponse = await fetch(`${window.API_URL}/usuarios/equipe`, {
                         method: 'GET',
                         credentials: 'include'
@@ -90,6 +107,63 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ==========================================
+    // 2. FLUXO DO 2FA
+    // ==========================================
+    const form2FA = document.getElementById('2fa-form');
+    if (form2FA) {
+        form2FA.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const codigo = document.getElementById('codigo-2fa').value.trim();
+            UI.showFormFeedback('2fa-feedback', '', false);
+            UI.setButtonLoading('btn-2fa', true);
+
+            try {
+                const response = await fetch(`${window.API_URL}/login/2fa`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        temp_user_id: tempUserIdPara2FA,
+                        codigo: codigo
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const verifyResponse = await fetch(`${window.API_URL}/usuarios/equipe`, {
+                        method: 'GET',
+                        credentials: 'include'
+                    });
+
+                    if (verifyResponse.status === 401) {
+                        if (window.api && window.api.exibirModalErroCookies) {
+                            window.api.exibirModalErroCookies();
+                        } else {
+                            UI.showFormFeedback('2fa-feedback', 'Acesso negado: Seu navegador bloqueou os cookies.', true);
+                        }
+                        return;
+                    }
+
+                    localStorage.setItem('user_data', JSON.stringify(data.user));
+                    window.location.href = 'dashboard.html';
+                } else {
+                    UI.showFormFeedback('2fa-feedback', data.detail || 'Código inválido ou expirado.', true);
+                    document.getElementById('codigo-2fa').value = '';
+                    document.getElementById('codigo-2fa').focus();
+                }
+            } catch (error) {
+                UI.showFormFeedback('2fa-feedback', 'Erro de conexão com o servidor.', true);
+            } finally {
+                UI.setButtonLoading('btn-2fa', false);
+            }
+        });
+    }
+
+    // ==========================================
+    // MENU E LOGOUT
+    // ==========================================
     const btnLogout = document.getElementById('btn-logout');
     if (btnLogout) {
         btnLogout.addEventListener('click', () => {

@@ -243,6 +243,38 @@
         </div>
     </div>
 
+    <div id="modal-setup-2fa" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 999999; justify-content: center; align-items: center;">
+        <div class="modal-content" style="background: var(--bg-surface); padding: 32px; border-radius: 16px; width: 90%; max-width: 450px; box-shadow: var(--shadow-lg); text-align: center; border: 1px solid var(--border-color);">
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; border-bottom: 1px solid var(--border-color); padding-bottom: 16px;">
+                <h3 style="margin:0; font-size: 18px; color: var(--text-main);">Configurar 2fatores</h3>
+                <button type="button" onclick="fecharSetup2FA()" style="background:none; border:none; font-size:28px; cursor:pointer; color:var(--text-muted);">&times;</button>
+            </div>
+            
+            <div id="2fa-step-1">
+                <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 14px;">Escaneie o QR Code abaixo com o seu aplicativo Autenticador (Google Authenticator).</p>
+                
+                <div id="qrcode-container" style="display: flex; justify-content: center; margin-bottom: 20px; padding: 20px; background: white; border-radius: 12px; border: 1px solid var(--border-color);"></div>
+                
+                <p style="font-size: 13px; color: var(--text-muted);">Ou insira o código manualmente:<br>
+                    <strong id="secret-text" style="letter-spacing: 2px; color: var(--primary); font-size: 16px; margin-top: 5px; display: inline-block;"></strong>
+                </p>
+                
+                <button class="btn btn-primary btn-block" style="margin-top: 24px;" onclick="avancarPasso2FA()">Já escaneei, avançar</button>
+            </div>
+
+            <div id="2fa-step-2" class="hidden">
+                <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 14px;">Digite o código de 6 dígitos gerado pelo aplicativo para confirmar a ativação.</p>
+                
+                <input type="text" id="codigo-confirmacao-2fa" class="form-control" maxlength="6" placeholder="000 000" style="font-size: 28px; letter-spacing: 8px; text-align: center; margin-bottom: 24px; font-weight: bold;">
+                
+                <button class="btn btn-primary btn-block" onclick="confirmarAtivacao2FA()" id="btn-confirmar-2fa">Ativar Proteção 2FA</button>
+                <button class="btn btn-secondary btn-block" onclick="voltarPasso2FA()" style="margin-top: 10px;">Voltar</button>
+            </div>
+
+        </div>
+    </div>
+
     <div id="toast-container" style="position: fixed; bottom: 24px; right: 24px; z-index: 1000000; display: flex; flex-direction: column; gap: 10px;"></div>
     
     <script src="js/api.js"></script>

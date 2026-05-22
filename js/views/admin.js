@@ -50,6 +50,10 @@ function renderAdminPanel() {
                 <h3>👁️ Auditoria e Logs</h3>
                 <p>Rastreie quem fez o quê e quando.</p>
             </div>
+            <div class="admin-card" onclick="iniciarSetup2FA()" style="border-top-color: var(--danger);">
+                <h3>🔐 Segurança (2FA)</h3>
+                <p>Proteger minha conta com Autenticador.</p>
+            </div>
         </div>
         
         <div id="admin-module-area" style="margin-top: 30px;"></div>
@@ -561,3 +565,87 @@ window.adminDelete = async (route, id, tabToReload) => {
         console.error("Erro no adminDelete:", error);
     }
 }
+
+// ==========================================
+// 8. CONFIGURAÇÃO DE 2FA (ADMIN)
+// ==========================================
+window.iniciarSetup2FA = async function() {
+    try {
+        const res = await window.api.fetchProtected('/2fa/setup');
+        const data = await res.json();
+        
+        if (!res.ok) {
+            window.UI.showToast(data.detail || "Erro ao iniciar configuração do 2FA.", "error");
+            return;
+        }
+
+        document.getElementById('modal-setup-2fa').style.display = 'flex';
+        document.getElementById('2fa-step-1').classList.remove('hidden');
+        document.getElementById('2fa-step-2').classList.add('hidden');
+        document.getElementById('secret-text').innerText = data.secret;
+        const qrContainer = document.getElementById('qrcode-container');
+        qrContainer.innerHTML = ''; 
+        new QRCode(qrContainer, {
+            text: data.qr_uri,
+            width: 200,
+            height: 200,
+            colorDark : "#000000",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.M
+        });
+        
+    } catch (err) {
+        window.UI.showToast("Erro de comunicação com o servidor.", "error");
+    }
+};
+
+window.fecharSetup2FA = function() {
+    document.getElementById('modal-setup-2fa').style.display = 'none';
+};
+
+window.avancarPasso2FA = function() {
+    document.getElementById('2fa-step-1').classList.add('hidden');
+    document.getElementById('2fa-step-2').classList.remove('hidden');
+    document.getElementById('codigo-confirmacao-2fa').value = '';
+    document.getElementById('codigo-confirmacao-2fa').focus();
+};
+
+window.voltarPasso2FA = function() {
+    document.getElementById('2fa-step-2').classList.add('hidden');
+    document.getElementById('2fa-step-1').classList.remove('hidden');
+};
+
+window.confirmarAtivacao2FA = async function() {
+    const codigo = document.getElementById('codigo-confirmacao-2fa').value.trim();
+    if (codigo.length < 6) {
+        window.UI.showToast("Introduza os 6 dígitos completos.", "warning");
+        return;
+    }
+
+    const btn = document.getElementById('btn-confirmar-2fa');
+    const originalText = btn.innerText;
+    btn.disabled = true;
+    btn.innerText = 'Validando...';
+
+    try {
+        const res = await window.api.fetchProtected('/2fa/confirmar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ codigo: codigo })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            window.UI.showToast("2FA Ativado com Sucesso! A sua conta está segura.", "success");
+            fecharSetup2FA();
+        } else {
+            window.UI.showToast(data.detail || "Código incorreto. Tente novamente.", "error");
+        }
+    } catch (err) {
+        window.UI.showToast("Erro na validação do código.", "error");
+    } finally {
+        btn.disabled = false;
+        btn.innerText = originalText;
+    }
+};
