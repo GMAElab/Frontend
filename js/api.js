@@ -164,3 +164,53 @@ window.api = {
 };
 
 window.API_URL = API_URL;
+
+// ==========================================
+// UPLOAD DE IMAGENS E PREVIEW
+// ==========================================
+
+window.previewImagem = function(event, previewDivId, imgId) {
+    const file = event.target.files[0];
+    const previewDiv = document.getElementById(previewDivId);
+    const imgElement = document.getElementById(imgId);
+
+    if (file) {
+        if (file.size > 10 * 1024 * 1024) { 
+            window.UI.showToast("A imagem é muito grande. Máximo 10MB.", "warning");
+            event.target.value = ''; 
+            return;
+        }
+        imgElement.src = URL.createObjectURL(file);
+        previewDiv.style.display = 'block';
+    }
+};
+
+window.removerImagem = function(inputId, previewDivId) {
+    document.getElementById(inputId).value = '';
+    document.getElementById(previewDivId).style.display = 'none';
+};
+
+window.fazerUploadImagem = async function(inputId) {
+    const fileInput = document.getElementById(inputId);
+    if (!fileInput || fileInput.files.length === 0) return null;
+
+    const file = fileInput.files[0];
+    const formData = new FormData();
+    formData.append("file", file); 
+
+    try {
+        const res = await fetch(`${window.API_URL}/upload-imagem`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!res.ok) throw new Error("Falha no servidor ao enviar imagem");
+        
+        const data = await res.json();
+        return data.url; 
+    } catch (error) {
+        console.error("Erro no upload:", error);
+        window.UI.showToast("Erro ao processar a imagem na nuvem.", "error");
+        return null;
+    }
+};

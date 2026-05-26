@@ -111,7 +111,14 @@ window.openPopModal = function(codigoEdicao = null) {
                     <div><label style="font-weight:bold;">7. Segurança e Riscos</label><textarea id="pop-seguranca" class="form-control" rows="2" style="width:100%; padding:8px;">${dadosEdit.seguranca || ''}</textarea></div>
                     <div><label style="font-weight:bold;">8. Manutenção e Calibração</label><textarea id="pop-manutencao" class="form-control" rows="2" style="width:100%; padding:8px;">${dadosEdit.manutencao || ''}</textarea></div>
                     <div><label style="font-weight:bold;">9. Referências</label><textarea id="pop-referencias" class="form-control" rows="2" style="width:100%; padding:8px;">${dadosEdit.referencias || ''}</textarea></div>
-                    
+                    <div style="background: #F9FAFB; padding: 15px; border: 1px dashed #D1D5DB; border-radius: 8px; margin-bottom: 15px;">
+                        <label style="font-weight:bold;">Evidência Visual (Imagem até 10MB - Opcional)</label>
+                        <input type="file" id="pop-imagem-visual" class="form-control" style="width:100%; padding:8px; margin-top:5px;" accept="image/png, image/jpeg, image/jpg" onchange="previewImagem(event, 'preview-pop', 'img-preview-pop')">
+                        <div id="preview-pop" style="display: none; margin-top: 10px; text-align: center;">
+                            <img id="img-preview-pop" src="" style="max-width: 100%; max-height: 200px; border-radius: 6px;" />
+                            <p style="margin: 8px 0 0 0; font-size: 13px; color: #DC2626; cursor: pointer; font-weight: bold;" onclick="removerImagem('pop-imagem-visual', 'preview-pop')">❌ Remover Imagem</p>
+                        </div>
+                    </div>
                     <div style="background: #F9FAFB; padding: 15px; border: 1px dashed #D1D5DB; border-radius: 8px;">
                         <label style="font-weight:bold;">10. Anexos (PDF, DOCX, XLSX, Imagens - Máx 10MB)</label>
                         <input type="file" id="pop-anexos-file" class="form-control" style="width:100%; padding:8px; margin-top:5px;" accept=".pdf, .doc, .docx, .xls, .xlsx, image/*">
@@ -185,10 +192,11 @@ window.handleSavePop = async function(event) {
     event.preventDefault();
     const btn = event.target.querySelector('button[type="submit"]');
     const textoOriginal = btn.innerText;
-    btn.innerText = "Salvando..."; 
+    btn.innerText = "Salvando (Aguarde)..."; 
     btn.disabled = true;
 
     try {
+        let linkDaImagem = await window.fazerUploadImagem('pop-imagem-visual');
         const conteudoCompleto = {
             versao: document.getElementById('pop-versao').value,
             data_emissao: document.getElementById('pop-data').value,
@@ -209,7 +217,8 @@ window.handleSavePop = async function(event) {
         const popData = {
             codigo: document.getElementById('pop-codigo').value,
             titulo: document.getElementById('pop-titulo').value,
-            descricao: JSON.stringify(conteudoCompleto) 
+            descricao: JSON.stringify(conteudoCompleto),
+            imagem_url: linkDaImagem 
         };
 
         let res;
@@ -240,7 +249,6 @@ window.handleSavePop = async function(event) {
         btn.disabled = false;
     }
 };
-
 // ==========================================
 // 4. TABELA DE EXIBIÇÃO
 // ==========================================
@@ -330,6 +338,14 @@ function renderPopDocxTemplate(pop, dados) {
             ${formatPopSection('7. Segurança e Riscos', dados.seguranca)}
             ${formatPopSection('8. Manutenção e Calibração', dados.manutencao)}
             ${formatPopSection('9. Referências', dados.referencias)}
+
+            ${pop.imagem_url ? `
+            <div class="pop-sec" style="margin-bottom: 15px; width: 100%; max-width: 100%;">
+                <h4 style="margin: 0 0 5px 0; font-size: 12pt; font-weight: bold; color: #000;">Evidência Visual</h4>
+                <div style="margin: 0; text-align: center;">
+                    <img src="${window.escapeHTML(pop.imagem_url)}" style="max-width: 400px; border: 1px solid #000;" />
+                </div>
+            </div>` : ''}
             
             <div class="pop-sec" style="margin-bottom: 15px; width: 100%; max-width: 100%;">
                 <h4 style="margin: 0 0 5px 0; font-size: 12pt; font-weight: bold; color: #000;">10. Anexos</h4>

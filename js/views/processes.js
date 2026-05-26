@@ -132,12 +132,18 @@ function renderProcesses(processes) {
 
 async function handleSaveProcess(event) {
     event.preventDefault();
+    const btn = event.target.querySelector('button[type="submit"]');
+    const textoOriginal = btn.innerText;
+    btn.innerText = "Enviando (Aguarde)...";
+    btn.disabled = true;
+
     const checkboxes = document.querySelectorAll('input[name="smart_equipe_cb"]:checked');
     const equipeSelecionada = Array.from(checkboxes).map(cb => cb.value).join(', ');
     const inputTextoOriginal = document.getElementById('proc-equipe').value;
     const equipeFinal = equipeSelecionada ? equipeSelecionada : inputTextoOriginal;
 
     try {
+        let linkDaImagem = await window.fazerUploadImagem('proc-imagem');
         const processData = {
             nome_processo: document.getElementById('proc-nome').value,
             responsavel: document.getElementById('proc-resp').value, 
@@ -147,6 +153,7 @@ async function handleSaveProcess(event) {
             detalhamento_etapas: document.getElementById('proc-etapas').value,
             indicadores_desempenho: document.getElementById('proc-indicadores').value,
             anexos_url: document.getElementById('proc-anexos').value,
+            imagem_url: linkDaImagem,
             status: document.getElementById('proc-status').value || "Em Desenvolvimento" 
         };
 
@@ -165,9 +172,11 @@ async function handleSaveProcess(event) {
     } catch (error) {
         console.error("Erro ao salvar:", error);
         window.UI.showToast("Falha ao salvar processo. Verifique os campos.", "error");
+    } finally {
+        btn.innerText = textoOriginal;
+        btn.disabled = false;
     }
 }
-
 // ==========================================
 // DETALHES DO PROCESSO
 // ==========================================
@@ -237,6 +246,13 @@ window.renderProcessDetailsModal = function(proc, atividades) {
 
                     <h4 style="color:#1E293B; margin-bottom: 8px; font-size: 14px;">Detalhamento das Etapas</h4>
                     <div style="background:#F8FAFC; padding:15px; border-radius:8px; font-size:13px; color: #334155; margin-bottom:20px; white-space:pre-wrap;">${window.escapeHTML(proc.detalhamento_etapas || 'Nenhuma etapa registrada.')}</div>
+                    
+                    ${proc.imagem_url ? `
+                    <h4 style="color:#1E293B; margin-bottom: 8px; font-size: 14px;">Imagens do processo</h4>
+                    <div style="background:#F8FAFC; padding:15px; border-radius:8px; margin-bottom:20px; text-align:center;">
+                        <img src="${window.escapeHTML(proc.imagem_url)}" style="max-width: 100%; border-radius: 6px; cursor: pointer;" onclick="window.open(this.src, '_blank')" title="Clique para ampliar" />
+                    </div>` : ''}
+
 
                     <h4 style="color:#1E293B; margin-bottom: 8px; font-size: 14px;">Indicadores de Desempenho</h4>
                     <div style="background:#F8FAFC; padding:15px; border-radius:8px; font-size:13px; color: #334155; margin-bottom:20px; white-space:pre-wrap;">${window.escapeHTML(proc.indicadores_desempenho || 'Nenhum indicador registrado.')}</div>

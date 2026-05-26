@@ -165,25 +165,35 @@
                 </div>
 
                 <div id="tab-resultados" class="tab-content" style="display: none;">
-                    <div style="display: grid; gap: 16px;">
-                        <div class="input-group">
-                            <label for="proc-indicadores">Indicadores e Resultados</label>
-                            <textarea id="proc-indicadores" class="form-control" rows="3"></textarea>
-                        </div>
-                        <div class="input-group">
-                            <label for="proc-anexos">Anexos (Link Externo)</label>
-                            <input type="url" id="proc-anexos" class="form-control">
-                        </div>
-                        <div class="input-group">
-                            <label for="proc-status">Status Final</label>
-                            <select id="proc-status" class="form-control">
-                                <option value="rascunho">RASCUNHO</option>
-                                <option value="em_andamento">EM ANDAMENTO</option>
-                                <option value="concluido">CONCLUÍDO</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
+    <div style="display: grid; gap: 16px;">
+        <div class="input-group">
+            <label for="proc-indicadores">Indicadores e Resultados</label>
+            <textarea id="proc-indicadores" class="form-control" rows="3"></textarea>
+        </div>
+        
+        <div class="input-group" style="background: #F9FAFB; padding: 15px; border: 1px dashed #D1D5DB; border-radius: 8px;">
+            <label for="proc-imagem">Imagem processo(Máx 10MB - Opcional)</label>
+            <input type="file" id="proc-imagem" class="form-control" accept="image/png, image/jpeg, image/jpg" onchange="previewImagem(event, 'preview-proc', 'img-preview-proc')">
+            <div id="preview-proc" style="display: none; margin-top: 10px; text-align: center;">
+                <img id="img-preview-proc" src="" style="max-width: 100%; max-height: 200px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);" />
+                <p style="margin: 8px 0 0 0; font-size: 13px; color: #DC2626; cursor: pointer; font-weight: bold;" onclick="removerImagem('proc-imagem', 'preview-proc')">❌ Remover Imagem</p>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="proc-anexos">Anexos (Link Externo)</label>
+            <input type="url" id="proc-anexos" class="form-control">
+        </div>
+        <div class="input-group">
+            <label for="proc-status">Status Final</label>
+            <select id="proc-status" class="form-control">
+                <option value="rascunho">RASCUNHO</option>
+                <option value="em_andamento">EM ANDAMENTO</option>
+                <option value="concluido">CONCLUÍDO</option>
+            </select>
+        </div>
+    </div>
+</div>
 
                 <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:32px; border-top: 1px solid var(--border-color); padding-top: 20px;">
                     <button type="button" onclick="window.closeProcessModal()" class="btn btn-secondary">Cancelar</button>
