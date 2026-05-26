@@ -213,21 +213,24 @@ window.viewProcessDetails = async function(id) {
 window.renderProcessDetailsModal = function(proc, atividades) {
     const oldModal = document.getElementById('processDetailsModal');
     if (oldModal) oldModal.remove();
-    let actHtml = atividades.map(a => {
+    
+    window.currentProcessActivities = atividades;
+
+    let actHtml = atividades.map((a, index) => {
         const stringDataUTC = a.entry_date.endsWith('Z') ? a.entry_date : a.entry_date + 'Z';
         const dataLocal = new Date(stringDataUTC);
         
         const safeTitle = window.escapeHTML ? window.escapeHTML(a.title) : a.title;
         const safeNote = window.escapeHTML ? window.escapeHTML(a.note) : a.note;
-        const safeImg = a.imagem_url ? (window.escapeHTML ? window.escapeHTML(a.imagem_url) : a.imagem_url) : '';
+        const temImagem = !!a.imagem_url;
         return `
-        <div onclick="abrirModalAtividade('${safeTitle.replace(/'/g, "\\'")}', '${safeNote.replace(/\n/g, '\\n').replace(/'/g, "\\'")}', '${safeImg.replace(/'/g, "\\'")}')" style="border-left: 3px solid var(--primary); padding-left: 12px; margin-bottom: 15px; cursor: pointer; transition: background 0.2s; padding: 8px 12px; border-radius: 0 8px 8px 0;" onmouseover="this.style.background='#F1F5F9'" onmouseout="this.style.background='transparent'">
+        <div onclick="window.handleActivityClick(${index})" style="border-left: 3px solid var(--primary); padding-left: 12px; margin-bottom: 15px; cursor: pointer; transition: background 0.2s; padding: 8px 12px; border-radius: 0 8px 8px 0;" onmouseover="this.style.background='#F1F5F9'" onmouseout="this.style.background='transparent'">
             <div style="font-size: 11px; color: #777f8a; font-weight:bold; margin-bottom: 3px;">
                 Data: ${dataLocal.toLocaleDateString('pt-BR')} às ${dataLocal.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
             </div>
             <strong style="display:block; font-size: 14px; color: #191f29;">${safeTitle}</strong>
             <p style="margin: 5px 0 0 0; font-size: 13px; color: #424850; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${safeNote}</p>
-            ${safeImg ? '<span style="font-size: 11px; color: #10B981; margin-top: 5px; display: inline-block;">🖼️ Contém Imagem</span>' : ''}
+            ${temImagem ? '<span style="font-size: 11px; color: #10B981; margin-top: 5px; display: inline-block;">🖼️ Contém Imagem</span>' : ''}
         </div>
         `;
     }).join('');
@@ -374,4 +377,12 @@ window.abrirModalAtividade = function(title, note, imgUrl) {
     </div>`;
     
     document.body.insertAdjacentHTML('beforeend', html);
+};
+
+window.handleActivityClick = function(index) {
+    const atividade = window.currentProcessActivities[index];
+    if (!atividade) return;
+    
+    console.log("Abrindo nota da linha do tempo:", atividade); 
+    window.abrirModalAtividade(atividade.title, atividade.note, atividade.imagem_url);
 };
