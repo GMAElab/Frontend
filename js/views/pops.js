@@ -120,7 +120,7 @@ window.openPopModal = function(codigoEdicao = null) {
                         </div>
                     </div>
                     <div style="background: #F9FAFB; padding: 15px; border: 1px dashed #D1D5DB; border-radius: 8px;">
-                        <label style="font-weight:bold;">10. Anexos (PDF, DOCX, XLSX, Imagens - Máx 10MB)</label>
+                        <label style="font-weight:bold;">10. Anexos (PDF, DOCX, XLSX -Máx 10MB)</label>
                         <input type="file" id="pop-anexos-file" class="form-control" style="width:100%; padding:8px; margin-top:5px;" accept=".pdf, .doc, .docx, .xls, .xlsx, image/*">
                         <input type="hidden" id="pop-anexos-b64" value="${escapeQuote(dadosEdit.anexo_dados || '')}">
                         <input type="hidden" id="pop-anexos-meta" value="${escapeQuote(dadosEdit.anexo_meta || '')}">
@@ -341,7 +341,7 @@ function renderPopDocxTemplate(pop, dados) {
 
             ${pop.imagem_url ? `
             <div class="pop-sec" style="margin-bottom: 15px; width: 100%; max-width: 100%;">
-                <h4 style="margin: 0 0 5px 0; font-size: 12pt; font-weight: bold; color: #000;">Evidência Visual</h4>
+                <h4 style="margin: 0 0 5px 0; font-size: 12pt; font-weight: bold; color: #000;">Imagens</h4>
                 <div style="margin: 0; text-align: center;">
                     <img src="${window.escapeHTML(pop.imagem_url)}" style="max-width: 400px; border: 1px solid #000;" />
                 </div>

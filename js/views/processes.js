@@ -16,6 +16,10 @@ window.openProcessModal = async function() {
 
     const firstTab = document.querySelector('.tab-btn');
     if (firstTab) firstTab.click();
+    
+    const previewProc = document.getElementById('preview-proc');
+    if (previewProc) previewProc.style.display = 'none';
+
     const userString = localStorage.getItem('user_data');
     let nomeLogado = '';
     if (userString) {
@@ -24,6 +28,7 @@ window.openProcessModal = async function() {
         const inputResp = document.getElementById('proc-resp');
         if (inputResp) inputResp.value = nomeLogado;
     }
+    
     const equipeInput = document.getElementById('proc-equipe');
     if (equipeInput) {
         equipeInput.style.display = 'none';
@@ -130,7 +135,7 @@ function renderProcesses(processes) {
     });
 }
 
-async function handleSaveProcess(event) {
+window.handleSaveProcess = async function(event) {
     event.preventDefault();
     const btn = event.target.querySelector('button[type="submit"]');
     const textoOriginal = btn.innerText;
@@ -143,7 +148,10 @@ async function handleSaveProcess(event) {
     const equipeFinal = equipeSelecionada ? equipeSelecionada : inputTextoOriginal;
 
     try {
-        let linkDaImagem = await window.fazerUploadImagem('proc-imagem');
+        let linkDaImagem = null;
+        if (window.fazerUploadImagem) {
+            linkDaImagem = await window.fazerUploadImagem('proc-imagem');
+        }
         const processData = {
             nome_processo: document.getElementById('proc-nome').value,
             responsavel: document.getElementById('proc-resp').value, 
@@ -167,25 +175,27 @@ async function handleSaveProcess(event) {
 
         window.closeProcessModal();
         if (typeof loadProcessesTable === 'function') loadProcessesTable();
-        window.UI.showToast("Processo salvo com sucesso!", "success");
+        if (window.UI) window.UI.showToast("Processo salvo com sucesso!", "success");
 
     } catch (error) {
         console.error("Erro ao salvar:", error);
-        window.UI.showToast("Falha ao salvar processo. Verifique os campos.", "error");
+        if (window.UI) window.UI.showToast("Falha ao salvar processo. Verifique os campos.", "error");
     } finally {
         btn.innerText = textoOriginal;
         btn.disabled = false;
     }
-}
+};
+
 // ==========================================
 // DETALHES DO PROCESSO
 // ==========================================
 window.viewProcessDetails = async function(id) {
-    window.UI.showToast("Buscando detalhes do processo...", "info");
+    if (window.UI) window.UI.showToast("Buscando detalhes do processo...", "info");
     try {
         const resProc = await window.api.fetchProtected(`/processes/${id}`);
         if (!resProc.ok) throw new Error("Erro ao buscar dados do processo.");
         const proc = await resProc.json();
+        
         let atividades = [];
         try {
             const resAct = await window.api.fetchProtected(`/processes/${id}/activities`);
@@ -196,7 +206,7 @@ window.viewProcessDetails = async function(id) {
 
         renderProcessDetailsModal(proc, atividades);
     } catch (err) {
-        window.UI.showToast("Falha ao abrir detalhes.", "error");
+        if (window.UI) window.UI.showToast("Falha ao abrir detalhes.", "error");
     }
 };
 
@@ -206,17 +216,22 @@ window.renderProcessDetailsModal = function(proc, atividades) {
     let actHtml = atividades.map(a => {
         const stringDataUTC = a.entry_date.endsWith('Z') ? a.entry_date : a.entry_date + 'Z';
         const dataLocal = new Date(stringDataUTC);
-
+        
+        const safeTitle = window.escapeHTML ? window.escapeHTML(a.title) : a.title;
+        const safeNote = window.escapeHTML ? window.escapeHTML(a.note) : a.note;
+        const safeImg = a.imagem_url ? (window.escapeHTML ? window.escapeHTML(a.imagem_url) : a.imagem_url) : '';
         return `
-        <div style="border-left: 3px solid var(--primary); padding-left: 12px; margin-bottom: 15px;">
+        <div onclick="abrirModalAtividade('${safeTitle.replace(/'/g, "\\'")}', '${safeNote.replace(/\n/g, '\\n').replace(/'/g, "\\'")}', '${safeImg.replace(/'/g, "\\'")}')" style="border-left: 3px solid var(--primary); padding-left: 12px; margin-bottom: 15px; cursor: pointer; transition: background 0.2s; padding: 8px 12px; border-radius: 0 8px 8px 0;" onmouseover="this.style.background='#F1F5F9'" onmouseout="this.style.background='transparent'">
             <div style="font-size: 11px; color: #777f8a; font-weight:bold; margin-bottom: 3px;">
                 Data: ${dataLocal.toLocaleDateString('pt-BR')} às ${dataLocal.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
             </div>
-            <strong style="display:block; font-size: 14px; color: #191f29;">${window.escapeHTML(a.title)}</strong>
-            <p style="margin: 5px 0 0 0; font-size: 13px; color: #424850;">${window.escapeHTML(a.note)}</p>
+            <strong style="display:block; font-size: 14px; color: #191f29;">${safeTitle}</strong>
+            <p style="margin: 5px 0 0 0; font-size: 13px; color: #424850; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${safeNote}</p>
+            ${safeImg ? '<span style="font-size: 11px; color: #10B981; margin-top: 5px; display: inline-block;">🖼️ Contém Imagem</span>' : ''}
         </div>
         `;
     }).join('');
+    
     if(!actHtml) actHtml = '<p style="color:#94A3B8; font-size:13px; text-align:center; padding:20px;">Nenhuma anotação registrada ainda. Crie a primeira abaixo!</p>';
 
     const modalHTML = `
@@ -225,8 +240,8 @@ window.renderProcessDetailsModal = function(proc, atividades) {
 
             <div style="width: 100%; padding: 20px 25px; border-bottom: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: white; z-index: 10;">
                 <div>
-                    <h2 style="margin:0; color:#0F172A; font-size: 20px;">${window.escapeHTML(proc.nome_processo || 'Processo Sem Nome')}</h2>
-<span style="font-size: 13px; color: #64748B;">Responsável: <strong>${window.escapeHTML(proc.responsavel || 'N/A')}</strong> | Equipe: ${window.escapeHTML(proc.equipe || 'N/A')}</span>   
+                    <h2 style="margin:0; color:#0F172A; font-size: 20px;">${window.escapeHTML ? window.escapeHTML(proc.nome_processo || 'Processo Sem Nome') : (proc.nome_processo || 'Processo Sem Nome')}</h2>
+                    <span style="font-size: 13px; color: #64748B;">Responsável: <strong>${window.escapeHTML ? window.escapeHTML(proc.responsavel || 'N/A') : (proc.responsavel || 'N/A')}</strong> | Equipe: ${window.escapeHTML ? window.escapeHTML(proc.equipe || 'N/A') : (proc.equipe || 'N/A')}</span>   
                 </div>
                 <div style="display:flex; align-items:center; gap: 15px;">
                     <span class="badge" style="background: #e7f3ff; color: #004080; padding: 6px 12px; border-radius: 6px; font-weight:bold;">${(proc.status || 'RASCUNHO').toUpperCase()}</span>
@@ -239,28 +254,27 @@ window.renderProcessDetailsModal = function(proc, atividades) {
                 <div style="flex: 2 1 400px; padding: 25px; border-right: 1px solid #E2E8F0;">
                     
                     <h4 style="color:#1E293B; margin-bottom: 8px; font-size: 14px;">Visão Geral</h4>
-                    <div style="background:#F8FAFC; padding:15px; border-radius:8px; font-size:13px; color: #334155; margin-bottom:20px;">${window.escapeHTML(proc.visao_geral || 'Nenhuma visão geral definida.')}</div>
+                    <div style="background:#F8FAFC; padding:15px; border-radius:8px; font-size:13px; color: #334155; margin-bottom:20px;">${window.escapeHTML ? window.escapeHTML(proc.visao_geral || 'Nenhuma visão geral definida.') : (proc.visao_geral || 'Nenhuma visão geral definida.')}</div>
 
                     <h4 style="color:#1E293B; margin-bottom: 8px; font-size: 14px;">Objetivo da Fase</h4>
-                    <div style="background:#F8FAFC; padding:15px; border-radius:8px; font-size:13px; color: #334155; margin-bottom:20px;">${window.escapeHTML(proc.objetivo_fase || 'Nenhum objetivo definido.')}</div>
+                    <div style="background:#F8FAFC; padding:15px; border-radius:8px; font-size:13px; color: #334155; margin-bottom:20px;">${window.escapeHTML ? window.escapeHTML(proc.objetivo_fase || 'Nenhum objetivo definido.') : (proc.objetivo_fase || 'Nenhum objetivo definido.')}</div>
 
                     <h4 style="color:#1E293B; margin-bottom: 8px; font-size: 14px;">Detalhamento das Etapas</h4>
-                    <div style="background:#F8FAFC; padding:15px; border-radius:8px; font-size:13px; color: #334155; margin-bottom:20px; white-space:pre-wrap;">${window.escapeHTML(proc.detalhamento_etapas || 'Nenhuma etapa registrada.')}</div>
-                    
+                    <div style="background:#F8FAFC; padding:15px; border-radius:8px; font-size:13px; color: #334155; margin-bottom:20px; white-space:pre-wrap;">${window.escapeHTML ? window.escapeHTML(proc.detalhamento_etapas || 'Nenhuma etapa registrada.') : (proc.detalhamento_etapas || 'Nenhuma etapa registrada.')}</div>
+
                     ${proc.imagem_url ? `
-                    <h4 style="color:#1E293B; margin-bottom: 8px; font-size: 14px;">Imagens do processo</h4>
+                    <h4 style="color:#1E293B; margin-bottom: 8px; font-size: 14px;">Evidência Visual</h4>
                     <div style="background:#F8FAFC; padding:15px; border-radius:8px; margin-bottom:20px; text-align:center;">
-                        <img src="${window.escapeHTML(proc.imagem_url)}" style="max-width: 100%; border-radius: 6px; cursor: pointer;" onclick="window.open(this.src, '_blank')" title="Clique para ampliar" />
+                        <img src="${window.escapeHTML ? window.escapeHTML(proc.imagem_url) : proc.imagem_url}" style="max-width: 100%; max-height: 400px; border-radius: 6px; cursor: pointer;" onclick="window.open(this.src, '_blank')" title="Clique para ampliar" />
                     </div>` : ''}
 
-
                     <h4 style="color:#1E293B; margin-bottom: 8px; font-size: 14px;">Indicadores de Desempenho</h4>
-                    <div style="background:#F8FAFC; padding:15px; border-radius:8px; font-size:13px; color: #334155; margin-bottom:20px; white-space:pre-wrap;">${window.escapeHTML(proc.indicadores_desempenho || 'Nenhum indicador registrado.')}</div>
+                    <div style="background:#F8FAFC; padding:15px; border-radius:8px; font-size:13px; color: #334155; margin-bottom:20px; white-space:pre-wrap;">${window.escapeHTML ? window.escapeHTML(proc.indicadores_desempenho || 'Nenhum indicador registrado.') : (proc.indicadores_desempenho || 'Nenhum indicador registrado.')}</div>
                 </div>
 
                 <div style="flex: 1 1 300px; padding: 25px; background: #F8FAFC;">
                     <h3 style="margin:0 0 20px 0; font-size:16px; color:#0F172A; display:flex; align-items:center; gap:8px;">
-                        <span>Notas Adicionadas pós criação do processo</span>
+                        <span>Linha do Tempo (Atividades)</span>
                     </h3>
 
                     <div style="max-height: 400px; overflow-y:auto; margin-bottom: 25px; padding-right: 5px;">
@@ -271,6 +285,16 @@ window.renderProcessDetailsModal = function(proc, atividades) {
                         <h4 style="margin:0 0 12px 0; font-size:14px; color:#1E293B;">+ Adicionar Atividade</h4>
                         <input type="text" id="act-title" placeholder="Título (Ex: Teste Finalizado)" required class="form-control" style="width:100%; padding:10px; margin-bottom:12px; font-size:13px;">
                         <textarea id="act-note" placeholder="Descreva os resultados ou o que foi feito..." required class="form-control" rows="3" style="width:100%; padding:10px; margin-bottom:12px; font-size:13px;"></textarea>
+                        
+                        <div class="input-group" style="margin-bottom: 12px; background: #F8FAFC; padding: 10px; border-radius: 6px; border: 1px dashed #CBD5E1;">
+                            <label style="font-size: 11px; font-weight: bold; color: #475569; display:block; margin-bottom: 5px;">Anexar Imagem (Opcional)</label>
+                            <input type="file" id="act-imagem" class="form-control" accept="image/png, image/jpeg, image/jpg" style="font-size: 12px; padding: 5px;" onchange="if(window.previewImagem) window.previewImagem(event, 'preview-act', 'img-preview-act')">
+                            <div id="preview-act" style="display: none; margin-top: 10px; text-align: center;">
+                                <img id="img-preview-act" src="" style="max-width: 100%; max-height: 120px; border-radius: 4px;" />
+                                <p style="margin: 5px 0 0 0; font-size: 11px; color: #DC2626; cursor: pointer; font-weight: bold;" onclick="if(window.removerImagem) window.removerImagem('act-imagem', 'preview-act')">❌ Remover</p>
+                            </div>
+                        </div>
+
                         <button type="submit" class="btn btn-primary" style="width:100%; font-weight:bold; padding: 10px;">Registrar na Linha do Tempo</button>
                     </form>
                 </div>
@@ -286,14 +310,21 @@ window.submitProcessActivity = async function(e, processId) {
     e.preventDefault();
     const btn = e.target.querySelector('button');
     const originalText = btn.innerText;
-    btn.innerText = "Salvando..."; btn.disabled = true;
-
-    const payload = {
-        title: document.getElementById('act-title').value,
-        note: document.getElementById('act-note').value
-    };
+    btn.innerText = "Salvando (Aguarde)..."; 
+    btn.disabled = true;
 
     try {
+        let linkImagem = null;
+        if (window.fazerUploadImagem) {
+            linkImagem = await window.fazerUploadImagem('act-imagem');
+        }
+
+        const payload = {
+            title: document.getElementById('act-title').value,
+            note: document.getElementById('act-note').value,
+            imagem_url: linkImagem
+        };
+
         const res = await window.api.fetchProtected(`/processes/${processId}/activities`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -302,10 +333,45 @@ window.submitProcessActivity = async function(e, processId) {
 
         if (!res.ok) throw new Error("Erro ao salvar nota");
 
-        window.UI.showToast("Atividade registrada na linha do tempo!", "success");
-        viewProcessDetails(processId);
+        if (window.UI) window.UI.showToast("Atividade registrada na linha do tempo!", "success");
+        viewProcessDetails(processId); 
     } catch(err) {
-        window.UI.showToast("Falha ao registrar atividade.", "error");
-        btn.innerText = originalText; btn.disabled = false;
+        if (window.UI) window.UI.showToast("Falha ao registrar atividade.", "error");
+    } finally {
+        btn.innerText = originalText; 
+        btn.disabled = false;
     }
+};
+
+window.abrirModalAtividade = function(title, note, imgUrl) {
+    const modalId = 'activityDetailsModal';
+    const modalAntigo = document.getElementById(modalId);
+    if(modalAntigo) modalAntigo.remove();
+
+    const imgHtml = imgUrl 
+        ? `<div style="text-align: center; margin-top: 20px; border-top: 1px solid #E2E8F0; padding-top: 20px;">
+             <label style="font-size: 12px; font-weight: bold; color: #64748B; text-transform: uppercase;">Evidência Visual</label><br>
+             <img src="${imgUrl}" style="max-width: 100%; max-height: 400px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); cursor: pointer; margin-top: 10px;" onclick="window.open(this.src, '_blank')" title="Clique para ampliar">
+           </div>` 
+        : '';
+
+    const html = `
+    <div id="${modalId}" class="modal-overlay" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 10000000; justify-content: center; align-items: center; padding: 20px;">
+        <div class="modal-content fade-in" style="background: white; padding: 32px; border-radius: 12px; width: 100%; max-width: 550px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); position: relative;">
+            
+            <button onclick="document.getElementById('${modalId}').remove()" style="position: absolute; top: 16px; right: 20px; background: none; border: none; font-size: 28px; cursor: pointer; color: #94A3B8; line-height: 1;">&times;</button>
+            
+            <h3 style="margin: 0 0 16px 0; color: #0F172A; font-size: 18px; padding-right: 20px;">${title}</h3>
+            
+            <div style="background: #F8FAFC; padding: 16px; border-radius: 8px; font-size: 14px; color: #334155; white-space: pre-wrap; line-height: 1.6; border: 1px solid #E2E8F0;">${note}</div>
+            
+            ${imgHtml}
+            
+            <div style="margin-top: 24px; text-align: right;">
+                <button onclick="document.getElementById('${modalId}').remove()" class="btn btn-secondary">Fechar</button>
+            </div>
+        </div>
+    </div>`;
+    
+    document.body.insertAdjacentHTML('beforeend', html);
 };
