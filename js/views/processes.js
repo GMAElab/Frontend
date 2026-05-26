@@ -230,7 +230,6 @@ window.renderProcessDetailsModal = function(proc, atividades) {
             </div>
             <strong style="display:block; font-size: 14px; color: #191f29;">${safeTitle}</strong>
             <p style="margin: 5px 0 0 0; font-size: 13px; color: #424850; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${safeNote}</p>
-            ${temImagem ? '<span style="font-size: 11px; color: #10B981; margin-top: 5px; display: inline-block;">🖼️ Contém Imagem</span>' : ''}
         </div>
         `;
     }).join('');
@@ -266,7 +265,7 @@ window.renderProcessDetailsModal = function(proc, atividades) {
                     <div style="background:#F8FAFC; padding:15px; border-radius:8px; font-size:13px; color: #334155; margin-bottom:20px; white-space:pre-wrap;">${window.escapeHTML ? window.escapeHTML(proc.detalhamento_etapas || 'Nenhuma etapa registrada.') : (proc.detalhamento_etapas || 'Nenhuma etapa registrada.')}</div>
 
                     ${proc.imagem_url ? `
-                    <h4 style="color:#1E293B; margin-bottom: 8px; font-size: 14px;">Evidência Visual</h4>
+                    <h4 style="color:#1E293B; margin-bottom: 8px; font-size: 14px;">Anexos</h4>
                     <div style="background:#F8FAFC; padding:15px; border-radius:8px; margin-bottom:20px; text-align:center;">
                         <img src="${window.escapeHTML ? window.escapeHTML(proc.imagem_url) : proc.imagem_url}" style="max-width: 100%; max-height: 400px; border-radius: 6px; cursor: pointer;" onclick="window.open(this.src, '_blank')" title="Clique para ampliar" />
                     </div>` : ''}
@@ -353,7 +352,7 @@ window.abrirModalAtividade = function(title, note, imgUrl) {
 
     const imgHtml = imgUrl 
         ? `<div style="text-align: center; margin-top: 20px; border-top: 1px solid #E2E8F0; padding-top: 20px;">
-             <label style="font-size: 12px; font-weight: bold; color: #64748B; text-transform: uppercase;">Evidência Visual</label><br>
+             <label style="font-size: 12px; font-weight: bold; color: #64748B; text-transform: uppercase;">Anexos</label><br>
              <img src="${imgUrl}" style="max-width: 100%; max-height: 400px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); cursor: pointer; margin-top: 10px;" onclick="window.open(this.src, '_blank')" title="Clique para ampliar">
            </div>` 
         : '';
