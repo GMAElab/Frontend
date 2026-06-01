@@ -1,4 +1,4 @@
-const API_URL = 'https://api-ic.onrender.com';
+const API_URL = 'https://api-hzrz.onrender.com';
 const APP_START_TIME = Date.now(); 
 
 window.api = {
