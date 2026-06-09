@@ -1,10 +1,10 @@
-# 🔬 Sistema de Gestão de Conhecimento e Inovação - Frontend
+# Sistema de Gestão de Conhecimento e Inovação - Frontend
 
 > Sistema de gestão laboratorial desenvolvido para o laboratório **LEQM**. Focado no controle de ativos, processos de Pesquisa e Desenvolvimento (P&D) e Procedimentos Operacionais Padrão (POPs).
 
 ---
 
-## 🚀 Tecnologias e Padrões
+## Tecnologias e Padrões
 
 Este projeto foi construído priorizando leveza, acessibilidade e ausência de dependências complexas:
 
@@ -15,13 +15,13 @@ Este projeto foi construído priorizando leveza, acessibilidade e ausência de d
 
 ---
 
-## 🛠️ Funcionalidades Implementadas até o momento
+## Funcionalidades Implementadas até o momento
 
-### 📦 Gestão de Equipamentos
+### Gestão de Equipamentos
 * **Cadastro de Ativos**: Registro detalhado com especificações técnicas, links para manuais e anexos.
 * **Treinamento Integrado**: Visualização rápida de instruções de uso (SOPs) com player de vídeo do YouTube embutido, permitindo capacitação sem sair da plataforma.
 
-### 🧪 Processos de P&D
+### Processos de P&D
 * **Fluxo de 3 Etapas**: Mapeamento de processos estruturado metodicamente em **Planejamento**, **Execução** e **Resultados/Anexos**.
 * **Gerenciamento de Dados**: Controle rigoroso de parâmetros técnicos, indicadores de desempenho (KPIs) e registro de lições aprendidas.
 * **Integridade de Dados**: Prevenção de perda de dados através do sincronismo estrito de IDs entre a interface (HTML) e a lógica (JS).

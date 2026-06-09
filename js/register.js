@@ -19,7 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const met = requirements.filter(r => r.regex.test(pass));
         const percent = (met.length / requirements.length) * 100;
 
-        // Estilização dinâmica do alerta
         if (pass.length === 0) {
             UI.showFormFeedback('register-feedback', '', false);
         } else if (percent < 50) {
@@ -65,10 +64,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 registerForm.reset(); 
                 setTimeout(() => { window.location.href = 'index.html'; }, 3000);
             } else {
-                // TRATAMENTO DO ERRO 422: Mostra a mensagem exata do Python/Pydantic
                 let errorMsg = 'Falha no registro.';
                 if (Array.isArray(data.detail)) {
-                    errorMsg = data.detail[0].msg; // Pega a mensagem do validador do schemas.py
+                    errorMsg = data.detail[0].msg;
                 } else {
                     errorMsg = data.detail || errorMsg;
                 }

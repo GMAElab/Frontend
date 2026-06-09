@@ -68,8 +68,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
 
                 if (response.ok) {
-                    
-                    // --- INTERCEPTAÇÃO DO 2FA ---
                     if (data.requires_2fa) {
                         tempUserIdPara2FA = data.temp_user_id; 
                         document.getElementById('login-form').classList.add('hidden');
@@ -77,8 +75,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         document.getElementById('codigo-2fa').focus();
                         return; 
                     }
-                    
-                    // --- LOGIN NORMAL SEM 2FA ---
                     const verifyResponse = await fetch(`${window.API_URL}/usuarios/equipe`, {
                         method: 'GET',
                         credentials: 'include'

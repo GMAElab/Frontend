@@ -166,7 +166,7 @@ window.viewDossier = async function(id) {
     }
 };
 
-// fecha modal
+// fechar modal
 window.closeDossierModal = function() {
     const modal = document.getElementById('modal-dossier');
     if (modal) {

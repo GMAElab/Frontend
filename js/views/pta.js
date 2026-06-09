@@ -53,13 +53,13 @@ function renderPTAPesquisador() {
     main.innerHTML = `
         <div class="view-header">
             <h2>Plano de Trabalho (PTA)</h2>
-            <p class="text-muted">Envie seus relatórios mensais e acompanhe seu histórico.</p>
+            <p class="text-muted">Envie sua progressão mensal em cada tópico disponível.</p>
         </div>
         
         <div class="grid-fluida" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
             
             <div class="card-responsivo" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); align-self: start;">
-                <h3 style="margin-bottom: 20px; color: #111; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">Novo Relatório</h3>
+                <h3 style="margin-bottom: 20px; color: #111; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">Novo PTA</h3>
                 <form id="form-pta">
                     <div style="margin-bottom: 15px;">
                         <label style="font-weight: bold; font-size: 14px; color: #111;">Tópico de Pesquisa:</label>
@@ -350,7 +350,7 @@ function renderPTACoordenador() {
                 </div>
 
                 <div style="background: #F8FAFC; padding: 20px; border-radius: 8px; border: 1px solid #E2E8F0;">
-                    <h4 style="color: #007BFF; margin-bottom: 10px; font-size: 15px;">Gerar Síntese (Inteligência Artificial)</h4>
+                    <h4 style="color: #007BFF; margin-bottom: 10px; font-size: 15px;">Gerar texto com base nos PTAs aprovados</h4>
                     <p style="font-size: 13px; color: #64748b; margin-bottom: 15px;">Unifica todos os relatórios <b>aprovados</b> do mês atual.</p>
                     
                     <select id="ia-topico-id" class="form-control" style="margin-bottom: 15px; border: 1px solid #111;"></select>
