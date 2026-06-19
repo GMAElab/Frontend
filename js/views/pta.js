@@ -15,7 +15,7 @@ function routerPTA() {
 }
 
 // ==========================================
-// FUNÇÃO COMPARTILHADA: CARREGAR TÓPICOS
+// CARREGAR TÓPICOS
 // ==========================================
 async function carregarDropdownTopicos(selectId) {
     const select = document.getElementById(selectId);
@@ -44,7 +44,7 @@ async function carregarDropdownTopicos(selectId) {
 }
 
 // ==========================================
-// VISÃO DO PESQUISADOR (COM HISTÓRICO E LEMBRETE)
+// VISÃO DO PESQUISADOR
 // ==========================================
 function renderPTAPesquisador() {
     const main = document.getElementById('dynamic-content');
@@ -119,7 +119,7 @@ function renderPTAPesquisador() {
 }
 
 // ==========================================
-// A MÁGICA: VERIFICA O ÚLTIMO ENVIO E EXIBE
+// VERIFICA O ÚLTIMO ENVIO E EXIBE
 // ==========================================
 window.atualizarAvisoUltimoPTA = function() {
     const topicoElement = document.getElementById('pta-topico');
@@ -176,7 +176,7 @@ async function carregarMeusPTAs() {
         let html = '';
         relatorios.forEach(rel => {
             let statusColor = '#64748b';
-            let statusText = '⏳ Em Avaliação';
+            let statusText = '⏳ Enviado (Aguardando Avaliação)';
             let bgCard = '#F8FAFC';
             let borderCard = '#E2E8F0';
 
@@ -200,7 +200,6 @@ async function carregarMeusPTAs() {
                 }
             }
             
-            // Adicionado fallback de segurança no encodeURIComponent
             html += `
                 <div style="border: 1px solid ${borderCard}; border-left: 4px solid ${statusColor}; border-radius: 6px; padding: 15px; background: ${bgCard}; cursor: pointer; transition: transform 0.1s ease-in-out;"
                      title="Dê um duplo clique para abrir os detalhes completos"
@@ -277,7 +276,7 @@ async function enviarRelatorio(e) {
 }
 
 // ==========================================
-// TELA 2: VISÃO DO ADMIN 
+// VISÃO DO ADMIN 
 // ==========================================
 function renderPTACoordenador() {
     const main = document.getElementById('dynamic-content');
@@ -489,7 +488,6 @@ window.carregarAprovadosChefia = async function(mes, ano) {
         });
 
         const aprovadosDeduplicados = Array.from(mapaRelatorios.values());
-        // ==========================================================
 
         let html = '';
         aprovadosDeduplicados.forEach(rel => {
@@ -615,7 +613,7 @@ async function criarTopicoAction(e) {
 }
 
 // ==========================================
-// IMPORTAÇÃO DE HISTÓRICO EM LOTE
+// IMPORTAÇÃO DE HISTÓRICO
 // ==========================================
 async function importarMatrizPTAAction(e) {
     e.preventDefault();
