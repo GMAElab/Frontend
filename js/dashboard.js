@@ -1,9 +1,20 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    const userStringLocal = localStorage.getItem('user_data'); 
-    if (!userStringLocal) {
-        window.location.href = 'index.html';
-        return;
+    const userString = localStorage.getItem('user_data');
+    if (userString) {
+        const user = JSON.parse(userString);
+        const btnSetup2FA = document.getElementById('btn-setup-2fa');
+        if (btnSetup2FA && user.is_2fa_enabled) {
+            btnSetup2FA.style.display = 'none';
+        }
+        const btnAdmin = document.getElementById('menu-admin');
+        if (btnAdmin) {
+            if (user.role === 'admin') {
+                btnAdmin.style.display = 'block';
+            } else {
+                btnAdmin.remove(); 
+            }
+        }
     }
 
     initializeUserProfile();
@@ -174,6 +185,12 @@ window.confirmarAtivacao2FA = async function() {
         if (response.ok) {
             UI.showToast('Autenticação de 2 Fatores ativada com sucesso!', 'success');
             window.fecharSetup2FA();
+            const btnSetup2FA = document.getElementById('btn-setup-2fa');
+            if (btnSetup2FA) btnSetup2FA.style.display = 'none';
+            let userAtual = JSON.parse(localStorage.getItem('user_data'));
+            userAtual.is_2fa_enabled = true;
+            localStorage.setItem('user_data', JSON.stringify(userAtual));
+
         } else {
             UI.showToast(data.detail || 'Código incorreto. Tente novamente.', 'error');
             document.getElementById('codigo-confirmacao-2fa').value = '';
