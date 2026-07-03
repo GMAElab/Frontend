@@ -39,13 +39,14 @@
                 <button class="menu-toggle" id="menu-toggle">☰</button>
                 <h2 id="current-page-title" style="margin: 0; font-size: 1.25rem;">Dashboard</h2>
             </div>
-            <div class="topbar-right">
+            <div class="topbar-right" style="display: flex; align-items: center;">
+                <button id="btn-setup-2fa" onclick="abrirSetup2FA()" class="btn btn-primary btn-sm" style="margin-right: 15px; display: none;">
+                    🔒 Ativar 2FA
+                </button>
+                
                 <span id="user-greeting" style="margin-right: 15px; font-weight: 500; font-size: 14px; color: var(--text-muted);">Carregando...</span>
                 <div class="avatar" id="user-avatar">P</div>
             </div>
-            <button id="btn-setup-2fa" onclick="abrirSetup2FA()" class="btn btn-outline-primary btn-block" style="margin-top: 10px;">
-    🔒 Configurar Segurança 2FA
-            </button>
         </header>
 
         <main id="dynamic-content" class="content-area">

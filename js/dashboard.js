@@ -4,9 +4,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (userString) {
         const user = JSON.parse(userString);
         const btnSetup2FA = document.getElementById('btn-setup-2fa');
-        if (btnSetup2FA && user.is_2fa_enabled) {
-            btnSetup2FA.style.display = 'none';
+        if (btnSetup2FA && !user.is_2fa_enabled) {
+            btnSetup2FA.style.display = 'inline-flex';
         }
+
         const btnAdmin = document.getElementById('menu-admin');
         if (btnAdmin) {
             if (user.role === 'admin') {
@@ -25,20 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
         menuToggle.addEventListener('click', () => {
             sidebar.classList.toggle('open');
         });
-    }
-
-    const userString = localStorage.getItem('user_data');
-    if (userString) {
-        const user = JSON.parse(userString);
-        const btnAdmin = document.getElementById('menu-admin');
-        
-        if (btnAdmin) {
-            if (user.role === 'admin') {
-                btnAdmin.style.display = 'block';
-            } else {
-                btnAdmin.remove(); 
-            }
-        }
     }
 
     const btnLogout = document.getElementById('btn-logout');
