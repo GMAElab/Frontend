@@ -92,3 +92,97 @@ window.escapeHTML = function(str) {
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
 };
+
+// ==========================================
+// CONFIGURAÇÃO DO 2FA 
+// ==========================================
+
+// 1. Abre o modal
+window.abrirSetup2FA = async function() {
+    try {
+        document.getElementById('modal-setup-2fa').style.display = 'flex';
+        document.getElementById('qrcode-container').innerHTML = '<span class="spinner" style="border-top-color: var(--primary);"></span> a carregar...';
+        document.getElementById('secret-text').innerText = '';
+        document.getElementById('codigo-confirmacao-2fa').value = '';
+        document.getElementById('2fa-step-1').classList.remove('hidden');
+        document.getElementById('2fa-step-2').classList.add('hidden');
+
+        const response = await window.api.fetchProtected('2fa/setup', {
+            method: 'GET'
+        });
+        const data = await response.json();
+
+        if (response.ok && data.qr_uri) {
+            document.getElementById('qrcode-container').innerHTML = '';
+            new QRCode(document.getElementById('qrcode-container'), {
+                text: data.qr_uri,
+                width: 180,
+                height: 180,
+                colorDark: "#0F172A",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            document.getElementById('secret-text').innerText = data.secret;
+        } else {
+            UI.showToast(data.detail || 'O 2FA já está ativo ou ocorreu um erro.', 'error');
+            window.fecharSetup2FA();
+        }
+    } catch (error) {
+        UI.showToast('Erro de comunicação ao configurar o 2FA.', 'error');
+        window.fecharSetup2FA();
+    }
+};
+
+// navegacao do modal
+window.fecharSetup2FA = function() {
+    document.getElementById('modal-setup-2fa').style.display = 'none';
+};
+
+window.avancarPasso2FA = function() {
+    document.getElementById('2fa-step-1').classList.add('hidden');
+    document.getElementById('2fa-step-2').classList.remove('hidden');
+    document.getElementById('codigo-confirmacao-2fa').focus();
+};
+
+window.voltarPasso2FA = function() {
+    document.getElementById('2fa-step-2').classList.add('hidden');
+    document.getElementById('2fa-step-1').classList.remove('hidden');
+};
+
+// 3. Valida e ativa o 2FA
+window.confirmarAtivacao2FA = async function() {
+    const codigo = document.getElementById('codigo-confirmacao-2fa').value.trim();
+    
+    if (!codigo || codigo.length < 6) {
+        UI.showToast('Introduza o código de 6 dígitos completo.', 'warning');
+        return;
+    }
+
+    const btn = document.getElementById('btn-confirmar-2fa');
+    const textoOriginal = btn.innerText;
+    btn.innerText = 'A verificar...';
+    btn.disabled = true;
+
+    try {
+        const response = await window.api.fetchProtected('2fa/confirmar', {
+            method: 'POST',
+            body: JSON.stringify({ codigo: codigo })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            UI.showToast('Autenticação de 2 Fatores ativada com sucesso!', 'success');
+            window.fecharSetup2FA();
+        } else {
+            UI.showToast(data.detail || 'Código incorreto. Tente novamente.', 'error');
+            document.getElementById('codigo-confirmacao-2fa').value = '';
+            document.getElementById('codigo-confirmacao-2fa').focus();
+        }
+    } catch (error) {
+        UI.showToast('Erro ao validar o código.', 'error');
+    } finally {
+        btn.innerText = textoOriginal;
+        btn.disabled = false;
+    }
+};
