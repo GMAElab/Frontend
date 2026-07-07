@@ -150,9 +150,15 @@ window.voltarPasso2FA = function() {
 // 3. Valida e ativa o 2FA
 window.confirmarAtivacao2FA = async function() {
     const codigo = document.getElementById('codigo-confirmacao-2fa').value.trim();
+    const pinResgate = document.getElementById('pin-resgate-2fa').value.trim();
     
     if (!codigo || codigo.length < 6) {
-        UI.showToast('Introduza o código de 6 dígitos completo.', 'warning');
+        UI.showToast('Introduza o código do celular completo.', 'warning');
+        return;
+    }
+    
+    if (!pinResgate || pinResgate.length < 4) {
+        UI.showToast('Crie um PIN de resgate com pelo menos 4 números.', 'warning');
         return;
     }
 
@@ -164,27 +170,32 @@ window.confirmarAtivacao2FA = async function() {
     try {
         const response = await window.api.fetchProtected('2fa/confirmar', {
             method: 'POST',
-            body: JSON.stringify({ codigo: codigo })
+            body: JSON.stringify({ 
+                codigo: codigo,
+                pin_resgate: pinResgate 
+            })
         });
 
         const data = await response.json();
 
         if (response.ok) {
-            UI.showToast('Autenticação de 2 Fatores ativada com sucesso!', 'success');
+            UI.showToast('Autenticação de 2 Fatores e PIN ativados com sucesso!', 'success');
             window.fecharSetup2FA();
+            
             const btnSetup2FA = document.getElementById('btn-setup-2fa');
             if (btnSetup2FA) btnSetup2FA.style.display = 'none';
+            
             let userAtual = JSON.parse(localStorage.getItem('user_data'));
             userAtual.is_2fa_enabled = true;
             localStorage.setItem('user_data', JSON.stringify(userAtual));
 
         } else {
-            UI.showToast(data.detail || 'Código incorreto. Tente novamente.', 'error');
+            UI.showToast(data.detail || 'Código ou PIN incorreto. Tente novamente.', 'error');
             document.getElementById('codigo-confirmacao-2fa').value = '';
             document.getElementById('codigo-confirmacao-2fa').focus();
         }
     } catch (error) {
-        UI.showToast('Erro ao validar o código.', 'error');
+        UI.showToast('Erro ao validar os dados.', 'error');
     } finally {
         btn.innerText = textoOriginal;
         btn.disabled = false;
