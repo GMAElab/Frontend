@@ -182,3 +182,62 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
+
+// ==========================================
+// 3. FLUXO DE RECUPERAÇÃO DE SENHA (PIN + 2FA)
+// ==========================================
+
+window.mostrarEsqueciSenha = function(event) {
+    event.preventDefault();
+    document.getElementById('login-form').classList.add('hidden');
+    document.getElementById('2fa-form').classList.add('hidden');
+    document.getElementById('forgot-password-form').classList.remove('hidden');
+};
+
+window.voltarParaLogin = function() {
+    document.getElementById('forgot-password-form').classList.add('hidden');
+    document.getElementById('2fa-form').classList.add('hidden');
+    document.getElementById('login-form').classList.remove('hidden');
+};
+
+const forgotForm = document.getElementById('forgot-password-form');
+if (forgotForm) {
+    forgotForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const email = document.getElementById('reset-email').value.trim();
+        const codigo2FA = document.getElementById('reset-2fa').value.trim();
+        const pinResgate = document.getElementById('reset-pin').value.trim();
+        const novaSenha = document.getElementById('reset-new-password').value;
+        
+        UI.showFormFeedback('reset-feedback', '', false);
+        UI.setButtonLoading('btn-reset', true);
+        
+        try {
+            const response = await fetch(`${window.API_URL}/esqueci-senha/auto-recuperacao`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: email,
+                    codigo_2fa: codigo2FA,
+                    pin_resgate: pinResgate,
+                    nova_senha: novaSenha
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                UI.showFormFeedback('reset-feedback', 'Sucesso! A redirecionar para o login...', false);
+                document.getElementById('reset-feedback').style.color = 'var(--success)';
+                setTimeout(() => { window.location.reload(); }, 2500);
+            } else {
+                UI.showFormFeedback('reset-feedback', data.detail || 'Erro ao recuperar senha.', true);
+            }
+        } catch (error) {
+            UI.showFormFeedback('reset-feedback', 'Erro de conexão com o servidor.', true);
+        } finally {
+            UI.setButtonLoading('btn-reset', false);
+        }
+    });
+}

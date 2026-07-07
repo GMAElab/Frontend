@@ -32,6 +32,7 @@
                     <span class="btn-text">Entrar</span>
                     <span class="spinner hidden" aria-hidden="true"></span>
                 </button>
+                <p class="text-small text-muted" style="margin-top: 15px; text-align: center;"><a href="#" onclick="mostrarEsqueciSenha(event)">Esqueci a minha senha</a></p>
             </form>
 
             <form id="2fa-form" class="hidden" aria-label="Autenticação em Duas Etapas">
@@ -51,6 +52,35 @@
                     <span class="spinner hidden" aria-hidden="true"></span>
                 </button>
                 <button type="button" class="btn btn-secondary btn-block mt-md" onclick="window.location.reload()" style="margin-top: 10px;">Voltar</button>
+            </form>
+
+            <form id="forgot-password-form" class="hidden" aria-label="Recuperação de Senha">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <span style="font-size: 40px;">🔐</span>
+                    <h3 style="color: var(--text-main); margin-top: 10px;">Recuperar Acesso</h3>
+                    <p class="text-muted text-small">Coloque os seus dados de segurança para criar uma nova senha.</p>
+                </div>
+                
+                <div class="input-group">
+                    <input type="email" id="reset-email" class="form-control" required placeholder="Email">
+                </div>
+                
+                <div class="input-group" style="display: flex; gap: 10px;">
+                    <input type="text" id="reset-2fa" class="form-control" maxlength="6" required placeholder="Cód. Authenticator" style="text-align: center; font-weight: bold; width: 50%;">
+                    <input type="password" id="reset-pin" class="form-control" required placeholder="PIN de Resgate" style="text-align: center; width: 50%;">
+                </div>
+
+                <div class="input-group">
+                    <input type="password" id="reset-new-password" class="form-control" required placeholder="Escreva a Nova Senha">
+                </div>
+                
+                <div id="reset-feedback" class="feedback-msg" aria-live="polite"></div>
+                
+                <button type="submit" id="btn-reset" class="btn btn-primary btn-block">
+                    <span class="btn-text">Validar e Alterar Senha</span>
+                    <span class="spinner hidden" aria-hidden="true"></span>
+                </button>
+                <button type="button" class="btn btn-secondary btn-block mt-md" onclick="voltarParaLogin()" style="margin-top: 10px;">Cancelar</button>
             </form>
 
             <footer class="login-footer mt-md text-center">
