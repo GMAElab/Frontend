@@ -278,13 +278,11 @@
             </div>
 
             <div id="2fa-step-2" class="hidden">
-                <p style="color: var(--text-muted); margin-bottom: 15px; font-size: 14px;">1. Digite o código de 6 dígitos gerado pelo aplicativo:</p>
-                <input type="text" id="codigo-confirmacao-2fa" class="form-control" maxlength="6" placeholder="000 000" style="font-size: 24px; letter-spacing: 6px; text-align: center; margin-bottom: 20px; font-weight: bold;">
+                <p style="color: var(--text-muted); margin-bottom: 15px; font-size: 14px;">Digite o código de 6 dígitos gerado pelo aplicativo Autenticador para finalizar:</p>
                 
-                <p style="color: var(--text-muted); margin-bottom: 15px; font-size: 14px;">2. Crie um <strong>PIN de Resgate (4 a 8 números)</strong>. Você usará isso caso esqueça a sua senha:</p>
-                <input type="password" id="pin-resgate-2fa" class="form-control" maxlength="8" placeholder="Ex: 123456" style="font-size: 20px; text-align: center; margin-bottom: 24px; letter-spacing: 4px;">
+                <input type="text" id="codigo-confirmacao-2fa" class="form-control" maxlength="6" placeholder="000 000" style="font-size: 24px; letter-spacing: 6px; text-align: center; margin-bottom: 24px; font-weight: bold;">
                 
-                <button class="btn btn-primary btn-block" onclick="confirmarAtivacao2FA()" id="btn-confirmar-2fa">Ativar Proteção Total</button>
+                <button class="btn btn-primary btn-block" onclick="confirmarAtivacao2FA()" id="btn-confirmar-2fa">Validar e Gerar Códigos de Backup</button>
                 <button class="btn btn-secondary btn-block" onclick="voltarPasso2FA()" style="margin-top: 10px;">Voltar</button>
             </div>
 
@@ -299,7 +297,7 @@
     <script src="js/auth.js"></script>
     <script src="js/views/equipments.js"></script>
     <script src="js/views/processes.js"></script> 
-    <script src="js/dashboard.js?v=999"></script>
+    <script src="js/dashboard.js?v=1000"></script>
     <script src="js/views/pta.js?v=4"></script>
     <script src="js/views/pops.js?v=286"></script>
     <script src="js/views/admin.js?v=550"></script>

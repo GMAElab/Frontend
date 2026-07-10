@@ -147,39 +147,52 @@ window.voltarPasso2FA = function() {
     document.getElementById('2fa-step-1').classList.remove('hidden');
 };
 
-// 3. Valida e ativa o 2FA
 window.confirmarAtivacao2FA = async function() {
     const codigo = document.getElementById('codigo-confirmacao-2fa').value.trim();
-    const pinResgate = document.getElementById('pin-resgate-2fa').value.trim();
     
     if (!codigo || codigo.length < 6) {
-        UI.showToast('Introduza o código do celular completo.', 'warning');
-        return;
-    }
-    
-    if (!pinResgate || pinResgate.length < 4) {
-        UI.showToast('Crie um PIN de resgate com pelo menos 4 números.', 'warning');
+        UI.showToast('Introduza o código de 6 dígitos completo.', 'warning');
         return;
     }
 
     const btn = document.getElementById('btn-confirmar-2fa');
     const textoOriginal = btn.innerText;
-    btn.innerText = 'A verificar...';
+    btn.innerText = 'A verificar e gerar chaves...';
     btn.disabled = true;
 
     try {
         const response = await window.api.fetchProtected('2fa/confirmar', {
             method: 'POST',
-            body: JSON.stringify({ 
-                codigo: codigo,
-                pin_resgate: pinResgate 
-            })
+            body: JSON.stringify({ codigo: codigo }) 
         });
 
         const data = await response.json();
 
         if (response.ok) {
-            UI.showToast('Autenticação de 2 Fatores e PIN ativados com sucesso!', 'success');
+            UI.showToast('Segurança ativada! Iniciando download das chaves...', 'success');
+            if (data.codigos_backup) {
+                const conteudoArquivo = 
+` SGCI LEQM - CÓDIGOS DE RECUPERAÇÃO 2FA 
+
+Guarde este arquivo em um local seguro, de preferência offline.
+Se você esquecer sua senha ou perder o acesso ao seu celular, 
+utilize um destes códigos para recuperar sua conta.
+
+ATENÇÃO: Cada código listado abaixo só pode ser utilizado UMA ÚNICA VEZ.
+
+${data.codigos_backup.map((c, i) => `${i + 1}. ${c}`).join('\n')}
+
+Gerado em: ${new Date().toLocaleString('pt-BR')}
+`;
+                const blob = new Blob([conteudoArquivo], { type: 'text/plain' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'SGCI_Codigos_Recuperacao.txt';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+
             window.fecharSetup2FA();
             
             const btnSetup2FA = document.getElementById('btn-setup-2fa');
@@ -190,7 +203,7 @@ window.confirmarAtivacao2FA = async function() {
             localStorage.setItem('user_data', JSON.stringify(userAtual));
 
         } else {
-            UI.showToast(data.detail || 'Código ou PIN incorreto. Tente novamente.', 'error');
+            UI.showToast(data.detail || 'Código incorreto. Tente novamente.', 'error');
             document.getElementById('codigo-confirmacao-2fa').value = '';
             document.getElementById('codigo-confirmacao-2fa').focus();
         }
