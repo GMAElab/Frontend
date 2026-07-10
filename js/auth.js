@@ -184,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================
-// 3. FLUXO DE RECUPERAÇÃO DE SENHA (PIN + 2FA)
+// 3. FLUXO DE RECUPERAÇÃO DE SENHA
 // ==========================================
 
 window.mostrarEsqueciSenha = function(event) {
@@ -207,7 +207,6 @@ if (forgotForm) {
         
         const email = document.getElementById('reset-email').value.trim();
         const codigo2FA = document.getElementById('reset-2fa').value.trim();
-        // 1. Pegamos o valor do novo campo
         const codigoBackup = document.getElementById('reset-backup').value.trim();
         const novaSenha = document.getElementById('reset-new-password').value;
         
@@ -221,7 +220,7 @@ if (forgotForm) {
                 body: JSON.stringify({
                     email: email,
                     codigo_2fa: codigo2FA,
-                    codigo_backup: codigoBackup, // 2. Enviamos como 'codigo_backup' para o backend
+                    codigo_backup: codigoBackup, 
                     nova_senha: novaSenha
                 })
             });
@@ -229,7 +228,7 @@ if (forgotForm) {
             const data = await response.json();
             
             if (response.ok) {
-                UI.showFormFeedback('reset-feedback', '✅ Sucesso! A redirecionar para o login...', false);
+                UI.showFormFeedback('reset-feedback', ' Sucesso! Voltaremos para o login...', false);
                 document.getElementById('reset-feedback').style.color = 'var(--success)';
                 setTimeout(() => { window.location.reload(); }, 2500);
             } else {
