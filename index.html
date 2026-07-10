@@ -70,8 +70,9 @@
                 </div>
 
                 <div class="input-group" style="display: flex; gap: 10px; margin-top: 10px;">
-                    <input type="password" id="reset-pin" class="form-control" required placeholder="PIN de Resgate" style="text-align: center; font-weight: bold">
-                    <input type="text" id="reset-2fa" class="form-control" maxlength="6" required placeholder="Cód. Authenticator" style="text-align: center; font-weight: bold">
+                    <input type="text" id="reset-backup" class="form-control" required placeholder="Cód. Backup (ex: LEQM-...)" style="text-align: center; font-weight: bold; font-size: 14px;">
+                    
+                    <input type="text" id="reset-2fa" class="form-control" maxlength="6" required placeholder="Cód. App 2FA" style="text-align: center; font-weight: bold; font-size: 14px;">
                 </div>
                 
                 <div id="reset-feedback" class="feedback-msg" aria-live="polite"></div>
@@ -92,6 +93,6 @@
 
     <script src="js/api.js"></script>
     <script src="js/ui.js"></script>
-    <script src="js/auth.js"></script>
+    <script src="js/auth.js?v=2000"></script>
 </body>
 </html>
