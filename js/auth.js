@@ -228,7 +228,7 @@ if (forgotForm) {
             const data = await response.json();
             
             if (response.ok) {
-                UI.showFormFeedback('reset-feedback', 'Sucesso! A redirecionar para o login...', false);
+                UI.showFormFeedback('reset-feedback', 'Sucesso! Voltaremos para a página de login...', false);
                 document.getElementById('reset-feedback').style.color = 'var(--success)';
                 setTimeout(() => { window.location.reload(); }, 2500);
             } else {
