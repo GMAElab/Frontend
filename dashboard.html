@@ -176,12 +176,9 @@
         </div>
         
         <div class="input-group" style="background: #F9FAFB; padding: 15px; border: 1px dashed #D1D5DB; border-radius: 8px;">
-            <label for="proc-imagem">Imagem processo(Máx 10MB - Opcional)</label>
-            <input type="file" id="proc-imagem" class="form-control" accept="image/png, image/jpeg, image/jpg" onchange="previewImagem(event, 'preview-proc', 'img-preview-proc')">
-            <div id="preview-proc" style="display: none; margin-top: 10px; text-align: center;">
-                <img id="img-preview-proc" src="" style="max-width: 100%; max-height: 200px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);" />
-                <p style="margin: 8px 0 0 0; font-size: 13px; color: #DC2626; cursor: pointer; font-weight: bold;" onclick="removerImagem('proc-imagem', 'preview-proc')">❌ Remover Imagem</p>
-            </div>
+            <label for="proc-imagem">Imagens do Processo (Máx 10MB cada)</label>
+            <input type="file" id="proc-imagem" class="form-control" accept="image/png, image/jpeg, image/jpg" multiple onchange="previewMultiplasImagens(event, 'preview-proc')">
+            <div id="preview-proc" style="display: none; margin-top: 10px; text-align: center; gap: 10px; flex-wrap: wrap; justify-content: center;"></div>
         </div>
 
         <div class="input-group">

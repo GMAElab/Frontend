@@ -150,7 +150,7 @@ window.handleSaveProcess = async function(event) {
     try {
         let linkDaImagem = null;
         if (window.fazerUploadImagem) {
-            linkDaImagem = await window.fazerUploadImagem('proc-imagem');
+            linkDaImagem = await window.fazerUploadMultiplo('proc-imagem');
         }
         const processData = {
             nome_processo: document.getElementById('proc-nome').value,
@@ -384,4 +384,54 @@ window.handleActivityClick = function(index) {
     
     console.log("Abrindo nota da linha do tempo:", atividade); 
     window.abrirModalAtividade(atividade.title, atividade.note, atividade.imagem_url);
+};
+
+window.previewMultiplasImagens = function(event, previewContainerId) {
+    const files = event.target.files;
+    const container = document.getElementById(previewContainerId);
+    container.innerHTML = ''; 
+
+    if (files.length > 0) {
+        container.style.display = 'flex';
+        
+        Array.from(files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgHTML = `
+                <div style="position: relative; display: inline-block;">
+                    <img src="${e.target.result}" style="max-width: 120px; max-height: 120px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); object-fit: cover;" />
+                </div>`;
+                container.insertAdjacentHTML('beforeend', imgHTML);
+            };
+            reader.readAsDataURL(file);
+        });
+
+        const clearBtn = `<p style="width: 100%; margin: 8px 0 0 0; font-size: 13px; color: #DC2626; cursor: pointer; font-weight: bold;" onclick="document.getElementById('${event.target.id}').value = ''; document.getElementById('${previewContainerId}').style.display = 'none';"> Remover Imagens</p>`;
+        container.insertAdjacentHTML('beforeend', clearBtn);
+    } else {
+        container.style.display = 'none';
+    }
+};
+
+window.fazerUploadMultiplo = async function(inputId) {
+    const input = document.getElementById(inputId);
+    if (!input || !input.files || input.files.length === 0) return null;
+
+    let urls = [];
+    const arquivosOriginais = Array.from(input.files);
+
+    for (let i = 0; i < arquivosOriginais.length; i++) {
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(arquivosOriginais[i]);
+        input.files = dataTransfer.files; 
+
+        const url = await window.fazerUploadImagem(inputId);
+        if (url) urls.push(url);
+    }
+
+    const dtRestore = new DataTransfer();
+    arquivosOriginais.forEach(f => dtRestore.items.add(f));
+    input.files = dtRestore.files;
+
+    return urls.length > 0 ? urls.join(',') : null;
 };
