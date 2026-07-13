@@ -106,59 +106,144 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('viewChanged', (e) => {
     const view = e.detail.view;
     const mainContent = document.getElementById('dynamic-content');
+    if (view === 'inicio') {
+        const userString = localStorage.getItem('user_data');
+        const user = userString ? JSON.parse(userString) : { role: 'pesquisador', nome: 'Pesquisador' };
+        const isAdmin = user.role === 'admin' || user.role === 'coordenador';
+
+        let alertasHTML = `
+            <div class="card" style="border-left: 4px solid var(--primary); padding: 20px;">
+                <h4 style="color: var(--text-main); margin-bottom: 5px; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+                    <span>🛡️</span> Segurança da Conta
+                </h4>
+                <p style="color: var(--text-muted); font-size: 13px; margin: 0; line-height: 1.5;">O seu acesso está protegido com a Autenticação de 2 Fatores. Lembre-se de guardar os seus códigos de backup num local seguro offline.</p>
+            </div>
+        `;
+
+        if (isAdmin) {
+            alertasHTML = `
+                <div class="card" style="border-left: 4px solid var(--warning); padding: 20px; cursor: pointer; transition: transform 0.2s;" onclick="UI.switchView('admin')" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <h4 style="color: var(--text-main); margin-bottom: 5px; display: flex; align-items: center; gap: 8px; font-size: 14px;">
+                        <span>⚠️</span> Pendências de Avaliação
+                    </h4>
+                    <p style="color: var(--text-muted); font-size: 13px; margin: 0; line-height: 1.5;">Existem pedidos de cadastro ou relatórios PTA de pesquisadores aguardando a sua revisão no Painel Admin.</p>
+                </div>
+                ${alertasHTML}
+            `;
+        } else {
+            alertasHTML = `
+                <div class="card" style="border-left: 4px solid var(--success); padding: 20px; cursor: pointer; transition: transform 0.2s;" onclick="UI.switchView('pta')" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <h4 style="color: var(--text-main); margin-bottom: 5px; display: flex; align-items: center; gap: 8px; font-size: 14px;">
+                        <span>📅</span> Relatório PTA
+                    </h4>
+                    <p style="color: var(--text-muted); font-size: 13px; margin: 0; line-height: 1.5;">O mês está a decorrer! Não se esqueça de registar o avanço das suas pesquisas no módulo de PTA antes do final do mês.</p>
+                </div>
+                ${alertasHTML}
+            `;
+        }
+
+        mainContent.innerHTML = `
+            <div class="view-header fade-in" style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 32px;">
+                <div>
+                    <h2 style="font-size: 1.8rem; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">Painel de Comando</h2>
+                    <p class="text-muted" style="margin: 0; font-size: 14px;">Resumo das suas atividades e atalhos operacionais do laboratório.</p>
+                </div>
+            </div>
+
+            <!-- Cartões de Resumo -->
+            <div class="fade-in" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 35px; animation-delay: 0.1s;">
+                <div class="card" style="padding: 24px; display: flex; align-items: center; gap: 16px;">
+                    <div style="background: var(--primary-light); color: var(--primary); width: 54px; height: 54px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: inset 0 0 0 1px rgba(37,99,235,0.1);">🔬</div>
+                    <div>
+                        <h4 style="margin: 0 0 4px 0; font-size: 16px; color: var(--text-main);">Equipamentos</h4>
+                        <p style="margin: 0; font-size: 13px; color: var(--text-muted);">Gestão e Manuais (POPs)</p>
+                    </div>
+                </div>
+                <div class="card" style="padding: 24px; display: flex; align-items: center; gap: 16px;">
+                    <div style="background: #ECFDF5; color: #10B981; width: 54px; height: 54px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: inset 0 0 0 1px rgba(16,185,129,0.1);">📋</div>
+                    <div>
+                        <h4 style="margin: 0 0 4px 0; font-size: 16px; color: var(--text-main);">Processos P&D</h4>
+                        <p style="margin: 0; font-size: 13px; color: var(--text-muted);">Mapeamento e Execução</p>
+                    </div>
+                </div>
+                <div class="card" style="padding: 24px; display: flex; align-items: center; gap: 16px;">
+                    <div style="background: #FEF2F2; color: #EF4444; width: 54px; height: 54px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: inset 0 0 0 1px rgba(239,68,68,0.1);">📊</div>
+                    <div>
+                        <h4 style="margin: 0 0 4px 0; font-size: 16px; color: var(--text-main);">Progresso PTA</h4>
+                        <p style="margin: 0; font-size: 13px; color: var(--text-muted);">Acompanhamento Mensal</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="fade-in" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; animation-delay: 0.2s;">
+                
+                <!-- Ações Rápidas -->
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    <h3 style="font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 4px;">Ações Rápidas</h3>
+                    
+                    <button class="btn btn-secondary" style="justify-content: flex-start; padding: 18px 20px; font-size: 15px; border-radius: 12px; background: white; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); color: var(--text-main);" onclick="UI.switchView('pta')">
+                        <span style="font-size: 20px; margin-right: 10px;">📝</span> Enviar Relatório PTA
+                    </button>
+                    
+                    <button class="btn btn-secondary" style="justify-content: flex-start; padding: 18px 20px; font-size: 15px; border-radius: 12px; background: white; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); color: var(--text-main);" onclick="UI.switchView('processes')">
+                        <span style="font-size: 20px; margin-right: 10px;">⚙️</span> Mapear Novo Processo
+                    </button>
+                    
+                    <button class="btn btn-secondary" style="justify-content: flex-start; padding: 18px 20px; font-size: 15px; border-radius: 12px; background: white; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); color: var(--text-main);" onclick="UI.switchView('equipments')">
+                        <span style="font-size: 20px; margin-right: 10px;">🔬</span> Consultar Equipamento
+                    </button>
+                </div>
+
+                <!-- Alertas -->
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    <h3 style="font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 4px;">Avisos do Sistema</h3>
+                    ${alertasHTML}
+                </div>
+            </div>
+        `;
+    }
 
     if (view === 'processes') {
         mainContent.innerHTML = `
-            <div class="view-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div class="view-header fade-in" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                 <div>
-                    <h3 style="margin: 0;">Gestão de Processos</h3>
+                    <h3 style="margin: 0; font-size: 1.5rem;">Gestão de Processos P&D</h3>
                     <p class="text-muted" style="margin-top: 5px;">Mapeamento, acompanhamento e histórico de processos.</p>
                 </div>
                 <button id="btn-novo-processo" class="btn btn-primary">+ Novo Processo</button>
             </div>
 
-            <div class="card table-card">
-                <div class="table-responsive">
-                    <table class="data-table" style="width: 100%; border-collapse: collapse;">
-                        <thead>
-                            <tr style="border-bottom: 2px solid #eee; text-align: left;">
-                                <th style="padding: 12px 8px;">Nome do Processo</th>
-                                <th style="padding: 12px 8px;">Responsável</th>
-                                <th style="padding: 12px 8px;">Status</th>
-                                <th style="padding: 12px 8px;">Data de Registro</th>
-                                <th style="padding: 12px 8px;">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="processesTableBody">
-                            <tr><td colspan="5" style="text-align: center; padding: 20px;">Carregando processos...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
+            <div class="card table-container fade-in">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Nome do Processo</th>
+                            <th>Responsável</th>
+                            <th>Status</th>
+                            <th>Data de Registro</th>
+                            <th style="text-align: right;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="processesTableBody">
+                        <tr><td colspan="5" style="text-align: center; padding: 30px; color: var(--text-muted);">Carregando processos...</td></tr>
+                    </tbody>
+                </table>
             </div>
         `;
 
         const btnNovoProcesso = document.getElementById('btn-novo-processo');
         if (btnNovoProcesso) {
             btnNovoProcesso.addEventListener('click', () => {
-                console.log("Iniciando abertura do modal...");
-                
                 if (typeof window.openProcessModal === 'function') {
                     window.openProcessModal();
                 } else {
                     const modal = document.getElementById('processModal');
-                    if (modal) {
-                        modal.style.display = 'flex';
-                        modal.style.zIndex = '99999';
-                    } else {
-                        alert("Erro: Estrutura do modal não encontrada no HTML principal.");
-                    }
+                    if (modal) modal.style.display = 'flex';
                 }
             });
         }
 
-        if (typeof loadProcessesTable === 'function') {
-            loadProcessesTable();
-        }
+        if (typeof loadProcessesTable === 'function') loadProcessesTable();
     }
 });
 
