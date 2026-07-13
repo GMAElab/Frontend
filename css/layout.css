@@ -1,5 +1,5 @@
 /* ==========================================
-   GRID principal do dashboard
+    Principal do Dashboard
    ========================================== */
 .dashboard-layout {
     display: flex;
@@ -11,28 +11,29 @@
    SIDEBAR
    ========================================== */
 .sidebar {
-    width: 260px;
+    width: 280px;
     background-color: var(--bg-sidebar);
     color: var(--text-inverse);
     display: flex;
     flex-direction: column;
     transition: var(--transition);
     z-index: 100;
-    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.05);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.08);
 }
 
 .sidebar-brand {
-    height: 70px;
+    height: 76px;
     display: flex;
     align-items: center;
     padding: 0 24px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .sidebar-brand h2 {
     color: var(--text-inverse);
     font-size: 1.25rem;
-    letter-spacing: 0.5px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
 }
 
 .sidebar-nav {
@@ -45,17 +46,17 @@
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 .nav-item {
     width: 100%;
     text-align: left;
-    background: none;
+    background: transparent;
     border: none;
     color: #94A3B8;
     padding: 12px 16px;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 500;
     cursor: pointer;
     border-radius: 8px;
@@ -65,23 +66,25 @@
 }
 
 .nav-item:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--bg-sidebar-hover);
     color: var(--text-inverse);
+    transform: translateX(4px);
 }
 
 .nav-item.active {
     background-color: var(--primary);
     color: var(--text-inverse);
-    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+    font-weight: 600;
 }
 
 .sidebar-footer {
     padding: 24px 16px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 /* ==========================================
-   TOPBAR E Conteúdo Principal
+   TOPBAR & MAIN AREA
    ========================================== */
 .main-wrapper {
     flex: 1;
@@ -92,8 +95,10 @@
 }
 
 .topbar {
-    height: 70px;
-    background-color: var(--bg-surface);
+    height: 76px;
+    background-color: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -120,12 +125,12 @@
 .topbar-right {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 20px;
 }
 
 .avatar {
-    width: 40px;
-    height: 40px;
+    width: 42px;
+    height: 42px;
     background: var(--primary-light);
     color: var(--primary);
     border-radius: 50%;
@@ -136,6 +141,13 @@
     font-size: 16px;
     border: 2px solid #FFF;
     box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.avatar:hover {
+    transform: scale(1.05);
+    box-shadow: var(--shadow-md);
 }
 
 .content-area {
@@ -154,66 +166,67 @@
 .view-header h2 {
     font-size: 1.75rem;
     color: var(--text-main);
-    margin-bottom: 6px;
+    margin-bottom: 4px;
 }
 
 /* ==========================================
-   CARDS
+   CARDS & MÓDULOS
    ========================================== */
 .card {
     background: var(--bg-surface);
-    border-radius: 12px;
-    padding: 24px;
-    box-shadow: var(--shadow-md);
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: var(--shadow-sm);
     border: 1px solid var(--border-color);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: var(--transition);
 }
 
-.card-hoverable:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
+.card:hover {
+    box-shadow: var(--shadow-md);
 }
 
 .welcome-card {
-    background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+    background: linear-gradient(135deg, var(--primary) 0%, #3B82F6 100%);
     color: white;
     border: none;
+    box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4);
 }
 
 .welcome-card h3 {
     color: white;
     margin-bottom: 8px;
+    font-size: 1.5rem;
 }
 
 /* ==========================================
-   RESPONSIVIDADE
+   TELA DE LOGIN
    ========================================== */
-@media (max-width: 768px) {
-    .sidebar {
-        position: fixed;
-        left: -260px;
-        height: 100%;
-    }
-    .sidebar.open {
-        left: 0;
-    }
-    .menu-toggle {
-        display: block;
-    }
-    .content-area {
-        padding: 20px;
-    }
+.login-container { 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    min-height: 100vh; 
+    padding: 20px; 
+    background: var(--bg-body);
 }
-
-/* ==========================================
-   Login e Registro
-   ========================================== */
-.login-container { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
-.login-card { width: 100%; max-width: 420px; padding: 40px 32px; }
+.login-card { 
+    width: 100%; 
+    max-width: 440px; 
+    padding: 48px 40px; 
+    box-shadow: var(--shadow-floating);
+    border-radius: 20px;
+}
 .text-center { text-align: center; }
 .mb-md { margin-bottom: 24px; }
 .mt-md { margin-top: 24px; }
-.text-primary { color: var(--primary); font-size: 1.5rem; letter-spacing: -0.02em; }
+.text-primary { color: var(--primary); font-size: 1.75rem; font-weight: 700; letter-spacing: -0.03em; }
 .text-muted { color: var(--text-muted); }
 .text-small { font-size: 13px; }
 .feedback-msg { min-height: 20px; margin-bottom: 16px; font-size: 14px; text-align: center; font-weight: 500; }
+
+@media (max-width: 768px) {
+    .sidebar { position: fixed; left: -280px; height: 100%; }
+    .sidebar.open { left: 0; }
+    .menu-toggle { display: block; }
+    .content-area { padding: 20px; }
+}

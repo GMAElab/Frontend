@@ -358,7 +358,7 @@ window.abrirModalAtividade = function(title, note, imgUrl) {
         
         imgHtml = `
         <div style="margin-top: 24px; border-top: 1px solid #E2E8F0; padding-top: 20px;">
-             <label style="font-size: 12px; font-weight: bold; color: #64748B; text-transform: uppercase; display: block; margin-bottom: 16px; text-align: center;">Galeria de Anexos</label>
+             <label style="font-size: 12px; font-weight: bold; color: #64748B; text-transform: uppercase; display: block; margin-bottom: 16px; text-align: center;">Anexos</label>
              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; align-items: center; justify-items: center; background: #F1F5F9; padding: 16px; border-radius: 8px;">
                  ${imagensRenderizadas}
              </div>
