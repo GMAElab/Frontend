@@ -151,31 +151,6 @@ document.addEventListener('viewChanged', (e) => {
                 </div>
             </div>
 
-            <!-- Cartões de Resumo -->
-            <div class="fade-in" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 35px; animation-delay: 0.1s;">
-                <div class="card" style="padding: 24px; display: flex; align-items: center; gap: 16px;">
-                    <div style="background: var(--primary-light); color: var(--primary); width: 54px; height: 54px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: inset 0 0 0 1px rgba(37,99,235,0.1);">🔬</div>
-                    <div>
-                        <h4 style="margin: 0 0 4px 0; font-size: 16px; color: var(--text-main);">Equipamentos</h4>
-                        <p style="margin: 0; font-size: 13px; color: var(--text-muted);">Gestão e Manuais (POPs)</p>
-                    </div>
-                </div>
-                <div class="card" style="padding: 24px; display: flex; align-items: center; gap: 16px;">
-                    <div style="background: #ECFDF5; color: #10B981; width: 54px; height: 54px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: inset 0 0 0 1px rgba(16,185,129,0.1);">📋</div>
-                    <div>
-                        <h4 style="margin: 0 0 4px 0; font-size: 16px; color: var(--text-main);">Processos P&D</h4>
-                        <p style="margin: 0; font-size: 13px; color: var(--text-muted);">Mapeamento e Execução</p>
-                    </div>
-                </div>
-                <div class="card" style="padding: 24px; display: flex; align-items: center; gap: 16px;">
-                    <div style="background: #FEF2F2; color: #EF4444; width: 54px; height: 54px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: inset 0 0 0 1px rgba(239,68,68,0.1);">📊</div>
-                    <div>
-                        <h4 style="margin: 0 0 4px 0; font-size: 16px; color: var(--text-main);">Progresso PTA</h4>
-                        <p style="margin: 0; font-size: 13px; color: var(--text-muted);">Acompanhamento Mensal</p>
-                    </div>
-                </div>
-            </div>
-
             <div class="fade-in" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; animation-delay: 0.2s;">
                 
                 <!-- Ações Rápidas -->
