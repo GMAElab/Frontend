@@ -168,6 +168,10 @@ document.addEventListener('viewChanged', (e) => {
                     <button class="btn btn-secondary" style="justify-content: flex-start; padding: 18px 20px; font-size: 15px; border-radius: 12px; background: white; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); color: var(--text-main);" onclick="UI.switchView('equipments')">
                         <span style="font-size: 20px; margin-right: 10px;"></span> Equipamentos
                     </button>
+
+                    <button class="btn btn-secondary" style="justify-content: flex-start; padding: 18px 20px; font-size: 15px; border-radius: 12px; background: white; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); color: var(--text-main);" onclick="UI.switchView('articles')">
+                        <span style="font-size: 20px; margin-right: 10px;"></span> Artigos
+                    </button>
                 </div>
 
                 <!-- Alertas -->
