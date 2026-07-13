@@ -229,7 +229,7 @@ window.renderProcessDetailsModal = function(proc, atividades) {
                 Data: ${dataLocal.toLocaleDateString('pt-BR')} às ${dataLocal.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
             </div>
             <strong style="display:block; font-size: 14px; color: #191f29;">${safeTitle}</strong>
-            <p style="margin: 5px 0 0 0; font-size: 13px; color: #424850; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${safeNote}</p>
+            <p style="margin: 5px 0 0 0; font-size: 13px; color: #424850; white-space: pre-wrap; word-break: break-word; line-height: 1.5;">${safeNote}</p>
         </div>
         `;
     }).join('');
@@ -353,29 +353,33 @@ window.abrirModalAtividade = function(title, note, imgUrl) {
     if (imgUrl) {
         const urls = imgUrl.split(',');
         const imagensRenderizadas = urls.map(u => `
-            <img src="${u.trim()}" style="max-width: 100%; max-height: 400px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); cursor: pointer; margin-top: 10px; object-fit: contain;" onclick="window.open(this.src, '_blank')" title="Clique para ampliar">
+            <img src="${u.trim()}" style="width: 100%; height: auto; max-height: 280px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer; object-fit: contain; background: #fff;" onclick="window.open(this.src, '_blank')" title="Clique para ampliar">
         `).join('');
         
         imgHtml = `
-        <div style="text-align: center; margin-top: 20px; border-top: 1px solid #E2E8F0; padding-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 15px;">
-             <label style="font-size: 12px; font-weight: bold; color: #64748B; text-transform: uppercase;">Anexos Múltiplos</label>
-             ${imagensRenderizadas}
+        <div style="margin-top: 24px; border-top: 1px solid #E2E8F0; padding-top: 20px;">
+             <label style="font-size: 12px; font-weight: bold; color: #64748B; text-transform: uppercase; display: block; margin-bottom: 16px; text-align: center;">Galeria de Anexos</label>
+             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; align-items: center; justify-items: center; background: #F1F5F9; padding: 16px; border-radius: 8px;">
+                 ${imagensRenderizadas}
+             </div>
         </div>`;
     }
 
     const html = `
-    <div id="${modalId}" class="modal-overlay" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 10000000; justify-content: center; align-items: center; padding: 20px;">
-        <div class="modal-content fade-in" style="background: white; padding: 32px; border-radius: 12px; width: 100%; max-width: 550px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); position: relative;">
+    <div id="${modalId}" class="modal-overlay" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 10000000; justify-content: center; align-items: center; padding: 20px;">
+        
+        <!-- A MÁGICA ESTÁ AQUI: max-height: 90vh e overflow-y: auto -->
+        <div class="modal-content fade-in" style="background: white; padding: 32px; border-radius: 12px; width: 100%; max-width: 650px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); position: relative;">
             
-            <button onclick="document.getElementById('${modalId}').remove()" style="position: absolute; top: 16px; right: 20px; background: none; border: none; font-size: 28px; cursor: pointer; color: #94A3B8; line-height: 1;">&times;</button>
+            <button onclick="document.getElementById('${modalId}').remove()" style="position: absolute; top: 16px; right: 20px; background: none; border: none; font-size: 28px; cursor: pointer; color: #94A3B8; line-height: 1; transition: color 0.2s;" onmouseover="this.style.color='#0F172A'" onmouseout="this.style.color='#94A3B8'">&times;</button>
             
-            <h3 style="margin: 0 0 16px 0; color: #0F172A; font-size: 18px; padding-right: 20px;">${title}</h3>
+            <h3 style="margin: 0 0 16px 0; color: #0F172A; font-size: 20px; padding-right: 30px; border-bottom: 1px solid #F1F5F9; padding-bottom: 12px;">${title}</h3>
             
-            <div style="background: #F8FAFC; padding: 16px; border-radius: 8px; font-size: 14px; color: #334155; white-space: pre-wrap; line-height: 1.6; border: 1px solid #E2E8F0;">${note}</div>
+            <div style="background: #F8FAFC; padding: 20px; border-radius: 8px; font-size: 14.5px; color: #334155; white-space: pre-wrap; word-break: break-word; line-height: 1.6; border: 1px solid #E2E8F0;">${note}</div>
             
             ${imgHtml}
             
-            <div style="margin-top: 24px; text-align: right;">
+            <div style="margin-top: 24px; text-align: right; border-top: 1px solid #F1F5F9; padding-top: 16px;">
                 <button onclick="document.getElementById('${modalId}').remove()" class="btn btn-secondary">Fechar</button>
             </div>
         </div>
@@ -383,7 +387,6 @@ window.abrirModalAtividade = function(title, note, imgUrl) {
     
     document.body.insertAdjacentHTML('beforeend', html);
 };
-
 window.handleActivityClick = function(index) {
     const atividade = window.currentProcessActivities[index];
     if (!atividade) return;
