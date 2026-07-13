@@ -266,8 +266,10 @@ window.renderProcessDetailsModal = function(proc, atividades) {
 
                     ${proc.imagem_url ? `
                     <h4 style="color:#1E293B; margin-bottom: 8px; font-size: 14px;">Anexos</h4>
-                    <div style="background:#F8FAFC; padding:15px; border-radius:8px; margin-bottom:20px; text-align:center;">
-                        <img src="${window.escapeHTML ? window.escapeHTML(proc.imagem_url) : proc.imagem_url}" style="max-width: 100%; max-height: 400px; border-radius: 6px; cursor: pointer;" onclick="window.open(this.src, '_blank')" title="Clique para ampliar" />
+                    <div style="background:#F8FAFC; padding:15px; border-radius:8px; margin-bottom:20px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
+                        ${proc.imagem_url.split(',').map(url => `
+                            <img src="${window.escapeHTML ? window.escapeHTML(url.trim()) : url.trim()}" style="max-width: 100%; max-height: 250px; border-radius: 6px; cursor: pointer; object-fit: contain; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" onclick="window.open(this.src, '_blank')" title="Clique para ampliar" />
+                        `).join('')}
                     </div>` : ''}
 
                     <h4 style="color:#1E293B; margin-bottom: 8px; font-size: 14px;">Indicadores de Desempenho</h4>
@@ -289,12 +291,9 @@ window.renderProcessDetailsModal = function(proc, atividades) {
                         <textarea id="act-note" placeholder="Descreva os resultados ou o que foi feito..." required class="form-control" rows="3" style="width:100%; padding:10px; margin-bottom:12px; font-size:13px;"></textarea>
                         
                         <div class="input-group" style="margin-bottom: 12px; background: #F8FAFC; padding: 10px; border-radius: 6px; border: 1px dashed #CBD5E1;">
-                            <label style="font-size: 11px; font-weight: bold; color: #475569; display:block; margin-bottom: 5px;">Anexar Imagem (Opcional)</label>
-                            <input type="file" id="act-imagem" class="form-control" accept="image/png, image/jpeg, image/jpg" style="font-size: 12px; padding: 5px;" onchange="if(window.previewImagem) window.previewImagem(event, 'preview-act', 'img-preview-act')">
-                            <div id="preview-act" style="display: none; margin-top: 10px; text-align: center;">
-                                <img id="img-preview-act" src="" style="max-width: 100%; max-height: 120px; border-radius: 4px;" />
-                                <p style="margin: 5px 0 0 0; font-size: 11px; color: #DC2626; cursor: pointer; font-weight: bold;" onclick="if(window.removerImagem) window.removerImagem('act-imagem', 'preview-act')">❌ Remover</p>
-                            </div>
+                            <label style="font-size: 11px; font-weight: bold; color: #475569; display:block; margin-bottom: 5px;">Anexar Imagens (Múltiplas - Opcional)</label>
+                            <input type="file" id="act-imagem" class="form-control" accept="image/png, image/jpeg, image/jpg" multiple style="font-size: 12px; padding: 5px;" onchange="window.previewMultiplasImagens(event, 'preview-act')">
+                            <div id="preview-act" style="display: none; margin-top: 10px; text-align: center; gap: 10px; flex-wrap: wrap; justify-content: center;"></div>
                         </div>
 
                         <button type="submit" class="btn btn-primary" style="width:100%; font-weight:bold; padding: 10px;">Registrar na Linha do Tempo</button>
@@ -317,8 +316,8 @@ window.submitProcessActivity = async function(e, processId) {
 
     try {
         let linkImagem = null;
-        if (window.fazerUploadImagem) {
-            linkImagem = await window.fazerUploadImagem('act-imagem');
+        if (window.fazerUploadMultiplo) {
+            linkImagem = await window.fazerUploadMultiplo('act-imagem');
         }
 
         const payload = {
@@ -350,12 +349,19 @@ window.abrirModalAtividade = function(title, note, imgUrl) {
     const modalAntigo = document.getElementById(modalId);
     if(modalAntigo) modalAntigo.remove();
 
-    const imgHtml = imgUrl 
-        ? `<div style="text-align: center; margin-top: 20px; border-top: 1px solid #E2E8F0; padding-top: 20px;">
-             <label style="font-size: 12px; font-weight: bold; color: #64748B; text-transform: uppercase;">Anexos</label><br>
-             <img src="${imgUrl}" style="max-width: 100%; max-height: 400px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); cursor: pointer; margin-top: 10px;" onclick="window.open(this.src, '_blank')" title="Clique para ampliar">
-           </div>` 
-        : '';
+    let imgHtml = '';
+    if (imgUrl) {
+        const urls = imgUrl.split(',');
+        const imagensRenderizadas = urls.map(u => `
+            <img src="${u.trim()}" style="max-width: 100%; max-height: 400px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); cursor: pointer; margin-top: 10px; object-fit: contain;" onclick="window.open(this.src, '_blank')" title="Clique para ampliar">
+        `).join('');
+        
+        imgHtml = `
+        <div style="text-align: center; margin-top: 20px; border-top: 1px solid #E2E8F0; padding-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 15px;">
+             <label style="font-size: 12px; font-weight: bold; color: #64748B; text-transform: uppercase;">Anexos Múltiplos</label>
+             ${imagensRenderizadas}
+        </div>`;
+    }
 
     const html = `
     <div id="${modalId}" class="modal-overlay" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 10000000; justify-content: center; align-items: center; padding: 20px;">
