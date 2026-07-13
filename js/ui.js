@@ -100,6 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
             sidebar.classList.toggle('open');
         });
     }
+    UI.switchView('inicio');
 });
 
 
