@@ -158,15 +158,15 @@ document.addEventListener('viewChanged', (e) => {
                     <h3 style="font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 4px;">Ações Rápidas</h3>
                     
                     <button class="btn btn-secondary" style="justify-content: flex-start; padding: 18px 20px; font-size: 15px; border-radius: 12px; background: white; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); color: var(--text-main);" onclick="UI.switchView('pta')">
-                        <span style="font-size: 20px; margin-right: 10px;">📝</span> Enviar Relatório PTA
+                        <span style="font-size: 20px; margin-right: 10px;"></span> Enviar PTA
                     </button>
                     
                     <button class="btn btn-secondary" style="justify-content: flex-start; padding: 18px 20px; font-size: 15px; border-radius: 12px; background: white; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); color: var(--text-main);" onclick="UI.switchView('processes')">
-                        <span style="font-size: 20px; margin-right: 10px;">⚙️</span> Mapear Novo Processo
+                        <span style="font-size: 20px; margin-right: 10px;"></span> Novo Processo
                     </button>
                     
                     <button class="btn btn-secondary" style="justify-content: flex-start; padding: 18px 20px; font-size: 15px; border-radius: 12px; background: white; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); color: var(--text-main);" onclick="UI.switchView('equipments')">
-                        <span style="font-size: 20px; margin-right: 10px;">🔬</span> Consultar Equipamento
+                        <span style="font-size: 20px; margin-right: 10px;"></span> Equipamentos
                     </button>
                 </div>
 
