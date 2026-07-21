@@ -112,15 +112,6 @@ document.addEventListener('viewChanged', (e) => {
         const user = userString ? JSON.parse(userString) : { role: 'pesquisador', nome: 'Pesquisador' };
         const isAdmin = user.role === 'admin' || user.role === 'coordenador';
 
-        let alertasHTML = `
-            <div class="card" style="border-left: 4px solid var(--primary); padding: 20px;">
-                <h4 style="color: var(--text-main); margin-bottom: 5px; font-size: 14px; display: flex; align-items: center; gap: 8px;">
-                    <span>🛡️</span> Segurança da Conta
-                </h4>
-                <p style="color: var(--text-muted); font-size: 13px; margin: 0; line-height: 1.5;">O seu acesso está protegido com a Autenticação de 2 Fatores. Lembre-se de guardar os seus códigos de backup num local seguro offline.</p>
-            </div>
-        `;
-
         if (isAdmin) {
             alertasHTML = `
                 <div class="card" style="border-left: 4px solid var(--warning); padding: 20px; cursor: pointer; transition: transform 0.2s;" onclick="UI.switchView('admin')" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
@@ -131,18 +122,7 @@ document.addEventListener('viewChanged', (e) => {
                 </div>
                 ${alertasHTML}
             `;
-        } else {
-            alertasHTML = `
-                <div class="card" style="border-left: 4px solid var(--success); padding: 20px; cursor: pointer; transition: transform 0.2s;" onclick="UI.switchView('pta')" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-                    <h4 style="color: var(--text-main); margin-bottom: 5px; display: flex; align-items: center; gap: 8px; font-size: 14px;">
-                        <span>📅</span> Relatório PTA
-                    </h4>
-                    <p style="color: var(--text-muted); font-size: 13px; margin: 0; line-height: 1.5;">O mês está a decorrer! Não se esqueça de registar o avanço das suas pesquisas no módulo de PTA antes do final do mês.</p>
-                </div>
-                ${alertasHTML}
-            `;
-        }
-
+        } 
         mainContent.innerHTML = `
             <div class="view-header fade-in" style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 32px;">
                 <div>
@@ -172,12 +152,6 @@ document.addEventListener('viewChanged', (e) => {
                     <button class="btn btn-secondary" style="justify-content: flex-start; padding: 18px 20px; font-size: 15px; border-radius: 12px; background: white; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); color: var(--text-main);" onclick="UI.switchView('articles')">
                         <span style="font-size: 20px; margin-right: 10px;"></span> Artigos
                     </button>
-                </div>
-
-                <!-- Alertas -->
-                <div style="display: flex; flex-direction: column; gap: 16px;">
-                    <h3 style="font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 4px;">Avisos do Sistema</h3>
-                    ${alertasHTML}
                 </div>
             </div>
         `;
