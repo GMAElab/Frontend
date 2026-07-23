@@ -111,11 +111,25 @@ function renderPTAPesquisador() {
             </div>
 
         </div>
+        <div id="modal-confirmacao-avanco" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 999999; justify-content: center; align-items: center;">
+            <div class="modal-content fade-in" style="background: var(--bg-surface); padding: 32px; border-radius: 16px; width: 90%; max-width: 450px; box-shadow: var(--shadow-floating); text-align: center; border: 1px solid var(--border-color);">
+                <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+                <h3 style="margin:0 0 12px 0; color: var(--text-main); font-size: 20px;">Atenção ao Avanço!</h3>
+                <p style="color: var(--text-muted); margin-bottom: 24px; font-size: 15px; line-height: 1.6;">
+                    A sua porcentagem de avanço (<span id="span-avanco-repetido" style="font-weight: bold; color: var(--text-main);"></span>%) é exatamente igual à do mês anterior.<br><br>
+                    O projeto não avançou nada neste mês?
+                </p>
+                <div style="display: flex; gap: 12px; justify-content: center;">
+                    <button type="button" class="btn btn-secondary" onclick="fecharModalAvanco()" style="flex: 1;">Voltar e Corrigir</button>
+                    <button type="button" class="btn btn-primary" onclick="confirmarEnvioAvancoRepetido()" style="flex: 1; background: var(--warning); color: #fff; border: none;">Enviar Mesmo Assim</button>
+                </div>
+            </div>
+        </div>
     `;
 
     carregarDropdownTopicos('pta-topico');
     carregarMeusPTAs();
-    document.getElementById('form-pta').addEventListener('submit', enviarRelatorio);
+    document.getElementById('form-pta').addEventListener('submit', prepararEnvioRelatorio);
 }
 
 // ==========================================
@@ -242,36 +256,43 @@ async function carregarMeusPTAs() {
         container.innerHTML = '<p style="color:red;">Erro ao carregar histórico.</p>';
     }
 }
-async function enviarRelatorio(e) {
+window.prepararEnvioRelatorio = function(e) {
     e.preventDefault();
-    
+
     const topicoId = parseInt(document.getElementById('pta-topico').value);
     const avancoNovo = parseInt(document.getElementById('pta-avanco').value);
-
-    // ==========================================
-    // Se o usuario n mexer na % de avanço, aparece alerta
-    // ==========================================
     if (!window.ptaEditandoId && window.meusPtasCache) {
         const ultimoRelato = window.meusPtasCache.find(rel => rel.topico_id === topicoId);
+        
         if (ultimoRelato && ultimoRelato.percentual_avanco === avancoNovo) {
-            const desejaContinuar = confirm(`⚠️ Atenção!\n\nA sua porcentagem de avanço (${avancoNovo}%) é exatamente igual à do mês anterior.\n\nO projeto não avançou nada neste mês?\n\nClique em [OK] para enviar mesmo assim, ou [Cancelar] para ajustar a barra.`);
-            if (!desejaContinuar) {
-                return; 
-            }
+            document.getElementById('span-avanco-repetido').innerText = avancoNovo;
+            document.getElementById('modal-confirmacao-avanco').style.display = 'flex';
+            return;
         }
     }
-    // ==========================================
+    executarEnvioPTA();
+};
 
+window.fecharModalAvanco = function() {
+    document.getElementById('modal-confirmacao-avanco').style.display = 'none';
+};
+
+window.confirmarEnvioAvancoRepetido = function() {
+    fecharModalAvanco();
+    executarEnvioPTA(); 
+};
+
+window.executarEnvioPTA = async function() {
     const payload = {
-        topico_id: topicoId,
+        topico_id: parseInt(document.getElementById('pta-topico').value),
         mes_referencia: parseInt(document.getElementById('pta-mes').value),
         ano_referencia: parseInt(document.getElementById('pta-ano').value),
-        percentual_avanco: avancoNovo,
+        percentual_avanco: parseInt(document.getElementById('pta-avanco').value),
         descricao_atividades: document.getElementById('pta-descricao').value,
         status: "aguardando_aprovacao"
     };
 
-    const btn = e.target.querySelector('button[type="submit"]');
+    const btn = document.querySelector('#form-pta button[type="submit"]');
     const textoOriginal = btn.innerText; 
     btn.innerHTML = '<span class="spinner"></span> Processando...';
     btn.disabled = true;
@@ -298,7 +319,7 @@ async function enviarRelatorio(e) {
             if (window.ptaEditandoId) {
                 window.cancelarEdicaoPTA(); 
             } else {
-                e.target.reset(); 
+                document.getElementById('form-pta').reset(); 
                 document.getElementById('valor-avanco').innerText = '50%';
             }
             carregarMeusPTAs(); 
@@ -312,7 +333,7 @@ async function enviarRelatorio(e) {
         btn.innerText = textoOriginal;
         btn.disabled = false;
     }
-}
+};
 // ==========================================
 // VISÃO DO ADMIN 
 // ==========================================
