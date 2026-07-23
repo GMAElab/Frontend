@@ -176,7 +176,7 @@ async function carregarMeusPTAs() {
         let html = '';
         relatorios.forEach(rel => {
             let statusColor = '#64748b';
-            let statusText = '⏳ Enviado (Aguardando Avaliação)';
+            let statusText = '⏳ Enviado';
             let bgCard = '#F8FAFC';
             let borderCard = '#E2E8F0';
 
@@ -200,6 +200,11 @@ async function carregarMeusPTAs() {
                 }
             }
             
+            let btnEditar = '';
+            if (rel.status !== 'consolidado') {
+                btnEditar = `<button type="button" onclick="event.stopPropagation(); window.carregarParaEdicao(${rel.id})" style="background: transparent; border: 1px solid ${statusColor}; color: ${statusColor}; padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold; margin-top: 10px; transition: all 0.2s;" onmouseover="this.style.background='${statusColor}'; this.style.color='#fff';" onmouseout="this.style.background='transparent'; this.style.color='${statusColor}';"> EDITAR PTA</button>`;
+            }
+
             html += `
                 <div style="border: 1px solid ${borderCard}; border-left: 4px solid ${statusColor}; border-radius: 6px; padding: 15px; background: ${bgCard}; cursor: pointer; transition: transform 0.1s ease-in-out;"
                      title="Dê um duplo clique para abrir os detalhes completos"
@@ -227,6 +232,8 @@ async function carregarMeusPTAs() {
                     <div style="font-size: 13px; color: #475569; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-style: italic;">
                         "${rel.descricao_atividades}"
                     </div>
+                    
+                    ${btnEditar}
                 </div>
             `;
         });
@@ -235,7 +242,6 @@ async function carregarMeusPTAs() {
         container.innerHTML = '<p style="color:red;">Erro ao carregar histórico.</p>';
     }
 }
-
 async function enviarRelatorio(e) {
     e.preventDefault();
     const payload = {
@@ -247,30 +253,45 @@ async function enviarRelatorio(e) {
         status: "aguardando_aprovacao"
     };
 
-    const btn = e.target.querySelector('button');
-    const textoOriginal = btn.innerHTML;
-    btn.innerHTML = '<span class="spinner"></span> Enviando...';
+    const btn = e.target.querySelector('button[type="submit"]');
+    const textoOriginal = btn.innerText; 
+    btn.innerHTML = '<span class="spinner"></span> Processando...';
     btn.disabled = true;
 
     try {
-        const res = await window.api.fetchProtected('/pta/salvar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
+        let res;
+        if (window.ptaEditandoId) {
+            res = await window.api.fetchProtected(`/pta/relatorios/${window.ptaEditandoId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        } else {
+            res = await window.api.fetchProtected('/pta/salvar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        }
 
         if (res.ok) {
-            window.UI.showToast("PTA enviado com sucesso!", "success");
-            e.target.reset(); 
-            document.getElementById('valor-avanco').innerText = '50%';
+            window.UI.showToast(window.ptaEditandoId ? "PTA atualizado com sucesso!" : "PTA enviado com sucesso!", "success");
+            
+            if (window.ptaEditandoId) {
+                window.cancelarEdicaoPTA(); 
+            } else {
+                e.target.reset(); 
+                document.getElementById('valor-avanco').innerText = '50%';
+            }
             carregarMeusPTAs(); 
         } else {
-            window.UI.showToast("Erro ao salvar o PTA", "error");
+            const errData = await res.json();
+            window.UI.showToast(errData.detail || "Erro ao salvar o PTA", "error");
         }
     } catch (err) {
         window.UI.showToast("Falha de conexão.", "error");
     } finally {
-        btn.innerHTML = textoOriginal;
+        btn.innerText = textoOriginal;
         btn.disabled = false;
     }
 }
@@ -666,9 +687,9 @@ async function importarMatrizPTAAction(e) {
     }
 }
 
-// ==========================================
+
+
 // Detalhes do mês enviado na direita quando usuário comum
-// ==========================================
 window.abrirModalDetalhesPTA = function(elemento) {
     const topico = decodeURIComponent(elemento.getAttribute('data-topico'));
     const mes = elemento.getAttribute('data-mes');
@@ -692,3 +713,49 @@ window.addEventListener('click', function(e) {
         fecharModalDetalhesPTA();
     }
 });
+
+window.carregarParaEdicao = function(id) {
+    const rel = window.meusPtasCache.find(r => r.id === id);
+    if(!rel) return;
+    
+    document.getElementById('pta-topico').value = rel.topico_id;
+    document.getElementById('pta-mes').value = rel.mes_referencia;
+    document.getElementById('pta-ano').value = rel.ano_referencia;
+    document.getElementById('pta-avanco').value = rel.percentual_avanco;
+    document.getElementById('valor-avanco').innerText = rel.percentual_avanco + '%';
+    document.getElementById('pta-descricao').value = rel.descricao_atividades;
+    
+    window.ptaEditandoId = rel.id;
+    
+    const btnSubmit = document.querySelector('#form-pta button[type="submit"]');
+    btnSubmit.innerText = "Atualizar Relatório";
+    btnSubmit.style.background = "#007BFF";
+    
+    if(!document.getElementById('btn-cancelar-edicao')) {
+        const btnCancel = document.createElement('button');
+        btnCancel.id = 'btn-cancelar-edicao';
+        btnCancel.type = 'button';
+        btnCancel.innerText = "Cancelar Edição";
+        btnCancel.style = "width: 100%; font-weight: bold; padding: 12px; background: #FEF2F2; color: #EF4444; border: 1px solid #FCA5A5; border-radius: 4px; cursor: pointer; margin-top: 10px;";
+        btnCancel.onclick = window.cancelarEdicaoPTA;
+        btnSubmit.parentNode.insertBefore(btnCancel, btnSubmit.nextSibling);
+    }
+    
+    window.UI.showToast("Relatório carregado para edição.", "info");
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+window.cancelarEdicaoPTA = function() {
+    window.ptaEditandoId = null;
+    document.getElementById('form-pta').reset();
+    document.getElementById('valor-avanco').innerText = '50%';
+    
+    const btnSubmit = document.querySelector('#form-pta button[type="submit"]');
+    btnSubmit.innerText = "Enviar PTA";
+    btnSubmit.style.background = "#111";
+    
+    const btnCancel = document.getElementById('btn-cancelar-edicao');
+    if(btnCancel) btnCancel.remove();
+    
+    window.atualizarAvisoUltimoPTA();
+}
