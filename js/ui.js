@@ -127,7 +127,7 @@ document.addEventListener('viewChanged', (e) => {
             <div class="view-header fade-in" style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 32px;">
                 <div>
                     <h2 style="font-size: 1.8rem; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">Visão Geral</h2>
-                    <p class="text-muted" style="margin: 0; font-size: 14px;">Resumo das suas atividades e atalhos operacionais do laboratório.</p>
+                    <p class="text-muted" style="margin: 0; font-size: 14px;">Atalhos para acessar rapidamente as principais funcionalidades.</p>
                 </div>
             </div>
 
