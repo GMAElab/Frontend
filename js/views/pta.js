@@ -132,9 +132,6 @@ function renderPTAPesquisador() {
     document.getElementById('form-pta').addEventListener('submit', prepararEnvioRelatorio);
 }
 
-// ==========================================
-// VERIFICA O ÚLTIMO ENVIO E EXIBE
-// ==========================================
 window.atualizarAvisoUltimoPTA = function() {
     const topicoElement = document.getElementById('pta-topico');
     if (!topicoElement) return;
@@ -150,14 +147,27 @@ window.atualizarAvisoUltimoPTA = function() {
         return;
     }
     
-    const ultimoRelato = window.meusPtasCache.find(rel => rel.topico_id == parseInt(topicoId));
+    let ultimoRelato = null;
+
+    if (window.ptaEditandoId) {
+        const relEditando = window.meusPtasCache.find(r => r.id === window.ptaEditandoId);
+        if (relEditando) {
+            ultimoRelato = window.meusPtasCache.find(rel => 
+                rel.topico_id == parseInt(topicoId) && 
+                (rel.ano_referencia < relEditando.ano_referencia || 
+                (rel.ano_referencia === relEditando.ano_referencia && rel.mes_referencia < relEditando.mes_referencia))
+            );
+        }
+    } else {
+        ultimoRelato = window.meusPtasCache.find(rel => rel.topico_id == parseInt(topicoId));
+    }
 
     if (ultimoRelato) {
         avisoContainer.style.display = 'block';
         document.getElementById('ultimo-pta-mes').innerText = `${ultimoRelato.mes_referencia}/${ultimoRelato.ano_referencia}`;
         document.getElementById('ultimo-pta-texto').innerText = `"${ultimoRelato.descricao_atividades}"`;
         document.getElementById('ultimo-pta-avanco').innerText = ultimoRelato.percentual_avanco;
-        
+    
         inputAvanco.min = ultimoRelato.percentual_avanco;
         
         if (parseInt(inputAvanco.value) < ultimoRelato.percentual_avanco) {
@@ -170,7 +180,6 @@ window.atualizarAvisoUltimoPTA = function() {
         inputAvanco.min = 0;
     }
 };
-
 async function carregarMeusPTAs() {
     const container = document.getElementById('meus-ptas-lista');
     try {
@@ -755,15 +764,18 @@ window.addEventListener('click', function(e) {
 window.carregarParaEdicao = function(id) {
     const rel = window.meusPtasCache.find(r => r.id === id);
     if(!rel) return;
-    
+
     document.getElementById('pta-topico').value = rel.topico_id;
     document.getElementById('pta-mes').value = rel.mes_referencia;
     document.getElementById('pta-ano').value = rel.ano_referencia;
+    
+    window.ptaEditandoId = rel.id;
+    
+    window.atualizarAvisoUltimoPTA();
+    
     document.getElementById('pta-avanco').value = rel.percentual_avanco;
     document.getElementById('valor-avanco').innerText = rel.percentual_avanco + '%';
     document.getElementById('pta-descricao').value = rel.descricao_atividades;
-    
-    window.ptaEditandoId = rel.id;
     
     const btnSubmit = document.querySelector('#form-pta button[type="submit"]');
     btnSubmit.innerText = "Atualizar Relatório";
