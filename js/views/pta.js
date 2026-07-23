@@ -176,17 +176,17 @@ async function carregarMeusPTAs() {
         let html = '';
         relatorios.forEach(rel => {
             let statusColor = '#64748b';
-            let statusText = '⏳ Enviado';
+            let statusText = 'Enviado';
             let bgCard = '#F8FAFC';
             let borderCard = '#E2E8F0';
 
             if (rel.status === 'consolidado') {
                 statusColor = '#007BFF'; 
-                statusText = '✅ Aprovado';
+                statusText = 'Aprovado';
                 borderCard = '#007BFF';
             } else if (rel.status === 'rascunho') {
                 statusColor = '#d9534f';
-                statusText = '❌ Devolvido (Revisar)';
+                statusText = 'Devolvido (Revisar)';
                 bgCard = '#FEF2F2'; 
                 borderCard = '#FCA5A5';
             }
@@ -244,11 +244,29 @@ async function carregarMeusPTAs() {
 }
 async function enviarRelatorio(e) {
     e.preventDefault();
+    
+    const topicoId = parseInt(document.getElementById('pta-topico').value);
+    const avancoNovo = parseInt(document.getElementById('pta-avanco').value);
+
+    // ==========================================
+    // Se o usuario n mexer na % de avanço, aparece alerta
+    // ==========================================
+    if (!window.ptaEditandoId && window.meusPtasCache) {
+        const ultimoRelato = window.meusPtasCache.find(rel => rel.topico_id === topicoId);
+        if (ultimoRelato && ultimoRelato.percentual_avanco === avancoNovo) {
+            const desejaContinuar = confirm(`⚠️ Atenção!\n\nA sua porcentagem de avanço (${avancoNovo}%) é exatamente igual à do mês anterior.\n\nO projeto não avançou nada neste mês?\n\nClique em [OK] para enviar mesmo assim, ou [Cancelar] para ajustar a barra.`);
+            if (!desejaContinuar) {
+                return; 
+            }
+        }
+    }
+    // ==========================================
+
     const payload = {
-        topico_id: parseInt(document.getElementById('pta-topico').value),
+        topico_id: topicoId,
         mes_referencia: parseInt(document.getElementById('pta-mes').value),
         ano_referencia: parseInt(document.getElementById('pta-ano').value),
-        percentual_avanco: parseInt(document.getElementById('pta-avanco').value),
+        percentual_avanco: avancoNovo,
         descricao_atividades: document.getElementById('pta-descricao').value,
         status: "aguardando_aprovacao"
     };
@@ -295,7 +313,6 @@ async function enviarRelatorio(e) {
         btn.disabled = false;
     }
 }
-
 // ==========================================
 // VISÃO DO ADMIN 
 // ==========================================
