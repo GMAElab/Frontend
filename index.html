@@ -27,12 +27,12 @@
                     <label for="password">Senha:</label>
                     <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="••••••••">
                 </div>
+                <p class="text-small text-muted" style="margin-top: 15px; text-align: center;"><a href="#" onclick="mostrarEsqueciSenha(event)">Esqueci a minha senha</a></p>
                 <div id="login-feedback" class="feedback-msg" aria-live="polite"></div>
                 <button type="submit" id="btn-login" class="btn btn-primary btn-block">
                     <span class="btn-text">Entrar</span>
                     <span class="spinner hidden" aria-hidden="true"></span>
                 </button>
-                <p class="text-small text-muted" style="margin-top: 15px; text-align: center;"><a href="#" onclick="mostrarEsqueciSenha(event)">Esqueci a minha senha</a></p>
             </form>
 
             <form id="2fa-form" class="hidden" aria-label="Autenticação em Duas Etapas">
