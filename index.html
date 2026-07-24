@@ -33,6 +33,9 @@
                     <span class="btn-text">Entrar</span>
                     <span class="spinner hidden" aria-hidden="true"></span>
                 </button>
+                <footer class="login-footer mt-md text-center">
+                <p class="text-small text-muted">Ainda não possui acesso? <a href="registro.html" id="link-register">Solicitar conta</a></p>
+            </footer>
             </form>
 
             <form id="2fa-form" class="hidden" aria-label="Autenticação em Duas Etapas">
@@ -52,6 +55,9 @@
                     <span class="spinner hidden" aria-hidden="true"></span>
                 </button>
                 <button type="button" class="btn btn-secondary btn-block mt-md" onclick="window.location.reload()" style="margin-top: 10px;">Voltar</button>
+                <footer class="login-footer mt-md text-center">
+                <p class="text-small text-muted">Volte para a tela de login? <a href="index.html" id="link-register">Solicitar conta</a></p>
+            </footer>
             </form>
 
             <form id="forgot-password-form" class="hidden" aria-label="Recuperação de Senha">
@@ -82,11 +88,12 @@
                     <span class="spinner hidden" aria-hidden="true"></span>
                 </button>
                 <button type="button" class="btn btn-secondary btn-block mt-md" onclick="voltarParaLogin()" style="margin-top: 10px;">Cancelar</button>
+                
+                <footer class="login-footer mt-md text-center">
+                <p class="text-small text-muted">Volte para a tela de Login <a href="index.html" id="link-login">Entrar</a></p>
+            </footer>
             </form>
 
-            <footer class="login-footer mt-md text-center">
-                <p class="text-small text-muted">Ainda não possui acesso? <a href="registro.html" id="link-register">Solicitar conta</a></p>
-            </footer>
         </section>
 
     </main>
