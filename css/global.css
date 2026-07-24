@@ -1,37 +1,105 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap');
 
+/* ==========================================
+   DESIGN TOKENS
+   Sistema de tokens único: qualquer cor, espaço,
+   raio ou sombra usado na aplicação vem daqui.
+   ========================================== */
 :root {
-    --primary: #2563EB;      
-    --primary-hover: #1D4ED8; 
-    --primary-light: #EFF6FF;
-    --primary-ring: rgba(37, 99, 235, 0.15);
-    --bg-body: #F1F5F9; 
+    /* --- Cor de marca --- */
+    --primary: #2554EB;
+    --primary-hover: #1D46D6;
+    --primary-active: #1638A6;
+    --primary-light: #EAF0FF;
+    --primary-ring: rgba(37, 84, 235, 0.18);
+    --color-primary: var(--primary); /* alias de compatibilidade */
+
+    /* --- Neutros --- */
+    --ink: #0B1220;
+    --bg-body: #F1F4F9;
     --bg-surface: #FFFFFF;
-    --bg-sidebar: #0F172A;
-    --bg-sidebar-hover: #1E293B;
-    --text-main: #0F172A;
-    --text-muted: #64748B;
+    --bg-subtle: #F8FAFC;
+    --bg-sidebar: #0B1220;
+    --bg-sidebar-hover: #182338;
+    --bg-sidebar-active: #1D2B45;
+    --text-main: var(--ink);
+    --text-muted: #5B6577;
+    --text-faint: #94A0B4;
     --text-inverse: #FFFFFF;
-    --success: #10B981;
-    --danger: #EF4444;
-    --warning: #F59E0B;
-    --border-color: #E2E8F0;
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
-    --shadow-floating: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    --border-color: #E3E8F0;
+    --border-light: #EEF1F6;
+    --border-strong: #C7CFDC;
+
+    /* --- Estado / semântica --- */
+    --success: #0FA968;
+    --success-light: #E7F9F1;
+    --success-border: #BCEDDB;
+    --danger: #E23744;
+    --danger-light: #FDEDEE;
+    --danger-border: #F7C6CA;
+    --warning: #D97706;
+    --warning-light: #FEF6E7;
+    --warning-border: #F6DFAF;
+    --info: #2554EB;
+    --info-light: var(--primary-light);
+
+    /* --- Tipografia --- */
+    --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+
+    /* --- Espaçamento (escala 4px) --- */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --space-10: 40px;
+    --space-12: 48px;
+
+    /* --- Raios --- */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 20px;
+    --radius-full: 9999px;
+
+    /* --- Sombras --- */
+    --shadow-xs: 0 1px 2px rgba(11, 18, 32, 0.04);
+    --shadow-sm: 0 1px 3px rgba(11, 18, 32, 0.06), 0 1px 2px rgba(11, 18, 32, 0.04);
+    --shadow-md: 0 4px 10px -2px rgba(11, 18, 32, 0.08), 0 2px 4px -2px rgba(11, 18, 32, 0.04);
+    --shadow-lg: 0 12px 24px -6px rgba(11, 18, 32, 0.12), 0 4px 8px -2px rgba(11, 18, 32, 0.05);
+    --shadow-floating: 0 24px 48px -12px rgba(11, 18, 32, 0.22), 0 8px 16px -4px rgba(11, 18, 32, 0.08);
+
+    /* --- Movimento --- */
+    --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+
+    /* --- Camadas --- */
+    --z-dropdown: 50;
+    --z-sticky: 100;
+    --z-modal: 999999;
+    --z-toast: 1000000;
+
     --focus-ring: 0 0 0 4px var(--primary-ring);
 }
 
 /* ==========================================
    RESET & BASE
    ========================================== */
-* {
+*,
+*::before,
+*::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: var(--font-sans);
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -41,38 +109,123 @@ body {
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
 }
 
-h1, h2, h3, h4, h5, h6 {
-    font-weight: 600;
-    color: var(--text-main);
-    letter-spacing: -0.02em; 
+img, svg {
+    display: block;
+    max-width: 100%;
 }
+
+button {
+    font: inherit;
+    color: inherit;
+}
+
+/* --- Escala tipográfica --- */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+}
+
+h1 { font-size: 2rem; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.125rem; }
+h4 { font-size: 0.9375rem; }
+
+p { color: var(--text-main); }
+
+small { font-size: 0.8125rem; }
 
 a {
     color: var(--primary);
     text-decoration: none;
-    transition: var(--transition);
+    transition: var(--transition-fast);
 }
 
 a:hover {
     color: var(--primary-hover);
 }
 
+/* Dados numéricos / técnicos (IDs, códigos, DOIs, segredos 2FA)
+   usam a mono para reforçar precisão — assinatura visual do sistema. */
+code,
+pre,
+.font-mono,
+.data-value,
+#secret-text,
+#modal-detalhes-avanco {
+    font-family: var(--font-mono);
+    letter-spacing: 0.01em;
+}
+
+/* --- Foco acessível --- */
+:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-radius: var(--radius-sm);
+}
+
+/* --- Scrollbar --- */
 ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
 }
 ::-webkit-scrollbar-track {
     background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-    background: #CBD5E1;
-    border-radius: 10px;
+    background: var(--border-strong);
+    border-radius: var(--radius-full);
+    border: 2px solid transparent;
+    background-clip: padding-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: #94A3B8;
+    background: #94A0B4;
+    background-clip: padding-box;
 }
-.hidden { 
-    display: none !important; 
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ==========================================
+   UTILITÁRIOS
+   ========================================== */
+.hidden { display: none !important; }
+
+.text-center { text-align: center; }
+.text-right  { text-align: right; }
+.text-muted  { color: var(--text-muted); }
+.text-faint  { color: var(--text-faint); }
+.text-danger { color: var(--danger); }
+.text-success{ color: var(--success); }
+.text-primary{ color: var(--primary); font-size: 1.75rem; font-weight: 700; letter-spacing: -0.03em; }
+.text-small  { font-size: 13px; }
+
+.mb-sm { margin-bottom: var(--space-2); }
+.mb-md { margin-bottom: var(--space-6); }
+.mt-sm { margin-top: var(--space-2); }
+.mt-md { margin-top: var(--space-6); }
+.p-lg  { padding: var(--space-8); }
+
+.fade-in {
+    animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-12px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
