@@ -874,7 +874,7 @@ window.carregarPTAUnificadoEquipe = async function() {
         container.innerHTML = html;
     } catch (err) {
         console.error("Erro interno do JS:", err);
-        container.innerHTML = '<div style="color:#EF4444; font-size: 13px; font-weight: bold; background: #FEE2E2; padding: 10px; border-radius: 4px;">Erro ao carregar o PTA. Consulte o Console (F12) para detalhes.</div>';
+        container.innerHTML = '<div style="color:#EF4444; font-size: 13px; font-weight: bold; background: #FEE2E2; padding: 10px; border-radius: 4px;">Erro ao carregar o PTA.</div>';
     }
 };
 
