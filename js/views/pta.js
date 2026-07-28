@@ -815,8 +815,8 @@ window.carregarPTAUnificadoEquipe = async function() {
     try {
         const res = await window.api.fetchProtected(`/pta/equipe/ptaunificado?topico_id=${topicoId}&mes=${mes}&ano=${ano}`);
         if (!res.ok) throw new Error("Falha na API.");
-        
-        const relatorios = await res.json(); 
+        const relatorios = await res.json();
+        const relatoriosExibir = relatorios; 
 
         if (relatoriosExibir.length === 0) {
             container.innerHTML = '<div style="background:#F8FAFC; padding: 15px; border-radius: 6px; text-align:center; color:#64748B; font-size: 13px;">Nenhum colega submeteu informações sobre este tópico neste mês ainda. Você é o primeiro!</div>';
@@ -824,12 +824,14 @@ window.carregarPTAUnificadoEquipe = async function() {
         }
 
         let html = '';
+        
         relatoriosExibir.forEach(rel => {
             let notasHtml = '';
             if (rel.notas && rel.notas.length > 0) {
                 notasHtml = '<div style="margin-top: 15px; border-top: 1px dashed #CBD5E1; padding-top: 10px;">';
                 rel.notas.forEach(nota => {
                     const btnApagar = nota.is_mine ? `<button onclick="window.deletarNotaPTA(${nota.id})" style="background: none; border: none; color: #EF4444; font-size: 11px; cursor: pointer; float: right;">[Apagar]</button>` : '';
+                    
                     const autorSeguro = window.escapeHTML(nota.autor_nome || 'Desconhecido');
                     const textoSeguro = window.escapeHTML(nota.texto || '');
 
@@ -843,8 +845,10 @@ window.carregarPTAUnificadoEquipe = async function() {
                 });
                 notasHtml += '</div>';
             }
+
             let corBorda = rel.is_mine ? "#3B82F6" : "#10B981";
             let tagMeu = rel.is_mine ? '<span style="font-size: 10px; background: #DBEAFE; color: #1E3A8A; padding: 2px 6px; border-radius: 4px; margin-left: 5px; font-weight: bold;">MEU ENVIO</span>' : '';
+            
             const usuarioSeguro = window.escapeHTML(rel.usuario_nome || 'Desconhecido');
             const descricaoSegura = window.escapeHTML(rel.descricao || 'Nenhuma descrição fornecida.');
 
