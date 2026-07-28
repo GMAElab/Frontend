@@ -64,17 +64,17 @@ function renderPTAPesquisador() {
                 <form id="form-pta">
                     <div style="margin-bottom: 15px;">
                         <label style="font-weight: bold; font-size: 14px; color: #111;">Tópico de Pesquisa:</label>
-                        <select id="pta-topico" class="form-control" required style="width: 100%; padding: 8px;" onchange="window.atualizarAvisoUltimoPTA(); window.carregarRadarEquipe()"></select>
+                        <select id="pta-topico" class="form-control" required style="width: 100%; padding: 8px;" onchange="window.atualizarAvisoUltimoPTA(); window.carregarPTAUnificadoEquipe()"></select>
                     </div>
                     
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                         <div>
                             <label style="font-weight: bold; font-size: 14px; color: #111;">Mês:</label>
-                            <input type="number" id="pta-mes" class="form-control" value="${dataAtual.getMonth() + 1}" required style="width: 100%; padding: 8px;" onchange="window.carregarRadarEquipe()">
+                            <input type="number" id="pta-mes" class="form-control" value="${dataAtual.getMonth() + 1}" required style="width: 100%; padding: 8px;" onchange="window.carregarPTAUnificadoEquipe()">
                         </div>
                         <div>
                             <label style="font-weight: bold; font-size: 14px; color: #111;">Ano:</label>
-                            <input type="number" id="pta-ano" class="form-control" value="${dataAtual.getFullYear()}" required style="width: 100%; padding: 8px;" onchange="window.carregarRadarEquipe()">
+                            <input type="number" id="pta-ano" class="form-control" value="${dataAtual.getFullYear()}" required style="width: 100%; padding: 8px;" onchange="window.carregarPTAUnificadoEquipe()">
                         </div>
                     </div>
                     
@@ -481,7 +481,6 @@ window.selecionarMes = function(mes, nomeMes) {
     carregarPendenciasChefia(mes, window.estadoCalendario.ano);
     carregarAprovadosChefia(mes, window.estadoCalendario.ano);
 }
-//
 window.fecharPainelMes = function() {
     document.getElementById('painel-mes-detalhe').style.display = 'none';
     window.estadoCalendario.mesSelecionado = null;
@@ -730,9 +729,6 @@ async function importarMatrizPTAAction(e) {
     }
 }
 
-
-
-// Detalhes do mês enviado na direita quando usuário comum
 window.abrirModalDetalhesPTA = function(elemento) {
     const topico = decodeURIComponent(elemento.getAttribute('data-topico'));
     const mes = elemento.getAttribute('data-mes');
@@ -806,7 +802,7 @@ window.cancelarEdicaoPTA = function() {
     window.atualizarAvisoUltimoPTA();
 }
 
-window.carregarRadarEquipe = async function() {
+window.carregarPTAUnificadoEquipe = async function() {
     const topicoId = document.getElementById('pta-topico').value;
     const mes = document.getElementById('pta-mes').value;
     const ano = document.getElementById('pta-ano').value;
@@ -818,8 +814,9 @@ window.carregarRadarEquipe = async function() {
 
     try {
         const res = await window.api.fetchProtected(`/pta/equipe/ptaunificado?topico_id=${topicoId}&mes=${mes}&ano=${ano}`);
-        const relatorios = await res.json();
-        const relatoriosExibir = relatorios;
+        if (!res.ok) throw new Error("Falha na API.");
+        
+        const relatorios = await res.json(); 
 
         if (relatoriosExibir.length === 0) {
             container.innerHTML = '<div style="background:#F8FAFC; padding: 15px; border-radius: 6px; text-align:center; color:#64748B; font-size: 13px;">Nenhum colega submeteu informações sobre este tópico neste mês ainda. Você é o primeiro!</div>';
@@ -827,30 +824,38 @@ window.carregarRadarEquipe = async function() {
         }
 
         let html = '';
-        relatoriosOutros.forEach(rel => {
+        relatoriosExibir.forEach(rel => {
             let notasHtml = '';
             if (rel.notas && rel.notas.length > 0) {
                 notasHtml = '<div style="margin-top: 15px; border-top: 1px dashed #CBD5E1; padding-top: 10px;">';
                 rel.notas.forEach(nota => {
-                    const btnApagar = nota.is_mine ? `<button onclick="window.deletarNotaPTA(${nota.id})" style="background: none; border: none; color: #EF4444; font-size: 11px; cursor: pointer;">[Apagar]</button>` : '';
+                    const btnApagar = nota.is_mine ? `<button onclick="window.deletarNotaPTA(${nota.id})" style="background: none; border: none; color: #EF4444; font-size: 11px; cursor: pointer; float: right;">[Apagar]</button>` : '';
+                    const autorSeguro = window.escapeHTML(nota.autor_nome || 'Desconhecido');
+                    const textoSeguro = window.escapeHTML(nota.texto || '');
+
                     notasHtml += `
-                        <div style="background: #FFF; padding: 8px; border-radius: 4px; border: 1px solid #E2E8F0; margin-bottom: 5px; font-size: 12px;">
-                            <strong style="color: #0F172A;">${window.escapeHTML(nota.autor_nome)}:</strong> 
-                            <span style="color: #475569;">${window.escapeHTML(nota.texto)}</span>
+                        <div style="background: #FFF; padding: 8px; border-radius: 4px; border: 1px solid #E2E8F0; margin-bottom: 5px; font-size: 12px; clear: both; overflow: hidden;">
+                            <strong style="color: #0F172A;">${autorSeguro}:</strong> 
+                            <span style="color: #475569;">${textoSeguro}</span>
                             ${btnApagar}
                         </div>
                     `;
                 });
                 notasHtml += '</div>';
             }
+            let corBorda = rel.is_mine ? "#3B82F6" : "#10B981";
+            let tagMeu = rel.is_mine ? '<span style="font-size: 10px; background: #DBEAFE; color: #1E3A8A; padding: 2px 6px; border-radius: 4px; margin-left: 5px; font-weight: bold;">MEU ENVIO</span>' : '';
+            const usuarioSeguro = window.escapeHTML(rel.usuario_nome || 'Desconhecido');
+            const descricaoSegura = window.escapeHTML(rel.descricao || 'Nenhuma descrição fornecida.');
+
             html += `
-                <div style="border: 1px solid #E2E8F0; border-left: 4px solid #10B981; border-radius: 6px; padding: 15px; background: #F8FAFC;">
+                <div style="border: 1px solid #E2E8F0; border-left: 4px solid ${corBorda}; border-radius: 6px; padding: 15px; background: #F8FAFC; margin-bottom: 15px;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <strong style="color: #111; font-size: 14px;">${window.escapeHTML(rel.usuario_nome)}</strong>
-                        <span class="badge" style="background: #D1FAE5; color: #065F46; font-size: 11px;">Avanço: ${rel.percentual_avanco}%</span>
+                        <strong style="color: #111; font-size: 14px;">${usuarioSeguro} ${tagMeu}</strong>
+                        <span class="badge" style="background: #D1FAE5; color: #065F46; font-size: 11px;">Avanço: ${rel.percentual_avanco || 0}%</span>
                     </div>
                     <div style="font-size: 13px; color: #334155; line-height: 1.5; font-style: italic; margin-bottom: 10px;">
-                        "${window.escapeHTML(rel.descricao)}"
+                        "${descricaoSegura}"
                     </div>
                     
                     ${notasHtml}
@@ -864,7 +869,8 @@ window.carregarRadarEquipe = async function() {
         });
         container.innerHTML = html;
     } catch (err) {
-        container.innerHTML = '<div style="color:red; font-size: 13px;">Erro ao carregar o PTA.</div>';
+        console.error("Erro interno do JS:", err);
+        container.innerHTML = '<div style="color:#EF4444; font-size: 13px; font-weight: bold; background: #FEE2E2; padding: 10px; border-radius: 4px;">Erro ao carregar o PTA. Consulte o Console (F12) para detalhes.</div>';
     }
 };
 
@@ -882,7 +888,7 @@ window.adicionarNotaPTA = async function(relatorioId) {
         });
         if (res.ok) {
             window.UI.showToast("Nota adicionada!", "success");
-            window.carregarRadarEquipe();
+            window.carregarPTAUnificadoEquipe();
         } else {
             window.UI.showToast("Erro ao adicionar nota.", "error");
         }
@@ -903,7 +909,7 @@ window.deletarNotaPTA = async function(notaId) {
         });
         if (res.ok) {
             window.UI.showToast("Nota apagada.", "success");
-            window.carregarRadarEquipe();
+            window.carregarPTAUnificadoEquipe();
         }
     } catch (err) {
         window.UI.showToast("Falha de conexão.", "error");
