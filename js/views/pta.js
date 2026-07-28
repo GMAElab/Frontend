@@ -505,18 +505,34 @@ window.carregarPendenciasChefia = async function(mes, ano) {
 
         let html = '';
         relatorios.forEach(rel => {
+            let notasHtml = '';
+            if (rel.notas && rel.notas.length > 0) {
+                notasHtml = '<div style="margin-top: 10px; padding: 12px; background: #F1F5F9; border-radius: 4px; font-size: 12px; border-left: 3px solid #CBD5E1;">';
+                notasHtml += '<strong style="color: #475569; display: block; margin-bottom: 8px; text-transform: uppercase; font-size: 11px;">Histórico de Notas da Equipe:</strong>';
+                rel.notas.forEach(nota => {
+                    notasHtml += `<div style="margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px dashed #E2E8F0;">
+                                    <strong style="color: #0F172A;">${window.escapeHTML(nota.autor_nome)}:</strong> 
+                                    <span style="color: #475569;">${window.escapeHTML(nota.texto)}</span>
+                                  </div>`;
+                });
+                notasHtml += '</div>';
+            }
+
             html += `
-                <div class="card mb-sm" id="card-relatorio-${rel.id}" style="border-left: 3px solid #94A3B8; padding: 15px; margin-bottom: 15px;">
+                <div class="card mb-sm" id="card-relatorio-${rel.id}" style="border-left: 3px solid #94A3B8; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                         <span style="font-size: 12px; color: #64748B; font-weight: 600;">Usuário ID: ${rel.usuario_id}</span>
-                        <span class="badge" style="background: #F1F5F9; color: #475569;">Avanco: ${rel.percentual_avanco}%</span>
+                        <span class="badge" style="background: #F1F5F9; color: #475569;">Avanço: ${rel.percentual_avanco || 0}%</span>
                     </div>
-                    <div style="background: #F8FAFC; padding: 12px; border-radius: 4px; margin-bottom: 12px; font-size: 13px; color: #334155; line-height: 1.5;">
-                        ${rel.descricao_atividades}
+                    <div style="background: #F8FAFC; padding: 12px; border-radius: 4px; margin-bottom: 12px; font-size: 13px; color: #334155; line-height: 1.5; border: 1px solid #E2E8F0;">
+                        ${window.escapeHTML(rel.descricao_atividades || 'Sem descrição')}
                     </div>
-                    <div style="display: flex; justify-content: flex-end; gap: 8px;">
-                        <button class="btn btn-sm" onclick="avaliarRelato(${rel.id}, false)" style="background: white; border: 1px solid #d9534f; color: #d9534f; cursor: pointer; padding: 5px 10px; border-radius: 4px;">Devolver</button>
-                        <button class="btn btn-sm" onclick="avaliarRelato(${rel.id}, true)" style="background: #007BFF; color: white; border: none; cursor: pointer; padding: 5px 10px; border-radius: 4px;">Aprovar</button>
+                    
+                    ${notasHtml} <!-- Aqui entra a visão privilegiada do Admin -->
+
+                    <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 15px;">
+                        <button class="btn btn-sm" onclick="window.abrirModalDevolucao(${rel.id})" style="background: white; border: 1px solid #d9534f; color: #d9534f; cursor: pointer; padding: 5px 10px; border-radius: 4px; font-weight: bold;">Devolver</button>
+                        <button class="btn btn-sm" onclick="avaliarRelato(${rel.id}, true)" style="background: #007BFF; color: white; border: none; cursor: pointer; padding: 5px 10px; border-radius: 4px; font-weight: bold;">Aprovar Relatório</button>
                     </div>
                 </div>
             `;
@@ -917,5 +933,63 @@ window.deletarNotaPTA = async function(notaId) {
         }
     } catch (err) {
         window.UI.showToast("Falha de conexão.", "error");
+    }
+};
+
+// ==========================================
+// MODAL DE DEVOLUÇÃO (ADM)
+// ==========================================
+window.abrirModalDevolucao = function(relatorioId) {
+    window.relatorioParaDevolver = relatorioId;
+    
+    let modal = document.getElementById('modal-devolucao');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'modal-devolucao';
+        modal.style = "display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(2px);";
+        modal.innerHTML = `
+            <div style="background: white; padding: 25px; border-radius: 8px; width: 90%; max-width: 450px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
+                <h3 style="margin-top: 0; color: #111; font-size: 18px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">Motivo da Devolução</h3>
+                <p style="font-size: 13px; color: #64748B; margin-bottom: 15px;">Este feedback será anexado ao relatório do pesquisador como uma orientação para correção.</p>
+                
+                <textarea id="texto-motivo-devolucao" class="form-control" rows="4" style="width: 100%; padding: 12px; border: 1px solid #CBD5E1; border-radius: 4px; margin-bottom: 20px; font-size: 13px; resize: vertical;" placeholder="Ex: Faltou detalhar a curva de temperatura no experimento 2..."></textarea>
+                
+                <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button onclick="window.fecharModalDevolucao()" class="btn" style="background: #F1F5F9; color: #475569; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;">Cancelar</button>
+                    <button onclick="window.confirmarDevolucao()" class="btn" style="background: #d9534f; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;">Confirmar Devolução</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    document.getElementById('texto-motivo-devolucao').value = '';
+    modal.style.display = 'flex';
+};
+
+window.fecharModalDevolucao = function() {
+    const modal = document.getElementById('modal-devolucao');
+    if (modal) modal.style.display = 'none';
+    window.relatorioParaDevolver = null;
+};
+
+window.confirmarDevolucao = async function() {
+    const relatorioId = window.relatorioParaDevolver;
+    const motivo = document.getElementById('texto-motivo-devolucao').value.trim();
+    
+    if (!motivo) {
+        window.UI.showToast("Por favor, escreva um motivo para a devolução.", "error");
+        return;
+    }
+    try {
+        await window.api.fetchProtected(`/pta/relatorios/${relatorioId}/notas`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ texto: `[AVALIAÇÃO DA CHEFIA]: ${motivo}` }) 
+        });
+        window.fecharModalDevolucao();
+        window.avaliarRelato(relatorioId, false);
+        
+    } catch (err) {
+        window.UI.showToast("Falha ao processar o feedback de devolução.", "error");
     }
 };
