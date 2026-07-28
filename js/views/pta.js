@@ -105,7 +105,7 @@ function renderPTAPesquisador() {
             </div>
 
             <div class="card-responsivo" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); align-self: start;">
-                <h3 style="margin-bottom: 10px; color: #111; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">Radar da Equipe</h3>
+                <h3 style="margin-bottom: 10px; color: #111; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">PTA já enviado</h3>
                 <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">Veja o que os outros membros já enviaram sobre este tópico no mês selecionado.</p>
                 <div id="ptaunificado-equipe-lista" style="display: flex; flex-direction: column; gap: 15px; max-height: 600px; overflow-y: auto; padding-right: 5px;">
                     <p style="color: #94A3B8; font-size: 13px; text-align: center;">Selecione um tópico para verificar o PTA.</p>
@@ -481,7 +481,7 @@ window.selecionarMes = function(mes, nomeMes) {
     carregarPendenciasChefia(mes, window.estadoCalendario.ano);
     carregarAprovadosChefia(mes, window.estadoCalendario.ano);
 }
-
+//
 window.fecharPainelMes = function() {
     document.getElementById('painel-mes-detalhe').style.display = 'none';
     window.estadoCalendario.mesSelecionado = null;
@@ -819,9 +819,9 @@ window.carregarRadarEquipe = async function() {
     try {
         const res = await window.api.fetchProtected(`/pta/equipe/ptaunificado?topico_id=${topicoId}&mes=${mes}&ano=${ano}`);
         const relatorios = await res.json();
-        const relatoriosOutros = relatorios.filter(r => !r.is_mine);
+        const relatoriosExibir = relatorios;
 
-        if (relatoriosOutros.length === 0) {
+        if (relatoriosExibir.length === 0) {
             container.innerHTML = '<div style="background:#F8FAFC; padding: 15px; border-radius: 6px; text-align:center; color:#64748B; font-size: 13px;">Nenhum colega submeteu informações sobre este tópico neste mês ainda. Você é o primeiro!</div>';
             return;
         }
@@ -856,7 +856,7 @@ window.carregarRadarEquipe = async function() {
                     ${notasHtml}
 
                     <div style="display: flex; gap: 8px; margin-top: 10px;">
-                        <input type="text" id="input-nota-${rel.id}" placeholder="Adicionar um adendo ou nota..." style="flex: 1; padding: 6px 10px; border: 1px solid #CBD5E1; border-radius: 4px; font-size: 12px;">
+                        <input type="text" id="input-nota-${rel.id}" placeholder="Adicione algo..." style="flex: 1; padding: 6px 10px; border: 1px solid #CBD5E1; border-radius: 4px; font-size: 12px;">
                         <button onclick="window.adicionarNotaPTA(${rel.id})" style="background: #111; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: bold;">+ Nota</button>
                     </div>
                 </div>
