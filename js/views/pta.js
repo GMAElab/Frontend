@@ -97,10 +97,7 @@ function renderPTAPesquisador() {
                     
                     <div style="margin-bottom: 20px;">
                         <label style="font-weight: bold; font-size: 14px; color: #111;">Descrição das Atividades no Mês</label>
-                        <div style="background: white; border-radius: 4px;">
-                        <div id="pta-descricao-editor" style="height: 250px; font-size: 14px;"></div>
-                        </div>
-                        <input type="hidden" id="pta-descricao-oculto" required>
+                        <textarea id="pta-descricao" class="form-control" rows="6" placeholder="Descreva os experimentos, resultados e atividades..." required style="width: 100%; padding: 8px;"></textarea>
                     </div>
                     
                     <button type="submit" class="btn" style="width: 100%; font-weight: bold; padding: 12px; background: #111; color: white; border: none; border-radius: 4px; cursor: pointer;">Enviar PTA</button>
@@ -128,22 +125,6 @@ function renderPTAPesquisador() {
 
     carregarDropdownTopicos('pta-topico');
     carregarMeusPTAs();
-    window.quillEditor = new Quill('#pta-descricao-editor', {
-        theme: 'snow',
-        placeholder: 'Descreva os experimentos, resultados e atividades...',
-        modules: {
-            toolbar: [
-                ['bold', 'italic', 'underline'],
-                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                [{ 'color': [] }, { 'background': [] }],
-                ['clean']
-            ]
-        }
-    });
-    window.quillEditor.on('text-change', function() {
-        document.getElementById('pta-descricao-oculto').value = window.quillEditor.root.innerHTML === '<p><br></p>' ? '' : window.quillEditor.root.innerHTML;
-    });
-
     document.getElementById('form-pta').addEventListener('submit', window.prepararEnvioRelatorio);
 }
 
@@ -312,7 +293,7 @@ window.executarEnvioPTA = async function() {
         mes_referencia: parseInt(document.getElementById('pta-mes').value),
         ano_referencia: parseInt(document.getElementById('pta-ano').value),
         percentual_avanco: parseInt(document.getElementById('pta-avanco').value),
-        descricao_atividades: window.quillEditor.root.innerHTML,
+        descricao_atividades: document.getElementById('pta-descricao').value,
         status: "aguardando_aprovacao"
     };
 

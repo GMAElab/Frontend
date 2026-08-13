@@ -214,38 +214,3 @@ Gerado em: ${new Date().toLocaleString('pt-BR')}
         btn.disabled = false;
     }
 };
-
-// ==========================================
-// AVISO DE PTA DEVOLVIDO 
-// ==========================================
-window.verificarAvisosPTA = async function() {
-    try {
-        const res = await window.api.fetchProtected('/pta/meus-relatorios');
-        if (!res.ok) return;
-        
-        const relatorios = await res.json();
-        const devolvidos = relatorios.filter(r => r.status === 'rascunho');
-
-        if (devolvidos.length > 0) {
-            const mainContent = document.getElementById('dynamic-content');
-            const banner = document.createElement('div');
-            banner.id = 'alerta-pta-devolvido';
-            banner.style = "background: #FEF2F2; border-left: 4px solid #EF4444; border-radius: 8px; padding: 20px; margin-bottom: 25px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); display: flex; justify-content: space-between; align-items: center; animation: fadeInDown 0.4s ease-out;";
-            
-            let htmlAviso = `
-                <div>
-                    <h3 style="color: #991B1B; margin: 0 0 8px 0; font-size: 16px;">Aviso: Devolução do PTA enviado</h3>
-                    <p style="color: #7F1D1D; margin: 0; font-size: 14px;">Você possui <strong>${devolvidos.length}</strong> PTA devolvido para revisão. Clique no botão ao lado para ler o comentário e corrigir.</p>
-                </div>
-                <button onclick="document.querySelector('[data-view=\\'pta\\']').click(); document.getElementById('alerta-pta-devolvido').remove();" class="btn btn-danger" style="white-space: nowrap; font-weight: bold;">Corrigir Agora</button>
-            `;
-            
-            banner.innerHTML = htmlAviso;
-            if (mainContent) {
-                mainContent.insertBefore(banner, mainContent.firstChild);
-            }
-        }
-    } catch (err) {
-        console.error("Erro ao verificar avisos do PTA:", err);
-    }
-};
