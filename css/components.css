@@ -393,3 +393,20 @@ tbody tr:hover {
     box-shadow: var(--shadow-md);
     border-color: var(--border-strong);
 }
+
+.ql-toolbar.ql-snow {
+    border: 1px solid var(--border-strong);
+    border-top-left-radius: var(--radius-md);
+    border-top-right-radius: var(--radius-md);
+    background-color: var(--bg-subtle);
+}
+.ql-container.ql-snow {
+    border: 1px solid var(--border-strong);
+    border-bottom-left-radius: var(--radius-md);
+    border-bottom-right-radius: var(--radius-md);
+    font-family: var(--font-sans);
+    font-size: 14px;
+}
+.ql-editor {
+    min-height: 250px;
+}
