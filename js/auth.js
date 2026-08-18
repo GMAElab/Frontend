@@ -1,4 +1,4 @@
-let tempUserIdPara2FA = null; 
+let preAuthTokenPara2FA = null;
 
 function verificarBloqueioDeCookies() {
     try {
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (response.ok) {
                     if (data.requires_2fa) {
-                        tempUserIdPara2FA = data.temp_user_id; 
+                        preAuthTokenPara2FA = data.pre_auth_token;
                         document.getElementById('login-form').classList.add('hidden');
                         document.getElementById('2fa-form').classList.remove('hidden');
                         document.getElementById('codigo-2fa').focus();
@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
                     body: JSON.stringify({
-                        temp_user_id: tempUserIdPara2FA,
+                        pre_auth_token: preAuthTokenPara2FA,
                         codigo: codigo
                     })
                 });
