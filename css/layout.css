@@ -246,10 +246,19 @@
 }
 
 .welcome-card {
-    background: linear-gradient(135deg, var(--primary) 0%, #4C7BF5 100%);
+    background: var(--ink);
     color: white;
     border: none;
-    box-shadow: 0 12px 28px -8px rgba(37, 84, 235, 0.45);
+    position: relative;
+    overflow: hidden;
+}
+
+.welcome-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 100% 0%, rgba(37, 84, 235, 0.35), transparent 60%);
+    pointer-events: none;
 }
 
 .welcome-card h3 {

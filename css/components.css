@@ -274,6 +274,110 @@ tbody tr:hover {
     color: var(--text-muted);
 }
 
+.empty-state-icon {
+    width: 52px;
+    height: 52px;
+    margin: 0 auto var(--space-4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--bg-subtle);
+    color: var(--text-faint);
+}
+
+.empty-state h4 {
+    color: var(--text-main);
+    font-size: 15px;
+    margin-bottom: 4px;
+}
+
+.empty-state p {
+    font-size: 13px;
+    max-width: 340px;
+    margin: 0 auto;
+}
+
+/* ==========================================
+   ÍCONES INLINE (substitui emoji na interface)
+   ========================================== */
+.icon {
+    flex-shrink: 0;
+    vertical-align: -3px;
+}
+
+.icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-strong);
+    background: var(--bg-surface);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.icon-btn:hover { background: var(--bg-subtle); color: var(--text-main); border-color: #94A3B8; }
+.icon-btn.danger { color: var(--danger); border-color: var(--danger-border); }
+.icon-btn.danger:hover { background: var(--danger-light); border-color: var(--danger); }
+
+.action-group {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+/* ==========================================
+   CARTÃO DE ATALHO (tela inicial)
+   ========================================== */
+.shortcut-card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    width: 100%;
+    text-align: left;
+    padding: var(--space-4) var(--space-5);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    transition: var(--transition);
+    color: var(--text-main);
+    font-size: 14.5px;
+    font-weight: 600;
+}
+
+.shortcut-card:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--border-strong);
+    transform: translateY(-2px);
+}
+
+.shortcut-card .icon-wrap {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: var(--radius-md);
+    background: var(--primary-light);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.shortcut-card small {
+    display: block;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
 /* ==========================================
    ABAS (Artigos: Buscar / Meus Salvos)
    ========================================== */
