@@ -29,7 +29,7 @@ window.api = {
                 <p style="color:#4B5563; font-size:14px; margin-bottom:24px; line-height:1.6; text-align:justify;">
                     Detectamos que você está em uma <strong>Guia Anônima</strong> ou usando um navegador que bloqueia conexões de segurança (como Safari ou Brave). 
                     <br><br>
-                    Para entrar no <strong>LEQM Hub</strong>, clique no ícone de <strong>olho riscado ou escudo</strong> na barra de endereços, selecione <strong>"Permitir cookies de terceiros"</strong> e atualize a página.
+                    Para entrar no <strong>SGCI - GMAE</strong>, clique no ícone de <strong>olho riscado ou escudo</strong> na barra de endereços, selecione <strong>"Permitir cookies de terceiros"</strong> e atualize a página.
                 </p>
                 <button onclick="window.location.reload()" style="width:100%; padding:12px; background:#007BFF; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold; font-size:15px;">
                     Já ativei, atualizar página

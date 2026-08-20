@@ -27,7 +27,7 @@ function exibirAvisoCookies() {
             <p style="color: #78350F; font-size: 13px; margin: 0; line-height: 1.5;">
                 Você está em uma <strong>Guia Anônima</strong> ou usando um navegador que bloqueia conexões externas (como Safari ou Brave). 
                 <br><br>
-                Para conseguir entrar no LEQM Hub, clique no ícone de <strong>olho riscado ou escudo</strong> na barra de endereços do seu navegador e selecione <strong>"Permitir cookies de terceiros"</strong>. Em seguida, atualize a página.
+                Para conseguir entrar no SGCI - GMAE, clique no ícone de <strong>olho riscado ou escudo</strong> na barra de endereços do seu navegador e selecione <strong>"Permitir cookies de terceiros"</strong>. Em seguida, atualize a página.
             </p>
         </div>
     `;
@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     UI.showFormFeedback('login-feedback', errorMessage, true);
                 }
             } catch (error) {
-                UI.showFormFeedback('login-feedback', 'Connection error. Please check your internet connection.', true);
+                UI.showFormFeedback('login-feedback', 'Erro de conexão. Verifique sua internet e tente novamente.', true);
             } finally {
                 UI.setButtonLoading('btn-login', false);
             }
@@ -230,7 +230,7 @@ if (forgotForm) {
             const data = await response.json();
             
             if (response.ok) {
-                UI.showFormFeedback('reset-feedback', ' Sucesso! Voltaremos para o login...', false);
+                UI.showFormFeedback('reset-feedback', 'Sucesso! Voltaremos para o login...', false);
                 document.getElementById('reset-feedback').style.color = 'var(--success)';
                 setTimeout(() => { window.location.reload(); }, 2500);
             } else {
