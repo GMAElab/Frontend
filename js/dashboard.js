@@ -18,16 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    initializeUserProfile();
-
-    const menuToggle = document.getElementById('menu-toggle');
-    const sidebar = document.querySelector('.sidebar');
-    if (menuToggle && sidebar) {        
-        menuToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('open');
-        });
-    }
-
     const btnLogout = document.getElementById('btn-logout');
     if (btnLogout) {
         btnLogout.addEventListener('click', () => {
@@ -38,58 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
-    configurarMenuLateral();
 });
-
-function initializeUserProfile() {
-    const userGreeting = document.getElementById('user-greeting');
-    const userAvatar = document.querySelector('.avatar');
-
-    const savedName = localStorage.getItem('user_name') || 'Pesquisador';
-
-    if (userGreeting) {
-        userGreeting.textContent = `Olá, ${savedName}`;
-    }
-
-    if (userAvatar && savedName !== 'Pesquisador') {
-        userAvatar.textContent = savedName.charAt(0).toUpperCase();
-    }
-}
-
-window.toggleMenu = function() {
-    const sidebar = document.getElementById('app-sidebar');
-    if (sidebar) sidebar.classList.toggle('collapsed');
-};
-
-function configurarMenuLateral() {
-    const navLinks = document.querySelectorAll('.nav-link');
-    const sidebar = document.getElementById('app-sidebar');
-    
-    if (!sidebar) return;
-
-    navLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            if (window.innerWidth <= 768) {
-                sidebar.classList.add('collapsed');
-            }
-        });
-    });
-
-    if (window.innerWidth <= 768) {
-        sidebar.classList.add('collapsed');
-    }
-}
-
-window.escapeHTML = function(str) {
-    if (str === null || str === undefined) return '';
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-};
 
 // ==========================================
 // CONFIGURAÇÃO DO 2FA 
@@ -99,7 +38,7 @@ window.escapeHTML = function(str) {
 window.abrirSetup2FA = async function() {
     try {
         document.getElementById('modal-setup-2fa').style.display = 'flex';
-        document.getElementById('qrcode-container').innerHTML = '<span class="spinner" style="border-top-color: var(--primary);"></span> a carregar...';
+        document.getElementById('qrcode-container').innerHTML = '<span class="spinner" style="border-top-color: var(--primary);"></span> carregando...';
         document.getElementById('secret-text').innerText = '';
         document.getElementById('codigo-confirmacao-2fa').value = '';
         document.getElementById('2fa-step-1').classList.remove('hidden');

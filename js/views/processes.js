@@ -353,7 +353,7 @@ window.abrirModalAtividade = function(title, note, imgUrl) {
     if (imgUrl) {
         const urls = imgUrl.split(',');
         const imagensRenderizadas = urls.map(u => `
-            <img src="${u.trim()}" style="width: 100%; height: auto; max-height: 280px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer; object-fit: contain; background: #fff;" onclick="window.open(this.src, '_blank')" title="Clique para ampliar">
+            <img src="${window.escapeHTML(u.trim())}" style="width: 100%; height: auto; max-height: 280px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer; object-fit: contain; background: #fff;" onclick="window.open(this.src, '_blank')" title="Clique para ampliar">
         `).join('');
         
         imgHtml = `
@@ -373,9 +373,9 @@ window.abrirModalAtividade = function(title, note, imgUrl) {
             
             <button onclick="document.getElementById('${modalId}').remove()" style="position: absolute; top: 16px; right: 20px; background: none; border: none; font-size: 28px; cursor: pointer; color: #94A3B8; line-height: 1; transition: color 0.2s;" onmouseover="this.style.color='#0F172A'" onmouseout="this.style.color='#94A3B8'">&times;</button>
             
-            <h3 style="margin: 0 0 16px 0; color: #0F172A; font-size: 20px; padding-right: 30px; border-bottom: 1px solid #F1F5F9; padding-bottom: 12px;">${title}</h3>
-            
-            <div style="background: #F8FAFC; padding: 20px; border-radius: 8px; font-size: 14.5px; color: #334155; white-space: pre-wrap; word-break: break-word; line-height: 1.6; border: 1px solid #E2E8F0;">${note}</div>
+            <h3 style="margin: 0 0 16px 0; color: #0F172A; font-size: 20px; padding-right: 30px; border-bottom: 1px solid #F1F5F9; padding-bottom: 12px;">${window.escapeHTML(title)}</h3>
+
+            <div style="background: #F8FAFC; padding: 20px; border-radius: 8px; font-size: 14.5px; color: #334155; white-space: pre-wrap; word-break: break-word; line-height: 1.6; border: 1px solid #E2E8F0;">${window.escapeHTML(note)}</div>
             
             ${imgHtml}
             

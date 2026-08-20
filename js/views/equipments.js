@@ -34,10 +34,11 @@ async function loadEquipmentsTable() {
     const container = document.getElementById('eq-container');
     try {
         const res = await api.fetchProtected('equipments');
+        if (!res.ok) throw new Error('Falha ao carregar equipamentos.');
         const data = await res.json();
 
         if (data.length === 0) {
-            container.innerHTML = `<p class="text-center text-muted" style="padding:20px;">Nenhum equipamento registrado no sistema.</p>`;
+            container.innerHTML = window.UI.emptyState({ title: 'Nenhum equipamento registrado', description: 'Cadastre o primeiro equipamento do laboratório.' });
             return;
         }
 
@@ -66,7 +67,7 @@ async function loadEquipmentsTable() {
         `;
     } catch (err) {
         console.error("Erro ao carregar equipamentos:", err);
-        container.innerHTML = `<p class="text-danger text-center">Falha ao conectar com o servidor de ativos.</p>`;
+        container.innerHTML = window.UI.errorState('Falha ao conectar com o servidor de ativos.');
     }
 }
 

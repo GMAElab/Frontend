@@ -1,3 +1,13 @@
+window.escapeHTML = function(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+};
+
 // ==========================================
 // ÍCONES (substitui emoji por SVG de linha consistente)
 // ==========================================
@@ -297,15 +307,6 @@ document.addEventListener('viewChanged', (e) => {
         if (typeof loadProcessesTable === 'function') loadProcessesTable();
     }
 });
-
-const btnMenuLegacy = document.getElementById('btn-menu-toggle');
-const sidebarLegacy = document.querySelector('.sidebar');
-
-if (btnMenuLegacy && sidebarLegacy) {
-    btnMenuLegacy.addEventListener('click', () => {
-        sidebarLegacy.classList.toggle('open');
-    });
-}
 
 document.querySelectorAll('.nav-item').forEach(item => {
     item.addEventListener('click', () => {

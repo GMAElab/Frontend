@@ -1,9 +1,14 @@
 const API_URL = 'https://api-hzrz.onrender.com';
 const APP_START_TIME = Date.now(); 
 
+function getCsrfTokenFromCookie() {
+    const match = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : null;
+}
+
 window.api = {
     setToken: () => {},
-    
+
     getToken: () => localStorage.getItem('user_data') ? 'cookie_active' : null,
     
     logout: async () => {
@@ -47,14 +52,17 @@ window.api = {
 
         const cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
         const isFormData = options.body instanceof FormData;
+        const method = (options.method || 'GET').toUpperCase();
+        const csrfToken = getCsrfTokenFromCookie();
 
         const fetchOptions = {
             ...options,
-            headers: { 
-                ...(isFormData ? {} : { 'Content-Type': 'application/json' }), 
-                ...(options.headers || {}) 
+            headers: {
+                ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+                ...(!['GET', 'HEAD', 'OPTIONS'].includes(method) && csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
+                ...(options.headers || {})
             },
-            credentials: 'include' 
+            credentials: 'include'
         };
 
         try {
@@ -200,7 +208,7 @@ window.fazerUploadImagem = async function(inputId) {
     formData.append("file", file); 
 
     try {
-        const res = await fetch(`${window.API_URL}/upload-imagem`, {
+        const res = await window.api.fetchProtected('/upload-imagem', {
             method: 'POST',
             body: formData
         });

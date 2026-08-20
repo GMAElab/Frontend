@@ -33,7 +33,7 @@ async function carregarDropdownTopicos(selectId) {
 
         let html = '<option value="">Selecione um tópico...</option>';
         topicos.forEach(t => {
-            html += `<option value="${t.id}">${t.titulo} (${t.ano})</option>`;
+            html += `<option value="${t.id}">${window.escapeHTML(t.titulo)} (${t.ano})</option>`;
         });
         select.innerHTML = html;
 
@@ -246,7 +246,7 @@ async function carregarMeusPTAs() {
                     </div>
 
                     <div class="text-muted" style="font-size: 13px; margin-bottom: 8px; font-weight: 600;">
-                        ${nomeTopicoFormatado}
+                        ${window.escapeHTML(nomeTopicoFormatado)}
                     </div>
 
                     <div style="width: 100%; background: var(--border-color); border-radius: 4px; height: 8px; margin-bottom: 10px;">
@@ -254,7 +254,7 @@ async function carregarMeusPTAs() {
                     </div>
 
                     <div class="text-muted" style="font-size: 13px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-style: italic;">
-                        "${rel.descricao_atividades}"
+                        "${window.escapeHTML(rel.descricao_atividades || '')}"
                     </div>
 
                     ${btnEditar}

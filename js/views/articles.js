@@ -215,7 +215,11 @@ window.salvarArtigo = async function(index) {
 };
 
 window.removerArtigo = async function(id) {
-    if(!confirm("Deseja realmente remover este artigo da sua biblioteca?")) return;
+    const ok = await window.UI.confirm(
+        "O artigo será removido da sua biblioteca pessoal.",
+        { title: 'Remover artigo?', danger: true }
+    );
+    if (!ok) return;
 
     try {
         const res = await window.api.fetchProtected(`/articles/saved/${id}`, { method: 'DELETE' });

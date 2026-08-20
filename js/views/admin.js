@@ -495,9 +495,34 @@ window.openDeepView = async function(route, id, entityName) {
         let html = '';
         for (const [key, value] of Object.entries(data)) {
             if (key === 'senha' || key === 'id' || key === 'descricao' || key === 'anexo_dados' || key === 'anexo_meta') continue;
-            const safeValue = value !== null && value !== undefined ? String(value).replace(/"/g, '&quot;') : '';
 
             const labelAmigavel = tradutorDeRotulos[key] || key;
+
+            if (key === 'role') {
+                const papeis = ['pesquisador', 'tecnico', 'coordenador', 'admin'];
+                html += `
+                    <div class="input-group" style="margin-bottom:0;">
+                        <label>${labelAmigavel}</label>
+                        <select id="dv-input-${key}" class="form-control">
+                            ${papeis.map(p => `<option value="${p}" ${value === p ? 'selected' : ''}>${p}</option>`).join('')}
+                        </select>
+                    </div>
+                `;
+                continue;
+            }
+
+            if (key === 'is_active') {
+                const marcado = value === 1 || value === true || value === '1';
+                html += `
+                    <div class="input-group" style="margin-bottom:0; display:flex; align-items:center; gap:8px;">
+                        <input type="checkbox" id="dv-input-${key}" ${marcado ? 'checked' : ''} style="width:auto;">
+                        <label style="margin:0;">${labelAmigavel}</label>
+                    </div>
+                `;
+                continue;
+            }
+
+            const safeValue = window.escapeHTML(value !== null && value !== undefined ? String(value) : '');
 
             html += `
                 <div class="input-group" style="margin-bottom:0;">
@@ -529,7 +554,8 @@ async function saveDeepView(route, id, originalData) {
     for (const key of Object.keys(originalData)) {
         if (key === 'senha' || key === 'id' || key === 'descricao' || key === 'anexo_dados' || key === 'anexo_meta') continue;
         const input = document.getElementById(`dv-input-${key}`);
-        if (input) payload[key] = input.value;
+        if (!input) continue;
+        payload[key] = key === 'is_active' ? (input.checked ? 1 : 0) : input.value;
     }
 
     saveBtn.disabled = true;
