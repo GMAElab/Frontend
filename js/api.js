@@ -1,21 +1,17 @@
 const API_URL = 'https://api-hzrz.onrender.com';
 const APP_START_TIME = Date.now(); 
 
-function getCsrfTokenFromCookie() {
-    const match = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]+)/);
-    return match ? decodeURIComponent(match[1]) : null;
-}
-
 window.api = {
     setToken: () => {},
 
     getToken: () => localStorage.getItem('user_data') ? 'cookie_active' : null,
-    
+
     logout: async () => {
         try {
             await fetch(`${API_URL}/logout`, { method: 'POST', credentials: 'include' });
         } catch (e) {}
         localStorage.removeItem('user_data');
+        localStorage.removeItem('csrf_token');
         window.location.href = 'index.html';
     },
 
@@ -53,7 +49,7 @@ window.api = {
         const cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
         const isFormData = options.body instanceof FormData;
         const method = (options.method || 'GET').toUpperCase();
-        const csrfToken = getCsrfTokenFromCookie();
+        const csrfToken = localStorage.getItem('csrf_token');
 
         const fetchOptions = {
             ...options,
@@ -148,6 +144,8 @@ window.api = {
                     });
 
                     if (res.ok) {
+                        const data = await res.json();
+                        if (data.csrf_token) localStorage.setItem('csrf_token', data.csrf_token);
                         modal.remove();
                         if(window.UI) window.UI.showToast("Sessão renovada!", "success");
                         resolve(true);

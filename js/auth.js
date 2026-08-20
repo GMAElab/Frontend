@@ -90,6 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                     localStorage.setItem('user_data', JSON.stringify(data.user));
+                    if (data.csrf_token) localStorage.setItem('csrf_token', data.csrf_token);
                     window.location.href = 'dashboard.html';
                 } else {
                     const errorMessage = data.detail || 'Credenciais inválidas. Tente novamente.';
@@ -143,6 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                     localStorage.setItem('user_data', JSON.stringify(data.user));
+                    if (data.csrf_token) localStorage.setItem('csrf_token', data.csrf_token);
                     window.location.href = 'dashboard.html';
                 } else {
                     UI.showFormFeedback('2fa-feedback', data.detail || 'Código inválido ou expirado.', true);
