@@ -1,5 +1,8 @@
 let preAuthTokenPara2FA = null;
 
+// ==========================================
+// DETECÇÃO DE COOKIES BLOQUEADOS
+// ==========================================
 function verificarBloqueioDeCookies() {
     try {
         document.cookie = "teste_cookies=1; SameSite=None; Secure";

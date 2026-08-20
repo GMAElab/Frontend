@@ -1,3 +1,6 @@
+// ==========================================
+// GUARDA DE ACESSO (SOMENTE ADMIN)
+// ==========================================
 document.addEventListener('viewChanged', (e) => {
     if (e.detail.view === 'admin') routerAdmin();
 });
@@ -437,7 +440,7 @@ window.viewLogPayload = function(index) {
 };
 
 // ==========================================
-// 6. DETALHES LOG
+// 6. Edição dos Dados
 // ==========================================
 window.closeDeepView = function() {
     document.getElementById('deep-view-modal').style.display = 'none';

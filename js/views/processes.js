@@ -1,3 +1,6 @@
+// ==========================================
+// 1. MODAL DE NOVO PROCESSO
+// ==========================================
 window.openProcessModal = async function() {
     console.log("--> Executando abertura visual do modal..."); 
     
@@ -94,6 +97,9 @@ window.openTab = function(evt, tabName) {
     evt.currentTarget.style.fontWeight = "bold";
 };
 
+// ==========================================
+// 2. TABELA DE PROCESSOS
+// ==========================================
 async function loadProcessesTable() {
     try {
         const response = await window.api.fetchProtected('/processes');
@@ -135,6 +141,9 @@ function renderProcesses(processes) {
     });
 }
 
+// ==========================================
+// 3. SALVAR NOVO PROCESSO
+// ==========================================
 window.handleSaveProcess = async function(event) {
     event.preventDefault();
     const btn = event.target.querySelector('button[type="submit"]');
@@ -187,7 +196,7 @@ window.handleSaveProcess = async function(event) {
 };
 
 // ==========================================
-// DETALHES DO PROCESSO
+// 4. DETALHES DO PROCESSO
 // ==========================================
 window.viewProcessDetails = async function(id) {
     if (window.UI) window.UI.showToast("Buscando detalhes do processo...", "info");
@@ -307,6 +316,9 @@ window.renderProcessDetailsModal = function(proc, atividades) {
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 };
 
+// ==========================================
+// 5. REGISTRAR ATIVIDADE NA LINHA DO TEMPO
+// ==========================================
 window.submitProcessActivity = async function(e, processId) {
     e.preventDefault();
     const btn = e.target.querySelector('button');
@@ -344,6 +356,9 @@ window.submitProcessActivity = async function(e, processId) {
     }
 };
 
+// ==========================================
+// 6. MODAL DE DETALHE DE ATIVIDADE
+// ==========================================
 window.abrirModalAtividade = function(title, note, imgUrl) {
     const modalId = 'activityDetailsModal';
     const modalAntigo = document.getElementById(modalId);
@@ -395,6 +410,9 @@ window.handleActivityClick = function(index) {
     window.abrirModalAtividade(atividade.title, atividade.note, atividade.imagem_url);
 };
 
+// ==========================================
+// 7. UPLOAD DE IMAGENS (PREVIEW E MÚLTIPLO)
+// ==========================================
 window.previewMultiplasImagens = function(event, previewContainerId) {
     const files = event.target.files;
     const container = document.getElementById(previewContainerId);

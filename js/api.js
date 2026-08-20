@@ -1,6 +1,9 @@
 const API_URL = 'https://api-hzrz.onrender.com';
-const APP_START_TIME = Date.now(); 
+const APP_START_TIME = Date.now();
 
+// ==========================================
+// CLIENTE DA API (sessão, cookies, CSRF)
+// ==========================================
 window.api = {
     setToken: () => {},
 

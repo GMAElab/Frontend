@@ -1,3 +1,6 @@
+// ==========================================
+// ROTEADOR DAS TELAS (PESQUISADOR e ADMINISTRAÇÃO)
+// ==========================================
 document.addEventListener('viewChanged', (e) => {
     if (e.detail.view === 'pta') routerPTA();
 });
@@ -748,6 +751,9 @@ async function importarMatrizPTAAction(e) {
     }
 }
 
+// ==========================================
+// DETALHES DO PTA
+// ==========================================
 window.abrirModalDetalhesPTA = function(elemento) {
     const topico = decodeURIComponent(elemento.getAttribute('data-topico'));
     const mes = elemento.getAttribute('data-mes');
@@ -772,6 +778,9 @@ window.addEventListener('click', function(e) {
     }
 });
 
+// ==========================================
+// EDIÇÃO DE PTA PRÓPRIO
+// ==========================================
 window.carregarParaEdicao = function(id) {
     const rel = window.meusPtasCache.find(r => r.id === id);
     if(!rel) return;
@@ -820,6 +829,9 @@ window.cancelarEdicaoPTA = function() {
     window.atualizarAvisoUltimoPTA();
 }
 
+// ==========================================
+// PTA UNIFICADO DA EQUIPE E NOTAS
+// ==========================================
 window.carregarPTAUnificadoEquipe = async function() {
     const topicoId = document.getElementById('pta-topico').value;
     const mes = document.getElementById('pta-mes').value;
@@ -940,7 +952,7 @@ window.deletarNotaPTA = async function(notaId) {
 };
 
 // ==========================================
-// MODAL DE DEVOLUÇÃO (ADM)
+// DEVOLUÇÃO PTA
 // ==========================================
 window.abrirModalDevolucao = function(relatorioId) {
     window.relatorioParaDevolver = relatorioId;

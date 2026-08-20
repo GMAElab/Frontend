@@ -7,6 +7,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     passwordInput.setAttribute('placeholder', 'Ex: Exemplo@2026 (Min. 8 caracteres)');
 
+    // ==========================================
+    // FORÇA DA SENHA
+    // ==========================================
     passwordInput.addEventListener('input', () => {
         const pass = passwordInput.value;
         const requirements = [
@@ -32,6 +35,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // ==========================================
+    // ENVIO DO PEDIDO DE CADASTRO
+    // ==========================================
     registerForm.addEventListener('submit', async (event) => {
         event.preventDefault();
 

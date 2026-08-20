@@ -1,3 +1,6 @@
+// ==========================================
+// 1. CONSTRUÇÃO DA TELA DE EQUIPAMENTOS
+// ==========================================
 document.addEventListener('viewChanged', (e) => {
     if (e.detail.view === 'equipments') {
         renderEquipments();
@@ -72,6 +75,9 @@ async function loadEquipmentsTable() {
 }
 
 
+// ==========================================
+// 2. MODAL DE NOVO EQUIPAMENTO
+// ==========================================
 window.openAddEquipmentModal = function() {
     const modal = document.getElementById('modal-eq');
     if (modal) {
@@ -111,15 +117,25 @@ window.handleSaveEquipment = async function(e) {
             window.closeEquipModal();
             loadEquipmentsTable();
         } else {
-            throw new Error();
+            const errData = await res.json().catch(() => ({}));
+            let msg = 'Erro ao processar registro.';
+            if (Array.isArray(errData.detail)) {
+                msg = (errData.detail[0].msg || msg).replace(/^Value error,\s*/, '');
+            } else if (errData.detail) {
+                msg = errData.detail;
+            }
+            throw new Error(msg);
         }
     } catch (err) {
-        UI.showToast('Erro ao processar registro', 'error');
+        UI.showToast(err.message || 'Erro ao processar registro', 'error');
     } finally {
         if (window.UI) UI.setButtonLoading('btn-save-eq', false);
     }
 };
 
+// ==========================================
+// 3. DETALHES DO EQUIPAMENTO
+// ==========================================
 window.viewDossier = async function(id) {
     try {
         const res = await api.fetchProtected(`equipments/${id}`); 

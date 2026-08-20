@@ -1,3 +1,6 @@
+// ==========================================
+// INICIALIZAÇÃO DO DASHBOARD
+// ==========================================
 document.addEventListener('DOMContentLoaded', () => {
 
     const userString = localStorage.getItem('user_data');
