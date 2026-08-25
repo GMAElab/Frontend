@@ -431,14 +431,14 @@ function renderPTACoordenador() {
                     </button>
 
                     <div id="resultado-ia" class="hidden" style="background: var(--bg-surface); border-left: 4px solid var(--primary); padding: 15px; margin-top: 15px; border-radius: var(--radius-sm); box-shadow: var(--shadow-xs);">
-                        <strong class="text-primary" style="font-size: 14px;">Texto Consolidado:</strong>
+                        <strong class="text-primary" style="font-size: 14px;">Texto pronto:</strong>
                         <p id="texto-ia" style="margin-top: 10px; line-height: 1.6; font-size: 14px;"></p>
                     </div>
                 </div>
             </div>
 
             <div style="border-top: 1px solid var(--border-color); padding-top: 25px;">
-                <h4 style="margin-bottom: 15px; font-size: 13px; text-transform: uppercase; letter-spacing:0.05em;">Relatórios Aprovados (Consolidados)</h4>
+                <h4 style="margin-bottom: 15px; font-size: 13px; text-transform: uppercase; letter-spacing:0.05em;">PTAs Aprovados</h4>
                 <div id="lista-aprovados" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px;">
                 </div>
             </div>
@@ -561,7 +561,7 @@ window.carregarAprovadosChefia = async function(mes, ano) {
         const aprovados = await res.json();
 
         if (aprovados.length === 0) {
-            container.innerHTML = `<div style="grid-column:1/-1;">${window.UI.emptyState({ icon: 'file-text', title: 'Nenhum relatório consolidado neste mês' })}</div>`;
+            container.innerHTML = `<div style="grid-column:1/-1;">${window.UI.emptyState({ icon: 'file-text', title: 'Nenhum PTA aprovado ainda neste mês' })}</div>`;
             return;
         }
         const mapaRelatorios = new Map();
@@ -595,7 +595,7 @@ window.carregarAprovadosChefia = async function(mes, ano) {
         });
         container.innerHTML = html;
     } catch (err) {
-        container.innerHTML = `<div style="grid-column:1/-1;">${window.UI.errorState('Não foi possível carregar os relatórios aprovados.')}</div>`;
+        container.innerHTML = `<div style="grid-column:1/-1;">${window.UI.errorState('Não foi possível carregar os PTAs aprovados.')}</div>`;
     }
 }
 
@@ -651,7 +651,7 @@ window.gerarSinteseIA = async function() {
         if (res.ok) {
             document.getElementById('resultado-ia').classList.remove('hidden');
             document.getElementById('texto-ia').innerText = data.sintese;
-            if (!data.sintese.includes('Não há relatórios aprovados')) {
+            if (!data.sintese.includes('Não há PTAs aprovados')) {
                  window.UI.showToast("Síntese gerada com sucesso!", "success");
             }
         } else {
@@ -967,7 +967,7 @@ window.abrirModalDevolucao = function(relatorioId) {
                 <div class="modal-header">
                     <h3>Motivo da Devolução</h3>
                 </div>
-                <p class="text-muted" style="font-size: 13px; margin-bottom: 15px;">Este feedback será anexado ao relatório do pesquisador como uma orientação para correção.</p>
+                <p class="text-muted" style="font-size: 13px; margin-bottom: 15px;">Este feedback será anexado ao PTA do pesquisador como uma orientação para correção.</p>
 
                 <textarea id="texto-motivo-devolucao" class="form-control" rows="4" placeholder="Ex: Faltou detalhar a curva de temperatura no experimento 2..."></textarea>
 
