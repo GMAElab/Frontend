@@ -416,18 +416,18 @@ function renderPTACoordenador() {
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
                 <div>
-                    <h4 class="text-muted" style="margin-bottom: 15px; font-size: 13px; text-transform: uppercase; letter-spacing:0.05em;">Relatórios Pendentes</h4>
+                    <h4 class="text-muted" style="margin-bottom: 15px; font-size: 13px; text-transform: uppercase; letter-spacing:0.05em;">PTAs Pendentes</h4>
                     <div id="lista-pendencias" style="max-height: 400px; overflow-y: auto; padding-right: 5px;"></div>
                 </div>
 
                 <div class="pop-sec">
                     <h4 style="color: var(--primary); margin-bottom: 10px; font-size: 15px;">Gerar texto com base nos PTAs aprovados</h4>
-                    <p class="text-muted" style="font-size: 13px; margin-bottom: 15px;">Unifica todos os relatórios <b>aprovados</b> do mês atual.</p>
+                    <p class="text-muted" style="font-size: 13px; margin-bottom: 15px;">Unifica todos os PTAs <b>aprovados</b> do mês atual.</p>
 
                     <select id="ia-topico-id" class="form-control" style="margin-bottom: 15px;"></select>
 
                     <button id="btn-gerar-ia" class="btn btn-primary btn-block" onclick="gerarSinteseIA()">
-                        ${window.Icon('sparkles', { size: 15 })} Processar Textos Aprovados
+                        ${window.Icon('sparkles', { size: 15 })} Processar PTAs Aprovados
                     </button>
 
                     <div id="resultado-ia" class="hidden" style="background: var(--bg-surface); border-left: 4px solid var(--primary); padding: 15px; margin-top: 15px; border-radius: var(--radius-sm); box-shadow: var(--shadow-xs);">
