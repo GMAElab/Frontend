@@ -7,11 +7,11 @@
    ========================================== */
 :root {
     /* --- Cor de marca --- */
-    --primary: #A8431F;
-    --primary-hover: #8F3818;
-    --primary-active: #742C13;
-    --primary-light: #F6E7DF;
-    --primary-ring: rgba(168, 67, 31, 0.18);
+    --primary: #2554EB;
+    --primary-hover: #1D46D6;
+    --primary-active: #1638A6;
+    --primary-light: #EAF0FF;
+    --primary-ring: rgba(37, 84, 235, 0.18);
     --color-primary: var(--primary); /* alias de compatibilidade */
 
     /* --- Neutros --- */
