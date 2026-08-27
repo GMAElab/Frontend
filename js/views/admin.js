@@ -115,7 +115,7 @@ window.openAdminModule = function(module) {
         sub.innerHTML = `
             <div class="card-responsivo" style="background: var(--warning-light); border-color: var(--warning-border); display:flex; align-items:center; gap:10px;">
                 ${window.Icon('alert-triangle', { size: 16, class: 'text-muted' })}
-                <p style="margin: 0; color:#9A5B04;"><strong>Aviso:</strong> Estes registros são permanentes. Ninguém pode apagar o histórico de auditoria.</p>
+                <p style="margin: 0; color:var(--warning);"><strong>Aviso:</strong> Estes registros são permanentes. Ninguém pode apagar o histórico de auditoria.</p>
             </div>
             <div id="audit-container" style="margin-top:16px;"></div>`;
         loadAuditLogs(document.getElementById('audit-container'));

@@ -28,10 +28,10 @@ document.addEventListener('DOMContentLoaded', () => {
             UI.showFormFeedback('register-feedback', 'Senha Fraca: Adicione maiúsculas e símbolos.', true);
         } else if (percent < 100) {
             UI.showFormFeedback('register-feedback', 'Senha Média: Quase lá...', false);
-            feedbackDiv.style.color = "#d97706";
+            feedbackDiv.style.color = "var(--warning)";
         } else {
             UI.showFormFeedback('register-feedback', 'Senha Forte e Segura!', false);
-            feedbackDiv.style.color = "#16a34a";
+            feedbackDiv.style.color = "var(--success)";
         }
     });
 
@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (response.ok) {
                 UI.showFormFeedback('register-feedback', 'Pedido enviado! Aguarde a aprovação do Admin.', false);
-                feedbackDiv.style.color = "#16a34a";
+                feedbackDiv.style.color = "var(--success)";
                 registerForm.reset(); 
                 setTimeout(() => { window.location.href = 'index.html'; }, 3000);
             } else {
@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     errorMsg = data.detail || errorMsg;
                 }
-                UI.showFormFeedback('register-feedback', `❌ ${errorMsg}`, true);
+                UI.showFormFeedback('register-feedback', errorMsg, true);
             }
         } catch (error) {
             UI.showFormFeedback('register-feedback', 'Erro de conexão. Tente novamente.', true);

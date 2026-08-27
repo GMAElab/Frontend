@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap');
 
 /* ==========================================
    DESIGN TOKENS
@@ -7,44 +7,45 @@
    ========================================== */
 :root {
     /* --- Cor de marca --- */
-    --primary: #2554EB;
-    --primary-hover: #1D46D6;
-    --primary-active: #1638A6;
-    --primary-light: #EAF0FF;
-    --primary-ring: rgba(37, 84, 235, 0.18);
+    --primary: #A8431F;
+    --primary-hover: #8F3818;
+    --primary-active: #742C13;
+    --primary-light: #F6E7DF;
+    --primary-ring: rgba(168, 67, 31, 0.18);
     --color-primary: var(--primary); /* alias de compatibilidade */
 
     /* --- Neutros --- */
-    --ink: #0B1220;
-    --bg-body: #F1F4F9;
-    --bg-surface: #FFFFFF;
-    --bg-subtle: #F8FAFC;
-    --bg-sidebar: #0B1220;
-    --bg-sidebar-hover: #182338;
-    --bg-sidebar-active: #1D2B45;
+    --ink: #1B1815;
+    --bg-body: #F3F0EA;
+    --bg-surface: #FBFAF7;
+    --bg-subtle: #ECE8E0;
+    --bg-sidebar: #1B1815;
+    --bg-sidebar-hover: #2A2521;
+    --bg-sidebar-active: #33291F;
     --text-main: var(--ink);
-    --text-muted: #5B6577;
-    --text-faint: #94A0B4;
-    --text-inverse: #FFFFFF;
-    --border-color: #E3E8F0;
-    --border-light: #EEF1F6;
-    --border-strong: #C7CFDC;
+    --text-muted: #6B6459;
+    --text-faint: #9A9285;
+    --text-inverse: #FBFAF7;
+    --border-color: #DDD7CA;
+    --border-light: #E7E2D6;
+    --border-strong: #C2B9A6;
 
     /* --- Estado / semântica --- */
-    --success: #0FA968;
-    --success-light: #E7F9F1;
-    --success-border: #BCEDDB;
-    --danger: #E23744;
-    --danger-light: #FDEDEE;
-    --danger-border: #F7C6CA;
-    --warning: #D97706;
-    --warning-light: #FEF6E7;
-    --warning-border: #F6DFAF;
-    --info: #2554EB;
+    --success: #3F7D4F;
+    --success-light: #E7F0E5;
+    --success-border: #C1D9BE;
+    --danger: #A8321F;
+    --danger-light: #F6E3DE;
+    --danger-border: #E3BCAF;
+    --warning: #92650F;
+    --warning-light: #F3EADA;
+    --warning-border: #DFC891;
+    --info: var(--primary);
     --info-light: var(--primary-light);
 
     /* --- Tipografia --- */
-    --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+    --font-sans: 'Public Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
     --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
 
     /* --- Espaçamento (escala 4px) --- */
@@ -59,23 +60,23 @@
     --space-12: 48px;
 
     /* --- Raios --- */
-    --radius-sm: 6px;
-    --radius-md: 10px;
-    --radius-lg: 14px;
-    --radius-xl: 20px;
+    --radius-sm: 3px;
+    --radius-md: 4px;
+    --radius-lg: 6px;
+    --radius-xl: 8px;
     --radius-full: 9999px;
 
     /* --- Sombras --- */
-    --shadow-xs: 0 1px 2px rgba(11, 18, 32, 0.04);
-    --shadow-sm: 0 1px 3px rgba(11, 18, 32, 0.06), 0 1px 2px rgba(11, 18, 32, 0.04);
-    --shadow-md: 0 4px 10px -2px rgba(11, 18, 32, 0.08), 0 2px 4px -2px rgba(11, 18, 32, 0.04);
-    --shadow-lg: 0 12px 24px -6px rgba(11, 18, 32, 0.12), 0 4px 8px -2px rgba(11, 18, 32, 0.05);
-    --shadow-floating: 0 24px 48px -12px rgba(11, 18, 32, 0.22), 0 8px 16px -4px rgba(11, 18, 32, 0.08);
+    --shadow-xs: 0 1px 0 rgba(27, 24, 21, 0.05);
+    --shadow-sm: 0 1px 2px rgba(27, 24, 21, 0.06);
+    --shadow-md: 0 2px 6px rgba(27, 24, 21, 0.08);
+    --shadow-lg: 0 4px 14px rgba(27, 24, 21, 0.10);
+    --shadow-floating: 0 8px 24px rgba(27, 24, 21, 0.16);
 
     /* --- Movimento --- */
-    --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-slow: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    --transition-fast: color 0.12s ease, background-color 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+    --transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    --transition-slow: all 0.2s ease;
 
     /* --- Camadas --- */
     --z-dropdown: 50;
@@ -83,7 +84,7 @@
     --z-modal: 999999;
     --z-toast: 1000000;
 
-    --focus-ring: 0 0 0 4px var(--primary-ring);
+    --focus-ring: 0 0 0 3px var(--primary-ring);
 }
 
 /* ==========================================
@@ -122,11 +123,21 @@ button {
     color: inherit;
 }
 
-/* --- Escala tipográfica --- */
-h1, h2, h3, h4, h5, h6 {
+/* --- Escala tipográfica ---
+   Serifada nos títulos, sans no corpo: par deliberado
+   em vez do padrão "Inter em tudo". */
+h1, h2, h3 {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    color: var(--text-main);
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+}
+
+h4, h5, h6 {
     font-weight: 700;
     color: var(--text-main);
-    letter-spacing: -0.02em;
+    letter-spacing: -0.01em;
     line-height: 1.25;
 }
 
@@ -217,15 +228,10 @@ pre,
 .p-lg  { padding: var(--space-8); }
 
 .fade-in {
-    animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: fadeIn 0.15s ease both;
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(6px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes fadeInDown {
-    from { opacity: 0; transform: translateY(-12px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; }
+    to   { opacity: 1; }
 }

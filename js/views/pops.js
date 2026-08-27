@@ -10,16 +10,16 @@ document.addEventListener('viewChanged', (e) => {
                 <div class="admin-container fade-in">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
                         <div>
-                            <h2 style="margin-bottom: 5px;">📄 Procedimentos Operacionais Padrão (POPs)</h2>
+                            <h2 style="margin-bottom: 5px; display: flex; align-items: center; gap: 10px;">${window.Icon('file-text', { size: 22 })} Procedimentos Operacionais Padrão (POPs)</h2>
                             <p class="text-muted">Gestão completa de POPs do laboratório.</p>
                         </div>
-                        <button class="btn btn-primary" onclick="window.openPopModal()" style="font-weight: bold; padding: 10px 20px; border: none; color: #fff; cursor: pointer; border-radius: 6px;">+ Criar Novo POP</button>
+                        <button class="btn btn-primary" onclick="window.openPopModal()">+ Criar Novo POP</button>
                     </div>
-                    
-                    <div class="card-responsivo" style="overflow-x: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+
+                    <div class="card-responsivo" style="overflow-x: auto; background: var(--bg-surface); padding: 20px; border-radius: var(--radius-lg); border: 1px solid var(--border-color);">
                         <table style="width:100%; text-align:left; border-collapse: collapse;">
                             <thead>
-                                <tr style="border-bottom: 2px solid #eee;">
+                                <tr style="border-bottom: 2px solid var(--border-color);">
                                     <th style="padding: 12px 10px;">Código</th>
                                     <th style="padding: 12px 10px;">Título do Procedimento</th>
                                     <th style="padding: 12px 10px;">Status</th>
@@ -65,40 +65,39 @@ window.openPopModal = function(codigoEdicao = null) {
         }
     }
 
-    const tituloModal = popEdit ? `✏️ Editar Procedimento: ${popEdit.codigo}` : `📄 Novo Procedimento Operacional Padrão (POP)`;
-    const textoBotaoSalvar = popEdit ? `💾 Salvar Alterações` : `💾 Salvar POP Oficial`;
-    const corBotao = popEdit ? `#007bff` : `#111`;
-    
+    const tituloModal = popEdit ? `${window.Icon('edit-2', { size: 18 })} Editar Procedimento: ${popEdit.codigo}` : `${window.Icon('file-text', { size: 18 })} Novo Procedimento Operacional Padrão (POP)`;
+    const textoBotaoSalvar = popEdit ? `Salvar Alterações` : `Salvar POP Oficial`;
+
     const escapeQuote = (str) => str ? str.replace(/"/g, '&quot;') : '';
 
     const modalHTML = `
-    <div id="popModal" class="modal-overlay" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999999; justify-content: center; align-items: center;">
-        <div class="modal-content" style="max-width: 850px; width: 95%; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); max-height: 90vh; overflow-y: auto;">
-            
-            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 15px;">
-                <h2 style="margin: 0; color: #333;">${tituloModal}</h2>
-                <button type="button" onclick="document.getElementById('popModal').remove()" style="background:none; border:none; font-size:30px; cursor:pointer; color:#999;">&times;</button>
+    <div id="popModal" class="modal-overlay" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 999999; justify-content: center; align-items: center;">
+        <div class="modal-content" style="max-width: 850px; width: 95%; padding: 25px; border-radius: 4px; border-top: 3px solid var(--primary); max-height: 90vh; overflow-y: auto;">
+
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">
+                <h2 style="margin: 0; font-size: 19px; display: flex; align-items: center; gap: 10px;">${tituloModal}</h2>
+                <button type="button" onclick="document.getElementById('popModal').remove()" style="background:none; border:none; font-size:28px; cursor:pointer; color:var(--text-faint); line-height:1;">&times;</button>
             </div>
             
             <form id="popForm" onsubmit="window.handleSavePop(event)">
                 <div class="grid-fluida" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                    <div><label style="font-weight:bold; font-size:14px;">Código do Documento *</label><input type="text" id="pop-codigo" value="${escapeQuote(popEdit ? popEdit.codigo : '')}" ${popEdit ? 'readonly style="background:#f3f4f6; width:100%; padding:8px; border: 1px solid #ccc; border-radius: 4px;"' : 'class="form-control" style="width:100%; padding:8px;"'} required></div>
-                    <div><label style="font-weight:bold; font-size:14px;">Título do Procedimento *</label><input type="text" id="pop-titulo" value="${escapeQuote(popEdit ? popEdit.titulo : '')}" class="form-control" required style="width:100%; padding:8px;"></div>
-                    <div><label style="font-weight:bold; font-size:14px;">Versão</label><input type="text" id="pop-versao" class="form-control" value="${escapeQuote(dadosEdit.versao || '1.0')}" style="width:100%; padding:8px;"></div>
-                    <div><label style="font-weight:bold; font-size:14px;">Data de Emissão</label><input type="text" id="pop-data" class="form-control" value="${escapeQuote(dadosEdit.data_emissao || dataHoje)}" readonly style="width:100%; padding:8px; background:#f3f4f6;"></div>
-                    <div style="grid-column: 1 / -1;"><label style="font-weight:bold; font-size:14px;">Responsável</label><input type="text" id="pop-responsavel" class="form-control" value="${escapeQuote(dadosEdit.responsavel || user.nome || '')}" readonly style="width:100%; padding:8px; background:#f3f4f6;"></div>
+                    <div><label style="font-weight:600; font-size:14px;">Código do Documento *</label><input type="text" id="pop-codigo" value="${escapeQuote(popEdit ? popEdit.codigo : '')}" ${popEdit ? 'readonly class="form-control" style="width:100%; background:var(--bg-subtle);"' : 'class="form-control" style="width:100%;"'} required></div>
+                    <div><label style="font-weight:600; font-size:14px;">Título do Procedimento *</label><input type="text" id="pop-titulo" value="${escapeQuote(popEdit ? popEdit.titulo : '')}" class="form-control" required style="width:100%;"></div>
+                    <div><label style="font-weight:600; font-size:14px;">Versão</label><input type="text" id="pop-versao" class="form-control" value="${escapeQuote(dadosEdit.versao || '1.0')}" style="width:100%;"></div>
+                    <div><label style="font-weight:600; font-size:14px;">Data de Emissão</label><input type="text" id="pop-data" class="form-control" value="${escapeQuote(dadosEdit.data_emissao || dataHoje)}" readonly style="width:100%; background:var(--bg-subtle);"></div>
+                    <div style="grid-column: 1 / -1;"><label style="font-weight:600; font-size:14px;">Responsável</label><input type="text" id="pop-responsavel" class="form-control" value="${escapeQuote(dadosEdit.responsavel || user.nome || '')}" readonly style="width:100%; background:var(--bg-subtle);"></div>
                 </div>
 
-                <hr style="margin: 20px 0; border-color: #eee;">
-                
-                <div style="background: #e7f3ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #007bff;">
-                    <h4 style="margin: 0 0 10px 0; color: #004080; display:flex; align-items:center; gap:8px;">✨ IA: Preenchimento Automático</h4>
-                    <label style="font-size:13px; color:#004080;">Faça upload do Manual do Equipamento (.pdf) para pré-preencher a estrutura do POP:</label>
+                <hr style="margin: 20px 0; border-color: var(--border-color);">
+
+                <div style="background: var(--primary-light); padding: 15px; border-radius: var(--radius-md); margin-bottom: 20px; border: 1px solid var(--border-color); border-left: 3px solid var(--primary);">
+                    <h4 style="margin: 0 0 10px 0; color: var(--primary-active); display:flex; align-items:center; gap:8px; font-size: 15px;">${window.Icon('sparkles', { size: 16 })} IA: Preenchimento Automático</h4>
+                    <label style="font-size:13px; color:var(--text-muted);">Faça upload do Manual do Equipamento (.pdf) para pré-preencher a estrutura do POP:</label>
                     <div style="display: flex; gap: 10px; margin-top: 10px; align-items: center;">
-                        <input type="file" id="manual-ia" class="form-control" accept=".pdf" style="flex: 1; padding: 8px;">
-                        <button type="button" id="btn-ia" onclick="gerarComIA()" class="btn btn-primary" style="background: #004080; border: none; font-weight: bold; padding: 8px 15px; cursor: pointer;">Extrair Dados</button>
+                        <input type="file" id="manual-ia" class="form-control" accept=".pdf" style="flex: 1;">
+                        <button type="button" id="btn-ia" onclick="gerarComIA()" class="btn btn-primary">Extrair Dados</button>
                     </div>
-                    <span id="ia-loading" style="display:none; color: #004080; font-size: 13px; margin-top: 10px; font-weight: bold;">⏳ Lendo manual e reescrevendo documento...</span>
+                    <span id="ia-loading" style="display:none; color: var(--primary-active); font-size: 13px; margin-top: 10px; font-weight: 600;">Lendo manual e reescrevendo documento...</span>
                 </div>
 
                 <div style="display: flex; flex-direction: column; gap: 15px;">
@@ -111,26 +110,26 @@ window.openPopModal = function(codigoEdicao = null) {
                     <div><label style="font-weight:bold;">7. Segurança e Riscos</label><textarea id="pop-seguranca" class="form-control" rows="2" style="width:100%; padding:8px;">${dadosEdit.seguranca || ''}</textarea></div>
                     <div><label style="font-weight:bold;">8. Manutenção e Calibração</label><textarea id="pop-manutencao" class="form-control" rows="2" style="width:100%; padding:8px;">${dadosEdit.manutencao || ''}</textarea></div>
                     <div><label style="font-weight:bold;">9. Referências</label><textarea id="pop-referencias" class="form-control" rows="2" style="width:100%; padding:8px;">${dadosEdit.referencias || ''}</textarea></div>
-                    <div style="background: #F9FAFB; padding: 15px; border: 1px dashed #D1D5DB; border-radius: 8px; margin-bottom: 15px;">
-                        <label style="font-weight:bold;">Evidência Visual (Imagem até 10MB - Opcional)</label>
-                        <input type="file" id="pop-imagem-visual" class="form-control" style="width:100%; padding:8px; margin-top:5px;" accept="image/png, image/jpeg, image/jpg" onchange="previewImagem(event, 'preview-pop', 'img-preview-pop')">
+                    <div style="background: var(--bg-subtle); padding: 15px; border: 1px dashed var(--border-strong); border-radius: var(--radius-md); margin-bottom: 15px;">
+                        <label style="font-weight:600;">Evidência Visual (Imagem até 10MB - Opcional)</label>
+                        <input type="file" id="pop-imagem-visual" class="form-control" style="width:100%; margin-top:5px;" accept="image/png, image/jpeg, image/jpg" onchange="previewImagem(event, 'preview-pop', 'img-preview-pop')">
                         <div id="preview-pop" style="display: none; margin-top: 10px; text-align: center;">
-                            <img id="img-preview-pop" src="" style="max-width: 100%; max-height: 200px; border-radius: 6px;" />
-                            <p style="margin: 8px 0 0 0; font-size: 13px; color: #DC2626; cursor: pointer; font-weight: bold;" onclick="removerImagem('pop-imagem-visual', 'preview-pop')">❌ Remover Imagem</p>
+                            <img id="img-preview-pop" src="" style="max-width: 100%; max-height: 200px; border-radius: var(--radius-sm);" />
+                            <p style="margin: 8px 0 0 0; font-size: 13px; color: var(--danger); cursor: pointer; font-weight: 600;" onclick="removerImagem('pop-imagem-visual', 'preview-pop')">Remover Imagem</p>
                         </div>
                     </div>
-                    <div style="background: #F9FAFB; padding: 15px; border: 1px dashed #D1D5DB; border-radius: 8px;">
-                        <label style="font-weight:bold;">10. Anexos (PDF, DOCX, XLSX -Máx 10MB)</label>
-                        <input type="file" id="pop-anexos-file" class="form-control" style="width:100%; padding:8px; margin-top:5px;" accept=".pdf, .doc, .docx, .xls, .xlsx, image/*">
+                    <div style="background: var(--bg-subtle); padding: 15px; border: 1px dashed var(--border-strong); border-radius: var(--radius-md);">
+                        <label style="font-weight:600;">10. Anexos (PDF, DOCX, XLSX -Máx 10MB)</label>
+                        <input type="file" id="pop-anexos-file" class="form-control" style="width:100%; margin-top:5px;" accept=".pdf, .doc, .docx, .xls, .xlsx, image/*">
                         <input type="hidden" id="pop-anexos-b64" value="${escapeQuote(dadosEdit.anexo_dados || '')}">
                         <input type="hidden" id="pop-anexos-meta" value="${escapeQuote(dadosEdit.anexo_meta || '')}">
-                        <p id="anexo-status" style="font-size: 13px; color: #004080; font-weight:bold; margin-top: 5px; display: ${dadosEdit.anexo_dados ? 'block' : 'none'};">✅ Arquivo em anexo mantido.</p>
+                        <p id="anexo-status" style="font-size: 13px; color: var(--success); font-weight:600; margin-top: 5px; display: ${dadosEdit.anexo_dados ? 'block' : 'none'};">Arquivo em anexo mantido.</p>
                     </div>
                 </div>
-                
+
                 <div style="margin-top: 25px; display: flex; gap: 10px; justify-content: flex-end;">
-                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('popModal').remove()" style="padding:10px 20px;">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" style="padding:10px 20px; background:${corBotao}; color:white; border:none; border-radius:5px; font-weight:bold;">${textoBotaoSalvar}</button>
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('popModal').remove()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">${textoBotaoSalvar}</button>
                 </div>
             </form>
         </div>
@@ -151,8 +150,8 @@ window.openPopModal = function(codigoEdicao = null) {
                 
                 const statusText = document.getElementById('anexo-status');
                 statusText.style.display = 'block';
-                statusText.innerText = '⏳ Fazendo upload para o servidor...';
-                statusText.style.color = '#F59E0B'; 
+                statusText.innerText = 'Fazendo upload para o servidor...';
+                statusText.style.color = 'var(--warning)';
 
                 const formData = new FormData();
                 formData.append("file", file);
@@ -170,12 +169,12 @@ window.openPopModal = function(codigoEdicao = null) {
                     document.getElementById('pop-anexos-b64').value = data.url_arquivo; 
                     document.getElementById('pop-anexos-meta').value = JSON.stringify({ name: data.nome_original });
         
-                    statusText.innerText = '✅ Arquivo salvo no servidor com sucesso!';
-                    statusText.style.color = '#10B981';
+                    statusText.innerText = 'Arquivo salvo no servidor com sucesso!';
+                    statusText.style.color = 'var(--success)';
 
                 } catch (err) {
-                    statusText.innerText = '❌ Falha no upload. Tente novamente.';
-                    statusText.style.color = '#DC2626';
+                    statusText.innerText = 'Falha no upload. Tente novamente.';
+                    statusText.style.color = 'var(--danger)';
                     window.UI.showToast("Falha ao anexar arquivo.", "error");
                 }
             });
@@ -275,15 +274,15 @@ async function loadPopsTable() {
             } catch(e) {}
 
             html += `
-                <tr style="border-bottom: 1px solid #eee;">
+                <tr style="border-bottom: 1px solid var(--border-light);">
                     <td style="padding: 12px 10px;"><strong>${escCodigo}</strong></td>
                     <td style="padding: 12px 10px;">${escTitulo}</td>
-                    <td style="padding: 12px 10px;"><span style="background: #e7f3ff; color: #004080; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight:bold;">ATIVO</span></td>
+                    <td style="padding: 12px 10px;"><span class="badge badge-success">ATIVO</span></td>
                     <td style="padding: 12px 10px;">${dataCriacao}</td>
                     <td style="padding: 12px 10px; display:flex; gap: 6px; flex-wrap:wrap;">
-                        <button onclick="viewPopDetails(this.getAttribute('data-id'))" data-id="${escCodigo}" class="btn btn-outline-primary btn-sm" style="padding: 5px 10px; cursor: pointer; border-color:#007bff; color:#000;">📄 Abrir</button>
-                        <button onclick="window.openPopModal(this.getAttribute('data-id'))" data-id="${escCodigo}" class="btn btn-secondary btn-sm" style="padding: 5px 10px;">✏️ Editar </button>
-                        <button onclick="window.removerPopOficial('${pop.codigo}')" class="btn btn-danger btn-sm" style="background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">🗑️ Excluir</button>
+                        <button onclick="viewPopDetails(this.getAttribute('data-id'))" data-id="${escCodigo}" class="btn btn-outline-primary btn-sm">${window.Icon('file-text', { size: 14 })} Abrir</button>
+                        <button onclick="window.openPopModal(this.getAttribute('data-id'))" data-id="${escCodigo}" class="btn btn-secondary btn-sm">${window.Icon('edit-2', { size: 14 })} Editar</button>
+                        <button onclick="window.removerPopOficial('${pop.codigo}')" class="btn btn-danger btn-sm">${window.Icon('trash-2', { size: 14 })} Excluir</button>
                     </td>
                 </tr>`;
 
@@ -309,7 +308,7 @@ function formatPopSection(title, content) {
 function renderPopDocxTemplate(pop, dados) {
     const renderField = (value) => {
         if (!value) return 'Não informado.';
-        if (value === '[object Object]') return '⚠️ Dados corrompidos. Edite o POP e passe a IA novamente.';
+        if (value === '[object Object]') return 'Aviso: dados corrompidos. Edite o POP e passe a IA novamente.';
         
         let strValue = typeof value === 'object' ? JSON.stringify(value, null, 2).replace(/[\{\}\[\]"]/g, '') : String(value);
         return window.escapeHTML(strValue);
@@ -352,7 +351,7 @@ function renderPopDocxTemplate(pop, dados) {
                 <h4 style="margin: 0 0 5px 0; font-size: 12pt; font-weight: bold; color: #000;">10. Anexos</h4>
                 <div style="margin: 0; font-size: 11pt; color: #000;">
                     ${dados.anexo_dados 
-                        ? `<a href="${window.API_URL}${dados.anexo_dados}" target="_blank" style="display: inline-block; padding: 8px 15px; background: #004080; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; font-family: Arial;">📥 Baixar Anexo Oficial</a>` 
+                        ? `<a href="${window.API_URL}${dados.anexo_dados}" target="_blank" style="display: inline-block; padding: 8px 15px; background: #333; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; font-family: Arial;">Baixar Anexo Oficial</a>`
                         : 'Não informado.'}
                 </div>
             </div>
@@ -391,17 +390,17 @@ window.viewPopDetails = function(codigo) {
     const divDocumento = document.createElement('div');
     divDocumento.id = "pop-document-container";
 
-    divDocumento.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10000; overflow-y:auto; padding: 40px 20px; box-sizing: border-box; display: block;";
-    
+    divDocumento.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(27,24,21,0.85); z-index:10000; overflow-y:auto; padding: 40px 20px; box-sizing: border-box; display: block;";
+
     divDocumento.innerHTML = `
-        <div style="background:#fff; width: 100%; max-width: 850px; margin: 0 auto; padding: 40px; position:relative; color: #000; box-shadow: 0 0 40px rgba(0,0,0,0.5); box-sizing: border-box; min-height: 100%;">
-            
+        <div style="background:#fff; width: 100%; max-width: 850px; margin: 0 auto; padding: 40px; position:relative; color: #000; box-shadow: var(--shadow-floating); box-sizing: border-box; min-height: 100%;">
+
             <div data-html2canvas-ignore="true" style="margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center;">
-                
-                <button onclick="document.getElementById('pop-document-container').remove()" class="btn" style="padding: 10px 20px; cursor: pointer; background:#f5f5f5; color:#333; border:1px solid #ccc; border-radius:6px; font-weight: bold;">⬅ VOLTAR</button>
-                
+
+                <button onclick="document.getElementById('pop-document-container').remove()" class="btn btn-secondary">${window.Icon('chevron-left', { size: 16 })} Voltar</button>
+
                 <div style="display:flex; gap: 10px; flex-wrap: wrap;">
-                    <button onclick="downloadPopDocx('${pop.codigo}', this)" class="btn" style="padding: 10px 20px; background:#111; color:white; border:none; font-weight:bold; cursor:pointer; border-radius:6px;">📄 BAIXAR .DOCX</button>
+                    <button onclick="downloadPopDocx('${pop.codigo}', this)" class="btn btn-primary">${window.Icon('download', { size: 16 })} Baixar .DOCX</button>
                 </div>
             </div>
 
@@ -414,7 +413,7 @@ window.viewPopDetails = function(codigo) {
 
 window.downloadPopDocx = async function(codigo, btn) {
     const textoOriginal = btn ? btn.innerText : null;
-    if (btn) { btn.disabled = true; btn.innerText = '⏳ Gerando...'; }
+    if (btn) { btn.disabled = true; btn.innerText = 'Gerando...'; }
 
     try {
         const res = await window.api.fetchProtected(`/pops/${encodeURIComponent(codigo)}/export-docx`);
@@ -450,7 +449,7 @@ window.gerarComIA = async function() {
     const formData = new FormData();
     formData.append("file", file);
 
-    if (btn) { btn.disabled = true; btn.innerText = "⏳ Analisando..."; }
+    if (btn) { btn.disabled = true; btn.innerText = "Analisando..."; }
     if (aviso) aviso.style.display = "block";
 
     try {

@@ -58,7 +58,7 @@ async function loadEquipmentsTable() {
                     ${data.map(eq => `
                         <tr>
                             <td><strong>${window.escapeHTML(eq.nome)}</strong></td>
-                            <td><span class="badge">${eq.status || 'ativo'}</span></td>
+                            <td><span class="badge badge-success">${eq.status || 'ativo'}</span></td>
                             <td style="text-align:right; display:flex; gap: 8px; justify-content:flex-end; flex-wrap:wrap;">
                                 <button class="btn btn-small" onclick="window.viewDossier(${eq.id})">Ver Detalhes</button>
                                 <button class="btn btn-small btn-secondary" onclick="openDeepView('equipments', ${eq.id}, 'Equipamento')">Editar</button>
@@ -154,15 +154,15 @@ window.viewDossier = async function(id) {
         
         if (dossierBody) {
             dossierBody.innerHTML = `
-                <div style="padding-right: 15px; border-right: 1px solid #eee;">
+                <div style="padding-right: 15px; border-right: 1px solid var(--border-color);">
                     <h4 style="margin-bottom:15px; color:var(--primary);">Vídeo de Treinamento</h4>
-                    ${videoEmbed ? 
-                        `<iframe width="100%" height="250" src="${videoEmbed}" frameborder="0" allowfullscreen style="border-radius:8px;"></iframe>` : 
-                        '<div style="background:#f8fafc; height:200px; display:flex; align-items:center; justify-content:center; border-radius:8px; border:1px dashed #cbd5e1; color:#64748b;">Nenhum vídeo disponível</div>'}
+                    ${videoEmbed ?
+                        `<iframe width="100%" height="250" src="${videoEmbed}" frameborder="0" allowfullscreen style="border-radius:var(--radius-md);"></iframe>` :
+                        '<div style="background:var(--bg-subtle); height:200px; display:flex; align-items:center; justify-content:center; border-radius:var(--radius-md); border:1px dashed var(--border-strong); color:var(--text-muted);">Nenhum vídeo disponível</div>'}
                 </div>
                 <div>
                     <h4 style="margin-bottom:15px; color:var(--primary);">Descrição</h4>
-                    <div style="background:#f1f5f9; padding:15px; border-radius:8px; margin-bottom:20px;">
+                    <div style="background:var(--bg-subtle); padding:15px; border-radius:var(--radius-md); margin-bottom:20px;">
                         <p style="font-size:0.9rem; line-height:1.5;">${window.escapeHTML(eq.description || 'Nenhuma descrição técnica informada para este ativo.')}</p>
                     </div>
                     ${eq.manual_url ? 

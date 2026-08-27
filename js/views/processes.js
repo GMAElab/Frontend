@@ -53,7 +53,7 @@ window.openProcessModal = async function() {
                 equipe.forEach(membro => {
                     if (membro.nome !== nomeLogado) {
                         htmlEquipe += `
-                        <label style="background: #F3F4F6; color: #374151; padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 5px; border: 1px solid #E5E7EB; user-select: none;">
+                        <label style="background: var(--bg-subtle); color: var(--text-main); padding: 6px 12px; border-radius: var(--radius-full); cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 5px; border: 1px solid var(--border-color); user-select: none;">
                             <input type="checkbox" name="smart_equipe_cb" value="${membro.nome}" style="cursor: pointer;">
                             ${membro.nome}
                         </label>`;
@@ -63,7 +63,7 @@ window.openProcessModal = async function() {
                 containerEquipe.innerHTML = htmlEquipe;
             }
         } catch (err) {
-            containerEquipe.innerHTML = '<span style="color:red; font-size: 12px;">Falha ao carregar lista de equipe.</span>';
+            containerEquipe.innerHTML = '<span style="color:var(--danger); font-size: 12px;">Falha ao carregar lista de equipe.</span>';
         }
     }
 };
@@ -93,7 +93,7 @@ window.openTab = function(evt, tabName) {
     if (targetTab) targetTab.style.display = "block";
     
     evt.currentTarget.classList.add("active");
-    evt.currentTarget.style.borderBottom = "3px solid #0056b3";
+    evt.currentTarget.style.borderBottom = "3px solid var(--primary)";
     evt.currentTarget.style.fontWeight = "bold";
 };
 
@@ -233,60 +233,60 @@ window.renderProcessDetailsModal = function(proc, atividades) {
         const safeNote = window.escapeHTML ? window.escapeHTML(a.note) : a.note;
         const temImagem = !!a.imagem_url;
         return `
-        <div onclick="window.handleActivityClick(${index})" style="border-left: 3px solid var(--primary); padding-left: 12px; margin-bottom: 15px; cursor: pointer; transition: background 0.2s; padding: 8px 12px; border-radius: 0 8px 8px 0;" onmouseover="this.style.background='#F1F5F9'" onmouseout="this.style.background='transparent'">
-            <div style="font-size: 11px; color: #777f8a; font-weight:bold; margin-bottom: 3px;">
+        <div onclick="window.handleActivityClick(${index})" style="border-left: 3px solid var(--primary); padding-left: 12px; margin-bottom: 15px; cursor: pointer; transition: var(--transition-fast); padding: 8px 12px; border-radius: 0 var(--radius-md) var(--radius-md) 0;" onmouseover="this.style.background='var(--bg-subtle)'" onmouseout="this.style.background='transparent'">
+            <div style="font-size: 11px; color: var(--text-muted); font-weight:600; margin-bottom: 3px;">
                 Data: ${dataLocal.toLocaleDateString('pt-BR')} às ${dataLocal.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
             </div>
-            <strong style="display:block; font-size: 14px; color: #191f29;">${safeTitle}</strong>
-            <p style="margin: 5px 0 0 0; font-size: 13px; color: #424850; white-space: pre-wrap; word-break: break-word; line-height: 1.5;">${safeNote}</p>
+            <strong style="display:block; font-size: 14px; color: var(--text-main);">${safeTitle}</strong>
+            <p style="margin: 5px 0 0 0; font-size: 13px; color: var(--text-muted); white-space: pre-wrap; word-break: break-word; line-height: 1.5;">${safeNote}</p>
         </div>
         `;
     }).join('');
-    
-    if(!actHtml) actHtml = '<p style="color:#94A3B8; font-size:13px; text-align:center; padding:20px;">Nenhuma anotação registrada ainda. Crie a primeira abaixo!</p>';
+
+    if(!actHtml) actHtml = '<p style="color:var(--text-faint); font-size:13px; text-align:center; padding:20px;">Nenhuma anotação registrada ainda. Crie a primeira abaixo!</p>';
 
     const modalHTML = `
-    <div id="processDetailsModal" class="modal-overlay" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999999; justify-content: center; align-items: center;">
-        <div class="modal-content" style="background: white; padding: 0; border-radius: 12px; width: 95%; max-width: 1000px; max-height: 90vh; overflow-y: auto; display: flex; flex-wrap: wrap; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+    <div id="processDetailsModal" class="modal-overlay" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 999999; justify-content: center; align-items: center;">
+        <div class="modal-content" style="padding: 0; border-radius: 4px; border-top: 3px solid var(--primary); width: 95%; max-width: 1000px; max-height: 90vh; overflow-y: auto; display: flex; flex-wrap: wrap;">
 
-            <div style="width: 100%; padding: 20px 25px; border-bottom: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: white; z-index: 10;">
+            <div style="width: 100%; padding: 20px 25px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: var(--bg-surface); z-index: 10;">
                 <div>
-                    <h2 style="margin:0; color:#0F172A; font-size: 20px;">${window.escapeHTML ? window.escapeHTML(proc.nome_processo || 'Processo Sem Nome') : (proc.nome_processo || 'Processo Sem Nome')}</h2>
-                    <span style="font-size: 13px; color: #64748B;">Responsável: <strong>${window.escapeHTML ? window.escapeHTML(proc.responsavel || 'N/A') : (proc.responsavel || 'N/A')}</strong> | Equipe: ${window.escapeHTML ? window.escapeHTML(proc.equipe || 'N/A') : (proc.equipe || 'N/A')}</span>   
+                    <h2 style="margin:0; font-size: 19px;">${window.escapeHTML ? window.escapeHTML(proc.nome_processo || 'Processo Sem Nome') : (proc.nome_processo || 'Processo Sem Nome')}</h2>
+                    <span style="font-size: 13px; color: var(--text-muted);">Responsável: <strong>${window.escapeHTML ? window.escapeHTML(proc.responsavel || 'N/A') : (proc.responsavel || 'N/A')}</strong> | Equipe: ${window.escapeHTML ? window.escapeHTML(proc.equipe || 'N/A') : (proc.equipe || 'N/A')}</span>
                 </div>
                 <div style="display:flex; align-items:center; gap: 15px;">
-                    <span class="badge" style="background: #e7f3ff; color: #004080; padding: 6px 12px; border-radius: 6px; font-weight:bold;">${(proc.status || 'RASCUNHO').toUpperCase()}</span>
-                    <button onclick="document.getElementById('processDetailsModal').remove()" style="background:none; border:none; font-size:28px; cursor:pointer; color:#94A3B8; line-height: 1;">&times;</button>
+                    <span class="badge badge-warning">${(proc.status || 'RASCUNHO').toUpperCase()}</span>
+                    <button onclick="document.getElementById('processDetailsModal').remove()" style="background:none; border:none; font-size:28px; cursor:pointer; color:var(--text-faint); line-height: 1;">&times;</button>
                 </div>
             </div>
 
             <div style="display: flex; flex-wrap: wrap; width: 100%; gap: 0;">
-                
-                <div style="flex: 2 1 400px; padding: 25px; border-right: 1px solid #E2E8F0;">
-                    
-                    <h4 style="color:#1E293B; margin-bottom: 8px; font-size: 14px;">Visão Geral</h4>
-                    <div style="background:#F8FAFC; padding:15px; border-radius:8px; font-size:13px; color: #334155; margin-bottom:20px;">${window.escapeHTML ? window.escapeHTML(proc.visao_geral || 'Nenhuma visão geral definida.') : (proc.visao_geral || 'Nenhuma visão geral definida.')}</div>
 
-                    <h4 style="color:#1E293B; margin-bottom: 8px; font-size: 14px;">Objetivo da Fase</h4>
-                    <div style="background:#F8FAFC; padding:15px; border-radius:8px; font-size:13px; color: #334155; margin-bottom:20px;">${window.escapeHTML ? window.escapeHTML(proc.objetivo_fase || 'Nenhum objetivo definido.') : (proc.objetivo_fase || 'Nenhum objetivo definido.')}</div>
+                <div style="flex: 2 1 400px; padding: 25px; border-right: 1px solid var(--border-color);">
 
-                    <h4 style="color:#1E293B; margin-bottom: 8px; font-size: 14px;">Detalhamento das Etapas</h4>
-                    <div style="background:#F8FAFC; padding:15px; border-radius:8px; font-size:13px; color: #334155; margin-bottom:20px; white-space:pre-wrap;">${window.escapeHTML ? window.escapeHTML(proc.detalhamento_etapas || 'Nenhuma etapa registrada.') : (proc.detalhamento_etapas || 'Nenhuma etapa registrada.')}</div>
+                    <h4 style="margin-bottom: 8px; font-size: 14px;">Visão Geral</h4>
+                    <div style="background:var(--bg-subtle); padding:15px; border-radius:var(--radius-md); font-size:13px; color: var(--text-main); margin-bottom:20px;">${window.escapeHTML ? window.escapeHTML(proc.visao_geral || 'Nenhuma visão geral definida.') : (proc.visao_geral || 'Nenhuma visão geral definida.')}</div>
+
+                    <h4 style="margin-bottom: 8px; font-size: 14px;">Objetivo da Fase</h4>
+                    <div style="background:var(--bg-subtle); padding:15px; border-radius:var(--radius-md); font-size:13px; color: var(--text-main); margin-bottom:20px;">${window.escapeHTML ? window.escapeHTML(proc.objetivo_fase || 'Nenhum objetivo definido.') : (proc.objetivo_fase || 'Nenhum objetivo definido.')}</div>
+
+                    <h4 style="margin-bottom: 8px; font-size: 14px;">Detalhamento das Etapas</h4>
+                    <div style="background:var(--bg-subtle); padding:15px; border-radius:var(--radius-md); font-size:13px; color: var(--text-main); margin-bottom:20px; white-space:pre-wrap;">${window.escapeHTML ? window.escapeHTML(proc.detalhamento_etapas || 'Nenhuma etapa registrada.') : (proc.detalhamento_etapas || 'Nenhuma etapa registrada.')}</div>
 
                     ${proc.imagem_url ? `
-                    <h4 style="color:#1E293B; margin-bottom: 8px; font-size: 14px;">Anexos</h4>
-                    <div style="background:#F8FAFC; padding:15px; border-radius:8px; margin-bottom:20px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
+                    <h4 style="margin-bottom: 8px; font-size: 14px;">Anexos</h4>
+                    <div style="background:var(--bg-subtle); padding:15px; border-radius:var(--radius-md); margin-bottom:20px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
                         ${proc.imagem_url.split(',').map(url => `
-                            <img src="${window.escapeHTML ? window.escapeHTML(url.trim()) : url.trim()}" style="max-width: 100%; max-height: 250px; border-radius: 6px; cursor: pointer; object-fit: contain; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" onclick="window.open(this.src, '_blank')" title="Clique para ampliar" />
+                            <img src="${window.escapeHTML ? window.escapeHTML(url.trim()) : url.trim()}" style="max-width: 100%; max-height: 250px; border-radius: var(--radius-sm); cursor: pointer; object-fit: contain; border: 1px solid var(--border-color);" onclick="window.open(this.src, '_blank')" title="Clique para ampliar" />
                         `).join('')}
                     </div>` : ''}
 
-                    <h4 style="color:#1E293B; margin-bottom: 8px; font-size: 14px;">Indicadores de Desempenho</h4>
-                    <div style="background:#F8FAFC; padding:15px; border-radius:8px; font-size:13px; color: #334155; margin-bottom:20px; white-space:pre-wrap;">${window.escapeHTML ? window.escapeHTML(proc.indicadores_desempenho || 'Nenhum indicador registrado.') : (proc.indicadores_desempenho || 'Nenhum indicador registrado.')}</div>
+                    <h4 style="margin-bottom: 8px; font-size: 14px;">Indicadores de Desempenho</h4>
+                    <div style="background:var(--bg-subtle); padding:15px; border-radius:var(--radius-md); font-size:13px; color: var(--text-main); margin-bottom:20px; white-space:pre-wrap;">${window.escapeHTML ? window.escapeHTML(proc.indicadores_desempenho || 'Nenhum indicador registrado.') : (proc.indicadores_desempenho || 'Nenhum indicador registrado.')}</div>
                 </div>
 
-                <div style="flex: 1 1 300px; padding: 25px; background: #F8FAFC;">
-                    <h3 style="margin:0 0 20px 0; font-size:16px; color:#0F172A; display:flex; align-items:center; gap:8px;">
+                <div style="flex: 1 1 300px; padding: 25px; background: var(--bg-subtle);">
+                    <h3 style="margin:0 0 20px 0; font-size:16px; display:flex; align-items:center; gap:8px;">
                         <span>Linha do Tempo (Atividades)</span>
                     </h3>
 
@@ -294,18 +294,18 @@ window.renderProcessDetailsModal = function(proc, atividades) {
                         ${actHtml}
                     </div>
 
-                    <form onsubmit="submitProcessActivity(event, ${proc.id})" style="background:white; padding:18px; border-radius:8px; border:1px solid #E2E8F0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                        <h4 style="margin:0 0 12px 0; font-size:14px; color:#1E293B;">+ Adicionar Atividade</h4>
-                        <input type="text" id="act-title" placeholder="Título (Ex: Teste Finalizado)" required class="form-control" style="width:100%; padding:10px; margin-bottom:12px; font-size:13px;">
-                        <textarea id="act-note" placeholder="Descreva os resultados ou o que foi feito..." required class="form-control" rows="3" style="width:100%; padding:10px; margin-bottom:12px; font-size:13px;"></textarea>
-                        
-                        <div class="input-group" style="margin-bottom: 12px; background: #F8FAFC; padding: 10px; border-radius: 6px; border: 1px dashed #CBD5E1;">
-                            <label style="font-size: 11px; font-weight: bold; color: #475569; display:block; margin-bottom: 5px;">Anexar Imagens (Múltiplas - Opcional)</label>
+                    <form onsubmit="submitProcessActivity(event, ${proc.id})" style="background:var(--bg-surface); padding:18px; border-radius:var(--radius-md); border:1px solid var(--border-color);">
+                        <h4 style="margin:0 0 12px 0; font-size:14px;">+ Adicionar Atividade</h4>
+                        <input type="text" id="act-title" placeholder="Título (Ex: Teste Finalizado)" required class="form-control" style="width:100%; margin-bottom:12px; font-size:13px;">
+                        <textarea id="act-note" placeholder="Descreva os resultados ou o que foi feito..." required class="form-control" rows="3" style="width:100%; margin-bottom:12px; font-size:13px;"></textarea>
+
+                        <div class="input-group" style="margin-bottom: 12px; background: var(--bg-subtle); padding: 10px; border-radius: var(--radius-sm); border: 1px dashed var(--border-strong);">
+                            <label style="font-size: 11px; font-weight: 600; color: var(--text-muted); display:block; margin-bottom: 5px;">Anexar Imagens (Múltiplas - Opcional)</label>
                             <input type="file" id="act-imagem" class="form-control" accept="image/png, image/jpeg, image/jpg" multiple style="font-size: 12px; padding: 5px;" onchange="window.previewMultiplasImagens(event, 'preview-act')">
                             <div id="preview-act" style="display: none; margin-top: 10px; text-align: center; gap: 10px; flex-wrap: wrap; justify-content: center;"></div>
                         </div>
 
-                        <button type="submit" class="btn btn-primary" style="width:100%; font-weight:bold; padding: 10px;">Registrar na Linha do Tempo</button>
+                        <button type="submit" class="btn btn-primary" style="width:100%; padding: 10px;">Registrar na Linha do Tempo</button>
                     </form>
                 </div>
 
@@ -368,33 +368,32 @@ window.abrirModalAtividade = function(title, note, imgUrl) {
     if (imgUrl) {
         const urls = imgUrl.split(',');
         const imagensRenderizadas = urls.map(u => `
-            <img src="${window.escapeHTML(u.trim())}" style="width: 100%; height: auto; max-height: 280px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer; object-fit: contain; background: #fff;" onclick="window.open(this.src, '_blank')" title="Clique para ampliar">
+            <img src="${window.escapeHTML(u.trim())}" style="width: 100%; height: auto; max-height: 280px; border-radius: var(--radius-sm); cursor: pointer; object-fit: contain; background: var(--bg-surface); border: 1px solid var(--border-color);" onclick="window.open(this.src, '_blank')" title="Clique para ampliar">
         `).join('');
-        
+
         imgHtml = `
-        <div style="margin-top: 24px; border-top: 1px solid #E2E8F0; padding-top: 20px;">
-             <label style="font-size: 12px; font-weight: bold; color: #64748B; text-transform: uppercase; display: block; margin-bottom: 16px; text-align: center;">Anexos</label>
-             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; align-items: center; justify-items: center; background: #F1F5F9; padding: 16px; border-radius: 8px;">
+        <div style="margin-top: 24px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+             <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 16px; text-align: center;">Anexos</label>
+             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; align-items: center; justify-items: center; background: var(--bg-subtle); padding: 16px; border-radius: var(--radius-md);">
                  ${imagensRenderizadas}
              </div>
         </div>`;
     }
 
     const html = `
-    <div id="${modalId}" class="modal-overlay" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 10000000; justify-content: center; align-items: center; padding: 20px;">
-        
-        <!-- A MÁGICA ESTÁ AQUI: max-height: 90vh e overflow-y: auto -->
-        <div class="modal-content fade-in" style="background: white; padding: 32px; border-radius: 12px; width: 100%; max-width: 650px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); position: relative;">
-            
-            <button onclick="document.getElementById('${modalId}').remove()" style="position: absolute; top: 16px; right: 20px; background: none; border: none; font-size: 28px; cursor: pointer; color: #94A3B8; line-height: 1; transition: color 0.2s;" onmouseover="this.style.color='#0F172A'" onmouseout="this.style.color='#94A3B8'">&times;</button>
-            
-            <h3 style="margin: 0 0 16px 0; color: #0F172A; font-size: 20px; padding-right: 30px; border-bottom: 1px solid #F1F5F9; padding-bottom: 12px;">${window.escapeHTML(title)}</h3>
+    <div id="${modalId}" class="modal-overlay" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 10000000; justify-content: center; align-items: center; padding: 20px;">
 
-            <div style="background: #F8FAFC; padding: 20px; border-radius: 8px; font-size: 14.5px; color: #334155; white-space: pre-wrap; word-break: break-word; line-height: 1.6; border: 1px solid #E2E8F0;">${window.escapeHTML(note)}</div>
-            
+        <div class="modal-content fade-in" style="width: 100%; max-width: 650px; max-height: 90vh; overflow-y: auto; border-radius: 4px; border-top: 3px solid var(--primary); position: relative;">
+
+            <button onclick="document.getElementById('${modalId}').remove()" style="position: absolute; top: 16px; right: 20px; background: none; border: none; font-size: 28px; cursor: pointer; color: var(--text-faint); line-height: 1;" onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-faint)'">&times;</button>
+
+            <h3 style="margin: 0 0 16px 0; font-size: 20px; padding-right: 30px; border-bottom: 1px solid var(--border-light); padding-bottom: 12px;">${window.escapeHTML(title)}</h3>
+
+            <div style="background: var(--bg-subtle); padding: 20px; border-radius: var(--radius-md); font-size: 14.5px; color: var(--text-main); white-space: pre-wrap; word-break: break-word; line-height: 1.6; border: 1px solid var(--border-color);">${window.escapeHTML(note)}</div>
+
             ${imgHtml}
             
-            <div style="margin-top: 24px; text-align: right; border-top: 1px solid #F1F5F9; padding-top: 16px;">
+            <div style="margin-top: 24px; text-align: right; border-top: 1px solid var(--border-light); padding-top: 16px;">
                 <button onclick="document.getElementById('${modalId}').remove()" class="btn btn-secondary">Fechar</button>
             </div>
         </div>
@@ -426,14 +425,14 @@ window.previewMultiplasImagens = function(event, previewContainerId) {
             reader.onload = function(e) {
                 const imgHTML = `
                 <div style="position: relative; display: inline-block;">
-                    <img src="${e.target.result}" style="max-width: 120px; max-height: 120px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); object-fit: cover;" />
+                    <img src="${e.target.result}" style="max-width: 120px; max-height: 120px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); object-fit: cover;" />
                 </div>`;
                 container.insertAdjacentHTML('beforeend', imgHTML);
             };
             reader.readAsDataURL(file);
         });
 
-        const clearBtn = `<p style="width: 100%; margin: 8px 0 0 0; font-size: 13px; color: #DC2626; cursor: pointer; font-weight: bold;" onclick="document.getElementById('${event.target.id}').value = ''; document.getElementById('${previewContainerId}').style.display = 'none';"> Remover Imagens</p>`;
+        const clearBtn = `<p style="width: 100%; margin: 8px 0 0 0; font-size: 13px; color: var(--danger); cursor: pointer; font-weight: 600;" onclick="document.getElementById('${event.target.id}').value = ''; document.getElementById('${previewContainerId}').style.display = 'none';"> Remover Imagens</p>`;
         container.insertAdjacentHTML('beforeend', clearBtn);
     } else {
         container.style.display = 'none';

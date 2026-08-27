@@ -25,19 +25,16 @@
 }
 
 .btn:active:not(:disabled) {
-    transform: translateY(1px) scale(0.98);
+    filter: brightness(0.94);
 }
 
 .btn-primary {
     background-color: var(--primary);
     color: white;
-    box-shadow: 0 2px 4px rgba(37, 84, 235, 0.2);
 }
 
 .btn-primary:hover:not(:disabled) {
     background-color: var(--primary-hover);
-    box-shadow: 0 6px 14px rgba(37, 84, 235, 0.28);
-    transform: translateY(-1px);
 }
 
 .btn-secondary {
@@ -65,13 +62,10 @@
 .btn-danger {
     background-color: var(--danger);
     color: white;
-    box-shadow: 0 2px 4px rgba(226, 55, 68, 0.2);
 }
 
 .btn-danger:hover:not(:disabled) {
-    background-color: #C92531;
-    box-shadow: 0 6px 14px rgba(226, 55, 68, 0.28);
-    transform: translateY(-1px);
+    background-color: #8F2A1A;
 }
 
 .btn-outline-danger {
@@ -152,20 +146,30 @@ textarea::placeholder {
 .badge, .status-badge {
     display: inline-flex;
     align-items: center;
-    padding: 4px 12px;
+    gap: 6px;
+    padding: 3px 9px;
     font-size: 11.5px;
-    font-weight: 700;
-    border-radius: var(--radius-full);
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    letter-spacing: 0.02em;
     white-space: nowrap;
 }
 
-.badge { background: var(--bg-subtle); color: var(--text-muted); }
-.badge-success, .status-aprovado, .status-ativo, .status-concluido, .status-concluído { background: var(--success-light); color: #067A4C; }
-.badge-warning, .status-pendente, .status-andamento, .status-em_andamento { background: var(--warning-light); color: #9A5B04; }
-.badge-danger,  .status-reprovado, .status-rejeitado, .status-atrasado, .status-inativo, .status-cancelado { background: var(--danger-light); color: #B71C27; }
-.status-badge:not([class*="status-"]) { background: var(--bg-subtle); color: var(--text-muted); }
+.badge::before, .status-badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+}
+
+.badge { background: var(--bg-subtle); color: var(--text-muted); border-color: var(--border-color); }
+.badge-success, .status-aprovado, .status-ativo, .status-concluido, .status-concluído { background: var(--success-light); color: #2C5E38; border-color: var(--success-border); }
+.badge-warning, .status-pendente, .status-andamento, .status-em_andamento { background: var(--warning-light); color: #71490B; border-color: var(--warning-border); }
+.badge-danger,  .status-reprovado, .status-rejeitado, .status-atrasado, .status-inativo, .status-cancelado { background: var(--danger-light); color: #832617; border-color: var(--danger-border); }
+.status-badge:not([class*="status-"]) { background: var(--bg-subtle); color: var(--text-muted); border-color: var(--border-color); }
 
 /* ==========================================
    TABELAS
@@ -188,10 +192,9 @@ th {
     background-color: var(--bg-subtle);
     color: var(--text-muted);
     font-weight: 600;
-    font-size: 11.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    padding: 14px 20px;
+    font-size: 12px;
+    letter-spacing: 0.02em;
+    padding: 12px 20px;
     border-bottom: 1px solid var(--border-color);
     white-space: nowrap;
 }
@@ -218,31 +221,22 @@ tbody tr:hover {
    MODAIS E NOTIFICAÇÕES
    ========================================== */
 .toast {
-    padding: 14px 18px;
+    padding: 13px 16px;
     border-radius: var(--radius-md);
     color: white;
-    font-weight: 600;
+    font-weight: 500;
     font-size: 13.5px;
     box-shadow: var(--shadow-floating);
     display: flex;
     align-items: center;
     gap: 12px;
-    animation: slideInRight 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    animation: fadeIn 0.15s ease;
 }
 
-.toast.success { background-color: var(--ink); border-left: 4px solid var(--success); }
-.toast.error   { background-color: var(--ink); border-left: 4px solid var(--danger); }
-.toast.warning { background-color: var(--ink); border-left: 4px solid var(--warning); }
-.toast.info    { background-color: var(--ink); border-left: 4px solid var(--primary); }
-
-@keyframes slideInRight {
-    from { transform: translateX(120%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-}
-@keyframes slideIn {
-    from { transform: translateX(0); opacity: 1; }
-    to { transform: translateX(120%); opacity: 0; }
-}
+.toast.success { background-color: var(--ink); border-left: 3px solid var(--success); }
+.toast.error   { background-color: var(--ink); border-left: 3px solid var(--danger); }
+.toast.warning { background-color: var(--ink); border-left: 3px solid var(--warning); }
+.toast.info    { background-color: var(--ink); border-left: 3px solid var(--primary); }
 
 .spinner {
     display: inline-block;
@@ -354,9 +348,8 @@ tbody tr:hover {
 }
 
 .shortcut-card:hover {
-    box-shadow: var(--shadow-md);
-    border-color: var(--border-strong);
-    transform: translateY(-2px);
+    border-color: var(--primary);
+    background: var(--bg-subtle);
 }
 
 .shortcut-card .icon-wrap {
@@ -410,12 +403,11 @@ tbody tr:hover {
 .admin-card {
     background: var(--bg-surface);
     border: 1px solid var(--border-color);
-    border-top: 4px solid var(--primary);
+    border-left: 3px solid var(--primary);
     border-radius: var(--radius-lg);
     padding: var(--space-6);
     cursor: pointer;
     transition: var(--transition);
-    box-shadow: var(--shadow-sm);
     display: flex;
     flex-direction: column;
 }
@@ -436,9 +428,9 @@ tbody tr:hover {
 }
 
 .admin-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
     border-color: var(--border-strong);
+    border-left-color: var(--primary);
+    background: var(--bg-subtle);
 }
 
 .meses-grid {
@@ -459,22 +451,17 @@ tbody tr:hover {
     font-weight: 600;
     color: var(--text-muted);
     user-select: none;
-    box-shadow: var(--shadow-xs);
 }
 
 .mes-card:hover {
     border-color: var(--primary);
     color: var(--primary);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
 }
 
 .mes-card.active {
     background: var(--primary);
     color: white;
     border-color: var(--primary);
-    box-shadow: 0 8px 16px rgba(37, 84, 235, 0.3);
-    transform: translateY(-2px);
 }
 
 .pop-sec {
@@ -489,11 +476,10 @@ tbody tr:hover {
     padding: var(--space-5);
     border-radius: var(--radius-lg);
     border: 1px solid var(--border-color);
-    box-shadow: var(--shadow-sm);
     transition: var(--transition);
 }
 
 .article-card:hover {
-    box-shadow: var(--shadow-md);
     border-color: var(--border-strong);
+    background: var(--bg-subtle);
 }

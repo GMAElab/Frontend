@@ -58,7 +58,7 @@ window.abrirSetup2FA = async function() {
                 text: data.qr_uri,
                 width: 180,
                 height: 180,
-                colorDark: "#0F172A",
+                colorDark: "#1B1815",
                 colorLight: "#ffffff",
                 correctLevel: QRCode.CorrectLevel.H
             });

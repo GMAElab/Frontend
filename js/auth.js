@@ -22,13 +22,14 @@ function verificarBloqueioDeCookies() {
 function exibirAvisoCookies() {
     const loginCard = document.querySelector('.login-card') || document.body;
     
+    const cookieIcon = window.Icon ? window.Icon('alert-triangle', { size: 16 }) : '';
     const avisoHtml = `
-        <div id="aviso-cookie-restrito" style="background: #FFFBEB; border: 1px solid #F59E0B; padding: 15px; border-radius: 6px; margin-bottom: 20px; text-align: left; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-            <h4 style="color: #B45309; margin: 0 0 5px 0; display: flex; align-items: center; gap: 8px;">
-                ⚠️ Navegador Restrito Detectado
+        <div id="aviso-cookie-restrito" style="background: var(--warning-light); border: 1px solid var(--warning-border); padding: 15px; border-radius: var(--radius-md); margin-bottom: 20px; text-align: left;">
+            <h4 style="color: var(--warning); margin: 0 0 5px 0; display: flex; align-items: center; gap: 8px; font-size: 14px;">
+                ${cookieIcon} Navegador Restrito Detectado
             </h4>
-            <p style="color: #78350F; font-size: 13px; margin: 0; line-height: 1.5;">
-                Você está em uma <strong>Guia Anônima</strong> ou usando um navegador que bloqueia conexões externas (como Safari ou Brave). 
+            <p style="color: var(--text-muted); font-size: 13px; margin: 0; line-height: 1.5;">
+                Você está em uma <strong>Guia Anônima</strong> ou usando um navegador que bloqueia conexões externas (como Safari ou Brave).
                 <br><br>
                 Para conseguir entrar no SGCI - GMAE, clique no ícone de <strong>olho riscado ou escudo</strong> na barra de endereços do seu navegador e selecione <strong>"Permitir cookies de terceiros"</strong>. Em seguida, atualize a página.
             </p>

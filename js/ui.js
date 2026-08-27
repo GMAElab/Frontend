@@ -88,8 +88,9 @@ const UI = {
 
         container.appendChild(toast);
         setTimeout(() => {
-            toast.style.animation = 'slideIn 0.3s ease reverse forwards';
-            setTimeout(() => toast.remove(), 300);
+            toast.style.transition = 'opacity 0.2s ease';
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 200);
         }, 4000);
     },
 
