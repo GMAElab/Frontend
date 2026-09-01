@@ -64,7 +64,7 @@ function renderPTAPesquisador() {
 
     main.innerHTML = `
         <div class="view-header">
-            <h2>Plano de Trabalho (PTA)</h2>
+            <h2>Planejamento Mensal</h2>
             <p class="text-muted">Envie sua progressão mensal em cada tópico disponível.</p>
         </div>
 
@@ -72,7 +72,7 @@ function renderPTAPesquisador() {
 
             <!-- FORMULÁRIO PRINCIPAL -->
             <div class="card-responsivo" style="align-self: start;">
-                <h3 style="margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border-light);">Novo PTA</h3>
+                <h3 style="margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border-light);">Novo Planejamento Mensal</h3>
                 <form id="form-pta">
                     <div class="input-group">
                         <label>Tópico de Pesquisa</label>
@@ -112,15 +112,15 @@ function renderPTAPesquisador() {
                         <textarea id="pta-descricao" class="form-control" rows="6" placeholder="Descreva os experimentos, resultados e atividades..." required></textarea>
                     </div>
 
-                    <button type="submit" class="btn btn-primary btn-block">Enviar PTA</button>
+                    <button type="submit" class="btn btn-primary btn-block">Enviar Planejamento Mensal</button>
                 </form>
             </div>
 
             <div class="card-responsivo" style="align-self: start;">
-                <h3 style="margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border-light);">PTA já enviado</h3>
+                <h3 style="margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border-light);">Planejamento Mensal     já enviado</h3>
                 <p class="text-muted" style="font-size: 12px; margin-bottom: 15px;">Veja o que os outros membros já enviaram sobre este tópico no mês selecionado.</p>
                 <div id="ptaunificado-equipe-lista" style="display: flex; flex-direction: column; gap: 15px; max-height: 600px; overflow-y: auto; padding-right: 5px;">
-                    <p class="text-faint" style="font-size: 13px; text-align: center;">Selecione um tópico para verificar o PTA.</p>
+                    <p class="text-faint" style="font-size: 13px; text-align: center;">Selecione um tópico para verificar o Planejamento Mensal.</p>
                 </div>
             </div>
 
