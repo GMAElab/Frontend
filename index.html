@@ -73,7 +73,7 @@
                 </div>
 
                 <div class="auth-requirements">
-                    Você vai precisar do <strong>código do seu aplicativo Autenticador</strong> e de um <strong>código de backup</strong> (gerados quando você ativou o 2FA). Nunca ativou o 2FA? Contate um administrador do sistema.
+                    Informe <strong>apenas um</strong> dos dois: o código do seu aplicativo Autenticador (se ainda tiver o celular) <strong>ou</strong> um código de backup (se tiver perdido o acesso ao Autenticador). Nunca ativou o 2FA? Contate um administrador do sistema.
                 </div>
 
                 <div class="input-group">
@@ -86,10 +86,11 @@
                 </div>
 
                 <div class="input-group" style="display: flex; gap: 10px; margin-top: 10px;">
-                    <input type="text" id="reset-backup" class="form-control" required placeholder="Cód. Backup (ex: LEQM-...)" style="text-align: center; font-weight: bold; font-size: 14px;">
+                    <input type="text" id="reset-backup" class="form-control" placeholder="Cód. Backup (ex: LEQM-...)" style="text-align: center; font-weight: bold; font-size: 14px;">
 
-                    <input type="text" id="reset-2fa" class="form-control" maxlength="6" required placeholder="Cód. App 2FA" style="text-align: center; font-weight: bold; font-size: 14px;">
+                    <input type="text" id="reset-2fa" class="form-control" maxlength="6" placeholder="Cód. App 2FA" style="text-align: center; font-weight: bold; font-size: 14px;">
                 </div>
+                <p class="text-muted text-small" style="margin-top: 6px;">Preencha só um dos dois campos acima.</p>
 
                 <div id="reset-feedback" class="feedback-msg" aria-live="polite"></div>
                 

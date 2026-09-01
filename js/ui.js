@@ -244,7 +244,7 @@ document.addEventListener('viewChanged', (e) => {
         const primeiroNome = (user.nome || 'Pesquisador').split(' ')[0];
 
         const atalhos = [
-            { view: 'pta', icon: 'bar-chart', label: 'Enviar PTA', desc: 'Registrar avanço mensal' },
+            { view: 'pta', icon: 'bar-chart', label: 'Enviar Planejamento Mensal', desc: 'Registrar avanço mensal' },
             { view: 'processes', icon: 'layers', label: 'Novo Processo', desc: 'Mapear um processo de P&D' },
             { view: 'equipments', icon: 'flask', label: 'Equipamentos', desc: 'Consultar o laboratório' },
             { view: 'articles', icon: 'search', label: 'Artigos', desc: 'Buscar literatura científica' },
@@ -255,7 +255,7 @@ document.addEventListener('viewChanged', (e) => {
                 <div style="color:var(--warning); flex-shrink:0; margin-top:2px;">${window.Icon('alert-triangle', { size: 20 })}</div>
                 <div>
                     <h4 style="font-size:14px; margin-bottom:4px;">Pendências de avaliação</h4>
-                    <p class="text-muted" style="font-size:13px; margin:0; line-height:1.5;">Há pedidos de cadastro ou relatórios PTA aguardando sua revisão no Painel Admin.</p>
+                    <p class="text-muted" style="font-size:13px; margin:0; line-height:1.5;">Há pedidos de cadastro ou relatórios do Planejamento Mensal aguardando sua revisão no Painel Admin.</p>
                 </div>
             </div>` : '';
 

@@ -215,18 +215,23 @@ if (forgotForm) {
         const codigo2FA = document.getElementById('reset-2fa').value.trim();
         const codigoBackup = document.getElementById('reset-backup').value.trim();
         const novaSenha = document.getElementById('reset-new-password').value;
-        
+
+        if (!codigo2FA && !codigoBackup) {
+            UI.showFormFeedback('reset-feedback', 'Preencha o código do Autenticador ou um código de backup.', true);
+            return;
+        }
+
         UI.showFormFeedback('reset-feedback', '', false);
         UI.setButtonLoading('btn-reset', true);
-        
+
         try {
             const response = await fetch(`${window.API_URL}/esqueci-senha/auto-recuperacao`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     email: email,
-                    codigo_2fa: codigo2FA,
-                    codigo_backup: codigoBackup, 
+                    codigo_2fa: codigo2FA || null,
+                    codigo_backup: codigoBackup || null,
                     nova_senha: novaSenha
                 })
             });

@@ -651,7 +651,7 @@ window.gerarSinteseIA = async function() {
         if (res.ok) {
             document.getElementById('resultado-ia').classList.remove('hidden');
             document.getElementById('texto-ia').innerText = data.sintese;
-            if (!data.sintese.includes('Não há PTAs aprovados')) {
+            if (!data.sintese.includes('Não há Planejamento Mensal aprovado')) {
                  window.UI.showToast("Síntese gerada com sucesso!", "success");
             }
         } else {
@@ -798,7 +798,7 @@ window.carregarParaEdicao = function(id) {
     document.getElementById('pta-descricao').value = rel.descricao_atividades;
 
     const btnSubmit = document.querySelector('#form-pta button[type="submit"]');
-    btnSubmit.innerText = "Atualizar Relatório";
+    btnSubmit.innerText = "Atualizar Planejamento Mensal";
 
     if(!document.getElementById('btn-cancelar-edicao')) {
         const btnCancel = document.createElement('button');
@@ -811,7 +811,7 @@ window.carregarParaEdicao = function(id) {
         btnSubmit.parentNode.insertBefore(btnCancel, btnSubmit.nextSibling);
     }
 
-    window.UI.showToast("Relatório carregado para edição.", "info");
+    window.UI.showToast("Planejamento carregado para edição.", "info");
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -821,7 +821,7 @@ window.cancelarEdicaoPTA = function() {
     document.getElementById('valor-avanco').innerText = '50%';
 
     const btnSubmit = document.querySelector('#form-pta button[type="submit"]');
-    btnSubmit.innerText = "Enviar PTA";
+    btnSubmit.innerText = "Enviar Planejamento Mensal";
 
     const btnCancel = document.getElementById('btn-cancelar-edicao');
     if(btnCancel) btnCancel.remove();
@@ -904,7 +904,7 @@ window.carregarPTAUnificadoEquipe = async function() {
         container.innerHTML = html;
     } catch (err) {
         console.error("Erro interno do JS:", err);
-        container.innerHTML = window.UI.errorState('Erro ao carregar o PTA.');
+        container.innerHTML = window.UI.errorState('Erro ao carregar o Planejamento Mensal.');
     }
 };
 
@@ -967,7 +967,7 @@ window.abrirModalDevolucao = function(relatorioId) {
                 <div class="modal-header">
                     <h3>Motivo da Devolução</h3>
                 </div>
-                <p class="text-muted" style="font-size: 13px; margin-bottom: 15px;">Este feedback será anexado ao PTA do pesquisador como uma orientação para correção.</p>
+                <p class="text-muted" style="font-size: 13px; margin-bottom: 15px;">Este feedback será anexado ao Planejamento Mensal do pesquisador como uma orientação para correção.</p>
 
                 <textarea id="texto-motivo-devolucao" class="form-control" rows="4" placeholder="Ex: Faltou detalhar a curva de temperatura no experimento 2..."></textarea>
 

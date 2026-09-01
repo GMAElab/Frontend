@@ -101,15 +101,15 @@ window.openPopModal = function(codigoEdicao = null) {
                 </div>
 
                 <div style="display: flex; flex-direction: column; gap: 15px;">
-                    <div><label style="font-weight:bold;">1. Objetivo</label><textarea id="pop-obj" class="form-control" rows="2" style="width:100%; padding:8px;">${dadosEdit.objetivo || ''}</textarea></div>
-                    <div><label style="font-weight:bold;">2. Aplicação e Escopo</label><textarea id="pop-escopo" class="form-control" rows="2" style="width:100%; padding:8px;">${dadosEdit.escopo || ''}</textarea></div>
-                    <div><label style="font-weight:bold;">3. Responsabilidades</label><textarea id="pop-resp-detalhe" class="form-control" rows="2" style="width:100%; padding:8px;">${dadosEdit.responsabilidades || ''}</textarea></div>
-                    <div><label style="font-weight:bold;">4. Materiais e Equipamentos Necessários</label><textarea id="pop-materiais" class="form-control" rows="2" style="width:100%; padding:8px;">${dadosEdit.materiais || ''}</textarea></div>
-                    <div><label style="font-weight:bold;">5. Procedimento Operacional</label><textarea id="pop-procedimento" class="form-control" rows="5" style="width:100%; padding:8px;">${dadosEdit.procedimento || ''}</textarea></div>
-                    <div><label style="font-weight:bold;">6. Controle de Qualidade</label><textarea id="pop-qualidade" class="form-control" rows="2" style="width:100%; padding:8px;">${dadosEdit.qualidade || ''}</textarea></div>
-                    <div><label style="font-weight:bold;">7. Segurança e Riscos</label><textarea id="pop-seguranca" class="form-control" rows="2" style="width:100%; padding:8px;">${dadosEdit.seguranca || ''}</textarea></div>
-                    <div><label style="font-weight:bold;">8. Manutenção e Calibração</label><textarea id="pop-manutencao" class="form-control" rows="2" style="width:100%; padding:8px;">${dadosEdit.manutencao || ''}</textarea></div>
-                    <div><label style="font-weight:bold;">9. Referências</label><textarea id="pop-referencias" class="form-control" rows="2" style="width:100%; padding:8px;">${dadosEdit.referencias || ''}</textarea></div>
+                    <div><label style="font-weight:bold;">1. Objetivo</label><textarea id="pop-obj" class="form-control" rows="2" style="width:100%; padding:8px;">${window.escapeHTML(dadosEdit.objetivo || '')}</textarea></div>
+                    <div><label style="font-weight:bold;">2. Aplicação e Escopo</label><textarea id="pop-escopo" class="form-control" rows="2" style="width:100%; padding:8px;">${window.escapeHTML(dadosEdit.escopo || '')}</textarea></div>
+                    <div><label style="font-weight:bold;">3. Responsabilidades</label><textarea id="pop-resp-detalhe" class="form-control" rows="2" style="width:100%; padding:8px;">${window.escapeHTML(dadosEdit.responsabilidades || '')}</textarea></div>
+                    <div><label style="font-weight:bold;">4. Materiais e Equipamentos Necessários</label><textarea id="pop-materiais" class="form-control" rows="2" style="width:100%; padding:8px;">${window.escapeHTML(dadosEdit.materiais || '')}</textarea></div>
+                    <div><label style="font-weight:bold;">5. Procedimento Operacional</label><textarea id="pop-procedimento" class="form-control" rows="5" style="width:100%; padding:8px;">${window.escapeHTML(dadosEdit.procedimento || '')}</textarea></div>
+                    <div><label style="font-weight:bold;">6. Controle de Qualidade</label><textarea id="pop-qualidade" class="form-control" rows="2" style="width:100%; padding:8px;">${window.escapeHTML(dadosEdit.qualidade || '')}</textarea></div>
+                    <div><label style="font-weight:bold;">7. Segurança e Riscos</label><textarea id="pop-seguranca" class="form-control" rows="2" style="width:100%; padding:8px;">${window.escapeHTML(dadosEdit.seguranca || '')}</textarea></div>
+                    <div><label style="font-weight:bold;">8. Manutenção e Calibração</label><textarea id="pop-manutencao" class="form-control" rows="2" style="width:100%; padding:8px;">${window.escapeHTML(dadosEdit.manutencao || '')}</textarea></div>
+                    <div><label style="font-weight:bold;">9. Referências</label><textarea id="pop-referencias" class="form-control" rows="2" style="width:100%; padding:8px;">${window.escapeHTML(dadosEdit.referencias || '')}</textarea></div>
                     <div style="background: var(--bg-subtle); padding: 15px; border: 1px dashed var(--border-strong); border-radius: var(--radius-md); margin-bottom: 15px;">
                         <label style="font-weight:600;">Evidência Visual (Imagem até 10MB - Opcional)</label>
                         <input type="file" id="pop-imagem-visual" class="form-control" style="width:100%; margin-top:5px;" accept="image/png, image/jpeg, image/jpg" onchange="previewImagem(event, 'preview-pop', 'img-preview-pop')">
@@ -350,8 +350,8 @@ function renderPopDocxTemplate(pop, dados) {
             <div class="pop-sec" style="margin-bottom: 15px; width: 100%; max-width: 100%;">
                 <h4 style="margin: 0 0 5px 0; font-size: 12pt; font-weight: bold; color: #000;">10. Anexos</h4>
                 <div style="margin: 0; font-size: 11pt; color: #000;">
-                    ${dados.anexo_dados 
-                        ? `<a href="${window.API_URL}${dados.anexo_dados}" target="_blank" style="display: inline-block; padding: 8px 15px; background: #333; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; font-family: Arial;">Baixar Anexo Oficial</a>`
+                    ${dados.anexo_dados
+                        ? `<a href="${dados.anexo_dados.startsWith('http') ? dados.anexo_dados : window.API_URL + dados.anexo_dados}" target="_blank" style="display: inline-block; padding: 8px 15px; background: #333; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; font-family: Arial;">Baixar Anexo Oficial</a>`
                         : 'Não informado.'}
                 </div>
             </div>

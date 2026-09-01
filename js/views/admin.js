@@ -214,6 +214,7 @@ async function loadActiveUsers(container) {
                 btn = `
                     <div class="action-group">
                         <button class="icon-btn" title="Editar" onclick="openDeepView('usuarios', ${u.id}, 'Usuário')">${window.Icon('edit-2', { size: 15 })}</button>
+                        <button class="icon-btn" title="Resetar 2FA (usuário perdeu o celular)" onclick="window.resetUser2FA(${u.id}, '${window.escapeHTML(u.nome).replace(/'/g, "\\'")}')">${window.Icon('shield', { size: 15 })}</button>
                         <button class="icon-btn danger" title="Bloquear acesso" onclick="adminDelete('usuarios', ${u.id}, 'active')">${window.Icon('ban', { size: 15 })}</button>
                     </div>
                 `;
@@ -232,6 +233,23 @@ async function loadActiveUsers(container) {
     } catch (err) { container.innerHTML = window.UI.errorState('Erro ao carregar usuários.'); }
 }
 
+window.resetUser2FA = async (userId, nome) => {
+    const ok = await window.UI.confirm(
+        `O 2FA de ${nome} será desativado. Use isso quando a pessoa perdeu o celular do Autenticador e esgotou os códigos de backup — ela poderá configurar o 2FA de novo após o próximo login.`,
+        { title: 'Resetar 2FA?', danger: true, confirmText: 'Resetar 2FA' }
+    );
+    if (!ok) return;
+    try {
+        const res = await window.api.fetchProtected(`/admin/usuarios/${userId}/resetar-2fa`, { method: 'POST' });
+        if (res.ok) {
+            window.UI.showToast("2FA resetado com sucesso.", "success");
+        } else {
+            window.UI.showToast("Erro ao resetar o 2FA.", "error");
+        }
+    } catch (err) {
+        window.UI.showToast("Falha na rede.", "error");
+    }
+};
 
 // ==========================================
 // 4. MÓDULO: LABORATÓRIO E P&D
