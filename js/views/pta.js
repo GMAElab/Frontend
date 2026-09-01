@@ -112,7 +112,7 @@ function renderPTAPesquisador() {
                         <textarea id="pta-descricao" class="form-control" rows="6" placeholder="Descreva os experimentos, resultados e atividades..." required></textarea>
                     </div>
 
-                    <button type="submit" class="btn btn-primary btn-block">Enviar PTA</button>
+                    <button type="submit" class="btn btn-primary btn-block">Enviar Planejamento</button>
                 </form>
             </div>
 
