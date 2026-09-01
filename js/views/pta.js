@@ -112,7 +112,7 @@ function renderPTAPesquisador() {
                         <textarea id="pta-descricao" class="form-control" rows="6" placeholder="Descreva os experimentos, resultados e atividades..." required></textarea>
                     </div>
 
-                    <button type="submit" class="btn btn-primary btn-block">Enviar Planejamento Mensal</button>
+                    <button type="submit" class="btn btn-primary btn-block">Enviar PTA</button>
                 </form>
             </div>
 
@@ -231,7 +231,7 @@ async function carregarMeusPTAs() {
 
             let btnEditar = '';
             if (rel.status !== 'consolidado') {
-                btnEditar = `<button type="button" class="btn btn-outline-primary btn-sm" style="margin-top:10px;" onclick="event.stopPropagation(); window.carregarParaEdicao(${rel.id})">Editar PTA</button>`;
+                btnEditar = `<button type="button" class="btn btn-outline-primary btn-sm" style="margin-top:10px;" onclick="event.stopPropagation(); window.carregarParaEdicao(${rel.id})">Editar Planejamento</button>`;
             }
 
             html += `
