@@ -173,11 +173,18 @@ window.handleApproval = async (id, isApproved) => {
         { title: isApproved ? 'Aprovar usuário?' : 'Rejeitar pedido?', danger: !isApproved }
     );
     if (!ok) return;
+
+    let stepUpToken = null;
+    if (isApproved) {
+        stepUpToken = await window.api.confirmStepUp({ title: 'Confirme para aprovar', message: 'Você está concedendo acesso ao sistema a um novo usuário.' });
+        if (!stepUpToken) return;
+    }
+
     try {
         const endpoint = isApproved ? `/aprovar-registro/${id}` : `/rejeitar-registro/${id}`;
         let opts = { method: 'POST' };
         if (isApproved) {
-            opts.headers = { 'Content-Type': 'application/json' };
+            opts.headers = { 'Content-Type': 'application/json', 'X-Step-Up-Token': stepUpToken };
             opts.body = JSON.stringify({ role_atribuida: document.getElementById(`role-${id}`).value });
         }
         const res = await window.api.fetchProtected(endpoint, opts);
@@ -214,6 +221,7 @@ async function loadActiveUsers(container) {
                 btn = `
                     <div class="action-group">
                         <button class="icon-btn" title="Editar" onclick="openDeepView('usuarios', ${u.id}, 'Usuário')">${window.Icon('edit-2', { size: 15 })}</button>
+                        <button class="icon-btn" title="Redefinir senha" onclick="window.resetUserPassword(${u.id}, '${window.escapeHTML(u.nome).replace(/'/g, "\\'")}')">${window.Icon('lock', { size: 15 })}</button>
                         <button class="icon-btn" title="Resetar 2FA (usuário perdeu o celular)" onclick="window.resetUser2FA(${u.id}, '${window.escapeHTML(u.nome).replace(/'/g, "\\'")}')">${window.Icon('shield', { size: 15 })}</button>
                         <button class="icon-btn danger" title="Bloquear acesso" onclick="adminDelete('usuarios', ${u.id}, 'active')">${window.Icon('ban', { size: 15 })}</button>
                     </div>
@@ -239,8 +247,12 @@ window.resetUser2FA = async (userId, nome) => {
         { title: 'Resetar 2FA?', danger: true, confirmText: 'Resetar 2FA' }
     );
     if (!ok) return;
+
+    const stepUpToken = await window.api.confirmStepUp({ title: 'Confirme para resetar o 2FA', message: `Você está removendo a segunda camada de segurança de ${nome}.` });
+    if (!stepUpToken) return;
+
     try {
-        const res = await window.api.fetchProtected(`/admin/usuarios/${userId}/resetar-2fa`, { method: 'POST' });
+        const res = await window.api.fetchProtected(`/admin/usuarios/${userId}/resetar-2fa`, { method: 'POST', headers: { 'X-Step-Up-Token': stepUpToken } });
         if (res.ok) {
             window.UI.showToast("2FA resetado com sucesso.", "success");
         } else {
@@ -249,6 +261,54 @@ window.resetUser2FA = async (userId, nome) => {
     } catch (err) {
         window.UI.showToast("Falha na rede.", "error");
     }
+};
+
+window.resetUserPassword = async (userId, nome) => {
+    const ok = await window.UI.confirm(
+        `Uma nova senha temporária será gerada para ${nome}. A senha atual dele(a) deixará de funcionar imediatamente.`,
+        { title: 'Redefinir senha?', danger: true, confirmText: 'Redefinir' }
+    );
+    if (!ok) return;
+
+    const stepUpToken = await window.api.confirmStepUp({ title: 'Confirme para redefinir a senha', message: `Você está gerando uma nova senha para ${nome}.` });
+    if (!stepUpToken) return;
+
+    try {
+        const res = await window.api.fetchProtected(`/admin/usuarios/${userId}/resetar-senha`, { method: 'POST', headers: { 'X-Step-Up-Token': stepUpToken } });
+        if (res.ok) {
+            const data = await res.json();
+            window.mostrarSenhaTemporaria(nome, data.senha_temporaria);
+        } else {
+            const data = await res.json().catch(() => ({}));
+            window.UI.showToast(data.detail || "Erro ao redefinir a senha.", "error");
+        }
+    } catch (err) {
+        window.UI.showToast("Falha na rede.", "error");
+    }
+};
+
+window.mostrarSenhaTemporaria = function(nome, senha) {
+    const modalId = 'senha-temp-modal';
+    const old = document.getElementById(modalId);
+    if (old) old.remove();
+
+    const modal = document.createElement('div');
+    modal.id = modalId;
+    modal.className = 'modal-overlay';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width:440px;">
+            <div class="modal-header">
+                <h3>Senha redefinida</h3>
+            </div>
+            <p class="text-muted" style="font-size:14px;">Repasse esta senha a <strong>${window.escapeHTML(nome)}</strong> por um canal seguro. Ela só será exibida uma vez e não pode ser recuperada depois.</p>
+            <div style="display:flex; align-items:center; gap:10px; margin:16px 0;">
+                <code id="senha-temp-valor" style="flex:1; background:var(--bg-subtle); padding:12px; border-radius:8px; font-size:16px; text-align:center; user-select:all;">${window.escapeHTML(senha)}</code>
+                <button class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText('${senha.replace(/'/g, "\\'")}'); window.UI.showToast('Copiado!', 'success');">Copiar</button>
+            </div>
+            <button class="btn btn-primary btn-block" onclick="document.getElementById('${modalId}').remove()">Entendi, já anotei</button>
+        </div>`;
+    document.body.appendChild(modal);
 };
 
 // ==========================================
@@ -579,6 +639,12 @@ async function saveDeepView(route, id, originalData) {
         payload[key] = key === 'is_active' ? (input.checked ? 1 : 0) : input.value;
     }
 
+    let stepUpToken = null;
+    if (route === 'usuarios') {
+        stepUpToken = await window.api.confirmStepUp({ title: 'Confirme para salvar', message: 'Você está alterando dados de acesso de um usuário, incluindo possivelmente o cargo/permissão dele.' });
+        if (!stepUpToken) return;
+    }
+
     saveBtn.disabled = true;
 
     try {
@@ -592,7 +658,10 @@ async function saveDeepView(route, id, originalData) {
 
         const res = await window.api.fetchProtected(endpoint, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                ...(stepUpToken ? { 'X-Step-Up-Token': stepUpToken } : {})
+            },
             body: JSON.stringify(payload)
         });
 
@@ -630,6 +699,12 @@ window.adminDelete = async (route, id, tabToReload) => {
     );
     if (!ok) return;
 
+    let stepUpToken = null;
+    if (isUser) {
+        stepUpToken = await window.api.confirmStepUp({ title: 'Confirme para bloquear', message: 'Você está revogando o acesso deste usuário ao sistema.' });
+        if (!stepUpToken) return;
+    }
+
     let endpoint = '';
     if (route === 'usuarios') endpoint = `/admin/usuarios/${id}`;
     else if (route === 'equipments') endpoint = `/equipments/admin/${id}`;
@@ -638,7 +713,10 @@ window.adminDelete = async (route, id, tabToReload) => {
     else if (route === 'pta/topicos') endpoint = `/pta/admin/topicos/${id}`;
 
     try {
-        const res = await window.api.fetchProtected(endpoint, { method: 'DELETE' });
+        const res = await window.api.fetchProtected(endpoint, {
+            method: 'DELETE',
+            headers: isUser ? { 'X-Step-Up-Token': stepUpToken } : {}
+        });
 
         if (res.ok) {
             window.UI.showToast("Ação realizada com sucesso.", "success");

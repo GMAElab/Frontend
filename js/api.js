@@ -97,6 +97,93 @@ window.api = {
         }
     },
     
+    // Pede reconfirmação de identidade (senha, ou código do Autenticador se o admin
+    // tiver 2FA ativo) antes de uma ação administrativa sensível. Resolve com o
+    // step_up_token a ser enviado no header X-Step-Up-Token, ou null se cancelado.
+    confirmStepUp: ({ title, message } = {}) => {
+        return new Promise((resolve) => {
+            const userDataStr = localStorage.getItem('user_data');
+            if (!userDataStr) { resolve(null); return; }
+            const user = JSON.parse(userDataStr);
+            const usa2fa = !!user.is_2fa_enabled;
+
+            const modalId = 'stepup-modal';
+            const existente = document.getElementById(modalId);
+            if (existente) existente.remove();
+
+            const icon = window.Icon ? window.Icon('lock', { size: 24 }) : '';
+            const modalHtml = `
+            <div id="${modalId}" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(27,24,21,0.7); z-index:9999999; display:flex; justify-content:center; align-items:center;">
+                <div style="background:var(--bg-surface); padding:30px; border-radius:4px; border-top:3px solid var(--danger); width:90%; max-width:400px; text-align:center; box-shadow:var(--shadow-lg); border-left:1px solid var(--border-color); border-right:1px solid var(--border-color); border-bottom:1px solid var(--border-color);">
+                    <div style="color:var(--danger); margin-bottom:12px; display:flex; justify-content:center;">${icon}</div>
+                    <h3 style="margin-bottom:10px; font-size:18px;">${window.escapeHTML(title || 'Confirme sua identidade')}</h3>
+                    <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px; line-height:1.5;">
+                        ${window.escapeHTML(message || 'Esta é uma ação administrativa sensível.')}
+                        ${usa2fa ? 'Digite o código do seu Autenticador.' : 'Digite sua senha para continuar.'}
+                    </p>
+
+                    <input type="${usa2fa ? 'text' : 'password'}" id="stepup-input" class="form-control" inputmode="${usa2fa ? 'numeric' : 'text'}" autocomplete="${usa2fa ? 'one-time-code' : 'current-password'}" maxlength="${usa2fa ? 6 : 128}" placeholder="${usa2fa ? 'Código de 6 dígitos' : 'Sua senha'}" style="width:100%; margin-bottom:15px; font-size:16px; text-align:center;">
+
+                    <div style="display:flex; gap:10px;">
+                        <button id="stepup-cancel" class="btn btn-secondary" style="flex:1;">Cancelar</button>
+                        <button id="stepup-confirm" class="btn btn-primary" style="flex:1;">Confirmar</button>
+                    </div>
+                    <p id="stepup-error" style="color:var(--danger); font-size:13px; font-weight:600; margin-top:15px; display:none;"></p>
+                </div>
+            </div>`;
+
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+            const modal = document.getElementById(modalId);
+            const input = document.getElementById('stepup-input');
+            const btnConfirm = document.getElementById('stepup-confirm');
+            const btnCancel = document.getElementById('stepup-cancel');
+            const errorMsg = document.getElementById('stepup-error');
+
+            input.focus();
+            btnCancel.onclick = () => { modal.remove(); resolve(null); };
+
+            const doConfirm = async () => {
+                const valor = input.value.trim();
+                if (!valor) return;
+                btnConfirm.disabled = true;
+                btnConfirm.innerText = "Verificando...";
+                errorMsg.style.display = 'none';
+
+                try {
+                    const body = usa2fa ? { codigo_2fa: valor } : { senha: valor };
+                    const res = await window.api.fetchProtected('/admin/confirmar-acao', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(body)
+                    });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        modal.remove();
+                        resolve(data.step_up_token);
+                    } else {
+                        const data = await res.json().catch(() => ({}));
+                        errorMsg.innerText = data.detail || (usa2fa ? "Código incorreto." : "Senha incorreta.");
+                        errorMsg.style.display = 'block';
+                        btnConfirm.innerText = "Confirmar";
+                        btnConfirm.disabled = false;
+                        input.value = '';
+                        input.focus();
+                    }
+                } catch (e) {
+                    errorMsg.innerText = "Falha de conexão. Tente novamente.";
+                    errorMsg.style.display = 'block';
+                    btnConfirm.innerText = "Confirmar";
+                    btnConfirm.disabled = false;
+                }
+            };
+
+            btnConfirm.onclick = doConfirm;
+            input.addEventListener("keypress", (e) => { if (e.key === "Enter") { e.preventDefault(); doConfirm(); } });
+        });
+    },
+
     reauthSilencioso: () => {
         return new Promise((resolve) => {
             const userDataStr = localStorage.getItem('user_data');
