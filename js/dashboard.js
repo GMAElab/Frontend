@@ -99,7 +99,7 @@ window.confirmarAtivacao2FA = async function() {
 
     const btn = document.getElementById('btn-confirmar-2fa');
     const textoOriginal = btn.innerText;
-    btn.innerText = 'A verificar e gerar chaves...';
+    btn.innerText = 'Verificando e gerando chaves...';
     btn.disabled = true;
 
     try {
