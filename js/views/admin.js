@@ -203,19 +203,22 @@ async function loadActiveUsers(container) {
         const users = await res.json();
         users.sort((a, b) => a.nome.localeCompare(b.nome));
 
+        const meuId = (JSON.parse(localStorage.getItem('user_data') || '{}')).id;
+
         let html = '<div class="table-container"><table class="data-table">';
         html += '<thead><tr><th>ID</th><th>Nome</th><th>Email</th><th>Cargo</th><th>Status</th><th style="text-align:right;">Ação</th></tr></thead><tbody>';
 
         users.forEach(u => {
             const isActive = (u.is_active === 1 || u.is_active === true);
+            const isSelf = u.id === meuId;
             const statusBadge = isActive
                 ? '<span class="badge badge-success">Ativo</span>'
                 : '<span class="badge badge-danger">Inativo</span>';
 
+            // Admins também podem ser alvo destas ações — cada uma já exige reconfirmação
+            // de identidade (senha ou código do Autenticador) do admin que a executa.
             let btn = '';
-            if (u.role === 'admin') {
-                btn = '<span class="text-faint" style="font-style:italic; font-size:13px;">Protegido</span>';
-            } else if (!isActive) {
+            if (!isActive) {
                 btn = `<button class="icon-btn" title="Ver detalhes" onclick="openDeepView('usuarios', ${u.id}, 'Usuário')">${window.Icon('eye', { size: 15 })}</button>`;
             } else {
                 btn = `
@@ -223,7 +226,7 @@ async function loadActiveUsers(container) {
                         <button class="icon-btn" title="Editar" onclick="openDeepView('usuarios', ${u.id}, 'Usuário')">${window.Icon('edit-2', { size: 15 })}</button>
                         <button class="icon-btn" title="Redefinir senha" onclick="window.resetUserPassword(${u.id}, '${window.escapeHTML(u.nome).replace(/'/g, "\\'")}')">${window.Icon('lock', { size: 15 })}</button>
                         <button class="icon-btn" title="Resetar 2FA (usuário perdeu o celular)" onclick="window.resetUser2FA(${u.id}, '${window.escapeHTML(u.nome).replace(/'/g, "\\'")}')">${window.Icon('shield', { size: 15 })}</button>
-                        <button class="icon-btn danger" title="Bloquear acesso" onclick="adminDelete('usuarios', ${u.id}, 'active')">${window.Icon('ban', { size: 15 })}</button>
+                        ${!isSelf ? `<button class="icon-btn danger" title="Bloquear acesso" onclick="adminDelete('usuarios', ${u.id}, 'active')">${window.Icon('ban', { size: 15 })}</button>` : ''}
                     </div>
                 `;
             }

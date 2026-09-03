@@ -16,8 +16,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (user.role === 'admin') {
                 btnAdmin.style.display = 'block';
             } else {
-                btnAdmin.remove(); 
+                btnAdmin.remove();
             }
+        }
+
+        if (user.must_change_password) {
+            exibirModalTrocaSenhaObrigatoria();
         }
     }
 
@@ -156,3 +160,98 @@ Gerado em: ${new Date().toLocaleString('pt-BR')}
         btn.disabled = false;
     }
 };
+
+// ==========================================
+// TROCA DE SENHA OBRIGATÓRIA (após reset feito por um admin)
+// ==========================================
+function exibirModalTrocaSenhaObrigatoria() {
+    const modalId = 'forcar-troca-senha-modal';
+    if (document.getElementById(modalId)) return;
+
+    const icon = window.Icon ? window.Icon('lock', { size: 24 }) : '';
+    const modalHtml = `
+    <div id="${modalId}" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(27,24,21,0.85); z-index:9999999; display:flex; justify-content:center; align-items:center;">
+        <div style="background:var(--bg-surface); padding:30px; border-radius:4px; border-top:3px solid var(--warning); width:90%; max-width:420px; box-shadow:var(--shadow-lg);">
+            <div style="color:var(--warning); margin-bottom:12px; display:flex; justify-content:center;">${icon}</div>
+            <h3 style="text-align:center; margin-bottom:10px; font-size:18px;">Defina uma nova senha</h3>
+            <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px; line-height:1.5; text-align:center;">
+                Sua senha foi redefinida por um administrador. Por segurança, você precisa criar uma nova senha antes de continuar usando o sistema.
+            </p>
+
+            <div class="input-group" style="margin-bottom:12px;">
+                <label>Senha temporária (a que você acabou de usar)</label>
+                <input type="password" id="ftc-senha-atual" class="form-control" autocomplete="current-password">
+            </div>
+            <div class="input-group" style="margin-bottom:12px;">
+                <label>Nova senha</label>
+                <input type="password" id="ftc-nova-senha" class="form-control" autocomplete="new-password">
+            </div>
+            <div class="input-group" style="margin-bottom:6px;">
+                <label>Confirmar nova senha</label>
+                <input type="password" id="ftc-confirmar-senha" class="form-control" autocomplete="new-password">
+            </div>
+            <p class="text-muted" style="font-size:12px; margin-bottom:16px;">Mínimo 8 caracteres, com maiúscula, minúscula, número e caractere especial.</p>
+
+            <button id="ftc-btn-salvar" class="btn btn-primary btn-block">Salvar nova senha</button>
+            <p id="ftc-erro" style="color:var(--danger); font-size:13px; font-weight:600; margin-top:15px; display:none; text-align:center;"></p>
+        </div>
+    </div>`;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    const btn = document.getElementById('ftc-btn-salvar');
+    const erro = document.getElementById('ftc-erro');
+
+    const salvar = async () => {
+        const senhaAtual = document.getElementById('ftc-senha-atual').value;
+        const novaSenha = document.getElementById('ftc-nova-senha').value;
+        const confirmar = document.getElementById('ftc-confirmar-senha').value;
+
+        erro.style.display = 'none';
+
+        if (!senhaAtual || !novaSenha || !confirmar) {
+            erro.innerText = 'Preencha todos os campos.';
+            erro.style.display = 'block';
+            return;
+        }
+        if (novaSenha !== confirmar) {
+            erro.innerText = 'As senhas não coincidem.';
+            erro.style.display = 'block';
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerText = 'Salvando...';
+
+        try {
+            const res = await window.api.fetchProtected('/trocar-senha', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ senha_atual: senhaAtual, nova_senha: novaSenha })
+            });
+
+            if (res.ok) {
+                const userAtual = JSON.parse(localStorage.getItem('user_data'));
+                userAtual.must_change_password = false;
+                localStorage.setItem('user_data', JSON.stringify(userAtual));
+                document.getElementById(modalId).remove();
+                if (window.UI) window.UI.showToast('Senha alterada com sucesso!', 'success');
+            } else {
+                const data = await res.json().catch(() => ({}));
+                erro.innerText = data.detail || 'Erro ao alterar a senha.';
+                erro.style.display = 'block';
+            }
+        } catch (e) {
+            erro.innerText = 'Falha de conexão. Tente novamente.';
+            erro.style.display = 'block';
+        } finally {
+            btn.disabled = false;
+            btn.innerText = 'Salvar nova senha';
+        }
+    };
+
+    btn.onclick = salvar;
+    document.getElementById(modalId).querySelectorAll('input').forEach(input => {
+        input.addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); salvar(); } });
+    });
+}
