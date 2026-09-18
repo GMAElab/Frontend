@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Confirmar E-mail | SGCI - GMAE</title>
+
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+    <main class="login-container">
+        <section class="card login-card" style="text-align:center;">
+            <header class="text-center mb-md">
+                <h1 class="text-primary">SGCI - GMAE</h1>
+                <h4 class="text-muted">Confirmação de e-mail</h4>
+            </header>
+
+            <div id="verificacao-spinner">
+                <span class="spinner" style="position:relative;"></span>
+                <p class="text-muted" style="margin-top:12px;">Confirmando seu e-mail...</p>
+            </div>
+
+            <div id="verificacao-resultado" class="hidden">
+                <p id="verificacao-mensagem" class="feedback-msg" aria-live="polite"></p>
+                <a href="index.html" class="btn btn-primary btn-block" style="margin-top:10px;">Ir para o login</a>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        (async function () {
+            const API_URL = 'https://api-hzrz.onrender.com';
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get('token');
+
+            const spinner = document.getElementById('verificacao-spinner');
+            const resultado = document.getElementById('verificacao-resultado');
+            const mensagem = document.getElementById('verificacao-mensagem');
+
+            function mostrarResultado(texto, sucesso) {
+                spinner.classList.add('hidden');
+                resultado.classList.remove('hidden');
+                mensagem.textContent = texto;
+                mensagem.className = `feedback-msg ${sucesso ? 'success' : 'error'}`;
+            }
+
+            if (!token) {
+                mostrarResultado('Link de confirmação inválido: token ausente.', false);
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/verificar-email?token=${encodeURIComponent(token)}`, { method: 'GET' });
+                const data = await res.json().catch(() => ({}));
+
+                if (res.ok) {
+                    mostrarResultado(data.mensagem || 'E-mail confirmado com sucesso!', true);
+                } else {
+                    mostrarResultado(data.detail || 'Não foi possível confirmar seu e-mail.', false);
+                }
+            } catch (err) {
+                mostrarResultado('Erro de conexão. Tente novamente em instantes.', false);
+            }
+        })();
+    </script>
+</body>
+</html>
