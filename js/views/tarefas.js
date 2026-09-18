@@ -380,9 +380,16 @@ window.abrirDetalhesTarefa = async function(id) {
                 <div id="detalhe-comentarios-lista" style="display:flex; flex-direction:column; gap:10px; max-height:220px; overflow-y:auto; margin-bottom:14px;">
                     <span class="spinner"></span>
                 </div>
-                <form id="formComentarioTarefa" style="display:flex; gap:8px;">
-                    <input type="text" id="detalhe-comentario-texto" class="form-control" placeholder="Escreva um comentário..." required style="flex:1;">
-                    <button type="submit" class="btn btn-primary btn-sm">Enviar</button>
+                <form id="formComentarioTarefa">
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" id="detalhe-comentario-texto" class="form-control" placeholder="Escreva um comentário..." required style="flex:1;">
+                        <button type="submit" class="btn btn-primary btn-sm">Enviar</button>
+                    </div>
+                    <div style="margin-top:8px; display:flex; align-items:center; gap:8px;">
+                        <label for="detalhe-comentario-midia" class="btn btn-outline-primary btn-sm" style="cursor:pointer; margin:0;">${window.Icon('upload', { size: 14 })} Anexar foto/vídeo</label>
+                        <input type="file" id="detalhe-comentario-midia" accept="image/*,video/*" style="display:none;" onchange="window.previewMidiaComentario(event)">
+                        <span id="detalhe-comentario-midia-nome" class="text-muted" style="font-size:12px;"></span>
+                    </div>
                 </form>
             </div>
         </div>
@@ -394,6 +401,18 @@ window.abrirDetalhesTarefa = async function(id) {
     document.getElementById('formComentarioTarefa').addEventListener('submit', (e) => window.enviarComentarioTarefa(e, tarefa.id));
     carregarComentariosTarefa(tarefa.id);
 };
+
+function renderAnexoComentario(url) {
+    if (!url) return '';
+    const extensao = (url.split('.').pop() || '').split('?')[0].toLowerCase();
+    const ehVideo = ['mp4', 'mov', 'webm'].includes(extensao);
+    const safeUrl = window.escapeHTML(url);
+
+    if (ehVideo) {
+        return `<video controls style="max-width:100%; max-height:220px; border-radius:var(--radius-sm); margin-top:6px; display:block;"><source src="${safeUrl}"></video>`;
+    }
+    return `<img src="${safeUrl}" style="max-width:100%; max-height:220px; border-radius:var(--radius-sm); margin-top:6px; cursor:pointer; object-fit:contain;" onclick="window.open('${safeUrl}', '_blank')" title="Clique para ampliar">`;
+}
 
 async function carregarComentariosTarefa(id) {
     const container = document.getElementById('detalhe-comentarios-lista');
@@ -412,6 +431,7 @@ async function carregarComentariosTarefa(id) {
             <div style="border-left:2px solid var(--border-color); padding-left:10px;">
                 <strong style="font-size:12.5px;">${window.escapeHTML(c.autor_nome)}</strong>
                 <p style="margin:2px 0 0 0; font-size:13px; color:var(--text-main); white-space:pre-wrap;">${window.escapeHTML(c.texto)}</p>
+                ${renderAnexoComentario(c.anexo_url)}
             </div>
         `).join('');
     } catch (err) {
@@ -419,23 +439,66 @@ async function carregarComentariosTarefa(id) {
     }
 }
 
+window.previewMidiaComentario = function(event) {
+    const file = event.target.files[0];
+    const label = document.getElementById('detalhe-comentario-midia-nome');
+    if (!file) { if (label) label.textContent = ''; return; }
+
+    const ehVideo = file.type.startsWith('video/');
+    const limite = ehVideo ? 30 * 1024 * 1024 : 10 * 1024 * 1024;
+
+    if (file.size > limite) {
+        window.UI.showToast(`Arquivo muito grande. Limite de ${ehVideo ? '30MB para vídeo' : '10MB para imagem'}.`, 'warning');
+        event.target.value = '';
+        if (label) label.textContent = '';
+        return;
+    }
+    if (label) label.textContent = file.name;
+};
+
 window.enviarComentarioTarefa = async function(e, id) {
     e.preventDefault();
     const input = document.getElementById('detalhe-comentario-texto');
+    const midiaInput = document.getElementById('detalhe-comentario-midia');
     const texto = input.value.trim();
     if (!texto) return;
 
+    const btn = e.target.querySelector('button[type="submit"]');
+    const textoOriginalBtn = btn.innerText;
+    btn.disabled = true;
+    btn.innerText = 'Enviando...';
+
     try {
+        let anexoUrl = null;
+        if (midiaInput && midiaInput.files.length > 0) {
+            const formData = new FormData();
+            formData.append('file', midiaInput.files[0]);
+            const resUpload = await window.api.fetchProtected('/upload-midia', { method: 'POST', body: formData });
+            if (!resUpload.ok) {
+                const dataErro = await resUpload.json().catch(() => ({}));
+                throw new Error(dataErro.detail || 'Falha ao enviar o anexo.');
+            }
+            const dataUpload = await resUpload.json();
+            anexoUrl = dataUpload.url;
+        }
+
         const res = await window.api.fetchProtected(`/tarefas/${id}/comentarios`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ texto })
+            body: JSON.stringify({ texto, anexo_url: anexoUrl })
         });
         if (!res.ok) throw new Error();
+
         input.value = '';
+        if (midiaInput) midiaInput.value = '';
+        const label = document.getElementById('detalhe-comentario-midia-nome');
+        if (label) label.textContent = '';
         carregarComentariosTarefa(id);
     } catch (err) {
-        window.UI.showToast('Falha ao enviar comentário.', 'error');
+        window.UI.showToast(err.message || 'Falha ao enviar comentário.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerText = textoOriginalBtn;
     }
 };
 
