@@ -483,7 +483,6 @@ async function loadAuditLogs(container) {
     }
 }
 
-// LER OS DADOS
 window.viewLogPayload = function(index) {
     const log = window.currentAuditLogs[index];
     if (!log) return;

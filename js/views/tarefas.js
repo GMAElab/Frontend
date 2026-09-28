@@ -592,7 +592,6 @@ window.excluirTarefa = async function (id) {
     }
 };
 
-// O backend responde 422 com uma lista de erros de validação; extrai algo legível.
 async function mensagemDeErro(res, padrao) {
     const data = await res.json().catch(() => ({}));
     if (typeof data.detail === 'string') return data.detail;

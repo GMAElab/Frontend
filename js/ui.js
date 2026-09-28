@@ -223,7 +223,6 @@ document.addEventListener('DOMContentLoaded', () => {
     UI.switchView('inicio');
 });
 
-// Fecha qualquer modal visível com Esc — sem precisar clicar no X.
 document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
     document.querySelectorAll('.modal-overlay').forEach(modal => {

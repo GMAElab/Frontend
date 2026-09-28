@@ -183,7 +183,6 @@ window.viewDossier = async function(id) {
     }
 };
 
-// fechar modal
 window.closeDossierModal = function() {
     const modal = document.getElementById('modal-dossier');
     if (modal) {
