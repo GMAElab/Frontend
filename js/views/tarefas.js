@@ -85,14 +85,6 @@ function fmtDuracao(segundos) {
     return '< 1 min';
 }
 
-// segundos > 0 = depois do prazo (atraso); < 0 = antes (antecipou).
-function fmtContraPrazo(segundos) {
-    if (segundos === null || segundos === undefined) return 'Sem prazo';
-    if (segundos > 60) return `Atrasou ${fmtDuracao(segundos)}`;
-    if (segundos < -60) return `Antecipou ${fmtDuracao(segundos)}`;
-    return 'No prazo';
-}
-
 function normalizarTexto(s) {
     return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 }
@@ -1057,11 +1049,6 @@ function cartaoMetrica(rotulo, valor, cor) {
     </div>`;
 }
 
-function corContraPrazo(segundos) {
-    if (segundos === null || segundos === undefined) return '';
-    return segundos > 60 ? 'var(--danger)' : 'var(--success)';
-}
-
 function fmtPrazoIso(iso) {
     return iso ? new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : 'sem prazo';
 }
@@ -1108,22 +1095,12 @@ window.abrirResumoTarefa = async function (id) {
 
         const gestor = isGestor(user);
         const envolvido = gestor || t.atribuidos.some(a => a.id === user.id);
-        const conclusaoCor = corContraPrazo(m.conclusao_vs_prazo_segundos);
         const vinculos = [
             t.processo_nome ? `Processo: <strong>${escT(t.processo_nome)}</strong>` : '',
             t.topico_titulo ? `Tópico PTA: <strong>${escT(t.topico_titulo)}</strong>` : ''
         ].filter(Boolean).join(' · ');
 
-        const metricasHtml = [
-            cartaoMetrica('Tempo total', fmtDuracao(m.tempo_total_segundos)),
-            cartaoMetrica('Conclusão × prazo', fmtContraPrazo(m.conclusao_vs_prazo_segundos), conclusaoCor),
-            m.tempo_em_revisao_segundos !== null ? cartaoMetrica('Entrega × prazo', fmtContraPrazo(m.entrega_vs_prazo_segundos), corContraPrazo(m.entrega_vs_prazo_segundos)) : '',
-            cartaoMetrica('Até o 1º progresso', fmtDuracao(m.tempo_ate_primeiro_progresso_segundos)),
-            cartaoMetrica('Tempo em revisão', fmtDuracao(m.tempo_em_revisao_segundos)),
-            cartaoMetrica('Devoluções', m.devolucoes),
-            cartaoMetrica('Prazo alterado', `${m.prazo_alterado_vezes}×`),
-            cartaoMetrica('Comentários / anexos', `${m.comentarios} / ${m.anexos}`)
-        ].join('');
+        const metricasHtml = cartaoMetrica('Tempo para conclusão', fmtDuracao(m.tempo_total_segundos));
 
         const timelineHtml = linha.map(item => {
             const cor = corDoEvento(item.tipo);
