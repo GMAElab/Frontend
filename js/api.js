@@ -290,11 +290,56 @@ window.removerImagem = function(inputId, previewDivId) {
     document.getElementById(previewDivId).style.display = 'none';
 };
 
+// Fotos de celular/câmera chegam com 5–20MB; redimensionadas para 2000px em
+// JPEG 82% ficam em ~300KB–1MB sem perda visível, o que faz o 1GB do Supabase
+// Storage durar ~20x mais. JPEG (e não WebP) porque as imagens também entram
+// no DOCX exportado, e o python-docx não aceita WebP. GIF fica de fora para
+// não perder animação. Qualquer falha devolve o arquivo original.
+const IMG_MAX_LADO = 2000;
+const IMG_QUALIDADE = 0.82;
+const IMG_MIN_BYTES_PARA_COMPRIMIR = 500 * 1024;
+
+window.comprimirImagem = async function(file) {
+    if (!file || !['image/jpeg', 'image/png'].includes(file.type)) return file;
+    if (file.size < IMG_MIN_BYTES_PARA_COMPRIMIR) return file;
+
+    const objectUrl = URL.createObjectURL(file);
+    try {
+        const img = new Image();
+        img.src = objectUrl;
+        await img.decode();
+
+        const escala = Math.min(1, IMG_MAX_LADO / Math.max(img.naturalWidth, img.naturalHeight));
+        const largura = Math.round(img.naturalWidth * escala);
+        const altura = Math.round(img.naturalHeight * escala);
+
+        const canvas = document.createElement('canvas');
+        canvas.width = largura;
+        canvas.height = altura;
+        const ctx = canvas.getContext('2d');
+        // PNG com transparência ficaria com fundo preto em JPEG
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, largura, altura);
+        ctx.drawImage(img, 0, 0, largura, altura);
+
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', IMG_QUALIDADE));
+        if (!blob || blob.size >= file.size) return file;
+
+        const nomeBase = (file.name || 'imagem').replace(/\.[^.]+$/, '');
+        return new File([blob], `${nomeBase}.jpg`, { type: 'image/jpeg', lastModified: Date.now() });
+    } catch (e) {
+        console.warn('Compressão de imagem falhou, enviando original:', e);
+        return file;
+    } finally {
+        URL.revokeObjectURL(objectUrl);
+    }
+};
+
 window.fazerUploadImagem = async function(inputId) {
     const fileInput = document.getElementById(inputId);
     if (!fileInput || fileInput.files.length === 0) return null;
 
-    const file = fileInput.files[0];
+    const file = await window.comprimirImagem(fileInput.files[0]);
     const formData = new FormData();
     formData.append("file", file); 
 

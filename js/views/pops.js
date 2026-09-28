@@ -141,8 +141,10 @@ window.openPopModal = function(codigoEdicao = null) {
         const fileInput = document.getElementById('pop-anexos-file');
         if (fileInput) {
             fileInput.addEventListener('change', async function(e) {
-                const file = e.target.files[0];
-                if (!file) return;
+                if (!e.target.files[0]) return;
+                // JPG/PNG são comprimidos antes da checagem de tamanho, então
+                // fotos grandes cabem no limite de 10MB do anexo
+                const file = await window.comprimirImagem(e.target.files[0]);
                 if (file.size > 10 * 1024 * 1024) {
                     window.UI.showToast("Arquivo muito grande! Máximo de 10MB.", "error");
                     this.value = ''; return;
