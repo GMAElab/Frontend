@@ -572,7 +572,7 @@ window.openDeepView = async function(route, id, entityName) {
             "manual_url": "Link do POP",
             "status": "Status",
             "titulo": "Título",
-            "is_active": "Ativo? (1 ou 0)",
+            "is_active": "Ativo? (Marque a caixa de seleção para ativar o usuários)",
             "role": "Cargo"
         };
 

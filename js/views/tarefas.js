@@ -144,7 +144,7 @@ function routerTarefas() {
         </div>
         <div class="fade-in" style="display:flex; gap:6px; border-bottom:1px solid var(--border-color); margin-bottom:20px;">
             <button type="button" id="tab-tarefas-abertas" onclick="window.mostrarAbaTarefas('abertas')" style="padding:10px 16px; cursor:pointer; border:none; background:none; font-size:14px; margin-bottom:-1px;">Em andamento</button>
-            <button type="button" id="tab-tarefas-acervo" onclick="window.mostrarAbaTarefas('acervo')" style="padding:10px 16px; cursor:pointer; border:none; background:none; font-size:14px; margin-bottom:-1px;">Acervo (concluídas)</button>
+            <button type="button" id="tab-tarefas-acervo" onclick="window.mostrarAbaTarefas('acervo')" style="padding:10px 16px; cursor:pointer; border:none; background:none; font-size:14px; margin-bottom:-1px;">Tarefas concluídas</button>
         </div>
         <div id="tarefas-conteudo" class="fade-in"></div>
     `;
@@ -366,7 +366,7 @@ window.filtrarAcervo = function () {
 
     if (resultado.length === 0) {
         lista.innerHTML = total === 0
-            ? window.UI.emptyState({ icon: 'inbox', title: 'O acervo ainda está vazio', description: 'As tarefas concluídas pelos gestores aparecem aqui.' })
+            ? window.UI.emptyState({ icon: 'inbox', title: 'As tarefas ainda estão vazias', description: 'As tarefas concluídas pelos gestores aparecem aqui.' })
             : window.UI.emptyState({ icon: 'search', title: 'Nada encontrado', description: 'Tente outras palavras ou limpe os filtros.' });
         return;
     }
@@ -920,7 +920,7 @@ window.abrirModalConcluir = function (id) {
                 <h3 style="margin:0;">Concluir tarefa</h3>
                 <button type="button" onclick="document.getElementById('modalConcluirTarefa').remove()" style="background:none; border:none; font-size:26px; cursor:pointer; color:var(--text-faint);">&times;</button>
             </div>
-            <p class="text-muted" style="font-size:13px; margin:0 0 16px 0;"><strong>${escT(tarefa.titulo)}</strong><br>Este registro fica no acervo e ajuda quem chegar depois a não refazer o que já foi feito. Depois de concluída, a tarefa fica travada.</p>
+            <p class="text-muted" style="font-size:13px; margin:0 0 16px 0;"><strong>${escT(tarefa.titulo)}</strong><br>Este registro fica na base de dados e ajuda quem chegar depois a não refazer o que já foi feito. Depois de concluída, a tarefa fica travada.</p>
             <form id="formConcluirTarefa">
                 <div class="input-group" style="margin-bottom:14px;">
                     <label>Resultado *</label>
@@ -977,7 +977,7 @@ window.abrirModalConcluir = function (id) {
             if (!res.ok) throw new Error(await mensagemDeErro(res, 'Falha ao concluir a tarefa.'));
 
             fecharModais('modalConcluirTarefa', 'modalDetalhesTarefa');
-            window.UI.showToast('Tarefa concluída e registrada no acervo!', 'success');
+            window.UI.showToast('Tarefa concluída e registrada na base de dados!', 'success');
             recarregarTarefas();
             window.abrirResumoTarefa(id);
         } catch (err) {
@@ -1034,7 +1034,7 @@ window.abrirModalDevolver = function (id) {
 };
 
 window.reabrirTarefa = async function (id) {
-    const ok = await window.UI.confirm('Reabrir esta tarefa? Ela sai do acervo e volta para "Em andamento" para permitir correções.', { title: 'Reabrir tarefa', confirmText: 'Reabrir' });
+    const ok = await window.UI.confirm('Reabrir esta tarefa? Ela sai da base de dados e volta para "Em andamento" para permitir correções.', { title: 'Reabrir tarefa', confirmText: 'Reabrir' });
     if (!ok) return;
     try {
         const res = await window.api.fetchProtected(`/tarefas/${id}/reabrir`, { method: 'POST' });
