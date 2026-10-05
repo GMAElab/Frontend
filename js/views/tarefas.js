@@ -36,8 +36,6 @@ const DESFECHO_BADGE = {
     inconclusivo: 'badge'
 };
 
-const ESTILO_BADGE_REVISAO = 'background:rgba(37,84,235,0.1); color:var(--primary); border-color:var(--primary);';
-
 // Só ADMIN, TÉCNICO e COORDENADOR criam/editam/concluem tarefas e veem a equipe
 // inteira — espelha security.check_roles no backend.
 function isGestor(user) {
@@ -91,7 +89,7 @@ function normalizarTexto(s) {
 
 function badgeStatus(t) {
     if (t.atrasada) return '<span class="badge badge-danger">Atrasada</span>';
-    if (t.status === 'em_revisao') return `<span class="badge" style="${ESTILO_BADGE_REVISAO}">Em Revisão</span>`;
+    if (t.status === 'em_revisao') return '<span class="badge badge-accent">Em revisão</span>';
     return `<span class="badge ${STATUS_BADGE[t.status] || 'badge'}">${STATUS_LABEL[t.status] || escT(t.status)}</span>`;
 }
 
@@ -106,7 +104,7 @@ function badgeDesfecho(t) {
 
 function chipsTags(tags, clicavel) {
     if (!tags || tags.length === 0) return '';
-    return tags.map(tag => `<span class="badge" style="cursor:${clicavel ? 'pointer' : 'default'};"${clicavel ? ` onclick="event.stopPropagation(); window.filtrarAcervoPorTag('${escT(tag).replace(/'/g, '&#39;')}')"` : ''}>${escT(tag)}</span>`).join(' ');
+    return tags.map(tag => `<span class="badge"${clicavel ? ` title="Filtrar por esta tag" onclick="event.stopPropagation(); window.filtrarAcervoPorTag('${escT(tag).replace(/'/g, '&#39;')}')"` : ''}>${escT(tag)}</span>`).join(' ');
 }
 
 function buscarTarefaEmCache(id) {
@@ -127,16 +125,17 @@ function routerTarefas() {
     const gestor = isGestor(user);
 
     document.getElementById('dynamic-content').innerHTML = `
-        <div class="view-header fade-in" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+        <header class="page-head fade-in">
             <div>
-                <h3 style="margin:0; font-size:1.5rem;">${gestor ? 'Tarefas da Equipe' : 'Minhas Tarefas'}</h3>
-                <p class="text-muted" style="margin-top:5px;">${gestor ? 'Atribua tarefas, revise entregas e consulte o que já foi concluído.' : 'Reporte seu progresso e consulte o que a equipe já concluiu.'}</p>
+                <p class="eyebrow">${gestor ? 'equipe' : 'atribuídas a você'}</p>
+                <h1>Tarefas</h1>
+                <p class="lede">${gestor ? 'Atribua tarefas, revise entregas e consulte o que já foi concluído.' : 'Reporte seu progresso e consulte o que a equipe já concluiu.'}</p>
             </div>
-            <div id="tarefas-acoes-topo"></div>
-        </div>
-        <div class="fade-in" style="display:flex; gap:6px; border-bottom:1px solid var(--border-color); margin-bottom:20px;">
-            <button type="button" id="tab-tarefas-abertas" onclick="window.mostrarAbaTarefas('abertas')" style="padding:10px 16px; cursor:pointer; border:none; background:none; font-size:14px; margin-bottom:-1px;">Em andamento</button>
-            <button type="button" id="tab-tarefas-acervo" onclick="window.mostrarAbaTarefas('acervo')" style="padding:10px 16px; cursor:pointer; border:none; background:none; font-size:14px; margin-bottom:-1px;">Tarefas concluídas</button>
+            <div class="page-actions" id="tarefas-acoes-topo"></div>
+        </header>
+        <div class="tabs fade-in">
+            <button type="button" class="tab-btn" id="tab-tarefas-abertas" onclick="window.mostrarAbaTarefas('abertas')">Em andamento</button>
+            <button type="button" class="tab-btn" id="tab-tarefas-acervo" onclick="window.mostrarAbaTarefas('acervo')">Concluídas</button>
         </div>
         <div id="tarefas-conteudo" class="fade-in"></div>
     `;
@@ -152,16 +151,13 @@ window.mostrarAbaTarefas = function (aba) {
     ['abertas', 'acervo'].forEach(nome => {
         const btn = document.getElementById(`tab-tarefas-${nome}`);
         if (!btn) return;
-        const ativa = nome === aba;
-        btn.style.borderBottom = ativa ? '3px solid var(--primary)' : '3px solid transparent';
-        btn.style.fontWeight = ativa ? '700' : '400';
-        btn.style.color = ativa ? 'var(--text-main)' : 'var(--text-muted)';
+        btn.classList.toggle('active', nome === aba);
     });
 
     const acoes = document.getElementById('tarefas-acoes-topo');
     if (acoes) {
         acoes.innerHTML = (gestor && aba === 'abertas')
-            ? `<button type="button" class="btn btn-primary" onclick="window.abrirModalTarefa()">${window.Icon('plus', { size: 16 })} Nova Tarefa</button>`
+            ? `<button type="button" class="btn btn-primary" onclick="window.abrirModalTarefa()">Nova tarefa</button>`
             : '';
     }
 
@@ -183,7 +179,7 @@ function recarregarTarefas() {
 // ==========================================
 function renderTabelaGestor() {
     document.getElementById('tarefas-conteudo').innerHTML = `
-        <div class="card table-container">
+        <div class="table-container">
             <table class="data-table">
                 <thead>
                     <tr>
@@ -193,11 +189,11 @@ function renderTabelaGestor() {
                         <th>Prazo</th>
                         <th>Progresso</th>
                         <th>Status</th>
-                        <th style="text-align:right;">Ações</th>
+                        <th class="end">Ações</th>
                     </tr>
                 </thead>
                 <tbody id="tarefasEquipeBody">
-                    <tr><td colspan="7" style="text-align:center; padding:30px;"><span class="spinner"></span></td></tr>
+                    <tr><td colspan="7">${window.UI.loading()}</td></tr>
                 </tbody>
             </table>
         </div>
@@ -215,7 +211,7 @@ async function carregarTarefasEquipe() {
         window.tarefasEquipeCache = tarefas;
 
         if (tarefas.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="7">${window.UI.emptyState({ icon: 'clipboard', title: 'Nenhuma tarefa em andamento', description: 'Clique em "Nova Tarefa" para atribuir uma. As concluídas ficam na aba Acervo.' })}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="7">${window.UI.emptyState({ title: 'Nenhuma tarefa em andamento', description: 'Use “Nova tarefa” para atribuir uma. As concluídas ficam na aba Concluídas.' })}</td></tr>`;
             return;
         }
         tbody.innerHTML = tarefas.map(renderLinhaTarefaGestor).join('');
@@ -226,21 +222,22 @@ async function carregarTarefasEquipe() {
 
 function renderLinhaTarefaGestor(t) {
     const nomes = t.atribuidos.map(a => escT(a.nome)).join(', ') || '—';
-    const vinculo = t.processo_nome ? `<div class="text-muted" style="font-size:12px; margin-top:2px;">Processo: ${escT(t.processo_nome)}</div>` : '';
-    const destaque = t.status === 'em_revisao' ? ' style="cursor:pointer; background:rgba(37,84,235,0.05);"' : ' style="cursor:pointer;"';
+    const vinculo = t.processo_nome ? `<span class="sub">Processo: ${escT(t.processo_nome)}</span>` : '';
 
     return `
-        <tr${destaque} onclick="window.abrirDetalhesTarefa(${t.id})">
+        <tr class="clickable${t.status === 'em_revisao' ? ' is-flagged' : ''}" onclick="window.abrirDetalhesTarefa(${t.id})">
             <td><strong>${escT(t.titulo)}</strong>${vinculo}</td>
             <td>${nomes}</td>
             <td>${badgePrioridade(t)}</td>
-            <td>${fmtPrazo(t.prazo)}</td>
-            <td>${t.percentual_conclusao}%</td>
+            <td class="num">${fmtPrazo(t.prazo)}</td>
+            <td class="num">${t.percentual_conclusao}%</td>
             <td>${badgeStatus(t)}</td>
-            <td style="text-align:right; white-space:nowrap;" onclick="event.stopPropagation()">
-                <button class="btn btn-primary btn-sm" onclick="window.abrirModalConcluir(${t.id})">Concluir</button>
-                <button class="btn btn-outline-primary btn-sm" onclick="window.abrirModalTarefa(${t.id})">Editar</button>
-                <button class="btn btn-outline-danger btn-sm" onclick="window.excluirTarefa(${t.id})">Excluir</button>
+            <td onclick="event.stopPropagation()">
+                <div class="row-actions">
+                    <button class="link-btn" onclick="window.abrirModalConcluir(${t.id})">Concluir</button>
+                    <button class="link-btn muted" onclick="window.abrirModalTarefa(${t.id})">Editar</button>
+                    <button class="link-btn danger" onclick="window.excluirTarefa(${t.id})">Excluir</button>
+                </div>
             </td>
         </tr>
     `;
@@ -251,9 +248,7 @@ function renderLinhaTarefaGestor(t) {
 // ==========================================
 function renderListaColaborador() {
     document.getElementById('tarefas-conteudo').innerHTML = `
-        <div id="minhasTarefasLista" style="display:flex; flex-direction:column; gap:14px;">
-            <span class="spinner"></span>
-        </div>
+        <div id="minhasTarefasLista" class="entries">${window.UI.loading()}</div>
     `;
     carregarMinhasTarefas();
 }
@@ -268,7 +263,7 @@ async function carregarMinhasTarefas() {
         window.minhasTarefasCache = tarefas;
 
         if (tarefas.length === 0) {
-            container.innerHTML = window.UI.emptyState({ icon: 'clipboard', title: 'Nenhuma tarefa em andamento', description: 'Quando um gestor atribuir uma tarefa a você, ela aparece aqui. As já concluídas ficam na aba Acervo.' });
+            container.innerHTML = window.UI.emptyState({ title: 'Nenhuma tarefa em andamento', description: 'Quando um gestor atribuir uma tarefa a você, ela aparece aqui. As já concluídas ficam na aba Concluídas.' });
             return;
         }
         container.innerHTML = tarefas.map(renderCardTarefaColaborador).join('');
@@ -278,45 +273,43 @@ async function carregarMinhasTarefas() {
 }
 
 function renderCardTarefaColaborador(t) {
-    const vinculo = t.processo_nome ? ` · Processo: ${escT(t.processo_nome)}` : '';
+    const vinculo = t.processo_nome ? ` · processo: ${escT(t.processo_nome)}` : '';
     return `
-        <div class="card" style="cursor:pointer; border-left:3px solid var(--primary);" onclick="window.abrirDetalhesTarefa(${t.id})">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap;">
-                <div>
-                    <strong style="font-size:15px;">${escT(t.titulo)}</strong>
-                    <p class="text-muted" style="font-size:12.5px; margin:4px 0 0 0;">Prazo: ${fmtPrazo(t.prazo)} · Criada por ${escT(t.criado_por_nome)}${vinculo}</p>
-                </div>
-                <div style="display:flex; gap:6px; flex-wrap:wrap;">
+        <article class="entry clickable" onclick="window.abrirDetalhesTarefa(${t.id})">
+            <div class="entry-head">
+                <h3 class="entry-title">${escT(t.titulo)}</h3>
+                <div class="cluster">
                     ${badgePrioridade(t)}
                     ${badgeStatus(t)}
                 </div>
             </div>
-            <div style="margin-top:12px; background:var(--bg-subtle); border-radius:var(--radius-full); height:8px; overflow:hidden;">
-                <div style="width:${t.percentual_conclusao}%; background:var(--primary); height:100%;"></div>
+            <p class="meta">prazo: ${fmtPrazo(t.prazo)} · criada por ${escT(t.criado_por_nome)}${vinculo}</p>
+            <div class="meter">
+                <div class="meter-track"><div class="meter-fill" style="width:${t.percentual_conclusao}%"></div></div>
+                <span class="meter-value">${t.percentual_conclusao}%</span>
             </div>
-            <p class="text-muted" style="font-size:12px; margin:6px 0 0 0; text-align:right;">${t.percentual_conclusao}% concluído</p>
-        </div>
+        </article>
     `;
 }
 
 // ==========================================
-// TAREFAS CONCLUÍDAS 
+// TAREFAS CONCLUÍDAS
 // ==========================================
 function renderAcervo() {
     document.getElementById('tarefas-conteudo').innerHTML = `
-        <p class="text-muted" style="font-size:13px; margin:0 0 14px 0;">Registro do que já foi feito no laboratório: resultados, lições aprendidas e o que não funcionou. Consulte antes de começar algo novo.</p>
-        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:16px;">
-            <input type="search" id="acervo-busca" class="form-control" placeholder="Buscar por título, resultado, lições, tag, pessoa ou processo..." style="flex:1 1 280px;" oninput="window.filtrarAcervo()">
-            <select id="acervo-desfecho" class="form-control" style="flex:0 0 190px;" onchange="window.filtrarAcervo()">
+        <p class="lede mb-md">O que já foi feito no laboratório: resultados, lições aprendidas e o que não funcionou. Consulte antes de começar algo novo.</p>
+        <div class="toolbar">
+            <input type="search" id="acervo-busca" class="form-control grow" placeholder="Buscar por título, resultado, lições, tag, pessoa ou processo" oninput="window.filtrarAcervo()">
+            <select id="acervo-desfecho" class="form-control" onchange="window.filtrarAcervo()" aria-label="Desfecho">
                 <option value="">Todos os desfechos</option>
                 ${Object.entries(DESFECHO_LABEL).map(([valor, rotulo]) => `<option value="${valor}">${rotulo}</option>`).join('')}
             </select>
-            <label style="display:flex; align-items:center; gap:6px; font-size:13px; margin:0; white-space:nowrap;">
+            <label class="check-inline">
                 <input type="checkbox" id="acervo-minhas" onchange="window.filtrarAcervo()"> Somente as minhas
             </label>
         </div>
-        <div id="acervo-contador" class="text-muted" style="font-size:12.5px; margin-bottom:10px;"></div>
-        <div id="acervo-lista" style="display:flex; flex-direction:column; gap:12px;"><span class="spinner"></span></div>
+        <p id="acervo-contador" class="meta mb-sm"></p>
+        <div id="acervo-lista" class="entries">${window.UI.loading()}</div>
     `;
     carregarAcervo();
 }
@@ -354,12 +347,12 @@ window.filtrarAcervo = function () {
     });
 
     const total = (window.acervoCache || []).length;
-    document.getElementById('acervo-contador').textContent = `${resultado.length} de ${total} registro(s)`;
+    document.getElementById('acervo-contador').textContent = `${resultado.length} de ${total} ${total === 1 ? 'registro' : 'registros'}`;
 
     if (resultado.length === 0) {
         lista.innerHTML = total === 0
-            ? window.UI.emptyState({ icon: 'inbox', title: 'As tarefas ainda estão vazias', description: 'As tarefas concluídas pelos gestores aparecem aqui.' })
-            : window.UI.emptyState({ icon: 'search', title: 'Nada encontrado', description: 'Tente outras palavras ou limpe os filtros.' });
+            ? window.UI.emptyState({ title: 'Nenhuma tarefa concluída ainda', description: 'As tarefas concluídas pelos gestores aparecem aqui.' })
+            : window.UI.emptyState({ title: 'Nada encontrado', description: 'Tente outras palavras ou limpe os filtros.' });
         return;
     }
     lista.innerHTML = resultado.map(renderCardAcervo).join('');
@@ -382,25 +375,23 @@ function renderCardAcervo(t) {
     }
     const resumoTxt = t.resultado
         ? escT(t.resultado.length > 220 ? t.resultado.slice(0, 220) + '…' : t.resultado)
-        : '<em class="text-faint">Concluída antes do registro de resultado existir.</em>';
+        : '<span class="text-faint">Sem registro de resultado.</span>';
     const vinculos = [
         t.processo_nome ? `Processo: ${escT(t.processo_nome)}` : '',
         t.topico_titulo ? `Tópico PTA: ${escT(t.topico_titulo)}` : ''
     ].filter(Boolean).join(' · ');
 
     return `
-        <div class="card" style="cursor:pointer; border-left:3px solid var(--primary);" onclick="window.abrirResumoTarefa(${t.id})">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap;">
-                <strong style="font-size:15px;">${escT(t.titulo)}</strong>
-                <div style="display:flex; gap:6px; flex-wrap:wrap;">${badgeDesfecho(t)}${atrasoBadge}</div>
+        <article class="entry clickable" onclick="window.abrirResumoTarefa(${t.id})">
+            <div class="entry-head">
+                <h3 class="entry-title">${escT(t.titulo)}</h3>
+                <div class="cluster">${badgeDesfecho(t)}${atrasoBadge}</div>
             </div>
-            ${vinculos ? `<p class="text-muted" style="font-size:12px; margin:4px 0 0 0;">${vinculos}</p>` : ''}
-            <p style="font-size:13.5px; margin:10px 0; line-height:1.55; white-space:pre-wrap;">${resumoTxt}</p>
-            ${t.tags && t.tags.length ? `<div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">${chipsTags(t.tags, true)}</div>` : ''}
-            <p class="text-muted" style="font-size:12px; margin:0;">
-                Concluída em ${fmtData(t.concluida_em)} · Tempo total: ${fmtDuracao(t.tempo_total_segundos)} · ${t.atribuidos.map(a => escT(a.nome)).join(', ') || '—'}
-            </p>
-        </div>
+            ${vinculos ? `<p class="meta">${vinculos}</p>` : ''}
+            <p class="entry-body pre-wrap">${resumoTxt}</p>
+            ${t.tags && t.tags.length ? `<div class="cluster mt-sm">${chipsTags(t.tags, true)}</div>` : ''}
+            <p class="meta">concluída em ${fmtData(t.concluida_em)} · tempo total: ${fmtDuracao(t.tempo_total_segundos)} · ${t.atribuidos.map(a => escT(a.nome)).join(', ') || '—'}</p>
+        </article>
     `;
 }
 
@@ -447,14 +438,14 @@ function lerVinculos(idSelectProcesso, idSelectTopico) {
 
 function htmlSelectsVinculo(prefixo) {
     return `
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:14px; margin-bottom:14px;">
-            <div class="input-group" style="margin-bottom:0;">
-                <label>Processo (opcional)</label>
-                <select id="${prefixo}-processo" class="form-control"><option value="">Carregando...</option></select>
+        <div class="field-grid">
+            <div class="input-group">
+                <label for="${prefixo}-processo">Processo (opcional)</label>
+                <select id="${prefixo}-processo"><option value="">Carregando...</option></select>
             </div>
-            <div class="input-group" style="margin-bottom:0;">
-                <label>Tópico do PTA (opcional)</label>
-                <select id="${prefixo}-topico" class="form-control"><option value="">Carregando...</option></select>
+            <div class="input-group">
+                <label for="${prefixo}-topico">Tópico de pesquisa (opcional)</label>
+                <select id="${prefixo}-topico"><option value="">Carregando...</option></select>
             </div>
         </div>`;
 }
@@ -469,29 +460,29 @@ window.abrirModalTarefa = async function (id = null) {
     fecharModais('modalTarefa');
 
     document.body.insertAdjacentHTML('beforeend', `
-    <div id="modalTarefa" class="modal-overlay" style="display:flex; position:fixed; top:0; left:0; width:100%; height:100%; z-index:999999; justify-content:center; align-items:center; padding:20px;">
-        <div class="modal-content" style="width:100%; max-width:600px; max-height:90vh; overflow-y:auto; border-radius:4px; border-top:3px solid var(--primary);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
-                <h3 style="margin:0;">${editando ? 'Editar Tarefa' : 'Nova Tarefa'}</h3>
-                <button type="button" onclick="document.getElementById('modalTarefa').remove()" style="background:none; border:none; font-size:26px; cursor:pointer; color:var(--text-faint);">&times;</button>
+    <div id="modalTarefa" class="modal-overlay is-open">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>${editando ? 'Editar tarefa' : 'Nova tarefa'}</h3>
+                ${window.UI.closeButton("document.getElementById('modalTarefa').remove()")}
             </div>
             <form id="formTarefa">
-                <div class="input-group" style="margin-bottom:14px;">
-                    <label>Título</label>
-                    <input type="text" id="tarefa-titulo" class="form-control" required value="${tarefa ? escT(tarefa.titulo) : ''}">
+                <div class="input-group">
+                    <label for="tarefa-titulo">Título</label>
+                    <input type="text" id="tarefa-titulo" required value="${tarefa ? escT(tarefa.titulo) : ''}">
                 </div>
-                <div class="input-group" style="margin-bottom:14px;">
-                    <label>Descrição</label>
-                    <textarea id="tarefa-descricao" class="form-control" rows="3">${tarefa ? escT(tarefa.descricao || '') : ''}</textarea>
+                <div class="input-group">
+                    <label for="tarefa-descricao">Descrição</label>
+                    <textarea id="tarefa-descricao" rows="3">${tarefa ? escT(tarefa.descricao || '') : ''}</textarea>
                 </div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px;">
-                    <div class="input-group" style="margin-bottom:0;">
-                        <label>Prazo</label>
-                        <input type="datetime-local" id="tarefa-prazo" class="form-control" value="${tarefa && tarefa.prazo ? tarefa.prazo.substring(0, 16) : ''}">
+                <div class="field-grid">
+                    <div class="input-group">
+                        <label for="tarefa-prazo">Prazo</label>
+                        <input type="datetime-local" id="tarefa-prazo" value="${tarefa && tarefa.prazo ? tarefa.prazo.substring(0, 16) : ''}">
                     </div>
-                    <div class="input-group" style="margin-bottom:0;">
-                        <label>Prioridade</label>
-                        <select id="tarefa-prioridade" class="form-control">
+                    <div class="input-group">
+                        <label for="tarefa-prioridade">Prioridade</label>
+                        <select id="tarefa-prioridade">
                             <option value="baixa">Baixa</option>
                             <option value="media" selected>Média</option>
                             <option value="alta">Alta</option>
@@ -499,13 +490,14 @@ window.abrirModalTarefa = async function (id = null) {
                     </div>
                 </div>
                 ${htmlSelectsVinculo('tarefa')}
-                <div class="input-group" style="margin-bottom:18px;">
+                <div class="input-group">
                     <label>Atribuir a</label>
-                    <div id="tarefa-equipe-container" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;">
-                        <span class="spinner" style="width:15px; height:15px;"></span> <span style="font-size:13px;">Carregando equipe...</span>
-                    </div>
+                    <div id="tarefa-equipe-container" class="check-chips">${window.UI.loading('Carregando equipe')}</div>
                 </div>
-                <button type="submit" class="btn btn-primary btn-block">${editando ? 'Salvar Alterações' : 'Criar Tarefa'}</button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('modalTarefa').remove()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">${editando ? 'Salvar alterações' : 'Criar tarefa'}</button>
+                </div>
             </form>
         </div>
     </div>`);
@@ -519,17 +511,17 @@ window.abrirModalTarefa = async function (id = null) {
         const res = await window.api.fetchProtected('/usuarios/equipe');
         const equipe = res.ok ? await res.json() : [];
         if (equipe.length === 0) {
-            containerEquipe.innerHTML = '<span class="text-muted" style="font-size:13px;">Nenhum usuário disponível.</span>';
+            containerEquipe.innerHTML = '<span class="help">Nenhum usuário disponível.</span>';
         } else {
             containerEquipe.innerHTML = equipe.map(u => `
-                <label style="background:var(--bg-subtle); color:var(--text-main); padding:6px 12px; border-radius:var(--radius-full); cursor:pointer; font-size:13px; display:flex; align-items:center; gap:5px; border:1px solid var(--border-color); user-select:none;">
-                    <input type="checkbox" name="tarefa_atribuido_cb" value="${u.id}" ${atribuidosAtuais.includes(u.id) ? 'checked' : ''} style="cursor:pointer;">
+                <label class="check-chip">
+                    <input type="checkbox" name="tarefa_atribuido_cb" value="${u.id}" ${atribuidosAtuais.includes(u.id) ? 'checked' : ''}>
                     ${escT(u.nome)}
                 </label>
             `).join('');
         }
     } catch (err) {
-        containerEquipe.innerHTML = '<span style="color:var(--danger); font-size:12px;">Falha ao carregar lista de equipe.</span>';
+        containerEquipe.innerHTML = '<span class="help text-danger">Não foi possível carregar a equipe.</span>';
     }
 
     document.getElementById('formTarefa').addEventListener('submit', (e) => window.salvarTarefa(e, id));
@@ -607,14 +599,14 @@ async function mensagemDeErro(res, padrao) {
 function htmlFormComentario() {
     return `
         <form id="formComentarioTarefa">
-            <div style="display:flex; gap:8px;">
-                <input type="text" id="detalhe-comentario-texto" class="form-control" placeholder="Escreva um comentário..." required style="flex:1;">
-                <button type="submit" class="btn btn-primary btn-sm">Enviar</button>
+            <div class="inline-form">
+                <input type="text" id="detalhe-comentario-texto" class="form-control" placeholder="Escreva um comentário" required>
+                <button type="submit" class="btn btn-secondary">Enviar</button>
             </div>
-            <div style="margin-top:8px; display:flex; align-items:center; gap:8px;">
-                <label for="detalhe-comentario-midia" class="btn btn-outline-primary btn-sm" style="cursor:pointer; margin:0;">${window.Icon('upload', { size: 14 })} Anexar foto/vídeo</label>
-                <input type="file" id="detalhe-comentario-midia" accept="image/*,video/*" style="display:none;" onchange="window.previewMidiaComentario(event)">
-                <span id="detalhe-comentario-midia-nome" class="text-muted" style="font-size:12px;"></span>
+            <div class="cluster mt-sm">
+                <label for="detalhe-comentario-midia" class="link-btn muted attach-label">Anexar foto ou vídeo</label>
+                <input type="file" id="detalhe-comentario-midia" class="hidden" accept="image/*,video/*" onchange="window.previewMidiaComentario(event)">
+                <span id="detalhe-comentario-midia-nome" class="meta"></span>
             </div>
         </form>`;
 }
@@ -641,58 +633,63 @@ window.abrirDetalhesTarefa = function (id) {
 
     let avisoRevisao = '';
     if (emRevisao) {
-        avisoRevisao = `<div style="background:rgba(37,84,235,0.08); border-left:3px solid var(--primary); padding:10px 14px; border-radius:var(--radius-md); font-size:13px; margin-bottom:14px;">
-            ${gestor ? 'Esta tarefa foi enviada para revisão. Confira a entrega e conclua ou devolva com ajustes.' : 'Enviada para revisão. Aguardando o gestor. Se precisar mexer em algo, mude o status abaixo.'}
-        </div>`;
+        avisoRevisao = `<p class="note accent">
+            ${gestor ? 'Esta tarefa foi enviada para revisão. Confira a entrega e conclua ou devolva com ajustes.' : 'Enviada para revisão, aguardando o gestor. Se precisar mexer em algo, mude o status abaixo.'}
+        </p>`;
     }
 
     const acoesGestor = gestor ? `
-        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
+        <div class="cluster mb-md">
             <button type="button" class="btn btn-primary btn-sm" onclick="window.abrirModalConcluir(${tarefa.id})">Concluir tarefa</button>
-            ${emRevisao ? `<button type="button" class="btn btn-outline-primary btn-sm" onclick="window.abrirModalDevolver(${tarefa.id})">Devolver para ajustes</button>` : ''}
+            ${emRevisao ? `<button type="button" class="btn btn-secondary btn-sm" onclick="window.abrirModalDevolver(${tarefa.id})">Devolver para ajustes</button>` : ''}
         </div>` : '';
 
     const progressoHtml = souAtribuido ? `
-        <div style="background:var(--bg-subtle); padding:16px; border-radius:var(--radius-md); margin-top:6px;">
-            <h4 style="margin:0 0 12px 0; font-size:14px;">Atualizar meu progresso</h4>
-            <div class="input-group" style="margin-bottom:10px;">
-                <label style="display:flex; justify-content:space-between;"><span>Conclusão</span><span id="detalhe-avanco-valor">${tarefa.percentual_conclusao}%</span></label>
-                <input type="range" id="detalhe-avanco" min="0" max="100" value="${tarefa.percentual_conclusao}" style="width:100%;" oninput="document.getElementById('detalhe-avanco-valor').innerText = this.value + '%'">
+        <section class="modal-section">
+            <div class="section-head"><h3>Meu progresso</h3></div>
+            <div class="input-group">
+                <label for="detalhe-avanco" class="label-row"><span>Conclusão</span><span id="detalhe-avanco-valor" class="mono">${tarefa.percentual_conclusao}%</span></label>
+                <input type="range" id="detalhe-avanco" min="0" max="100" value="${tarefa.percentual_conclusao}" oninput="document.getElementById('detalhe-avanco-valor').innerText = this.value + '%'">
             </div>
-            <div class="input-group" style="margin-bottom:10px;">
-                <label>Status</label>
-                <select id="detalhe-status" class="form-control" onchange="window.aoMudarStatusProgresso()">
+            <div class="inline-form">
+                <select id="detalhe-status" class="form-control" onchange="window.aoMudarStatusProgresso()" aria-label="Status">
                     <option value="pendente">Pendente</option>
-                    <option value="em_andamento">Em Andamento</option>
-                    <option value="em_revisao">Enviar para revisão (terminei)</option>
+                    <option value="em_andamento">Em andamento</option>
+                    <option value="em_revisao">Terminei, enviar para revisão</option>
                 </select>
+                <button type="button" id="detalhe-btn-progresso" class="btn btn-primary" onclick="window.salvarProgressoTarefa(${tarefa.id})">Salvar progresso</button>
             </div>
-            <button type="button" id="detalhe-btn-progresso" class="btn btn-primary btn-sm" onclick="window.salvarProgressoTarefa(${tarefa.id})">Salvar Progresso</button>
-        </div>` : '';
+        </section>` : '';
 
     document.body.insertAdjacentHTML('beforeend', `
-    <div id="modalDetalhesTarefa" class="modal-overlay" style="display:flex; position:fixed; top:0; left:0; width:100%; height:100%; z-index:999999; justify-content:center; align-items:center; padding:20px;">
-        <div class="modal-content" style="width:100%; max-width:640px; max-height:90vh; overflow-y:auto; border-radius:4px; border-top:3px solid var(--primary);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:10px;">
-                <h3 style="margin:0;">${escT(tarefa.titulo)}</h3>
-                <button type="button" onclick="document.getElementById('modalDetalhesTarefa').remove()" style="background:none; border:none; font-size:26px; cursor:pointer; color:var(--text-faint);">&times;</button>
+    <div id="modalDetalhesTarefa" class="modal-overlay is-open">
+        <div class="modal-content modal-md">
+            <div class="modal-header">
+                <div>
+                    <p class="eyebrow">tarefa</p>
+                    <h3>${escT(tarefa.titulo)}</h3>
+                </div>
+                ${window.UI.closeButton("document.getElementById('modalDetalhesTarefa').remove()")}
             </div>
-            <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">${badgePrioridade(tarefa)}${badgeStatus(tarefa)}</div>
-            <p class="text-muted" style="font-size:13px; margin-bottom:${vinculos ? '6px' : '14px'};">Atribuída a: <strong>${nomes}</strong> · Prazo: <strong>${fmtPrazo(tarefa.prazo)}</strong></p>
-            ${vinculos ? `<p class="text-muted" style="font-size:13px; margin-bottom:14px;">${vinculos}</p>` : ''}
-            <div style="background:var(--bg-subtle); padding:14px; border-radius:var(--radius-md); font-size:13.5px; white-space:pre-wrap; margin-bottom:14px;">${tarefa.descricao ? escT(tarefa.descricao) : 'Sem descrição.'}</div>
+            <div class="cluster mb-md">${badgePrioridade(tarefa)}${badgeStatus(tarefa)}</div>
 
             ${avisoRevisao}
             ${acoesGestor}
+
+            <dl class="dl compact">
+                <div><dt>atribuída a</dt><dd class="plain">${nomes}</dd></div>
+                <div><dt>prazo</dt><dd class="plain mono">${fmtPrazo(tarefa.prazo)}</dd></div>
+                ${vinculos ? `<div><dt>vínculos</dt><dd class="plain">${vinculos}</dd></div>` : ''}
+                <div><dt>descrição</dt><dd>${tarefa.descricao ? escT(tarefa.descricao) : '<span class="text-faint">Sem descrição.</span>'}</dd></div>
+            </dl>
+
             ${progressoHtml}
 
-            <div style="margin-top:20px; border-top:1px solid var(--border-light); padding-top:16px;">
-                <h4 style="margin:0 0 10px 0; font-size:14px;">Comentários</h4>
-                <div id="detalhe-comentarios-lista" style="display:flex; flex-direction:column; gap:10px; max-height:220px; overflow-y:auto; margin-bottom:14px;">
-                    <span class="spinner"></span>
-                </div>
+            <section class="modal-section">
+                <div class="section-head"><h3>Comentários</h3></div>
+                <div id="detalhe-comentarios-lista" class="comments">${window.UI.loading()}</div>
                 ${(gestor || souAtribuido) ? htmlFormComentario() : ''}
-            </div>
+            </section>
         </div>
     </div>`);
 
@@ -717,7 +714,7 @@ window.aoMudarStatusProgresso = function () {
         document.getElementById('detalhe-avanco-valor').innerText = '100%';
     }
     slider.disabled = revisao;
-    if (btn) btn.innerText = revisao ? 'Enviar para revisão' : 'Salvar Progresso';
+    if (btn) btn.innerText = revisao ? 'Enviar para revisão' : 'Salvar progresso';
 };
 
 window.salvarProgressoTarefa = async function (id) {
@@ -755,9 +752,9 @@ function renderAnexoComentario(url) {
     const safeUrl = escT(url);
 
     if (ehVideo) {
-        return `<video controls style="max-width:100%; max-height:220px; border-radius:var(--radius-sm); margin-top:6px; display:block;"><source src="${safeUrl}"></video>`;
+        return `<video controls><source src="${safeUrl}"></video>`;
     }
-    return `<img src="${safeUrl}" style="max-width:100%; max-height:220px; border-radius:var(--radius-sm); margin-top:6px; cursor:pointer; object-fit:contain;" onclick="window.open('${safeUrl}', '_blank')" title="Clique para ampliar">`;
+    return `<img src="${safeUrl}" alt="" onclick="window.open(this.src, '_blank')" title="Abrir em tamanho real">`;
 }
 
 async function carregarComentariosTarefa(id) {
@@ -769,20 +766,19 @@ async function carregarComentariosTarefa(id) {
         const comentarios = await res.json();
 
         if (comentarios.length === 0) {
-            container.innerHTML = '<p class="text-faint" style="font-size:12.5px; text-align:center;">Nenhum comentário ainda.</p>';
+            container.innerHTML = '<p class="text-faint text-small">Nenhum comentário ainda.</p>';
             return;
         }
         container.innerHTML = comentarios.map(c => `
-            <div style="border-left:2px solid var(--border-color); padding-left:10px;">
-                <strong style="font-size:12.5px;">${escT(c.autor_nome)}</strong>
-                <span class="text-faint" style="font-size:11.5px;"> · ${fmtDataHora(c.criado_em)}</span>
-                <p style="margin:2px 0 0 0; font-size:13px; color:var(--text-main); white-space:pre-wrap;">${escT(c.texto)}</p>
+            <div class="comment">
+                <strong>${escT(c.autor_nome)}</strong> <span class="meta">${fmtDataHora(c.criado_em)}</span>
+                <p class="pre-wrap">${escT(c.texto)}</p>
                 ${renderAnexoComentario(c.anexo_url)}
             </div>
         `).join('');
         container.scrollTop = container.scrollHeight;
     } catch (err) {
-        container.innerHTML = '<p class="text-danger" style="font-size:12.5px;">Erro ao carregar comentários.</p>';
+        container.innerHTML = '<p class="text-danger text-small">Não foi possível carregar os comentários.</p>';
     }
 }
 
@@ -844,14 +840,14 @@ window.enviarComentarioTarefa = async function (e, id) {
 };
 
 // ==========================================
-// CONCLUIR TAREFA 
+// CONCLUIR TAREFA
 // ==========================================
 function criarInputDeTags(idContainer, iniciais) {
     const container = document.getElementById(idContainer);
     const tags = [...iniciais];
 
     container.innerHTML = `
-        <div class="tag-chips" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px;"></div>
+        <div class="tag-chips cluster mb-sm"></div>
         <input type="text" class="form-control" list="${idContainer}-sugestoes" maxlength="40" placeholder="Digite e pressione Enter (ex.: pla, extrusão)">
         <datalist id="${idContainer}-sugestoes"></datalist>`;
     const chips = container.querySelector('.tag-chips');
@@ -860,8 +856,8 @@ function criarInputDeTags(idContainer, iniciais) {
 
     const desenhar = () => {
         chips.innerHTML = tags.map((tag, i) => `
-            <span class="badge" style="gap:6px;">${escT(tag)}
-                <button type="button" data-i="${i}" style="background:none; border:none; cursor:pointer; padding:0; font-size:14px; line-height:1; color:inherit;" aria-label="Remover tag">&times;</button>
+            <span class="badge">${escT(tag)}
+                <button type="button" data-i="${i}" aria-label="Remover tag">&times;</button>
             </span>`).join('');
         chips.querySelectorAll('button').forEach(b => {
             b.onclick = () => { tags.splice(parseInt(b.dataset.i, 10), 1); desenhar(); };
@@ -905,36 +901,39 @@ window.abrirModalConcluir = function (id) {
     fecharModais('modalConcluirTarefa');
 
     document.body.insertAdjacentHTML('beforeend', `
-    <div id="modalConcluirTarefa" class="modal-overlay" style="display:flex; position:fixed; top:0; left:0; width:100%; height:100%; z-index:1000000; justify-content:center; align-items:center; padding:20px;">
-        <div class="modal-content" style="width:100%; max-width:640px; max-height:92vh; overflow-y:auto; border-radius:4px; border-top:3px solid var(--success, var(--primary));">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                <h3 style="margin:0;">Concluir tarefa</h3>
-                <button type="button" onclick="document.getElementById('modalConcluirTarefa').remove()" style="background:none; border:none; font-size:26px; cursor:pointer; color:var(--text-faint);">&times;</button>
-            </div>
-            <p class="text-muted" style="font-size:13px; margin:0 0 16px 0;"><strong>${escT(tarefa.titulo)}</strong><br>Este registro fica na base de dados e ajuda quem chegar depois a não refazer o que já foi feito. Depois de concluída, a tarefa fica travada.</p>
-            <form id="formConcluirTarefa">
-                <div class="input-group" style="margin-bottom:14px;">
-                    <label>Resultado *</label>
-                    <textarea id="concluir-resultado" class="form-control" rows="4" required minlength="10" placeholder="O que foi obtido? Inclua dados, condições e valores relevantes."></textarea>
+    <div id="modalConcluirTarefa" class="modal-overlay is-open is-top">
+        <div class="modal-content modal-md">
+            <div class="modal-header">
+                <div>
+                    <p class="eyebrow">concluir tarefa</p>
+                    <h3>${escT(tarefa.titulo)}</h3>
                 </div>
-                <div class="input-group" style="margin-bottom:14px;">
-                    <label>Desfecho *</label>
-                    <select id="concluir-desfecho" class="form-control" required>
-                        <option value="" disabled selected>Selecione...</option>
+                ${window.UI.closeButton("document.getElementById('modalConcluirTarefa').remove()")}
+            </div>
+            <p class="note">Este registro fica na base e ajuda quem chegar depois a não refazer o que já foi feito. Depois de concluída, a tarefa fica travada.</p>
+            <form id="formConcluirTarefa">
+                <div class="input-group">
+                    <label for="concluir-resultado">Resultado</label>
+                    <textarea id="concluir-resultado" rows="4" required minlength="10" placeholder="O que foi obtido? Inclua dados, condições e valores relevantes."></textarea>
+                </div>
+                <div class="input-group">
+                    <label for="concluir-desfecho">Desfecho</label>
+                    <select id="concluir-desfecho" required>
+                        <option value="" disabled selected>Selecione</option>
                         ${Object.entries(DESFECHO_LABEL).map(([valor, rotulo]) => `<option value="${valor}">${rotulo}</option>`).join('')}
                     </select>
                 </div>
-                <div class="input-group" style="margin-bottom:14px;">
-                    <label>Lições aprendidas / o que não funcionou</label>
-                    <textarea id="concluir-licoes" class="form-control" rows="3" placeholder="Opcional. O que faria diferente? O que evitar?"></textarea>
+                <div class="input-group">
+                    <label for="concluir-licoes">Lições aprendidas e o que não funcionou (opcional)</label>
+                    <textarea id="concluir-licoes" rows="3" placeholder="O que faria diferente? O que evitar?"></textarea>
                 </div>
-                <div class="input-group" style="margin-bottom:14px;">
-                    <label>Palavras-chave (tags)</label>
+                <div class="input-group">
+                    <label>Palavras-chave</label>
                     <div id="concluir-tags"></div>
-                    <span class="text-muted" style="font-size:12px;">Ajudam a encontrar este registro na busca. Reaproveite as já existentes.</span>
+                    <span class="help">Ajudam a encontrar este registro na busca. Reaproveite as já existentes.</span>
                 </div>
                 ${htmlSelectsVinculo('concluir')}
-                <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" onclick="document.getElementById('modalConcluirTarefa').remove()">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Concluir tarefa</button>
                 </div>
@@ -985,16 +984,20 @@ window.abrirModalDevolver = function (id) {
     fecharModais('modalDevolverTarefa');
 
     document.body.insertAdjacentHTML('beforeend', `
-    <div id="modalDevolverTarefa" class="modal-overlay" style="display:flex; position:fixed; top:0; left:0; width:100%; height:100%; z-index:1000000; justify-content:center; align-items:center; padding:20px;">
-        <div class="modal-content" style="width:100%; max-width:520px; border-radius:4px; border-top:3px solid var(--warning, var(--primary));">
-            <h3 style="margin:0 0 6px 0;">Devolver para ajustes</h3>
-            <p class="text-muted" style="font-size:13px; margin:0 0 14px 0;">${escT(tarefa.titulo)}</p>
-            <form id="formDevolverTarefa">
-                <div class="input-group" style="margin-bottom:14px;">
-                    <label>O que precisa ser ajustado? *</label>
-                    <textarea id="devolver-motivo" class="form-control" rows="4" required minlength="3"></textarea>
+    <div id="modalDevolverTarefa" class="modal-overlay is-open is-top">
+        <div class="modal-content modal-sm">
+            <div class="modal-header">
+                <div>
+                    <p class="eyebrow">devolver para ajustes</p>
+                    <h3>${escT(tarefa.titulo)}</h3>
                 </div>
-                <div style="display:flex; justify-content:flex-end; gap:10px;">
+            </div>
+            <form id="formDevolverTarefa">
+                <div class="input-group">
+                    <label for="devolver-motivo">O que precisa ser ajustado</label>
+                    <textarea id="devolver-motivo" rows="4" required minlength="3"></textarea>
+                </div>
+                <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" onclick="document.getElementById('modalDevolverTarefa').remove()">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Devolver</button>
                 </div>
@@ -1041,11 +1044,8 @@ window.reabrirTarefa = async function (id) {
 // ==========================================
 // RESUMO DA TAREFA CONCLUÍDA
 // ==========================================
-function cartaoMetrica(rotulo, valor, cor) {
-    return `<div style="background:var(--bg-subtle); border-radius:var(--radius-md); padding:12px;">
-        <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.04em; color:var(--text-muted); font-weight:600;">${rotulo}</div>
-        <div style="font-size:15.5px; font-weight:700; margin-top:4px;${cor ? ` color:${cor};` : ''}">${valor}</div>
-    </div>`;
+function cartaoMetrica(rotulo, valor) {
+    return `<div class="figure"><span class="v">${valor}</span><span class="k">${rotulo}</span></div>`;
 }
 
 function fmtPrazoIso(iso) {
@@ -1069,9 +1069,9 @@ function descreverEvento(ev) {
 
 function corDoEvento(tipo) {
     return {
-        concluida: 'var(--success)', enviada_revisao: 'var(--primary)', devolvida: 'var(--warning)',
-        reaberta: 'var(--warning)', prazo_alterado: 'var(--warning)', comentario: 'var(--text-faint)'
-    }[tipo] || 'var(--border-strong, var(--text-faint))';
+        concluida: 'ok', enviada_revisao: 'accent', devolvida: 'warn',
+        reaberta: 'warn', prazo_alterado: 'warn'
+    }[tipo] || '';
 }
 
 window.abrirResumoTarefa = async function (id) {
@@ -1080,9 +1080,9 @@ window.abrirResumoTarefa = async function (id) {
     fecharModais('modalResumoTarefa');
 
     document.body.insertAdjacentHTML('beforeend', `
-    <div id="modalResumoTarefa" class="modal-overlay" style="display:flex; position:fixed; top:0; left:0; width:100%; height:100%; z-index:999999; justify-content:center; align-items:flex-start; padding:20px; overflow-y:auto;">
-        <div class="modal-content" style="width:100%; max-width:820px; border-radius:4px; border-top:3px solid var(--primary); margin:auto;">
-            <div id="resumo-corpo"><span class="spinner"></span> Carregando resumo...</div>
+    <div id="modalResumoTarefa" class="modal-overlay is-open">
+        <div class="modal-content modal-lg">
+            <div id="resumo-corpo">${window.UI.loading('Carregando resumo')}</div>
         </div>
     </div>`);
 
@@ -1099,83 +1099,75 @@ window.abrirResumoTarefa = async function (id) {
             t.topico_titulo ? `Tópico PTA: <strong>${escT(t.topico_titulo)}</strong>` : ''
         ].filter(Boolean).join(' · ');
 
-        const metricasHtml = cartaoMetrica('Tempo para conclusão', fmtDuracao(m.tempo_total_segundos));
+        const metricasHtml = cartaoMetrica('do início à conclusão', fmtDuracao(m.tempo_total_segundos));
 
         const timelineHtml = linha.map(item => {
             const cor = corDoEvento(item.tipo);
             let conteudo;
             if (item.origem === 'comentario') {
                 conteudo = `<strong>${escT(item.usuario_nome)}</strong> comentou
-                    <p style="margin:4px 0 0 0; white-space:pre-wrap; background:var(--bg-subtle); padding:8px 10px; border-radius:var(--radius-md);">${escT(item.texto)}</p>
+                    <p class="tl-quote pre-wrap">${escT(item.texto)}</p>
                     ${renderAnexoComentario(item.anexo_url)}`;
             } else {
                 conteudo = descreverEvento(item);
             }
-            return `<div style="display:flex; gap:12px; padding-bottom:14px;">
-                <div style="flex:0 0 10px; display:flex; flex-direction:column; align-items:center;">
-                    <span style="width:10px; height:10px; border-radius:50%; background:${cor}; margin-top:4px;"></span>
-                    <span style="flex:1; width:2px; background:var(--border-color); margin-top:4px;"></span>
-                </div>
-                <div style="flex:1; font-size:13px; line-height:1.5;">
-                    <div class="text-faint" style="font-size:11.5px;">${fmtDataHora(item.criado_em)}</div>
-                    ${conteudo}
-                </div>
-            </div>`;
+            return `<li class="tl-item ${cor}">
+                <div class="meta">${fmtDataHora(item.criado_em)}</div>
+                ${conteudo}
+            </li>`;
         }).join('');
 
+        const bloco = (rotulo, texto) => `<div><dt>${rotulo}</dt><dd>${texto}</dd></div>`;
+
         corpo.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:10px;">
+            <div class="modal-header">
                 <div>
-                    <div class="text-muted" style="font-size:11.5px; text-transform:uppercase; letter-spacing:0.05em; font-weight:600;">Resumo da tarefa</div>
-                    <h3 style="margin:4px 0 0 0;">${escT(t.titulo)}</h3>
+                    <p class="eyebrow">resumo da tarefa</p>
+                    <h3>${escT(t.titulo)}</h3>
                 </div>
-                <button type="button" onclick="document.getElementById('modalResumoTarefa').remove()" style="background:none; border:none; font-size:26px; cursor:pointer; color:var(--text-faint); line-height:1;">&times;</button>
+                ${window.UI.closeButton("document.getElementById('modalResumoTarefa').remove()")}
             </div>
-            <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">
+            <div class="cluster">
                 ${t.status === 'concluida' ? '<span class="badge badge-success">Concluída</span>' : badgeStatus(t)}
                 ${badgeDesfecho(t)}${badgePrioridade(t)}
             </div>
-            <p class="text-muted" style="font-size:13px; margin:0 0 4px 0;">
-                Atribuída a <strong>${t.atribuidos.map(a => escT(a.nome)).join(', ') || '—'}</strong> · Criada por ${escT(t.criado_por_nome)} em ${fmtData(t.criado_em)}
-                ${t.concluida_em ? ` · Concluída por ${escT(t.concluida_por_nome || '—')} em ${fmtDataHora(t.concluida_em)}` : ''}
-            </p>
-            ${vinculos ? `<p class="text-muted" style="font-size:13px; margin:0 0 4px 0;">${vinculos}</p>` : ''}
 
-            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:10px; margin:18px 0;">${metricasHtml}</div>
+            ${metricasHtml}
 
-            ${t.descricao ? `<h4 style="margin:0 0 6px 0; font-size:14px;">O que foi pedido</h4>
-                <div style="background:var(--bg-subtle); padding:12px 14px; border-radius:var(--radius-md); font-size:13.5px; white-space:pre-wrap; margin-bottom:16px;">${escT(t.descricao)}</div>` : ''}
+            <dl class="dl">
+                ${bloco('atribuída a', t.atribuidos.map(a => escT(a.nome)).join(', ') || '—')}
+                ${bloco('criada', `por ${escT(t.criado_por_nome)} em ${fmtData(t.criado_em)}`)}
+                ${t.concluida_em ? bloco('concluída', `por ${escT(t.concluida_por_nome || '—')} em ${fmtDataHora(t.concluida_em)}`) : ''}
+                ${vinculos ? `<div><dt>vínculos</dt><dd class="plain">${vinculos}</dd></div>` : ''}
+                ${t.descricao ? bloco('o que foi pedido', escT(t.descricao)) : ''}
+                ${bloco('resultado', t.resultado ? escT(t.resultado) : '<span class="text-faint">Sem registro de resultado.</span>')}
+                ${t.licoes ? bloco('lições aprendidas', escT(t.licoes)) : ''}
+                ${t.tags && t.tags.length ? `<div><dt>palavras-chave</dt><dd class="plain"><div class="cluster">${chipsTags(t.tags, false)}</div></dd></div>` : ''}
+                ${bloco('participaram', m.participantes.map(escT).join(', ') || '—')}
+            </dl>
 
-            <h4 style="margin:0 0 6px 0; font-size:14px;">Resultado</h4>
-            <div style="background:var(--bg-subtle); padding:12px 14px; border-radius:var(--radius-md); font-size:13.5px; white-space:pre-wrap; margin-bottom:16px; border-left:3px solid var(--success, var(--primary));">${t.resultado ? escT(t.resultado) : '<em class="text-faint">Sem registro de resultado.</em>'}</div>
+            <section class="modal-section">
+                <div class="section-head"><h3>Linha do tempo</h3></div>
+                ${timelineHtml ? `<ul class="timeline">${timelineHtml}</ul>` : '<p class="text-faint text-small">Sem histórico registrado.</p>'}
+            </section>
 
-            ${t.licoes ? `<h4 style="margin:0 0 6px 0; font-size:14px;">Lições aprendidas / o que não funcionou</h4>
-                <div style="background:var(--bg-subtle); padding:12px 14px; border-radius:var(--radius-md); font-size:13.5px; white-space:pre-wrap; margin-bottom:16px;">${escT(t.licoes)}</div>` : ''}
-
-            ${t.tags && t.tags.length ? `<div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px;">${chipsTags(t.tags, false)}</div>` : ''}
-
-            <p class="text-muted" style="font-size:12.5px; margin:0 0 18px 0;">Participaram: ${m.participantes.map(escT).join(', ') || '—'}</p>
-
-            <h4 style="margin:0 0 12px 0; font-size:14px;">Linha do tempo</h4>
-            <div>${timelineHtml || '<p class="text-faint" style="font-size:13px;">Sem histórico registrado.</p>'}</div>
-
-            ${envolvido ? `<div style="border-top:1px solid var(--border-light); padding-top:14px; margin-top:6px;">
-                <h4 style="margin:0 0 8px 0; font-size:14px;">Adendo</h4>
-                <p class="text-muted" style="font-size:12.5px; margin:0 0 8px 0;">A tarefa está travada. Correções e informações novas entram como comentário.</p>
+            ${envolvido ? `<section class="modal-section">
+                <div class="section-head"><h3>Adendo</h3></div>
+                <p class="text-muted text-small mb-sm">A tarefa está travada. Correções e informações novas entram como comentário.</p>
                 ${htmlFormComentario()}
-            </div>` : ''}
+            </section>` : ''}
 
-            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px; border-top:1px solid var(--border-color); padding-top:16px;">
-                ${(user.role === 'admin' && t.status === 'concluida') ? `<button type="button" class="btn btn-outline-danger" onclick="window.reabrirTarefa(${t.id})">Reabrir tarefa</button>` : ''}
-                <button type="button" class="btn btn-secondary" onclick="document.getElementById('modalResumoTarefa').remove()">Fechar</button>
-            </div>
+            ${(user.role === 'admin' && t.status === 'concluida') ? `
+            <div class="modal-footer">
+                <button type="button" class="link-btn danger" onclick="window.reabrirTarefa(${t.id})">Reabrir tarefa</button>
+            </div>` : ''}
         `;
 
         const form = document.getElementById('formComentarioTarefa');
         if (form) form.addEventListener('submit', (e) => window.enviarComentarioTarefa(e, t.id));
     } catch (err) {
         corpo.innerHTML = `${window.UI.errorState(err.message)}
-            <div style="text-align:center;"><button type="button" class="btn btn-secondary" onclick="document.getElementById('modalResumoTarefa').remove()">Fechar</button></div>`;
+            <button type="button" class="btn btn-secondary" onclick="document.getElementById('modalResumoTarefa').remove()">Fechar</button>`;
     }
 };
 })();

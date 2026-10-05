@@ -2,313 +2,301 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SGCI - GMAE</title>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGCI · GMAE</title>
+
     <link rel="stylesheet" href="css/global.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/components.css">
 </head>
 <body class="dashboard-layout">
-    
+
     <aside class="sidebar">
         <div class="sidebar-brand">
-            <h2>SGCI - GMAE</h2>
+            <span class="brand-mark">SGCI / GMAE</span>
+            <span class="brand-sub">Gestão de Conhecimento e Inovação</span>
         </div>
-        
-        <nav class="sidebar-nav">
+
+        <nav class="sidebar-nav" aria-label="Seções">
             <ul>
-                <li><button class="nav-item active" data-view="inicio"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>Início</button></li>
-                <li><button class="nav-item" data-view="equipments"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6.34L4.24 17.5A2 2 0 0 0 6 20.5h12a2 2 0 0 0 1.76-3L15 8.34V2"/><path d="M8.5 2h7"/><path d="M6.5 14.5h11"/></svg>Equipamentos</button></li>
-                <li><button class="nav-item" data-view="processes"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>Mapeamento de Processos</button></li>
-                <li><button class="nav-item" data-view="pops"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>POPs</button></li>
-                <li><button class="nav-item" data-view="pta"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>Planejamento Mensal</button></li>
-                <li><button class="nav-item" data-view="tarefas"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg>Tarefas</button></li>
-                <li><button class="nav-item" data-view="articles"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Artigos</button></li>
-                <li id="menu-admin" style="display: none;"><button class="nav-item" data-view="admin"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 6v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6l-8-4Z"/></svg>Administração</button></li>
+                <li><button class="nav-item active" data-view="inicio" data-label="Início"><span class="nav-index">01</span>Início</button></li>
+                <li class="nav-sep" role="presentation"></li>
+                <li><button class="nav-item" data-view="equipments" data-label="Equipamentos"><span class="nav-index">02</span>Equipamentos</button></li>
+                <li><button class="nav-item" data-view="processes" data-label="Processos de P&amp;D"><span class="nav-index">03</span>Processos de P&amp;D</button></li>
+                <li><button class="nav-item" data-view="pops" data-label="POPs"><span class="nav-index">04</span>POPs</button></li>
+                <li class="nav-sep" role="presentation"></li>
+                <li><button class="nav-item" data-view="pta" data-label="Planejamento mensal"><span class="nav-index">05</span>Planejamento mensal</button></li>
+                <li><button class="nav-item" data-view="tarefas" data-label="Tarefas"><span class="nav-index">06</span>Tarefas</button></li>
+                <li><button class="nav-item" data-view="articles" data-label="Artigos"><span class="nav-index">07</span>Artigos</button></li>
+                <li id="menu-admin" style="display: none;">
+                    <div class="nav-sep" role="presentation"></div>
+                    <button class="nav-item" data-view="admin" data-label="Administração"><span class="nav-index">08</span>Administração</button>
+                </li>
             </ul>
         </nav>
-        
+
         <div class="sidebar-footer">
-            <button id="btn-logout" class="btn btn-outline-danger btn-block">Sair do Sistema</button>
+            <div class="sidebar-user" id="user-greeting">&nbsp;</div>
+            <div class="sidebar-role" id="user-role"></div>
+            <button id="btn-logout" class="link-btn muted">Sair</button>
         </div>
     </aside>
 
     <div class="main-wrapper">
         <header class="topbar">
             <div class="topbar-left">
-                <button class="menu-toggle" id="menu-toggle">☰</button>
-                <h2 id="current-page-title" style="margin: 0; font-size: 1.25rem;">Dashboard</h2>
-            </div>
-            <div class="topbar-right" style="display: flex; align-items: center;">
-                <button id="btn-setup-2fa" onclick="abrirSetup2FA()" class="btn btn-primary btn-sm" style="margin-right: 15px; display: none;">
-                    <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Ativar 2FA
+                <button class="menu-toggle" id="menu-toggle" aria-label="Abrir menu">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="17" x2="21" y2="17"/></svg>
                 </button>
-                
-                <span id="user-greeting" style="margin-right: 15px; font-weight: 500; font-size: 14px; color: var(--text-muted);">Carregando...</span>
-                <div class="avatar" id="user-avatar">P</div>
+                <p class="crumbs">sgci / <strong id="current-page-title">início</strong></p>
+            </div>
+            <div class="topbar-right">
+                <button id="btn-setup-2fa" onclick="abrirSetup2FA()" class="link-btn" style="display: none;"><span class="long">Ativar verificação em duas etapas</span><span class="short">Ativar 2FA</span></button>
             </div>
         </header>
 
-        <main id="dynamic-content" class="content-area">
-        </main>
+        <main id="dynamic-content" class="content-area"></main>
     </div>
 
-    <div id="modal-eq" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 999999; justify-content: center; align-items: center;">
-        <div class="modal-content" style="max-width: 600px; width: 90%; border-radius: 4px; border-top: 3px solid var(--primary);">
-            
-            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid var(--border-color); padding-bottom: 16px;">
-                <h3 style="margin: 0; font-size: 18px;">+ Novo Equipamento</h3>
-                <button type="button" onclick="window.closeEquipModal()" style="background:none; border:none; font-size:28px; cursor:pointer; color:var(--text-muted); line-height: 1;">&times;</button>
+    <!-- Novo equipamento -->
+    <div id="modal-eq" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Novo equipamento</h3>
+                <button type="button" class="modal-close" onclick="window.closeEquipModal()" aria-label="Fechar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
             </div>
-            
+
             <form id="form-new-eq" onsubmit="window.handleSaveEquipment(event)">
                 <div class="input-group">
-                    <label for="eq-name">Nome do Equipamento *</label>
-                    <input type="text" id="eq-name" class="form-control" required placeholder="Ex: Microscópio Eletrónico de Varrimento">
+                    <label for="eq-name">Nome do equipamento</label>
+                    <input type="text" id="eq-name" required>
                 </div>
-
                 <div class="input-group">
-                    <label for="eq-desc">Descrição básica</label>
-                    <textarea id="eq-desc" class="form-control" rows="3" placeholder="Detalhes técnicos e especificações..."></textarea>
+                    <label for="eq-desc">Descrição</label>
+                    <textarea id="eq-desc" rows="3" placeholder="Especificações, localização, observações de uso"></textarea>
                 </div>
-
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                <div class="field-grid">
                     <div class="input-group">
-                        <label for="eq-video">Vídeo (YouTube URL)</label>
-                        <input type="url" id="eq-video" class="form-control" placeholder="https://...">
+                        <label for="eq-video">Vídeo de treinamento (URL do YouTube)</label>
+                        <input type="url" id="eq-video" placeholder="https://">
                     </div>
                     <div class="input-group">
-                        <label for="eq-manual">POP</label>
-                        <input type="url" id="eq-manual" class="form-control" placeholder="https://...">
+                        <label for="eq-manual">POP do equipamento (URL)</label>
+                        <input type="url" id="eq-manual" placeholder="https://">
                     </div>
                 </div>
 
-                <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                <div class="modal-footer">
                     <button type="button" onclick="window.closeEquipModal()" class="btn btn-secondary">Cancelar</button>
-                    <button type="submit" id="btn-save-eq" class="btn btn-primary">Salvar Equipamento</button>
+                    <button type="submit" id="btn-save-eq" class="btn btn-primary">
+                        <span class="btn-text">Salvar equipamento</span>
+                        <span class="spinner hidden" aria-hidden="true"></span>
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div id="modal-dossier" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 999999; justify-content: center; align-items: center;">
-        <div class="modal-content" style="max-width: 850px; width: 90%; border-radius: 4px; border-top: 3px solid var(--primary);">
-            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid var(--border-color); padding-bottom: 16px;">
-                <h3 id="dossier-title" style="margin:0; font-size: 18px;">Carregando Detalhes...</h3>
-                <button type="button" onclick="window.closeDossierModal()" style="background:none; border:none; font-size:28px; cursor:pointer; color:var(--text-muted); line-height: 1;">&times;</button>
+    <!-- Detalhes do equipamento -->
+    <div id="modal-dossier" class="modal-overlay">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <div>
+                    <p class="eyebrow">equipamento</p>
+                    <h3 id="dossier-title">Carregando</h3>
+                </div>
+                <button type="button" class="modal-close" onclick="window.closeDossierModal()" aria-label="Fechar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
             </div>
-            <div id="dossier-body" style="display:grid; grid-template-columns: 1.5fr 1fr; gap:24px;"></div>
+            <div id="dossier-body"></div>
         </div>
     </div>
 
-    <div id="deep-view-modal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 999999; justify-content: center; align-items: center; padding: 20px; overflow-y: auto;">
-        <div class="modal-content" style="max-width: 720px; width: 100%; border-radius: 4px; border-top: 3px solid var(--primary);">
-            <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; border-bottom: 1px solid var(--border-color); padding-bottom:16px;">
-                <h3 id="dv-title" style="margin:0; font-size: 18px;">Editar Registo</h3>
-                <button type="button" onclick="window.closeDeepView()" style="background:none; border:none; font-size:28px; cursor:pointer; color:var(--text-muted); line-height: 1;">&times;</button>
+    <!-- Edição genérica de registro -->
+    <div id="deep-view-modal" class="modal-overlay">
+        <div class="modal-content modal-md">
+            <div class="modal-header">
+                <h3 id="dv-title">Editar registro</h3>
+                <button type="button" class="modal-close" onclick="window.closeDeepView()" aria-label="Fechar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
             </div>
-            <div id="dv-body" style="display:flex; flex-direction:column; gap:16px;"></div>
-            <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+            <div id="dv-body"></div>
+            <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="window.closeDeepView()">Cancelar</button>
-                <button class="btn btn-primary" id="dv-save-btn"><svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salvar Alterações</button>
+                <button class="btn btn-primary" id="dv-save-btn">Salvar alterações</button>
             </div>
         </div>
     </div>
 
-    <div id="processModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 999999; justify-content: center; align-items: center; padding: 20px;">
-        <div class="modal-content" style="max-width: 850px; width: 100%; border-radius: 4px; border-top: 3px solid var(--primary); max-height: 90vh; overflow-y: auto;">
-            
-            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid var(--border-color); padding-bottom: 16px;">
-                <h3 style="margin: 0; font-size: 18px;">Mapeamento de Processo P&D</h3>
-                <button type="button" onclick="window.closeProcessModal()" style="background:none; border:none; font-size:28px; cursor:pointer; color:var(--text-muted); line-height: 1;">&times;</button>
+    <!-- Novo processo -->
+    <div id="processModal" class="modal-overlay">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3>Novo processo de P&amp;D</h3>
+                <button type="button" class="modal-close" onclick="window.closeProcessModal()" aria-label="Fechar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
             </div>
-            
-            <div class="tabs-nav" style="display: flex; gap: 10px; margin-bottom: 24px; border-bottom: 1px solid var(--border-color); padding-bottom: 0;">
-                <button type="button" class="tab-btn active" onclick="window.openTab(event, 'tab-planejamento')" style="padding:12px 16px; cursor:pointer; border:none; background:none; font-weight:600; font-size: 14px; margin-bottom: -1px;">1. Planeamento</button>
-                <button type="button" class="tab-btn" onclick="window.openTab(event, 'tab-execucao')" style="padding:12px 16px; cursor:pointer; border:none; background:none; font-size: 14px; margin-bottom: -1px;">2. Execução</button>
-                <button type="button" class="tab-btn" onclick="window.openTab(event, 'tab-resultados')" style="padding:12px 16px; cursor:pointer; border:none; background:none; font-size: 14px; margin-bottom: -1px;">3. Resultados & Anexos</button>
+
+            <div class="tabs-nav">
+                <button type="button" class="tab-btn active" onclick="window.openTab(event, 'tab-planejamento')"><span class="mono">1</span>Planejamento</button>
+                <button type="button" class="tab-btn" onclick="window.openTab(event, 'tab-execucao')"><span class="mono">2</span>Execução</button>
+                <button type="button" class="tab-btn" onclick="window.openTab(event, 'tab-resultados')"><span class="mono">3</span>Resultados e anexos</button>
             </div>
 
             <form id="processForm" onsubmit="window.handleSaveProcess(event)">
-                <div id="tab-planejamento" class="tab-content" style="display: block;">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div id="tab-planejamento" class="tab-content">
+                    <div class="field-grid">
                         <div class="input-group">
-                            <label for="proc-nome">Nome do Processo *</label>
-                            <input type="text" id="proc-nome" class="form-control" required>
+                            <label for="proc-nome">Nome do processo</label>
+                            <input type="text" id="proc-nome" required>
                         </div>
                         <div class="input-group">
                             <label for="proc-resp">Responsável</label>
-                            <input type="text" id="proc-resp" class="form-control">
+                            <input type="text" id="proc-resp">
                         </div>
-                        <div class="input-group" style="grid-column: span 2;">
-                            <label for="proc-objetivo">Objetivo da Fase</label>
-                            <input type="text" id="proc-objetivo" class="form-control">
+                        <div class="input-group span-2">
+                            <label for="proc-objetivo">Objetivo da fase</label>
+                            <input type="text" id="proc-objetivo">
                         </div>
-                        <div class="input-group" style="grid-column: span 2;">
-                            <label for="proc-visao">Visão Geral</label>
-                            <textarea id="proc-visao" class="form-control" rows="3"></textarea>
+                        <div class="input-group span-2">
+                            <label for="proc-visao">Visão geral</label>
+                            <textarea id="proc-visao" rows="3"></textarea>
                         </div>
                     </div>
                 </div>
 
-                <div id="tab-execucao" class="tab-content" style="display: none;">
-                    <div style="display: grid; gap: 16px;">
+                <div id="tab-execucao" class="tab-content hidden">
+                    <div class="input-group">
+                        <label for="proc-equipe">Equipe envolvida</label>
+                        <input type="text" id="proc-equipe">
+                    </div>
+                    <div class="input-group">
+                        <label for="proc-etapas">Detalhamento das etapas</label>
+                        <textarea id="proc-etapas" rows="6" placeholder="Uma etapa por linha"></textarea>
+                    </div>
+                </div>
+
+                <div id="tab-resultados" class="tab-content hidden">
+                    <div class="input-group">
+                        <label for="proc-indicadores">Indicadores e resultados</label>
+                        <textarea id="proc-indicadores" rows="3"></textarea>
+                    </div>
+                    <div class="file-field">
+                        <label for="proc-imagem">Imagens do processo</label>
+                        <input type="file" id="proc-imagem" accept="image/png, image/jpeg, image/jpg" multiple onchange="previewMultiplasImagens(event, 'preview-proc')">
+                        <span class="help">PNG ou JPG, até 10 MB cada.</span>
+                        <div id="preview-proc" class="thumbs"></div>
+                    </div>
+                    <div class="field-grid">
                         <div class="input-group">
-                            <label for="proc-equipe">Equipe Envolvida</label>
-                            <input type="text" id="proc-equipe" class="form-control">
+                            <label for="proc-anexos">Link de anexos</label>
+                            <input type="url" id="proc-anexos" placeholder="https://">
                         </div>
-                        <div class="input-group">       
-                            <label for="proc-etapas">Detalhamento das Etapas</label>
-                            <textarea id="proc-etapas" class="form-control" rows="5" placeholder="Passo 1, Passo 2..."></textarea>
+                        <div class="input-group">
+                            <label for="proc-status">Status</label>
+                            <select id="proc-status">
+                                <option value="rascunho">Rascunho</option>
+                                <option value="em_andamento">Em andamento</option>
+                                <option value="concluido">Concluído</option>
+                            </select>
                         </div>
                     </div>
                 </div>
 
-                <div id="tab-resultados" class="tab-content" style="display: none;">
-    <div style="display: grid; gap: 16px;">
-        <div class="input-group">
-            <label for="proc-indicadores">Indicadores e Resultados</label>
-            <textarea id="proc-indicadores" class="form-control" rows="3"></textarea>
-        </div>
-        
-        <div class="input-group" style="background: #F9FAFB; padding: 15px; border: 1px dashed #D1D5DB; border-radius: 8px;">
-            <label for="proc-imagem">Imagens do Processo (Máx 10MB cada)</label>
-            <input type="file" id="proc-imagem" class="form-control" accept="image/png, image/jpeg, image/jpg" multiple onchange="previewMultiplasImagens(event, 'preview-proc')">
-            <div id="preview-proc" style="display: none; margin-top: 10px; text-align: center; gap: 10px; flex-wrap: wrap; justify-content: center;"></div>
-        </div>
-
-        <div class="input-group">
-            <label for="proc-anexos">Anexos</label>
-            <input type="url" id="proc-anexos" class="form-control">
-        </div>
-        <div class="input-group">
-            <label for="proc-status">Status Final</label>
-            <select id="proc-status" class="form-control">
-                <option value="rascunho">RASCUNHO</option>
-                <option value="em_andamento">EM ANDAMENTO</option>
-                <option value="concluido">CONCLUÍDO</option>
-            </select>
-        </div>
-    </div>
-</div>
-
-                <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:32px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                <div class="modal-footer">
                     <button type="button" onclick="window.closeProcessModal()" class="btn btn-secondary">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar Processo</button>
+                    <button type="submit" class="btn btn-primary">Salvar processo</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div id="popModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 999999; justify-content: center; align-items: center; padding: 20px;">
-        <div class="modal-content" style="max-width: 850px; width: 100%; border-radius: 4px; border-top: 3px solid var(--primary); max-height: 90vh; overflow-y: auto;">
-            
-            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid var(--border-color); padding-bottom: 16px;">
-                <h3 style="margin: 0; font-size: 18px;">Procedimento Operacional (POP)</h3>
-                <button type="button" onclick="window.closePopModal()" style="background:none; border:none; font-size:28px; cursor:pointer; color:var(--text-muted); line-height: 1;">&times;</button>
+    <!-- Detalhes de um relato do planejamento mensal -->
+    <div id="pta-detalhes-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <p class="eyebrow" id="modal-detalhes-mes"></p>
+                    <h3 id="modal-detalhes-topico"></h3>
+                </div>
+                <button type="button" class="modal-close" onclick="fecharModalDetalhesPTA()" aria-label="Fechar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
             </div>
-            
-            <form id="popForm"></form>
-            
+
+            <div class="figure">
+                <span class="v" id="modal-detalhes-avanco"></span>
+                <span class="k">de avanço na pesquisa</span>
+            </div>
+
+            <dl class="dl">
+                <div>
+                    <dt>atividades</dt>
+                    <dd id="modal-detalhes-descricao"></dd>
+                </div>
+            </dl>
         </div>
     </div>
 
-    <div id="pta-detalhes-modal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(27, 24, 21, 0.6); z-index: 999999; justify-content: center; align-items: center;">
-        <div class="modal-content" style="width: 90%; max-width: 600px; border-radius: 4px; border-top: 3px solid var(--primary); position: relative;">
-            
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 16px; margin-bottom: 24px;">
-                <h3 style="color: var(--text-main); font-size: 18px; font-weight: 700; margin: 0;">Detalhes do Planejamento Mensal</h3>
-                <button type="button" onclick="fecharModalDetalhesPTA()" style="background: none; border: none; font-size: 28px; color: var(--text-muted); cursor: pointer; line-height: 1;">&times;</button>
+    <!-- Confirmação: avanço igual ao do último relato -->
+    <div id="modal-confirmacao-avanco" class="modal-overlay">
+        <div class="modal-content modal-sm">
+            <div class="modal-header">
+                <h3>Avanço sem alteração</h3>
             </div>
-
-            <div style="display: flex; flex-direction: column; gap: 16px;">
-                <div>
-                    <label style="font-size: 12px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; letter-spacing: 0.05em;">Tópico de Pesquisa</label>
-                    <div id="modal-detalhes-topico" style="color: var(--text-main); font-weight: 600; font-size: 15px; background: var(--bg-body); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); margin-top: 4px;"></div>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                    <div>
-                        <label style="font-size: 12px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; letter-spacing: 0.05em;">Mês/Ano Referência</label>
-                        <div id="modal-detalhes-mes" style="color: var(--text-main); font-weight: 500; background: var(--bg-body); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); margin-top: 4px;"></div>
-                    </div>
-                    <div>
-                        <label style="font-size: 12px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; letter-spacing: 0.05em;">Avanço</label>
-                        <div id="modal-detalhes-avanco" style="color: var(--success); font-weight: 700; background: #ECFDF5; padding: 12px; border-radius: 8px; border: 1px solid #D1FAE5; margin-top: 4px;"></div>
-                    </div>
-                </div>
-
-                <div>
-                    <label style="font-size: 12px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; letter-spacing: 0.05em;">Descrição das Atividades</label>
-                    <div id="modal-detalhes-descricao" style="color: var(--text-main); font-size: 14px; background: var(--bg-body); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color); margin-top: 4px; max-height: 250px; overflow-y: auto; white-space: pre-wrap; line-height: 1.6; text-align: justify;"></div>
-                </div>
-            </div>
-
-            <div style="margin-top: 24px; display: flex; justify-content: flex-end; border-top: 1px solid var(--border-color); padding-top: 20px;">
-                <button onclick="fecharModalDetalhesPTA()" class="btn btn-primary" style="padding: 10px 20px; font-weight: bold; font-size: 14px;">Fechar</button>
+            <p class="dialog-text">O avanço informado (<span class="mono"><span id="span-avanco-repetido"></span>%</span>) é o mesmo do seu último relato neste tópico. Enviar assim mesmo?</p>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="fecharModalAvanco()">Revisar</button>
+                <button type="button" class="btn btn-primary" onclick="confirmarEnvioAvancoRepetido()">Enviar assim mesmo</button>
             </div>
         </div>
     </div>
 
-    <div id="modal-setup-2fa" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; justify-content: center; align-items: center;">
-        <div class="modal-content" style="width: 90%; max-width: 450px; border-radius: 4px; border-top: 3px solid var(--primary); text-align: center;">
-            
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; border-bottom: 1px solid var(--border-color); padding-bottom: 16px;">
-                <h3 style="margin:0; font-size: 18px; color: var(--text-main);">Configurar 2fatores</h3>
-                <button type="button" onclick="fecharSetup2FA()" style="background:none; border:none; font-size:28px; cursor:pointer; color:var(--text-muted);">&times;</button>
+    <!-- Configuração do 2FA -->
+    <div id="modal-setup-2fa" class="modal-overlay">
+        <div class="modal-content modal-sm">
+            <div class="modal-header">
+                <h3>Verificação em duas etapas</h3>
+                <button type="button" class="modal-close" onclick="fecharSetup2FA()" aria-label="Fechar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
             </div>
-            
+
             <div id="2fa-step-1">
-                <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 14px;">Escaneie o QR Code abaixo com o seu aplicativo Autenticador (Google Authenticator).</p>
-                
-                <div id="qrcode-container" style="display: flex; justify-content: center; margin-bottom: 20px; padding: 20px; background: white; border-radius: 12px; border: 1px solid var(--border-color);"></div>
-                
-                <p style="font-size: 13px; color: var(--text-muted);">Ou insira o código manualmente:<br>
-                    <strong id="secret-text" style="letter-spacing: 2px; color: var(--primary); font-size: 16px; margin-top: 5px; display: inline-block;"></strong>
-                </p>
-                
-                <button class="btn btn-primary btn-block" style="margin-top: 24px;" onclick="avancarPasso2FA()">Já escaneei, avançar</button>
+                <p class="eyebrow">etapa 1 de 2</p>
+                <p class="dialog-text">Escaneie o código com seu aplicativo Autenticador.</p>
+
+                <div id="qrcode-container" class="qr-box"></div>
+
+                <p class="help">Não consegue escanear? Digite a chave manualmente:</p>
+                <p id="secret-text" class="secret-key"></p>
+
+                <div class="modal-footer">
+                    <button class="btn btn-primary" onclick="avancarPasso2FA()">Continuar</button>
+                </div>
             </div>
 
             <div id="2fa-step-2" class="hidden">
-                <p style="color: var(--text-muted); margin-bottom: 15px; font-size: 14px;">Digite o código de 6 dígitos gerado pelo aplicativo Autenticador para finalizar:</p>
-                
-                <input type="text" id="codigo-confirmacao-2fa" class="form-control" maxlength="6" placeholder="000 000" style="font-size: 24px; letter-spacing: 6px; text-align: center; margin-bottom: 24px; font-weight: bold;">
-                
-                <button class="btn btn-primary btn-block" onclick="confirmarAtivacao2FA()" id="btn-confirmar-2fa">Validar e Gerar Códigos de Backup</button>
-                <button class="btn btn-secondary btn-block" onclick="voltarPasso2FA()" style="margin-top: 10px;">Voltar</button>
-            </div>
+                <p class="eyebrow">etapa 2 de 2</p>
+                <p class="dialog-text mb-md">Digite o código de 6 dígitos que o aplicativo está mostrando. Em seguida, seus códigos de backup serão baixados.</p>
 
+                <input type="text" id="codigo-confirmacao-2fa" class="code-input" maxlength="6" inputmode="numeric" placeholder="000000">
+
+                <div class="modal-footer split">
+                    <button class="btn btn-secondary" onclick="voltarPasso2FA()">Voltar</button>
+                    <button class="btn btn-primary" onclick="confirmarAtivacao2FA()" id="btn-confirmar-2fa">Ativar</button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div id="toast-container" style="position: fixed; bottom: 24px; right: 24px; z-index: 1000000; display: flex; flex-direction: column; gap: 10px;"></div>
-   
+    <div id="toast-container"></div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="js/api.js?v=2"></script>
-    <script src="js/ui.js?v=3000"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/views/equipments.js"></script>
-    <script src="js/views/processes.js"></script> 
-    <script src="js/dashboard.js?v=1100"></script>
-    <script src="js/views/pta.js?v=8"></script>
-    <script src="js/views/tarefas.js?v=3"></script>
-    <script src="js/views/pops.js?v=288"></script>
-    <script src="js/views/admin.js?v=550"></script>
-    <script src="js/views/articles.js"></script>
+    <script src="js/api.js?v=3"></script>
+    <script src="js/ui.js?v=3100"></script>
+    <script src="js/auth.js?v=2001"></script>
+    <script src="js/views/equipments.js?v=2"></script>
+    <script src="js/views/processes.js?v=2"></script>
+    <script src="js/dashboard.js?v=1200"></script>
+    <script src="js/views/pta.js?v=9"></script>
+    <script src="js/views/tarefas.js?v=4"></script>
+    <script src="js/views/pops.js?v=289"></script>
+    <script src="js/views/admin.js?v=551"></script>
+    <script src="js/views/articles.js?v=2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const userString = localStorage.getItem('user_data');
-            if (userString) {
-                const user = JSON.parse(userString);
-                const primeiroNome = user.nome ? user.nome.split(' ')[0] : 'Usuário';
-                const inicial = primeiroNome.charAt(0).toUpperCase();
-                document.getElementById('user-greeting').innerText = 'Olá, ' + primeiroNome;
-                document.getElementById('user-avatar').innerText = inicial;
-            }
-        });
-    </script>
 </body>
 </html>

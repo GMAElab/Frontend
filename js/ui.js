@@ -42,6 +42,8 @@ const ICON_PATHS = {
     inbox: '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11Z"/>',
     'file-plus': '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="12" x2="12" y2="18"/><line x1="9" y1="15" x2="15" y2="15"/>',
     upload: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>',
+    x: '<line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/>',
+    'arrow-right': '<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>',
     'eye-off': '<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/>',
 };
 
@@ -50,7 +52,7 @@ window.Icon = function (name, opts = {}) {
     const cls = opts.class ? ` ${opts.class}` : '';
     const path = ICON_PATHS[name];
     if (!path) return '';
-    return `<svg class="icon${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
+    return `<svg class="icon${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
 };
 
 // ==========================================
@@ -82,9 +84,9 @@ const UI = {
         toast.setAttribute('role', 'alert');
         toast.setAttribute('aria-live', 'assertive');
 
-        const iconByType = { success: 'check-circle', error: 'x-circle', warning: 'alert-triangle', info: 'message-square' };
-        toast.innerHTML = `${window.Icon(iconByType[type] || 'message-square', { size: 18 })}<span></span>`;
-        toast.querySelector('span').textContent = message;
+        const tagByType = { success: 'ok', error: 'erro', warning: 'aviso', info: 'info' };
+        toast.innerHTML = `<span class="tag">${tagByType[type] || 'info'}</span><span></span>`;
+        toast.lastElementChild.textContent = message;
 
         container.appendChild(toast);
         setTimeout(() => {
@@ -120,6 +122,14 @@ const UI = {
         feedbackEl.className = `feedback-msg ${isError ? 'error' : 'success'}`;
     },
 
+    /** Botão de fechar padrão dos modais. */
+    closeButton: (onclick) =>
+        `<button type="button" class="modal-close" onclick="${onclick}" aria-label="Fechar">${window.Icon('x', { size: 16 })}</button>`,
+
+    /** Linha de carregamento, usada enquanto uma lista ou painel busca dados. */
+    loading: (label = 'Carregando') =>
+        `<div class="loading"><span class="spinner"></span>${label}</div>`,
+
     /**
      * Substitui window.confirm() nativo por um modal com a identidade visual do sistema.
      * Uso: if (await UI.confirm("Excluir este item?", { danger: true })) { ... }
@@ -135,11 +145,9 @@ const UI = {
             modal.className = 'modal-overlay';
             modal.style.display = 'flex';
             modal.innerHTML = `
-                <div class="modal-content" style="max-width:420px;">
-                    <div class="modal-header" style="margin-bottom:16px; border-bottom:none; padding-bottom:0;">
-                        <h3 style="display:flex; align-items:center; gap:10px;">${danger ? window.Icon('alert-triangle', { size: 18, class: 'text-danger' }) : ''}${title}</h3>
-                    </div>
-                    <p style="color:var(--text-muted); font-size:14px; line-height:1.6; margin-bottom:8px;"></p>
+                <div class="modal-content modal-sm">
+                    <div class="modal-header"><h3>${title}</h3></div>
+                    <p class="dialog-text"></p>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-role="cancel">${cancelText}</button>
                         <button type="button" class="btn ${danger ? 'btn-danger' : 'btn-primary'}" data-role="ok">${confirmText}</button>
@@ -157,29 +165,25 @@ const UI = {
     },
 
     /**
-     * Markup padrão para listas/tabelas sem dados, com ícone e orientação —
+     * Markup padrão para listas/tabelas sem dados: título e orientação,
      * em vez de uma célula em branco sem explicação.
      */
     emptyState: (opts = {}) => {
-        const { icon = 'inbox', title = 'Nada por aqui ainda', description = '', actionLabel = '', actionOnclick = '' } = opts;
+        const { title = 'Nada por aqui ainda', description = '', actionLabel = '', actionOnclick = '' } = opts;
         return `
             <div class="empty-state">
-                <div class="empty-state-icon">${window.Icon(icon, { size: 26 })}</div>
                 <h4>${title}</h4>
-                ${description ? `<p class="text-muted">${description}</p>` : ''}
-                ${actionLabel ? `<button type="button" class="btn btn-primary btn-sm" style="margin-top:14px;" onclick="${actionOnclick}">${actionLabel}</button>` : ''}
+                ${description ? `<p>${description}</p>` : ''}
+                ${actionLabel ? `<button type="button" class="btn btn-secondary btn-sm" onclick="${actionOnclick}">${actionLabel}</button>` : ''}
             </div>`;
     },
 
-    /**
-     * Markup padrão para falhas de carregamento — substitui os antigos
-     * parágrafos soltos em vermelho por algo consistente com o resto do app.
-     */
+    /** Markup padrão para falhas de carregamento. */
     errorState: (message = 'Não foi possível carregar os dados.') => {
         return `
-            <div class="empty-state">
-                <div class="empty-state-icon" style="background:var(--danger-light); color:var(--danger);">${window.Icon('alert-triangle', { size: 24 })}</div>
-                <p class="text-danger" style="font-weight:600;">${message}</p>
+            <div class="empty-state error">
+                <h4>${message}</h4>
+                <p>Verifique a conexão e tente novamente.</p>
             </div>`;
     },
 
@@ -193,10 +197,10 @@ const UI = {
             btn.classList.remove('active');
             if (btn.getAttribute('data-view') === viewName) {
                 btn.classList.add('active');
-                if (pageTitle) pageTitle.textContent = (btn.dataset.label || btn.textContent).trim();
+                if (pageTitle) pageTitle.textContent = (btn.dataset.label || btn.textContent).trim().toLowerCase();
             }
         });
-        mainContent.innerHTML = `<div class="text-center mt-md"><span class="spinner" style="position:relative; border-color:var(--border-color); border-top-color:var(--primary)"></span> Carregando...</div>`;
+        mainContent.innerHTML = UI.loading();
         const event = new CustomEvent('viewChanged', { detail: { view: viewName } });
         document.dispatchEvent(event);
     }
@@ -226,6 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
     document.querySelectorAll('.modal-overlay').forEach(modal => {
+        if (modal.classList.contains('is-locked')) return;
         if (getComputedStyle(modal).display !== 'none') {
             modal.style.display = 'none';
             document.body.style.overflow = 'auto';
@@ -242,68 +247,78 @@ document.addEventListener('viewChanged', (e) => {
         const isAdmin = user.role === 'admin' || user.role === 'coordenador';
         const primeiroNome = (user.nome || 'Pesquisador').split(' ')[0];
 
-        const atalhos = [
-            { view: 'pta', icon: 'bar-chart', label: 'Enviar Planejamento Mensal', desc: 'Registrar avanço mensal' },
-            { view: 'processes', icon: 'layers', label: 'Novo Processo', desc: 'Mapear um processo de P&D' },
-            { view: 'equipments', icon: 'flask', label: 'Equipamentos', desc: 'Consultar o laboratório' },
-            { view: 'articles', icon: 'search', label: 'Artigos', desc: 'Buscar literatura científica' },
+        const agora = new Date();
+        const hora = agora.getHours();
+        const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
+        const dataExtenso = agora.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+        const secoes = [
+            { view: 'pta', label: 'Planejamento mensal', desc: 'Registre o avanço do mês em cada tópico de pesquisa.' },
+            { view: 'tarefas', label: 'Tarefas', desc: 'O que está em andamento e o que a equipe já concluiu.' },
+            { view: 'processes', label: 'Processos de P&amp;D', desc: 'Mapeie um processo e acompanhe sua linha do tempo.' },
+            { view: 'equipments', label: 'Equipamentos', desc: 'Consulte vídeos de treinamento e o POP de cada equipamento.' },
+            { view: 'pops', label: 'POPs', desc: 'Procedimentos operacionais padrão do laboratório.' },
+            { view: 'articles', label: 'Artigos', desc: 'Busque literatura científica e guarde o que importa.' },
         ];
 
+        const destinoRevisao = user.role === 'admin' ? 'admin' : 'pta';
         const alertaAdmin = isAdmin ? `
-            <div class="card" style="border-left: 4px solid var(--warning); cursor: pointer; display:flex; align-items:flex-start; gap:14px;" onclick="UI.switchView('admin')">
-                <div style="color:var(--warning); flex-shrink:0; margin-top:2px;">${window.Icon('alert-triangle', { size: 20 })}</div>
-                <div>
-                    <h4 style="font-size:14px; margin-bottom:4px;">Pendências de avaliação</h4>
-                    <p class="text-muted" style="font-size:13px; margin:0; line-height:1.5;">Há pedidos de cadastro ou relatórios do Planejamento Mensal aguardando sua revisão no Painel Admin.</p>
-                </div>
+            <div class="notice-row fade-in">
+                <p><span class="mono">revisão</span>Pode haver pedidos de cadastro ou relatos do planejamento mensal aguardando sua avaliação.</p>
+                <button type="button" class="link-btn" onclick="UI.switchView('${destinoRevisao}')">Abrir ${destinoRevisao === 'admin' ? 'administração' : 'planejamento'}</button>
             </div>` : '';
 
         mainContent.innerHTML = `
-            <div class="view-header fade-in" style="margin-bottom:28px;">
-                <h2 style="font-size:1.6rem;">Olá, ${window.escapeHTML(primeiroNome)}</h2>
-                <p class="text-muted" style="margin:0;">Aqui está um atalho rápido para o que você faz com mais frequência.</p>
-            </div>
-
-            <div class="fade-in" style="display:flex; flex-direction:column; gap:24px;">
-                ${alertaAdmin}
-                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:14px;">
-                    ${atalhos.map(a => `
-                        <button type="button" class="shortcut-card" onclick="UI.switchView('${a.view}')">
-                            <span class="icon-wrap">${window.Icon(a.icon, { size: 20 })}</span>
-                            <span>
-                                ${a.label}
-                                <small>${a.desc}</small>
-                            </span>
-                        </button>
-                    `).join('')}
+            <header class="page-head fade-in">
+                <div>
+                    <p class="eyebrow">${dataExtenso}</p>
+                    <h1>${saudacao}, ${window.escapeHTML(primeiroNome)}.</h1>
                 </div>
-            </div>
+            </header>
+
+            ${alertaAdmin}
+
+            <ul class="index-list fade-in">
+                ${secoes.map((s, i) => `
+                    <li>
+                        <button type="button" class="index-row" onclick="UI.switchView('${s.view}')">
+                            <span class="n">${String(i + 1).padStart(2, '0')}</span>
+                            <span class="t">${s.label}</span>
+                            <span class="d">${s.desc}</span>
+                            <span class="go">${window.Icon('arrow-right', { size: 16 })}</span>
+                        </button>
+                    </li>
+                `).join('')}
+            </ul>
         `;
     }
 
     if (view === 'processes') {
         mainContent.innerHTML = `
-            <div class="view-header fade-in" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <header class="page-head fade-in">
                 <div>
-                    <h3 style="margin: 0; font-size: 1.5rem;">Gestão de Processos P&D</h3>
-                    <p class="text-muted" style="margin-top: 5px;">Mapeamento, acompanhamento e histórico de processos.</p>
+                    <p class="eyebrow">pesquisa e desenvolvimento</p>
+                    <h1>Processos</h1>
+                    <p class="lede">Mapeamento, acompanhamento e histórico de cada processo.</p>
                 </div>
-                <button id="btn-novo-processo" class="btn btn-primary">${window.Icon('plus', { size: 16 })} Novo Processo</button>
-            </div>
+                <div class="page-actions">
+                    <button id="btn-novo-processo" class="btn btn-primary">Novo processo</button>
+                </div>
+            </header>
 
-            <div class="card table-container fade-in">
+            <div class="table-container fade-in">
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>Nome do Processo</th>
+                            <th>Processo</th>
                             <th>Responsável</th>
                             <th>Status</th>
-                            <th>Data de Registro</th>
-                            <th style="text-align: right;">Ações</th>
+                            <th>Registrado em</th>
+                            <th class="end">Ações</th>
                         </tr>
                     </thead>
                     <tbody id="processesTableBody">
-                        <tr><td colspan="5" style="text-align: center; padding: 30px;"><span class="spinner"></span></td></tr>
+                        <tr><td colspan="5">${UI.loading()}</td></tr>
                     </tbody>
                 </table>
             </div>

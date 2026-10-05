@@ -6,6 +6,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const userString = localStorage.getItem('user_data');
     if (userString) {
         const user = JSON.parse(userString);
+
+        const nomeEl = document.getElementById('user-greeting');
+        const papelEl = document.getElementById('user-role');
+        if (nomeEl) nomeEl.textContent = user.nome || 'Usuário';
+        if (papelEl) papelEl.textContent = user.role || '';
+
         const btnSetup2FA = document.getElementById('btn-setup-2fa');
         if (btnSetup2FA && !user.is_2fa_enabled) {
             btnSetup2FA.style.display = 'inline-flex';
@@ -45,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
 window.abrirSetup2FA = async function() {
     try {
         document.getElementById('modal-setup-2fa').style.display = 'flex';
-        document.getElementById('qrcode-container').innerHTML = '<span class="spinner" style="border-top-color: var(--primary);"></span> carregando...';
+        document.getElementById('qrcode-container').innerHTML = '<span class="spinner"></span>';
         document.getElementById('secret-text').innerText = '';
         document.getElementById('codigo-confirmacao-2fa').value = '';
         document.getElementById('2fa-step-1').classList.remove('hidden');
@@ -62,7 +68,7 @@ window.abrirSetup2FA = async function() {
                 text: data.qr_uri,
                 width: 180,
                 height: 180,
-                colorDark: "#1B1815",
+                colorDark: "#16171A",
                 colorLight: "#ffffff",
                 correctLevel: QRCode.CorrectLevel.H
             });
@@ -103,7 +109,7 @@ window.confirmarAtivacao2FA = async function() {
 
     const btn = document.getElementById('btn-confirmar-2fa');
     const textoOriginal = btn.innerText;
-    btn.innerText = 'Verificando e gerando chaves...';
+    btn.innerText = 'Verificando...';
     btn.disabled = true;
 
     try {
@@ -168,32 +174,35 @@ function exibirModalTrocaSenhaObrigatoria() {
     const modalId = 'forcar-troca-senha-modal';
     if (document.getElementById(modalId)) return;
 
-    const icon = window.Icon ? window.Icon('lock', { size: 24 }) : '';
     const modalHtml = `
-    <div id="${modalId}" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(27,24,21,0.85); z-index:9999999; display:flex; justify-content:center; align-items:center;">
-        <div style="background:var(--bg-surface); padding:30px; border-radius:4px; border-top:3px solid var(--warning); width:90%; max-width:420px; box-shadow:var(--shadow-lg);">
-            <div style="color:var(--warning); margin-bottom:12px; display:flex; justify-content:center;">${icon}</div>
-            <h3 style="text-align:center; margin-bottom:10px; font-size:18px;">Defina uma nova senha</h3>
-            <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px; line-height:1.5; text-align:center;">
-                Sua senha foi redefinida por um administrador. Por segurança, você precisa criar uma nova senha antes de continuar usando o sistema.
-            </p>
+    <div id="${modalId}" class="modal-overlay is-open is-top is-locked">
+        <div class="modal-content modal-sm">
+            <div class="modal-header">
+                <div>
+                    <p class="eyebrow">obrigatório</p>
+                    <h3>Defina uma nova senha</h3>
+                </div>
+            </div>
+            <p class="dialog-text mb-md">Um administrador redefiniu sua senha. Crie uma nova antes de continuar.</p>
 
-            <div class="input-group" style="margin-bottom:12px;">
-                <label>Senha temporária (a que você acabou de usar)</label>
-                <input type="password" id="ftc-senha-atual" class="form-control" autocomplete="current-password">
+            <div class="input-group">
+                <label for="ftc-senha-atual">Senha temporária</label>
+                <input type="password" id="ftc-senha-atual" autocomplete="current-password">
             </div>
-            <div class="input-group" style="margin-bottom:12px;">
-                <label>Nova senha</label>
-                <input type="password" id="ftc-nova-senha" class="form-control" autocomplete="new-password">
+            <div class="input-group">
+                <label for="ftc-nova-senha">Nova senha</label>
+                <input type="password" id="ftc-nova-senha" autocomplete="new-password">
+                <span class="help">8 ou mais caracteres, com maiúscula, minúscula, número e símbolo.</span>
             </div>
-            <div class="input-group" style="margin-bottom:6px;">
-                <label>Confirmar nova senha</label>
-                <input type="password" id="ftc-confirmar-senha" class="form-control" autocomplete="new-password">
+            <div class="input-group">
+                <label for="ftc-confirmar-senha">Confirmar nova senha</label>
+                <input type="password" id="ftc-confirmar-senha" autocomplete="new-password">
             </div>
-            <p class="text-muted" style="font-size:12px; margin-bottom:16px;">Mínimo 8 caracteres, com maiúscula, minúscula, número e caractere especial.</p>
+            <p id="ftc-erro" class="form-error"></p>
 
-            <button id="ftc-btn-salvar" class="btn btn-primary btn-block">Salvar nova senha</button>
-            <p id="ftc-erro" style="color:var(--danger); font-size:13px; font-weight:600; margin-top:15px; display:none; text-align:center;"></p>
+            <div class="modal-footer">
+                <button id="ftc-btn-salvar" class="btn btn-primary">Salvar nova senha</button>
+            </div>
         </div>
     </div>`;
 

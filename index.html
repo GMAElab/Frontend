@@ -2,115 +2,114 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Login | SGCI - GMAE</title>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrar · SGCI</title>
+
     <link rel="stylesheet" href="css/global.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/components.css">
 </head>
 <body>
-    <main class="login-container">
-        
-        <section class="card login-card">
-            <header class="text-center mb-md">
-                <h1 class="text-primary">SGCI - GMAE</h1>
-                <h4 class="text-muted">Sistema de Gestão de Conhecimento e Inovação</h4>
-            </header>
+    <div class="auth-layout">
+        <aside class="auth-aside">
+            <span class="brand-mark">SGCI / GMAE</span>
+            <p class="auth-statement">O que o laboratório sabe, <em>registrado</em> e fácil de encontrar.</p>
+            <p class="auth-note">Sistema de Gestão de Conhecimento e Inovação<br>Equipamentos · Processos de P&amp;D · POPs · Planejamento mensal</p>
+        </aside>
 
-            <form id="login-form" aria-label="Formulário de Autenticação">
-                <div class="input-group">
-                    <label for="email">E-mail:</label>
-                    <input type="email" id="email" name="email" required autocomplete="username" placeholder="pesquisador@leqm.com">
-                </div>
-                <div class="input-group">
-                    <label for="password">Senha:</label>
-                    <div class="password-field">
-                        <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="••••••••">
-                        <button type="button" class="password-toggle" data-target="password" aria-label="Mostrar senha"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        <main class="auth-main">
+            <section class="auth-panel login-card">
+
+                <form id="login-form" aria-label="Formulário de Autenticação">
+                    <h1>Entrar</h1>
+                    <p class="lede">Use o e-mail e a senha da sua conta no laboratório.</p>
+
+                    <div class="input-group">
+                        <label for="email">E-mail</label>
+                        <input type="email" id="email" name="email" required autocomplete="username">
                     </div>
-                </div>
-               
-                <p class="text-small text-muted" style="margin-top: 15px; text-align: left;"><a href="#" onclick="mostrarEsqueciSenha(event)">Esqueci a minha senha</a></p>
-               
-                <div id="login-feedback" class="feedback-msg" aria-live="polite"></div>
-                <button type="submit" id="btn-login" class="btn btn-primary btn-block">
-                    <span class="btn-text">Entrar</span>
-                    <span class="spinner hidden" aria-hidden="true"></span>
-                </button>
-                <footer class="login-footer mt-md text-center">
-                <p class="text-small text-muted">Ainda não possui acesso? <a href="registro.html" id="link-register">Solicitar conta</a></p>
-            </footer>
-            </form>
+                    <div class="input-group">
+                        <label for="password">Senha</label>
+                        <div class="password-field">
+                            <input type="password" id="password" name="password" required autocomplete="current-password">
+                            <button type="button" class="password-toggle" data-target="password" aria-label="Mostrar senha"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                        </div>
+                    </div>
+                    <p class="auth-inline-link"><a href="#" onclick="mostrarEsqueciSenha(event)">Esqueci a senha</a></p>
 
-            <form id="2fa-form" class="hidden" aria-label="Autenticação em Duas Etapas">
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <span class="auth-icon-badge"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 6v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6l-8-4Z"/></svg></span>
-                    <h3 style="color: var(--text-main); margin-top: 10px;">Verificação de Segurança</h3>
-                    <p class="text-muted text-small">Abra o seu aplicativo Autenticador (Google/Authy) e introduza o código de 6 dígitos.</p>
-                </div>
-                
-                <div class="input-group">
-                    <input type="text" id="codigo-2fa" maxlength="6" required autocomplete="off" placeholder="000 000" style="text-align: center; font-size: 28px; letter-spacing: 8px; font-weight: bold;">
-                </div>
-                
-                <div id="2fa-feedback" class="feedback-msg" aria-live="polite"></div>
-                <button type="submit" id="btn-2fa" class="btn btn-primary btn-block">
-                    <span class="btn-text">Validar Código</span>
-                    <span class="spinner hidden" aria-hidden="true"></span>
-                </button>
-                <button type="button" class="btn btn-secondary btn-block mt-md" onclick="window.location.reload()" style="margin-top: 10px;">Voltar</button>
-                <footer class="login-footer mt-md text-center">
-                <p class="text-small text-muted">Volte para a tela de login? <a href="index.html" id="link-register">Login</a></p>
-            </footer>
-            </form>
+                    <div id="login-feedback" class="feedback-msg" aria-live="polite"></div>
+                    <button type="submit" id="btn-login" class="btn btn-primary btn-block">
+                        <span class="btn-text">Entrar</span>
+                        <span class="spinner hidden" aria-hidden="true"></span>
+                    </button>
 
-            <form id="forgot-password-form" class="hidden" aria-label="Recuperação de Senha">
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <span class="auth-icon-badge"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
-                    <h3 style="color: var(--text-main); margin-top: 10px;">Recuperar Acesso</h3>
-                    <p class="text-muted text-small">Coloque os seus dados de segurança para criar uma nova senha.</p>
-                </div>
+                    <p class="auth-foot">Ainda sem acesso? <a href="registro.html" id="link-register">Solicitar uma conta</a></p>
+                </form>
 
-                <div class="auth-requirements">
-                    Informe <strong>apenas um</strong> dos dois: o código do seu aplicativo Autenticador (se ainda tiver o celular) <strong>ou</strong> um código de backup (se tiver perdido o acesso ao Autenticador). Nunca ativou o 2FA? Contate um administrador do sistema.
-                </div>
+                <form id="2fa-form" class="hidden" aria-label="Autenticação em Duas Etapas">
+                    <p class="eyebrow">etapa 2 de 2</p>
+                    <h1>Código de verificação</h1>
+                    <p class="lede">Abra o aplicativo Autenticador e digite o código de 6 dígitos.</p>
 
-                <div class="input-group">
-                    <input type="email" id="reset-email" class="form-control" required placeholder="Email">
-                </div>
+                    <div class="input-group">
+                        <label for="codigo-2fa">Código</label>
+                        <input type="text" id="codigo-2fa" class="code-input" maxlength="6" required autocomplete="one-time-code" inputmode="numeric" placeholder="000000">
+                    </div>
 
-                <div class="input-group password-field">
-                    <input type="password" id="reset-new-password" class="form-control" required placeholder="Escreva a Nova Senha">
-                    <button type="button" class="password-toggle" data-target="reset-new-password" aria-label="Mostrar senha"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg></button>
-                </div>
+                    <div id="2fa-feedback" class="feedback-msg" aria-live="polite"></div>
+                    <button type="submit" id="btn-2fa" class="btn btn-primary btn-block">
+                        <span class="btn-text">Validar código</span>
+                        <span class="spinner hidden" aria-hidden="true"></span>
+                    </button>
 
-                <div class="input-group" style="display: flex; gap: 10px; margin-top: 10px;">
-                    <input type="text" id="reset-backup" class="form-control" placeholder="Cód. Backup (ex: LEQM-...)" style="text-align: center; font-weight: bold; font-size: 14px;">
+                    <p class="auth-foot"><a href="index.html">Voltar ao login</a></p>
+                </form>
 
-                    <input type="text" id="reset-2fa" class="form-control" maxlength="6" placeholder="Cód. App 2FA" style="text-align: center; font-weight: bold; font-size: 14px;">
-                </div>
-                <p class="text-muted text-small" style="margin-top: 6px;">Preencha só um dos dois campos acima.</p>
+                <form id="forgot-password-form" class="hidden" aria-label="Recuperação de Senha">
+                    <h1>Recuperar acesso</h1>
+                    <p class="lede">Defina uma nova senha confirmando sua identidade.</p>
 
-                <div id="reset-feedback" class="feedback-msg" aria-live="polite"></div>
-                
-                <button type="submit" id="btn-reset" class="btn btn-primary btn-block">
-                    <span class="btn-text">Validar e Alterar Senha</span>
-                    <span class="spinner hidden" aria-hidden="true"></span>
-                </button>
-                <button type="button" class="btn btn-secondary btn-block mt-md" onclick="voltarParaLogin()" style="margin-top: 10px;">Cancelar</button>
-                
-                <footer class="login-footer mt-md text-center">
-                <p class="text-small text-muted">Volte para a tela de Login <a href="index.html" id="link-login">Login</a></p>
-            </footer>
-            </form>
+                    <p class="auth-requirements">
+                        Informe <strong>apenas um</strong> dos dois códigos: o do aplicativo Autenticador <strong>ou</strong> um código de backup. Nunca ativou o 2FA? Fale com um administrador.
+                    </p>
 
-        </section>
+                    <div class="input-group">
+                        <label for="reset-email">E-mail</label>
+                        <input type="email" id="reset-email" required autocomplete="username">
+                    </div>
+                    <div class="input-group">
+                        <label for="reset-new-password">Nova senha</label>
+                        <div class="password-field">
+                            <input type="password" id="reset-new-password" required autocomplete="new-password">
+                            <button type="button" class="password-toggle" data-target="reset-new-password" aria-label="Mostrar senha"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                        </div>
+                    </div>
+                    <div class="field-grid">
+                        <div class="input-group">
+                            <label for="reset-2fa">Código do Autenticador</label>
+                            <input type="text" id="reset-2fa" class="mono" maxlength="6" inputmode="numeric" placeholder="000000">
+                        </div>
+                        <div class="input-group">
+                            <label for="reset-backup">ou código de backup</label>
+                            <input type="text" id="reset-backup" class="mono" placeholder="LEQM-...">
+                        </div>
+                    </div>
 
-    </main>
+                    <div id="reset-feedback" class="feedback-msg" aria-live="polite"></div>
+                    <button type="submit" id="btn-reset" class="btn btn-primary btn-block">
+                        <span class="btn-text">Alterar senha</span>
+                        <span class="spinner hidden" aria-hidden="true"></span>
+                    </button>
+
+                    <p class="auth-foot"><a href="#" onclick="event.preventDefault(); voltarParaLogin()" id="link-login">Voltar ao login</a></p>
+                </form>
+
+            </section>
+        </main>
+    </div>
 
     <script src="js/api.js"></script>
     <script src="js/ui.js"></script>
-    <script src="js/auth.js?v=2000"></script>
+    <script src="js/auth.js?v=2001"></script>
 </body>
 </html>

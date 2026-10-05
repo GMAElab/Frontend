@@ -12,16 +12,17 @@ async function renderEquipments() {
     if (!main) return;
 
     main.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
+        <header class="page-head fade-in">
             <div>
-                <h2 style="color:var(--primary); text-transform: uppercase;">Equipamentos</h2>
-                <p class="text-muted text-small">Gestão dos equipamentos do laboratório.</p>
+                <p class="eyebrow">laboratório</p>
+                <h1>Equipamentos</h1>
+                <p class="lede">Cada equipamento com seu vídeo de treinamento e o POP correspondente.</p>
             </div>
-            <button id="btn-novo-equip" class="btn btn-primary">+ Novo Equipamento</button>
-        </div>
-        <div id="eq-container" class="card">
-            <div class="text-center p-lg">Carregando equipamentos...</div>
-        </div>
+            <div class="page-actions">
+                <button id="btn-novo-equip" class="btn btn-primary">Novo equipamento</button>
+            </div>
+        </header>
+        <div id="eq-container" class="fade-in">${window.UI.loading()}</div>
     `;
 
     const btnNovo = document.getElementById('btn-novo-equip');
@@ -46,31 +47,35 @@ async function loadEquipmentsTable() {
         }
 
         container.innerHTML = `
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Nome do Equipamento</th>
-                        <th>Status</th>
-                        <th style="text-align:right">Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${data.map(eq => `
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
                         <tr>
-                            <td><strong>${window.escapeHTML(eq.nome)}</strong></td>
-                            <td><span class="badge badge-success">${eq.status || 'ativo'}</span></td>
-                            <td style="text-align:right; display:flex; gap: 8px; justify-content:flex-end; flex-wrap:wrap;">
-                                <button class="btn btn-small" onclick="window.viewDossier(${eq.id})">Ver Detalhes</button>
-                                <button class="btn btn-small btn-secondary" onclick="openDeepView('equipments', ${eq.id}, 'Equipamento')">Editar</button>
-                            </td>
+                            <th>Equipamento</th>
+                            <th>Status</th>
+                            <th class="end">Ações</th>
                         </tr>
-                    `).join('')}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        ${data.map(eq => `
+                            <tr>
+                                <td><strong>${window.escapeHTML(eq.nome)}</strong></td>
+                                <td><span class="badge badge-success">${window.escapeHTML(eq.status || 'ativo')}</span></td>
+                                <td>
+                                    <div class="row-actions">
+                                        <button class="link-btn" onclick="window.viewDossier(${eq.id})">Abrir</button>
+                                        <button class="link-btn muted" onclick="openDeepView('equipments', ${eq.id}, 'Equipamento')">Editar</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
         `;
     } catch (err) {
         console.error("Erro ao carregar equipamentos:", err);
-        container.innerHTML = window.UI.errorState('Falha ao conectar com o servidor de ativos.');
+        container.innerHTML = window.UI.errorState('Não foi possível carregar os equipamentos.');
     }
 }
 
@@ -113,7 +118,7 @@ window.handleSaveEquipment = async function(e) {
         });
 
         if (res.ok) {
-            UI.showToast('Equipamento registrado com sucesso!', 'success');
+            UI.showToast('Equipamento registrado.', 'success');
             window.closeEquipModal();
             loadEquipmentsTable();
         } else {
@@ -138,37 +143,39 @@ window.handleSaveEquipment = async function(e) {
 // ==========================================
 window.viewDossier = async function(id) {
     try {
-        const res = await api.fetchProtected(`equipments/${id}`); 
-        
+        const res = await api.fetchProtected(`equipments/${id}`);
+
         if (!res.ok) throw new Error('Equipamento não encontrado');
-        
+
         const eq = await res.json();
 
-        const videoEmbed = window.escapeHTML(eq.video_url); 
+        const videoEmbed = window.escapeHTML(eq.video_url);
 
         const dossierTitle = document.getElementById('dossier-title');
         const dossierBody = document.getElementById('dossier-body');
         const modalDossier = document.getElementById('modal-dossier');
 
         if (dossierTitle) dossierTitle.textContent = eq.nome;
-        
+
         if (dossierBody) {
             dossierBody.innerHTML = `
-                <div style="padding-right: 15px; border-right: 1px solid var(--border-color);">
-                    <h4 style="margin-bottom:15px; color:var(--primary);">Vídeo de Treinamento</h4>
-                    ${videoEmbed ?
-                        `<iframe width="100%" height="250" src="${videoEmbed}" frameborder="0" allowfullscreen style="border-radius:var(--radius-md);"></iframe>` :
-                        '<div style="background:var(--bg-subtle); height:200px; display:flex; align-items:center; justify-content:center; border-radius:var(--radius-md); border:1px dashed var(--border-strong); color:var(--text-muted);">Nenhum vídeo disponível</div>'}
-                </div>
-                <div>
-                    <h4 style="margin-bottom:15px; color:var(--primary);">Descrição</h4>
-                    <div style="background:var(--bg-subtle); padding:15px; border-radius:var(--radius-md); margin-bottom:20px;">
-                        <p style="font-size:0.9rem; line-height:1.5;">${window.escapeHTML(eq.description || 'Nenhuma descrição técnica informada para este ativo.')}</p>
+                ${videoEmbed ? `<iframe class="video-frame" src="${videoEmbed}" frameborder="0" allowfullscreen title="Vídeo de treinamento"></iframe>` : ''}
+                <dl class="dl">
+                    <div>
+                        <dt>descrição</dt>
+                        <dd>${eq.description ? window.escapeHTML(eq.description) : '<span class="text-faint">Sem descrição registrada.</span>'}</dd>
                     </div>
-                    ${eq.manual_url ? 
-                        `<a href="${window.escapeHTML(eq.manual_url)}" target="_blank" class="btn btn-primary" style="width:100%; text-align:center; text-decoration:none; display:inline-block;">Acessar POP do equipamento</a>` : 
-                        '<p class="text-muted text-center" style="font-size:0.85rem;">Manual não disponível no momento.</p>'}
-                </div>
+                    <div>
+                        <dt>treinamento</dt>
+                        <dd class="plain">${videoEmbed ? 'Vídeo acima.' : '<span class="text-faint">Nenhum vídeo cadastrado.</span>'}</dd>
+                    </div>
+                    <div>
+                        <dt>pop</dt>
+                        <dd class="plain">${eq.manual_url
+                            ? `<a href="${window.escapeHTML(eq.manual_url)}" target="_blank" rel="noopener">Abrir o POP do equipamento</a>`
+                            : '<span class="text-faint">Nenhum POP vinculado.</span>'}</dd>
+                    </div>
+                </dl>
             `;
         }
 

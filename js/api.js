@@ -22,22 +22,19 @@ window.api = {
         const modalExistente = document.getElementById('reauth-modal');
         if (modalExistente) modalExistente.remove();
 
-        const iconHtml = window.Icon ? window.Icon('alert-triangle', { size: 26 }) : '';
         const modalHtml = `
-        <div id="cookie-block-modal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(27,24,21,0.6); z-index:9999999; display:flex; justify-content:center; align-items:center;">
-            <div style="background:var(--bg-surface); padding:32px; border-radius:4px; border-top:3px solid var(--warning); width:90%; max-width:450px; text-align:center; box-shadow:var(--shadow-lg); border-left:1px solid var(--border-color); border-right:1px solid var(--border-color); border-bottom:1px solid var(--border-color);">
-                <div style="background:var(--warning-light); color:var(--warning); width:52px; height:52px; border-radius:50%; display:flex; justify-content:center; align-items:center; margin:0 auto 20px auto;">
-                    ${iconHtml}
-                </div>
-                <h3 style="color:var(--text-main); font-size:19px; margin-bottom:12px;">Acesso Restrito pelo Navegador</h3>
-                <p style="color:var(--text-muted); font-size:14px; margin-bottom:24px; line-height:1.6; text-align:justify;">
-                    Detectamos que você está em uma <strong>Guia Anônima</strong> ou usando um navegador que bloqueia conexões de segurança (como Safari ou Brave).
-                    <br><br>
-                    Para entrar no <strong>SGCI - GMAE</strong>, clique no ícone de <strong>olho riscado ou escudo</strong> na barra de endereços, selecione <strong>"Permitir cookies de terceiros"</strong> e atualize a página.
+        <div id="cookie-block-modal" class="modal-overlay is-open is-top">
+            <div class="modal-content modal-sm">
+                <div class="modal-header"><h3>O navegador bloqueou o login</h3></div>
+                <p class="dialog-text">
+                    Isso acontece em guia anônima ou em navegadores que bloqueiam cookies de terceiros (Safari, Brave).
                 </p>
-                <button onclick="window.location.reload()" class="btn btn-primary btn-block">
-                    Já ativei, atualizar página
-                </button>
+                <p class="dialog-text mt-sm">
+                    Na barra de endereços, clique no ícone de olho riscado ou escudo, escolha <strong>Permitir cookies de terceiros</strong> e atualize a página.
+                </p>
+                <div class="modal-footer">
+                    <button onclick="window.location.reload()" class="btn btn-primary">Já permiti, atualizar</button>
+                </div>
             </div>
         </div>`;
 
@@ -111,24 +108,25 @@ window.api = {
             const existente = document.getElementById(modalId);
             if (existente) existente.remove();
 
-            const icon = window.Icon ? window.Icon('lock', { size: 24 }) : '';
             const modalHtml = `
-            <div id="${modalId}" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(27,24,21,0.7); z-index:9999999; display:flex; justify-content:center; align-items:center;">
-                <div style="background:var(--bg-surface); padding:30px; border-radius:4px; border-top:3px solid var(--danger); width:90%; max-width:400px; text-align:center; box-shadow:var(--shadow-lg); border-left:1px solid var(--border-color); border-right:1px solid var(--border-color); border-bottom:1px solid var(--border-color);">
-                    <div style="color:var(--danger); margin-bottom:12px; display:flex; justify-content:center;">${icon}</div>
-                    <h3 style="margin-bottom:10px; font-size:18px;">${window.escapeHTML(title || 'Confirme sua identidade')}</h3>
-                    <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px; line-height:1.5;">
-                        ${window.escapeHTML(message || 'Esta é uma ação administrativa sensível.')}
-                        ${usa2fa ? 'Digite o código do seu Autenticador.' : 'Digite sua senha para continuar.'}
-                    </p>
-
-                    <input type="${usa2fa ? 'text' : 'password'}" id="stepup-input" class="form-control" inputmode="${usa2fa ? 'numeric' : 'text'}" autocomplete="${usa2fa ? 'one-time-code' : 'current-password'}" maxlength="${usa2fa ? 6 : 128}" placeholder="${usa2fa ? 'Código de 6 dígitos' : 'Sua senha'}" style="width:100%; margin-bottom:15px; font-size:16px; text-align:center;">
-
-                    <div style="display:flex; gap:10px;">
-                        <button id="stepup-cancel" class="btn btn-secondary" style="flex:1;">Cancelar</button>
-                        <button id="stepup-confirm" class="btn btn-primary" style="flex:1;">Confirmar</button>
+            <div id="${modalId}" class="modal-overlay is-open is-top is-locked">
+                <div class="modal-content modal-sm">
+                    <div class="modal-header">
+                        <div>
+                            <p class="eyebrow">ação administrativa</p>
+                            <h3>${window.escapeHTML(title || 'Confirme sua identidade')}</h3>
+                        </div>
                     </div>
-                    <p id="stepup-error" style="color:var(--danger); font-size:13px; font-weight:600; margin-top:15px; display:none;"></p>
+                    <p class="dialog-text mb-md">${window.escapeHTML(message || 'Esta é uma ação administrativa sensível.')}</p>
+
+                    <label for="stepup-input">${usa2fa ? 'Código do Autenticador' : 'Sua senha'}</label>
+                    <input type="${usa2fa ? 'text' : 'password'}" id="stepup-input" class="${usa2fa ? 'code-input' : 'form-control'}" inputmode="${usa2fa ? 'numeric' : 'text'}" autocomplete="${usa2fa ? 'one-time-code' : 'current-password'}" maxlength="${usa2fa ? 6 : 128}"${usa2fa ? ' placeholder="000000"' : ''}>
+                    <p id="stepup-error" class="form-error"></p>
+
+                    <div class="modal-footer">
+                        <button id="stepup-cancel" class="btn btn-secondary">Cancelar</button>
+                        <button id="stepup-confirm" class="btn btn-primary">Confirmar</button>
+                    </div>
                 </div>
             </div>`;
 
@@ -190,21 +188,20 @@ window.api = {
             if (!userDataStr) { resolve(false); return; }
             const user = JSON.parse(userDataStr);
             
-            const reauthIcon = window.Icon ? window.Icon('lock', { size: 24 }) : '';
             const modalHtml = `
-            <div id="reauth-modal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(27,24,21,0.7); z-index:9999999; display:flex; justify-content:center; align-items:center;">
-                <div style="background:var(--bg-surface); padding:30px; border-radius:4px; border-top:3px solid var(--warning); width:90%; max-width:400px; text-align:center; box-shadow:var(--shadow-lg); border-left:1px solid var(--border-color); border-right:1px solid var(--border-color); border-bottom:1px solid var(--border-color);">
-                    <div style="color:var(--warning); margin-bottom:12px; display:flex; justify-content:center;">${reauthIcon}</div>
-                    <h3 style="margin-bottom:10px; font-size:18px;">Sessão Expirada</h3>
-                    <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px; line-height:1.5;">Por segurança, sua sessão expirou por inatividade. <br><br>Digite sua senha para destravar a tela.</p>
+            <div id="reauth-modal" class="modal-overlay is-open is-top is-locked">
+                <div class="modal-content modal-sm">
+                    <div class="modal-header"><h3>Sessão expirada</h3></div>
+                    <p class="dialog-text mb-md">A sessão foi encerrada por inatividade. Digite sua senha para continuar de onde parou.</p>
 
-                    <input type="password" id="reauth-pass" class="form-control" placeholder="Sua senha do sistema..." style="width:100%; margin-bottom:15px; font-size:16px;">
+                    <label for="reauth-pass">Senha</label>
+                    <input type="password" id="reauth-pass" class="form-control" autocomplete="current-password">
+                    <p id="reauth-error" class="form-error">Senha incorreta. Tente novamente.</p>
 
-                    <div style="display:flex; gap:10px;">
-                        <button id="btn-reauth-cancel" class="btn btn-secondary" style="flex:1;">Sair</button>
-                        <button id="btn-reauth-confirm" class="btn btn-primary" style="flex:1;">Destravar Sessão</button>
+                    <div class="modal-footer split">
+                        <button id="btn-reauth-cancel" class="btn btn-secondary">Sair</button>
+                        <button id="btn-reauth-confirm" class="btn btn-primary">Continuar</button>
                     </div>
-                    <p id="reauth-error" style="color:var(--danger); font-size:13px; font-weight:600; margin-top:15px; display:none;">Senha incorreta. Tente novamente.</p>
                 </div>
             </div>`;
 
@@ -244,13 +241,13 @@ window.api = {
                         resolve(true);
                     } else {
                         errorMsg.style.display = 'block';
-                        btnConfirm.innerText = "Destravar Sessão";
+                        btnConfirm.innerText = "Continuar";
                         btnConfirm.disabled = false;
                         passInput.value = '';
                     }
                 } catch(e) {
                     errorMsg.style.display = 'block';
-                    btnConfirm.innerText = "Destravar Sessão";
+                    btnConfirm.innerText = "Continuar";
                     btnConfirm.disabled = false;
                 }
             };

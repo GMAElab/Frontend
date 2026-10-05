@@ -11,10 +11,13 @@ function routerAdmin() {
     const user = JSON.parse(userString);
     if (user.role !== 'admin') {
         document.getElementById('dynamic-content').innerHTML = `
-            <div class="card-responsivo" style="border-left: 4px solid var(--danger);">
-                <h3 class="text-danger">Acesso Negado</h3>
-                <p>Esta área é restrita para Administradores do Sistema.</p>
-            </div>
+            <header class="page-head">
+                <div>
+                    <p class="eyebrow">acesso restrito</p>
+                    <h1>Administração</h1>
+                    <p class="lede">Esta área é exclusiva para administradores do sistema.</p>
+                </div>
+            </header>
         `;
         return;
     }
@@ -26,41 +29,36 @@ function routerAdmin() {
 // ==========================================
 function renderAdminPanel() {
     const container = document.getElementById('dynamic-content');
+    const modulos = [
+        { acao: "openAdminModule('users')", titulo: 'Usuários', desc: 'Pedidos de cadastro, cargos, senhas e bloqueios.' },
+        { acao: "openAdminModule('lab')", titulo: 'Laboratório', desc: 'Equipamentos e POPs cadastrados.' },
+        { acao: "openAdminModule('pd')", titulo: 'P&amp;D e planejamento', desc: 'Processos e tópicos de pesquisa.' },
+        { acao: "openAdminModule('audit')", titulo: 'Auditoria', desc: 'Quem alterou o quê, e quando.' },
+        { acao: 'abrirSetup2FA()', titulo: 'Verificação em duas etapas', desc: 'Proteja a sua conta com um aplicativo Autenticador.' },
+    ];
+
     container.innerHTML = `
-    <div class="admin-container fade-in">
-        <div class="view-header" style="margin-bottom: 25px;">
-            <h2>Painel de controle Administrador</h2>
-            <p class="text-muted">Gerenciamento de todos os módulos do sistema.</p>
-        </div>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px;">
-            <div class="admin-card" onclick="openAdminModule('users')">
-                <h3>${window.Icon('users', { size: 18 })} Usuários</h3>
-                <p>Controle de acesso e permissões dos usuários.</p>
+        <header class="page-head fade-in">
+            <div>
+                <p class="eyebrow">sistema</p>
+                <h1>Administração</h1>
             </div>
+        </header>
 
-            <div class="admin-card" onclick="openAdminModule('lab')">
-                <h3>${window.Icon('flask', { size: 18 })} Laboratório</h3>
-                <p>Controle dos equipamentos e POPs.</p>
-            </div>
+        <ul class="index-list fade-in" id="admin-index">
+            ${modulos.map((m, i) => `
+                <li>
+                    <button type="button" class="index-row" onclick="${m.acao}">
+                        <span class="n">${String(i + 1).padStart(2, '0')}</span>
+                        <span class="t">${m.titulo}</span>
+                        <span class="d">${m.desc}</span>
+                        <span class="go">${window.Icon('arrow-right', { size: 16 })}</span>
+                    </button>
+                </li>
+            `).join('')}
+        </ul>
 
-            <div class="admin-card" onclick="openAdminModule('pd')">
-                <h3>${window.Icon('clipboard', { size: 18 })} P&D e PTA</h3>
-                <p>Processos e PTA</p>
-            </div>
-
-            <div class="admin-card" onclick="openAdminModule('audit')">
-                <h3>${window.Icon('eye', { size: 18 })} Auditoria e Logs</h3>
-                <p>Rastreie quem fez o quê e quando.</p>
-            </div>
-            <div class="admin-card" onclick="iniciarSetup2FA()" style="border-top-color: var(--danger);">
-                <h3>${window.Icon('lock', { size: 18 })} Segurança (2FA)</h3>
-                <p>Proteger minha conta com Autenticador.</p>
-            </div>
-        </div>
-
-        <div id="admin-module-area" style="margin-top: 30px;"></div>
-        </div>`;
+        <div id="admin-module-area"></div>`;
 }
 // ==========================================
 // 2. ROTEADOR DE MÓDULOS
@@ -74,50 +72,50 @@ window.openAdminModule = function(module) {
     else if (module === 'pd') title = 'Gestão de P&D';
     else if (module === 'audit') title = 'Logs de Auditoria';
 
+    const indice = document.getElementById('admin-index');
+    if (indice) indice.classList.add('hidden');
+
     area.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border-light);">
-            <button class="btn btn-secondary btn-sm" onclick="renderAdminPanel()">${window.Icon('arrow-left', { size: 14 })} Voltar</button>
-            <h3 style="margin: 0;">${title}</h3>
+        <div class="section-head fade-in">
+            <h3 class="module-title">${title}</h3>
+            <button class="link-btn muted" onclick="renderAdminPanel()">${window.Icon('arrow-left', { size: 14 })} Todos os módulos</button>
         </div>
-        <div id="module-subcontent"></div>
+        <div id="module-subcontent" class="fade-in"></div>
     `;
 
     const sub = document.getElementById('module-subcontent');
 
     if (module === 'users') {
         sub.innerHTML = `
-            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <button class="btn btn-primary" id="tab-pending" onclick="switchUserTab('pending')">Pedidos Pendentes</button>
-                <button class="btn btn-secondary" id="tab-active" onclick="switchUserTab('active')">Usuários Ativos</button>
+            <div class="tabs">
+                <button class="tab-btn" id="tab-pending" onclick="switchUserTab('pending')">Pedidos pendentes</button>
+                <button class="tab-btn" id="tab-active" onclick="switchUserTab('active')">Usuários</button>
             </div>
             <div id="users-container"></div>`;
         switchUserTab('pending');
     }
     else if (module === 'lab') {
         sub.innerHTML = `
-            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <button class="btn btn-primary" id="tab-eq" onclick="switchLabTab('eq')">Equipamentos</button>
-                <button class="btn btn-secondary" id="tab-pop" onclick="switchLabTab('pop')">POPs</button>
+            <div class="tabs">
+                <button class="tab-btn" id="tab-eq" onclick="switchLabTab('eq')">Equipamentos</button>
+                <button class="tab-btn" id="tab-pop" onclick="switchLabTab('pop')">POPs</button>
             </div>
             <div id="lab-container"></div>`;
         switchLabTab('eq');
     }
     else if (module === 'pd') {
         sub.innerHTML = `
-            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <button class="btn btn-primary" id="tab-proc" onclick="switchPdTab('proc')">Processos</button>
-                <button class="btn btn-secondary" id="tab-pta" onclick="switchPdTab('pta')">Tópicos PTA</button>
+            <div class="tabs">
+                <button class="tab-btn" id="tab-proc" onclick="switchPdTab('proc')">Processos</button>
+                <button class="tab-btn" id="tab-pta" onclick="switchPdTab('pta')">Tópicos de pesquisa</button>
             </div>
             <div id="pd-container"></div>`;
         switchPdTab('proc');
     }
     else if (module === 'audit') {
         sub.innerHTML = `
-            <div class="card-responsivo" style="background: var(--warning-light); border-color: var(--warning-border); display:flex; align-items:center; gap:10px;">
-                ${window.Icon('alert-triangle', { size: 16, class: 'text-muted' })}
-                <p style="margin: 0; color:var(--warning);"><strong>Aviso:</strong> Estes registros são permanentes. Ninguém pode apagar o histórico de auditoria.</p>
-            </div>
-            <div id="audit-container" style="margin-top:16px;"></div>`;
+            <p class="note">Estes registros são permanentes. O histórico de auditoria não pode ser editado nem apagado.</p>
+            <div id="audit-container"></div>`;
         loadAuditLogs(document.getElementById('audit-container'));
     }
 };
@@ -125,8 +123,8 @@ window.openAdminModule = function(module) {
 // 3. MÓDULO: USUÁRIOS
 // ==========================================
 window.switchUserTab = function(tab) {
-    document.getElementById('tab-pending').className = tab === 'pending' ? 'btn btn-primary' : 'btn btn-secondary';
-    document.getElementById('tab-active').className = tab === 'active' ? 'btn btn-primary' : 'btn btn-secondary';
+    document.getElementById('tab-pending').classList.toggle('active', tab === 'pending');
+    document.getElementById('tab-active').classList.toggle('active', tab === 'active');
     const container = document.getElementById('users-container');
 
     if (tab === 'pending') loadPendingRequests(container);
@@ -134,34 +132,36 @@ window.switchUserTab = function(tab) {
 };
 
 async function loadPendingRequests(container) {
-    container.innerHTML = '<span class="spinner"></span> Carregando...';
+    container.innerHTML = window.UI.loading();
     try {
         const res = await window.api.fetchProtected('/admin/pedidos-cadastro');
         if (!res.ok) throw new Error("Erro na API");
         const requests = await res.json();
 
         if (requests.length === 0) {
-            container.innerHTML = window.UI.emptyState({ icon: 'users', title: 'Nenhum pedido pendente', description: 'Novos cadastros aparecerão aqui para aprovação.' });
+            container.innerHTML = window.UI.emptyState({ title: 'Nenhum pedido pendente', description: 'Novos cadastros aparecerão aqui para aprovação.' });
             return;
         }
 
-        let html = '<div class="grid-fluida">';
+        let html = '<div class="entries">';
         requests.forEach(req => {
             html += `
-                <div class="card-responsivo">
-                    <h4>${window.escapeHTML(req.nome)}</h4>
-                        <p class="text-muted" style="font-size: 14px;">${window.escapeHTML(req.email)}</p>
-                    <select id="role-${req.id}" class="form-control" style="margin: 10px 0;">
-                        <option value="pesquisador">Pesquisador</option>
-                        <option value="tecnico">Técnico</option>
-                        <option value="coordenador">Coordenador</option>
-                        <option value="admin">Administrador</option>
-                    </select>
-                    <div style="display: flex; gap: 10px;">
-                        <button class="btn btn-outline-danger" style="flex: 1;" onclick="handleApproval(${req.id}, false)">Rejeitar</button>
-                        <button class="btn btn-primary" style="flex: 1;" onclick="handleApproval(${req.id}, true)">Aprovar</button>
+                <article class="entry request-row">
+                    <div>
+                        <h4 class="entry-title">${window.escapeHTML(req.nome)}</h4>
+                        <p class="meta">${window.escapeHTML(req.email)}</p>
                     </div>
-                </div>`;
+                    <div class="cluster">
+                        <select id="role-${req.id}" class="form-control" aria-label="Cargo">
+                            <option value="pesquisador">Pesquisador</option>
+                            <option value="tecnico">Técnico</option>
+                            <option value="coordenador">Coordenador</option>
+                            <option value="admin">Administrador</option>
+                        </select>
+                        <button class="btn btn-primary btn-sm" onclick="handleApproval(${req.id}, true)">Aprovar</button>
+                        <button class="link-btn danger" onclick="handleApproval(${req.id}, false)">Rejeitar</button>
+                    </div>
+                </article>`;
         });
         container.innerHTML = html + '</div>';
     } catch (err) { container.innerHTML = window.UI.errorState('Erro ao carregar pedidos.'); }
@@ -196,7 +196,7 @@ window.handleApproval = async (id, isApproved) => {
 };
 
 async function loadActiveUsers(container) {
-    container.innerHTML = '<span class="spinner"></span> Carregando...';
+    container.innerHTML = window.UI.loading();
     try {
         const res = await window.api.fetchProtected('/admin/usuarios');
         if (!res.ok) throw new Error("Erro na API");
@@ -206,38 +206,39 @@ async function loadActiveUsers(container) {
         const meuId = (JSON.parse(localStorage.getItem('user_data') || '{}')).id;
 
         let html = '<div class="table-container"><table class="data-table">';
-        html += '<thead><tr><th>ID</th><th>Nome</th><th>Email</th><th>Cargo</th><th>Status</th><th style="text-align:right;">Ação</th></tr></thead><tbody>';
+        html += '<thead><tr><th>ID</th><th>Nome</th><th>E-mail</th><th>Cargo</th><th>Status</th><th class="end">Ações</th></tr></thead><tbody>';
 
         users.forEach(u => {
             const isActive = (u.is_active === 1 || u.is_active === true);
             const isSelf = u.id === meuId;
             const statusBadge = isActive
-                ? '<span class="badge badge-success">Ativo</span>'
-                : '<span class="badge badge-danger">Inativo</span>';
+                ? '<span class="badge badge-success">ativo</span>'
+                : '<span class="badge badge-danger">bloqueado</span>';
 
             // Admins também podem ser alvo destas ações — cada uma já exige reconfirmação
             // de identidade (senha ou código do Autenticador) do admin que a executa.
+            const nomeJs = window.escapeHTML(u.nome).replace(/'/g, "\\'");
             let btn = '';
             if (!isActive) {
-                btn = `<button class="icon-btn" title="Ver detalhes" onclick="openDeepView('usuarios', ${u.id}, 'Usuário')">${window.Icon('eye', { size: 15 })}</button>`;
+                btn = `<div class="row-actions"><button class="link-btn" onclick="openDeepView('usuarios', ${u.id}, 'Usuário')">Abrir</button></div>`;
             } else {
                 btn = `
-                    <div class="action-group">
-                        <button class="icon-btn" title="Editar" onclick="openDeepView('usuarios', ${u.id}, 'Usuário')">${window.Icon('edit-2', { size: 15 })}</button>
-                        <button class="icon-btn" title="Redefinir senha" onclick="window.resetUserPassword(${u.id}, '${window.escapeHTML(u.nome).replace(/'/g, "\\'")}')">${window.Icon('lock', { size: 15 })}</button>
-                        <button class="icon-btn" title="Resetar 2FA (usuário perdeu o celular)" onclick="window.resetUser2FA(${u.id}, '${window.escapeHTML(u.nome).replace(/'/g, "\\'")}')">${window.Icon('shield', { size: 15 })}</button>
-                        ${!isSelf ? `<button class="icon-btn danger" title="Bloquear acesso" onclick="adminDelete('usuarios', ${u.id}, 'active')">${window.Icon('ban', { size: 15 })}</button>` : ''}
+                    <div class="row-actions">
+                        <button class="link-btn" onclick="openDeepView('usuarios', ${u.id}, 'Usuário')">Editar</button>
+                        <button class="link-btn muted" onclick="window.resetUserPassword(${u.id}, '${nomeJs}')">Nova senha</button>
+                        <button class="link-btn muted" title="Para quando a pessoa perdeu o celular do Autenticador" onclick="window.resetUser2FA(${u.id}, '${nomeJs}')">Resetar 2FA</button>
+                        ${!isSelf ? `<button class="link-btn danger" onclick="adminDelete('usuarios', ${u.id}, 'active')">Bloquear</button>` : ''}
                     </div>
                 `;
             }
 
-            html += `<tr style="${!isActive ? 'opacity:0.6;' : ''}">
-                <td>#${u.id}</td>
-                <td>${window.escapeHTML(u.nome)}</td>
+            html += `<tr class="${!isActive ? 'is-dimmed' : ''}">
+                <td class="num">${u.id}</td>
+                <td><strong>${window.escapeHTML(u.nome)}</strong></td>
                 <td>${window.escapeHTML(u.email)}</td>
-                <td style="text-transform: capitalize;">${window.escapeHTML(u.role)}</td>
+                <td>${window.escapeHTML(u.role)}</td>
                 <td>${statusBadge}</td>
-                <td style="text-align:right;">${btn}</td>
+                <td>${btn}</td>
             </tr>`;
         });
         container.innerHTML = html + '</tbody></table></div>';
@@ -297,19 +298,19 @@ window.mostrarSenhaTemporaria = function(nome, senha) {
 
     const modal = document.createElement('div');
     modal.id = modalId;
-    modal.className = 'modal-overlay';
+    modal.className = 'modal-overlay is-locked';
     modal.style.display = 'flex';
     modal.innerHTML = `
-        <div class="modal-content" style="max-width:440px;">
-            <div class="modal-header">
-                <h3>Senha redefinida</h3>
+        <div class="modal-content modal-sm">
+            <div class="modal-header"><h3>Senha redefinida</h3></div>
+            <p class="dialog-text">Repasse esta senha a <strong>${window.escapeHTML(nome)}</strong> por um canal seguro. Ela aparece só desta vez.</p>
+            <div class="secret-box">
+                <code id="senha-temp-valor">${window.escapeHTML(senha)}</code>
+                <button class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('senha-temp-valor').textContent); window.UI.showToast('Senha copiada.', 'success');">Copiar</button>
             </div>
-            <p class="text-muted" style="font-size:14px;">Repasse esta senha a <strong>${window.escapeHTML(nome)}</strong> por um canal seguro. Ela só será exibida uma vez e não pode ser recuperada depois.</p>
-            <div style="display:flex; align-items:center; gap:10px; margin:16px 0;">
-                <code id="senha-temp-valor" style="flex:1; background:var(--bg-subtle); padding:12px; border-radius:8px; font-size:16px; text-align:center; user-select:all;">${window.escapeHTML(senha)}</code>
-                <button class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText('${senha.replace(/'/g, "\\'")}'); window.UI.showToast('Copiado!', 'success');">Copiar</button>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="document.getElementById('${modalId}').remove()">Já anotei</button>
             </div>
-            <button class="btn btn-primary btn-block" onclick="document.getElementById('${modalId}').remove()">Entendi, já anotei</button>
         </div>`;
     document.body.appendChild(modal);
 };
@@ -318,36 +319,36 @@ window.mostrarSenhaTemporaria = function(nome, senha) {
 // 4. MÓDULO: LABORATÓRIO E P&D
 // ==========================================
 window.switchLabTab = function(tab) {
-    document.getElementById('tab-eq').className = tab === 'eq' ? 'btn btn-primary' : 'btn btn-secondary';
-    document.getElementById('tab-pop').className = tab === 'pop' ? 'btn btn-primary' : 'btn btn-secondary';
+    document.getElementById('tab-eq').classList.toggle('active', tab === 'eq');
+    document.getElementById('tab-pop').classList.toggle('active', tab === 'pop');
     const container = document.getElementById('lab-container');
     if (tab === 'eq') loadAdminEquipments(container); else loadAdminPops(container);
 };
 
 window.switchPdTab = function(tab) {
-    document.getElementById('tab-proc').className = tab === 'proc' ? 'btn btn-primary' : 'btn btn-secondary';
-    document.getElementById('tab-pta').className = tab === 'pta' ? 'btn btn-primary' : 'btn btn-secondary';
+    document.getElementById('tab-proc').classList.toggle('active', tab === 'proc');
+    document.getElementById('tab-pta').classList.toggle('active', tab === 'pta');
     const container = document.getElementById('pd-container');
     if (tab === 'proc') loadAdminProcesses(container); else loadAdminPtaTopics(container);
 };
 
 async function loadAdminEquipments(container) {
-    container.innerHTML = '<span class="spinner"></span>';
+    container.innerHTML = window.UI.loading();
     try {
         const res = await window.api.fetchProtected('/equipments');
         const eq = await res.json();
         eq.sort((a, b) => a.nome.localeCompare(b.nome));
         if (!Array.isArray(eq) || eq.length === 0) {
-            container.innerHTML = window.UI.emptyState({ icon: 'flask', title: 'Nenhum equipamento cadastrado' });
+            container.innerHTML = window.UI.emptyState({ title: 'Nenhum equipamento cadastrado' });
             return;
         }
 
-        let html = '<div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>Equipamento</th><th style="text-align:right;">Ação</th></tr></thead><tbody>';
+        let html = '<div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>Equipamento</th><th class="end">Ações</th></tr></thead><tbody>';
         eq.forEach(e => {
-            html += `<tr><td>#${e.id}</td><td>${window.escapeHTML(e.nome)}</td>
-            <td style="text-align:right;"><div class="action-group">
-                <button class="icon-btn" title="Editar" onclick="openDeepView('equipments', ${e.id}, 'Equipamento')">${window.Icon('edit-2', { size: 15 })}</button>
-                <button class="icon-btn danger" title="Excluir" onclick="adminDelete('equipments', ${e.id}, 'eq')">${window.Icon('trash-2', { size: 15 })}</button>
+            html += `<tr><td class="num">${e.id}</td><td>${window.escapeHTML(e.nome)}</td>
+            <td><div class="row-actions">
+                <button class="link-btn" onclick="openDeepView('equipments', ${e.id}, 'Equipamento')">Editar</button>
+                <button class="link-btn danger" onclick="adminDelete('equipments', ${e.id}, 'eq')">Excluir</button>
             </div></td></tr>`;
         });
         container.innerHTML = html + '</tbody></table></div>';
@@ -357,22 +358,22 @@ async function loadAdminEquipments(container) {
 }
 
 async function loadAdminPops(container) {
-    container.innerHTML = '<span class="spinner"></span>';
+    container.innerHTML = window.UI.loading();
     try {
         const res = await window.api.fetchProtected('/pops');
         const pops = await res.json();
         pops.sort((a, b) => a.titulo.localeCompare(b.titulo));
         if (!Array.isArray(pops) || pops.length === 0) {
-            container.innerHTML = window.UI.emptyState({ icon: 'clipboard', title: 'Nenhum POP disponível' });
+            container.innerHTML = window.UI.emptyState({ title: 'Nenhum POP disponível' });
             return;
         }
 
-        let html = '<div class="table-container"><table class="data-table"><thead><tr><th>Código</th><th>Título</th><th style="text-align:right;">Ação</th></tr></thead><tbody>';
+        let html = '<div class="table-container"><table class="data-table"><thead><tr><th>Código</th><th>Título</th><th class="end">Ações</th></tr></thead><tbody>';
         pops.forEach(p => {
-            html += `<tr><td>${window.escapeHTML(p.codigo)}</td><td>${window.escapeHTML(p.titulo)}</td>
-            <td style="text-align:right;"><div class="action-group">
-                <button class="icon-btn" title="Editar" onclick="openDeepView('pops', ${JSON.stringify(window.escapeHTML(p.codigo))}, 'POP')">${window.Icon('edit-2', { size: 15 })}</button>
-                <button class="icon-btn danger" title="Excluir" onclick="adminDelete('pops', ${JSON.stringify(window.escapeHTML(p.codigo))}, 'pop')">${window.Icon('trash-2', { size: 15 })}</button>
+            html += `<tr><td class="code">${window.escapeHTML(p.codigo)}</td><td>${window.escapeHTML(p.titulo)}</td>
+            <td><div class="row-actions">
+                <button class="link-btn" data-id="${window.escapeHTML(p.codigo)}" onclick="openDeepView('pops', this.dataset.id, 'POP')">Editar</button>
+                <button class="link-btn danger" data-id="${window.escapeHTML(p.codigo)}" onclick="adminDelete('pops', this.dataset.id, 'pop')">Excluir</button>
             </div></td></tr>`;
         });
         container.innerHTML = html + '</tbody></table></div>';
@@ -382,22 +383,22 @@ async function loadAdminPops(container) {
 }
 
 async function loadAdminProcesses(container) {
-    container.innerHTML = '<span class="spinner"></span>';
+    container.innerHTML = window.UI.loading();
     try {
         const res = await window.api.fetchProtected('/processes');
         const procs = await res.json();
         procs.sort((a, b) => b.id - a.id);
         if (!Array.isArray(procs) || procs.length === 0) {
-            container.innerHTML = window.UI.emptyState({ icon: 'layers', title: 'Nenhum processo cadastrado' });
+            container.innerHTML = window.UI.emptyState({ title: 'Nenhum processo cadastrado' });
             return;
         }
 
-        let html = '<div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>Processo</th><th style="text-align:right;">Ação</th></tr></thead><tbody>';
+        let html = '<div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>Processo</th><th class="end">Ações</th></tr></thead><tbody>';
         procs.forEach(p => {
-            html += `<tr><td>#${p.id}</td><td>${window.escapeHTML(p.nome_processo)}</td>
-            <td style="text-align:right;"><div class="action-group">
-                <button class="icon-btn" title="Editar" onclick="openDeepView('processes', ${p.id}, 'Processo')">${window.Icon('edit-2', { size: 15 })}</button>
-                <button class="icon-btn danger" title="Excluir" onclick="adminDelete('processes', ${p.id}, 'proc')">${window.Icon('trash-2', { size: 15 })}</button>
+            html += `<tr><td class="num">${p.id}</td><td>${window.escapeHTML(p.nome_processo)}</td>
+            <td><div class="row-actions">
+                <button class="link-btn" onclick="openDeepView('processes', ${p.id}, 'Processo')">Editar</button>
+                <button class="link-btn danger" onclick="adminDelete('processes', ${p.id}, 'proc')">Excluir</button>
             </div></td></tr>`;
         });
         container.innerHTML = html + '</tbody></table></div>';
@@ -407,7 +408,7 @@ async function loadAdminProcesses(container) {
 }
 
 async function loadAdminPtaTopics(container) {
-    container.innerHTML = '<span class="spinner"></span>';
+    container.innerHTML = window.UI.loading();
     try {
         const res = await window.api.fetchProtected('/pta/topicos');
         const tops = await res.json();
@@ -422,16 +423,16 @@ async function loadAdminPtaTopics(container) {
         });
 
         if (topicosUnicos.length === 0) {
-            container.innerHTML = window.UI.emptyState({ icon: 'bar-chart', title: 'Nenhum tópico PTA cadastrado' });
+            container.innerHTML = window.UI.emptyState({ title: 'Nenhum tópico PTA cadastrado' });
             return;
         }
 
-        let html = '<div class="table-container"><table class="data-table"><thead><tr><th>Ano</th><th>Tópico</th><th style="text-align:right;">Ação</th></tr></thead><tbody>';
+        let html = '<div class="table-container"><table class="data-table"><thead><tr><th>Ano</th><th>Tópico</th><th class="end">Ações</th></tr></thead><tbody>';
         topicosUnicos.forEach(t => {
-            html += `<tr><td>${t.ano}</td><td>${window.escapeHTML(t.titulo)}</td>
-            <td style="text-align:right;"><div class="action-group">
-                <button class="icon-btn" title="Editar" onclick="openDeepView('pta/topicos', ${t.id}, 'Tópico PTA')">${window.Icon('edit-2', { size: 15 })}</button>
-                <button class="icon-btn danger" title="Excluir" onclick="adminDelete('pta/topicos', ${t.id}, 'pta')">${window.Icon('trash-2', { size: 15 })}</button>
+            html += `<tr><td class="num">${t.ano}</td><td>${window.escapeHTML(t.titulo)}</td>
+            <td><div class="row-actions">
+                <button class="link-btn" onclick="openDeepView('pta/topicos', ${t.id}, 'Tópico PTA')">Editar</button>
+                <button class="link-btn danger" onclick="adminDelete('pta/topicos', ${t.id}, 'pta')">Excluir</button>
             </div></td></tr>`;
         });
         container.innerHTML = html + '</tbody></table></div>';
@@ -444,37 +445,35 @@ async function loadAdminPtaTopics(container) {
 // 5. LOGS
 // ==========================================
 async function loadAuditLogs(container) {
-    container.innerHTML = '<span class="spinner"></span> Carregando histórico...';
+    container.innerHTML = window.UI.loading();
     try {
         const res = await window.api.fetchProtected('/admin/logs');
         if (!res.ok) throw new Error("Erro ao buscar logs");
         const logs = await res.json();
 
         if (logs.length === 0) {
-            container.innerHTML = window.UI.emptyState({ icon: 'eye', title: 'Nenhum evento registrado ainda' });
+            container.innerHTML = window.UI.emptyState({ title: 'Nenhum evento registrado ainda' });
             return;
         }
 
         window.currentAuditLogs = logs;
 
-        let html = '<div class="table-container"><table class="data-table" style="font-size: 14px;">';
-        html += '<thead><tr><th>Data/Hora</th><th>Usuário</th><th>Ação</th><th>Módulo</th><th>Registro</th><th>Detalhes</th></tr></thead><tbody>';
+        let html = '<div class="table-container"><table class="data-table">';
+        html += '<thead><tr><th>Data e hora</th><th>Usuário</th><th>Ação</th><th>Módulo</th><th>Registro</th><th class="end">Detalhes</th></tr></thead><tbody>';
 
         logs.forEach((log, index) => {
             const dataFormatada = new Date(log.timestamp).toLocaleString('pt-BR');
             const isDelete = (log.action === "DELETE" || log.action === "SOFT_DELETE");
             const isUpdate = log.action === "UPDATE";
-            const corClasse = isDelete ? 'text-danger' : isUpdate ? 'text-primary' : 'text-success';
+            const corClasse = isDelete ? 'badge-danger' : isUpdate ? 'badge-accent' : 'badge-success';
 
             html += `<tr>
-                <td style="white-space: nowrap;">${dataFormatada}</td>
-                <td style="font-weight:600;">#${log.admin_id}</td>
-                <td><strong class="${corClasse}">${log.action}</strong></td>
-                <td style="text-transform: uppercase;">${log.table_name}</td>
-                <td>ID: ${log.record_id}</td>
-                <td>
-                    <button class="btn btn-secondary btn-sm" onclick="viewLogPayload(${index})">Ver detalhes</button>
-                </td>
+                <td class="num">${dataFormatada}</td>
+                <td class="num">#${log.admin_id}</td>
+                <td><span class="badge ${corClasse}">${window.escapeHTML(log.action)}</span></td>
+                <td class="code">${window.escapeHTML(log.table_name)}</td>
+                <td class="num">${window.escapeHTML(log.record_id)}</td>
+                <td><div class="row-actions"><button class="link-btn" onclick="viewLogPayload(${index})">Ver</button></div></td>
             </tr>`;
         });
         container.innerHTML = html + '</tbody></table></div>';
@@ -487,8 +486,8 @@ window.viewLogPayload = function(index) {
     const log = window.currentAuditLogs[index];
     if (!log) return;
 
-    const oldData = log.old_data ? JSON.stringify(log.old_data, null, 2) : "Sem detalhes / Não aplicável";
-    const newData = log.new_data ? JSON.stringify(log.new_data, null, 2) : "Sem detalhes / Não aplicável";
+    const oldData = log.old_data ? JSON.stringify(log.old_data, null, 2) : "Sem dados";
+    const newData = log.new_data ? JSON.stringify(log.new_data, null, 2) : "Sem dados";
 
     const modalId = 'log-payload-modal';
     const old = document.getElementById(modalId);
@@ -499,19 +498,22 @@ window.viewLogPayload = function(index) {
     modal.className = 'modal-overlay';
     modal.style.display = 'flex';
     modal.innerHTML = `
-        <div class="modal-content" style="max-width:560px;">
+        <div class="modal-content modal-md">
             <div class="modal-header">
-                <h3>Detalhes do evento</h3>
-                <button type="button" class="modal-close" onclick="document.getElementById('${modalId}').remove()">&times;</button>
+                <div>
+                    <p class="eyebrow">${window.escapeHTML(log.action)} · ${window.escapeHTML(log.table_name)} · ${window.escapeHTML(log.record_id)}</p>
+                    <h3>Detalhes do evento</h3>
+                </div>
+                ${window.UI.closeButton(`document.getElementById('${modalId}').remove()`)}
             </div>
-            <div style="display:flex; flex-direction:column; gap:14px;">
+            <div class="stack">
                 <div>
                     <label>Antes</label>
-                    <pre style="background:var(--bg-subtle); padding:12px; border-radius:8px; font-size:12px; overflow-x:auto; white-space:pre-wrap;">${window.escapeHTML(oldData)}</pre>
+                    <pre>${window.escapeHTML(oldData)}</pre>
                 </div>
                 <div>
-                    <label>Atual</label>
-                    <pre style="background:var(--bg-subtle); padding:12px; border-radius:8px; font-size:12px; overflow-x:auto; white-space:pre-wrap;">${window.escapeHTML(newData)}</pre>
+                    <label>Depois</label>
+                    <pre>${window.escapeHTML(newData)}</pre>
                 </div>
             </div>
         </div>`;
@@ -532,8 +534,8 @@ window.openDeepView = async function(route, id, entityName) {
     const saveBtn = document.getElementById('dv-save-btn');
 
     const displayId = typeof id === 'string' ? id : `#${id}`;
-    document.getElementById('dv-title').innerText = `Editando: ${entityName} ${displayId}`;
-    body.innerHTML = '<span class="spinner"></span> Carregando dados completos...';
+    document.getElementById('dv-title').innerText = `${entityName} ${displayId}`;
+    body.innerHTML = window.UI.loading();
     modal.style.display = 'flex';
 
     try {
@@ -571,7 +573,7 @@ window.openDeepView = async function(route, id, entityName) {
             "manual_url": "Link do POP",
             "status": "Status",
             "titulo": "Título",
-            "is_active": "Ativo? (Marque a caixa de seleção para ativar o usuários)",
+            "is_active": "Conta ativa",
             "role": "Cargo"
         };
 
@@ -584,7 +586,7 @@ window.openDeepView = async function(route, id, entityName) {
             if (key === 'role') {
                 const papeis = ['pesquisador', 'tecnico', 'coordenador', 'admin'];
                 html += `
-                    <div class="input-group" style="margin-bottom:0;">
+                    <div class="input-group">
                         <label>${labelAmigavel}</label>
                         <select id="dv-input-${key}" class="form-control">
                             ${papeis.map(p => `<option value="${p}" ${value === p ? 'selected' : ''}>${p}</option>`).join('')}
@@ -597,9 +599,11 @@ window.openDeepView = async function(route, id, entityName) {
             if (key === 'is_active') {
                 const marcado = value === 1 || value === true || value === '1';
                 html += `
-                    <div class="input-group" style="margin-bottom:0; display:flex; align-items:center; gap:8px;">
-                        <input type="checkbox" id="dv-input-${key}" ${marcado ? 'checked' : ''} style="width:auto;">
-                        <label style="margin:0;">${labelAmigavel}</label>
+                    <div class="input-group">
+                        <label class="check-inline">
+                            <input type="checkbox" id="dv-input-${key}" ${marcado ? 'checked' : ''}>
+                            ${labelAmigavel}
+                        </label>
                     </div>
                 `;
                 continue;
@@ -608,7 +612,7 @@ window.openDeepView = async function(route, id, entityName) {
             const safeValue = window.escapeHTML(value !== null && value !== undefined ? String(value) : '');
 
             html += `
-                <div class="input-group" style="margin-bottom:0;">
+                <div class="input-group">
                     <label>${labelAmigavel}</label>
                     <input type="text" id="dv-input-${key}" class="form-control" value="${safeValue}">
                 </div>
@@ -670,7 +674,12 @@ async function saveDeepView(route, id, originalData) {
         if (res.ok) {
             window.UI.showToast("Dados atualizados com sucesso!", "success");
             closeDeepView();
-            if (route === 'usuarios') switchUserTab('active');
+            const naAdmin = !!document.getElementById('module-subcontent');
+            if (!naAdmin) {
+                const viewAtual = document.querySelector('.nav-item.active');
+                if (viewAtual) window.UI.switchView(viewAtual.getAttribute('data-view'));
+            }
+            else if (route === 'usuarios') switchUserTab('active');
             else if (route === 'equipments') switchLabTab('eq');
             else if (route === 'pops') switchLabTab('pop');
             else if (route === 'processes') switchPdTab('proc');
