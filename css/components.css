@@ -25,8 +25,8 @@
 
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.btn-primary { background: var(--ink); border-color: var(--ink); color: #fff; }
-.btn-primary:hover:not(:disabled) { background: #2B2D32; border-color: #2B2D32; }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+.btn-primary:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); }
 
 .btn-secondary,
 .btn-outline-primary {
@@ -35,7 +35,7 @@
     color: var(--ink);
 }
 .btn-secondary:hover:not(:disabled),
-.btn-outline-primary:hover:not(:disabled) { border-color: var(--ink); }
+.btn-outline-primary:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
 
 .btn-danger { background: var(--danger); border-color: var(--danger); color: #fff; }
 .btn-danger:hover:not(:disabled) { background: #7F2419; border-color: #7F2419; }
@@ -59,15 +59,20 @@
     border: 0;
     background: none;
     font-size: 13px;
-    color: var(--ink);
+    font-weight: 500;
+    color: var(--accent);
     cursor: pointer;
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 3px;
-    text-decoration-color: var(--rule-strong);
+    text-decoration-color: rgba(27, 79, 208, 0.35);
     transition: var(--transition-fast);
 }
-.link-btn:hover { text-decoration-color: currentColor; }
+.link-btn:hover { color: var(--accent-hover); text-decoration-color: currentColor; }
+.link-btn.muted { font-weight: 400; text-decoration-color: var(--rule-strong); }
+.link-btn.muted:hover { color: var(--ink); }
+.link-btn.danger { text-decoration-color: rgba(154, 46, 33, 0.35); }
+.link-btn.danger:hover { color: #7F2419; }
 .link-btn.danger { color: var(--danger); }
 .link-btn.muted { color: var(--muted); }
 .link-btn:disabled { opacity: .5; cursor: not-allowed; }
@@ -129,7 +134,7 @@ input:hover, select:hover, textarea:hover { border-color: var(--faint); }
 
 input:focus, select:focus, textarea:focus {
     outline: none;
-    border-color: var(--ink);
+    border-color: var(--accent);
     box-shadow: var(--focus-ring);
 }
 
@@ -141,13 +146,13 @@ input:disabled, select:disabled, textarea:disabled { opacity: .6; cursor: not-al
 input[type="checkbox"], input[type="radio"] {
     width: 15px;
     height: 15px;
-    accent-color: var(--ink);
+    accent-color: var(--accent);
     cursor: pointer;
 }
 
 input[type="range"] {
     width: 100%;
-    accent-color: var(--ink);
+    accent-color: var(--accent);
     cursor: pointer;
 }
 
@@ -215,8 +220,8 @@ input[type="file"]::file-selector-button {
     user-select: none;
     transition: var(--transition-fast);
 }
-.check-chip:hover { border-color: var(--ink); }
-.check-chip:has(input:checked) { border-color: var(--ink); background: var(--paper-sunk); }
+.check-chip:hover { border-color: var(--accent); }
+.check-chip:has(input:checked) { border-color: var(--accent); background: var(--accent-tint); color: var(--accent-hover); font-weight: 500; }
 
 /* Bloco de anexo / upload */
 .file-field {
@@ -284,7 +289,10 @@ input[type="file"]::file-selector-button {
 .badge-danger, .status-reprovado, .status-rejeitado, .status-atrasado, .status-inativo, .status-cancelado {
     color: var(--danger); border-color: currentColor;
 }
-.badge-accent { color: var(--accent); border-color: currentColor; }
+.badge-accent { color: var(--accent); border-color: currentColor; background: var(--accent-tint); }
+.badge-success, .status-aprovado, .status-ativo, .status-concluido, .status-concluído { background: var(--success-tint); }
+.badge-warning, .status-pendente, .status-andamento, .status-em_andamento { background: var(--warning-tint); }
+.badge-danger, .status-reprovado, .status-rejeitado, .status-atrasado, .status-inativo, .status-cancelado { background: var(--danger-tint); }
 
 .badge button {
     background: none;
@@ -342,7 +350,8 @@ td .sub { display: block; font-size: 12px; color: var(--muted); margin-top: 1px;
 
 tbody tr { transition: var(--transition-fast); }
 tr.clickable { cursor: pointer; }
-tr.clickable:hover { background: var(--paper-sunk); }
+tbody tr:hover { background: rgba(27, 79, 208, 0.035); }
+tr.clickable:hover { background: var(--accent-tint); }
 tr.is-flagged td:first-child { box-shadow: inset 2px 0 0 var(--accent); padding-left: var(--space-3); }
 tr.is-dimmed { opacity: .55; }
 
@@ -371,8 +380,11 @@ tr.is-dimmed { opacity: .55; }
 .index-row .d { color: var(--muted); font-size: 13.5px; }
 .index-row .go { color: var(--faint); justify-self: end; align-self: center; transition: transform .18s var(--ease); }
 
-.index-row:hover { background: var(--paper-sunk); padding-left: var(--space-3); padding-right: var(--space-3); }
-.index-row:hover .go { color: var(--ink); transform: translateX(2px); }
+.index-row .go { color: var(--accent); }
+.index-row:hover { background: var(--accent-tint); padding-left: var(--space-3); padding-right: var(--space-3); }
+.index-row:hover .t { color: var(--accent-hover); }
+.index-row:hover .n { color: var(--accent); }
+.index-row:hover .go { color: var(--accent-hover); transform: translateX(2px); }
 
 /* ==========================================
    LISTA DE REGISTROS (artigos, tarefas, relatos)
@@ -386,7 +398,8 @@ tr.is-dimmed { opacity: .55; }
 }
 
 .entry.clickable { cursor: pointer; transition: background-color .12s var(--ease); }
-.entry.clickable:hover { background: var(--paper-sunk); box-shadow: 0 0 0 var(--space-3) var(--paper-sunk); }
+.entry.clickable:hover { background: var(--accent-tint); box-shadow: 0 0 0 var(--space-3) var(--accent-tint); }
+.entry.clickable:hover .entry-title { color: var(--accent-hover); }
 
 .entry-head {
     display: flex;
@@ -442,8 +455,8 @@ tr.is-dimmed { opacity: .55; }
     margin-top: var(--space-3);
 }
 
-.meter-track { height: 3px; background: var(--rule); }
-.meter-fill  { height: 100%; background: var(--ink); }
+.meter-track { height: 4px; background: var(--rule); }
+.meter-fill  { height: 100%; background: var(--accent); }
 .meter-fill.ok   { background: var(--success); }
 .meter-fill.bad  { background: var(--danger); }
 .meter-value { font-family: var(--font-mono); font-size: 12px; color: var(--ink-2); min-width: 4ch; text-align: right; }
@@ -511,7 +524,7 @@ tr.is-dimmed { opacity: .55; }
    ========================================== */
 .note {
     padding: var(--space-3) 0 var(--space-3) var(--space-4);
-    border-left: 2px solid var(--ink);
+    border-left: 2px solid var(--accent);
     font-size: 13.5px;
     line-height: 1.55;
     color: var(--ink-2);
@@ -560,7 +573,7 @@ tr.is-dimmed { opacity: .55; }
     width: 7px;
     height: 7px;
     background: var(--paper-raised);
-    border: 1px solid var(--ink);
+    border: 1px solid var(--accent);
 }
 
 .tl-item.ok::before     { background: var(--success); border-color: var(--success); }
@@ -596,7 +609,8 @@ tr.is-dimmed { opacity: .55; }
 }
 
 .tab-btn:hover { color: var(--ink); }
-.tab-btn.active { color: var(--ink); font-weight: 600; border-bottom-color: var(--ink); }
+.tab-btn.active { color: var(--accent-hover); font-weight: 600; border-bottom-color: var(--accent); }
+.tab-btn.active .mono { color: var(--accent); }
 .tab-btn .mono { font-size: 11px; color: var(--faint); margin-right: 6px; font-weight: 400; }
 
 .page-head .tabs { margin-bottom: calc(var(--space-5) * -1 - 1px); border-bottom: 0; }
@@ -627,8 +641,8 @@ tr.is-dimmed { opacity: .55; }
 }
 
 .mes-card:last-child { border-right: 0; }
-.mes-card:hover { background: var(--paper-sunk); color: var(--ink); }
-.mes-card.active { background: var(--ink); color: #fff; }
+.mes-card:hover { background: var(--accent-tint); color: var(--accent-hover); }
+.mes-card.active { background: var(--accent); color: #fff; font-weight: 600; }
 
 @media (max-width: 640px) {
     .meses-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
@@ -717,7 +731,7 @@ tr.is-dimmed { opacity: .55; }
     cursor: pointer;
     transition: var(--transition-fast);
 }
-.icon-btn:hover { border-color: var(--rule-strong); color: var(--ink); }
+.icon-btn:hover { border-color: var(--accent); color: var(--accent); }
 .icon-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
 
 .action-group { display: flex; gap: 2px; justify-content: flex-end; }

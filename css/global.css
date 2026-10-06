@@ -19,10 +19,10 @@
     --rule-strong: #C8C5BB;
 
     /* --- Acento --- */
-    --accent: #1F3A5F;
-    --accent-hover: #162B47;
-    --accent-tint: #E6EBF1;
-    --accent-ring: rgba(31, 58, 95, 0.22);
+    --accent: #1B4FD0;
+    --accent-hover: #143DA6;
+    --accent-tint: #E7EDFC;
+    --accent-ring: rgba(27, 79, 208, 0.28);
 
     /* --- Semântica (dessaturada de propósito) --- */
     --success: #3A6A3E;
@@ -143,7 +143,7 @@ a {
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 3px;
-    text-decoration-color: rgba(31, 58, 95, 0.35);
+    text-decoration-color: rgba(27, 79, 208, 0.4);
     transition: var(--transition-fast);
 }
 a:hover { text-decoration-color: currentColor; }

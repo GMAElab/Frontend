@@ -29,7 +29,7 @@
     font-weight: 600;
     font-size: 15px;
     letter-spacing: 0.02em;
-    color: var(--ink);
+    color: var(--accent);
 }
 
 .brand-sub {
@@ -73,12 +73,12 @@
 .nav-item:hover { background: var(--paper-sunk); color: var(--ink); }
 
 .nav-item.active {
-    color: var(--ink);
+    color: var(--accent-hover);
     font-weight: 600;
-    background: var(--paper-sunk);
+    background: var(--accent-tint);
 }
 
-.nav-item.active .nav-index { color: var(--accent); }
+.nav-item.active .nav-index { color: var(--accent); font-weight: 600; }
 
 .nav-sep {
     height: 1px;
@@ -134,7 +134,7 @@
     text-overflow: ellipsis;
 }
 
-.crumbs strong { color: var(--ink); font-weight: 500; }
+.crumbs strong { color: var(--accent); font-weight: 600; }
 
 .topbar-right {
     display: flex;
@@ -183,7 +183,7 @@
     flex-wrap: wrap;
     padding-bottom: var(--space-5);
     margin-bottom: var(--space-8);
-    border-bottom: 1px solid var(--ink);
+    border-bottom: 2px solid var(--accent);
 }
 
 .page-head h1,
@@ -196,7 +196,8 @@
 .eyebrow {
     font-family: var(--font-mono);
     font-size: 11.5px;
-    color: var(--muted);
+    font-weight: 500;
+    color: var(--accent);
     margin-bottom: var(--space-2);
     letter-spacing: 0.02em;
 }
@@ -365,7 +366,7 @@
 .feedback-msg.success { color: var(--success); }
 
 .auth-requirements {
-    border-left: 2px solid var(--ink);
+    border-left: 2px solid var(--accent);
     padding: var(--space-1) 0 var(--space-1) var(--space-4);
     font-size: 13px;
     color: var(--ink-2);
@@ -391,7 +392,7 @@
     color: var(--faint);
     cursor: pointer;
 }
-.password-toggle:hover { color: var(--ink); }
+.password-toggle:hover { color: var(--accent); }
 
 /* Página simples (verificar e-mail) */
 .auth-single {
@@ -473,7 +474,7 @@
     cursor: pointer;
     transition: var(--transition-fast);
 }
-.modal-close:hover { border-color: var(--rule-strong); color: var(--ink); }
+.modal-close:hover { border-color: var(--accent); color: var(--accent); }
 
 .modal-footer {
     display: flex;
