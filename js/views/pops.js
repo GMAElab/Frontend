@@ -1,9 +1,16 @@
 // ==========================================
 // 1. CONSTRUÇÃO DA TELA DE POPs
 // ==========================================
+// Importar POP de .docx é só para admin/técnico/coordenador — espelha
+// IMPORTADORES em routers/pops.py, que é quem de fato barra o acesso.
+function podeImportarPop(user) {
+    return ['admin', 'tecnico', 'coordenador'].includes(user.role);
+}
+
 document.addEventListener('viewChanged', (e) => {
     if (e.detail.view === 'pops' || e.detail.view === 'pop') {
         const container = document.getElementById('dynamic-content');
+        const user = JSON.parse(localStorage.getItem('user_data') || '{}');
 
         if (!document.getElementById('popsTableBody')) {
             container.innerHTML = `
@@ -14,6 +21,9 @@ document.addEventListener('viewChanged', (e) => {
                         <p class="lede">Os POPs vigentes do laboratório, prontos para consulta e exportação em .docx.</p>
                     </div>
                     <div class="page-actions">
+                        ${podeImportarPop(user) ? `
+                        <button class="btn btn-secondary" id="btn-importar-pop" onclick="document.getElementById('pop-import-file').click()">Importar .docx</button>
+                        <input type="file" id="pop-import-file" class="hidden" accept=".docx" onchange="window.importarPopDocx(this)">` : ''}
                         <button class="btn btn-primary" onclick="window.openPopModal()">Novo POP</button>
                     </div>
                 </header>
@@ -43,7 +53,9 @@ document.addEventListener('viewChanged', (e) => {
 // ==========================================
 // 2. CRIAR E EDITAR POP
 // ==========================================
-window.openPopModal = function(codigoEdicao = null) {
+// `importado` é a resposta de POST /pops/importar-docx: abre o formulário de
+// um POP novo já preenchido com o que foi lido do .docx, para revisão.
+window.openPopModal = function(codigoEdicao = null, importado = null) {
     const modalAntigo = document.getElementById('popModal');
     if (modalAntigo) modalAntigo.remove();
 
@@ -66,8 +78,21 @@ window.openPopModal = function(codigoEdicao = null) {
         }
     }
 
-    const tituloModal = popEdit ? `Editar ${window.escapeHTML(popEdit.codigo)}` : 'Novo POP';
+    if (importado) dadosEdit = importado.dados || {};
+    const base = popEdit || importado || {};
+
+    const tituloModal = popEdit ? `Editar ${window.escapeHTML(popEdit.codigo)}` : (importado ? 'Importar POP' : 'Novo POP');
     const textoBotaoSalvar = popEdit ? 'Salvar alterações' : 'Salvar POP';
+
+    // Data e responsável são travados num POP criado aqui (hoje / quem está
+    // logado), mas num POP importado valem os do documento original.
+    const travaOrigem = importado ? '' : 'readonly';
+    const avisoImportacao = importado ? `
+                <div class="note warn">
+                    <strong>Lido de ${window.escapeHTML(importado.arquivo || 'arquivo .docx')}.</strong>
+                    Confira cada seção antes de salvar — nada foi gravado ainda.
+                    ${(importado.avisos || []).map(a => `<br>• ${window.escapeHTML(a)}`).join('')}
+                </div>` : '';
 
     const secoes = [
         ['pop-obj', 'Objetivo', 'objetivo', 2],
@@ -95,14 +120,15 @@ window.openPopModal = function(codigoEdicao = null) {
             </div>
 
             <form id="popForm" onsubmit="window.handleSavePop(event)">
+                ${avisoImportacao}
                 <div class="field-grid">
                     <div class="input-group">
                         <label for="pop-codigo">Código do documento</label>
-                        <input type="text" id="pop-codigo" class="mono" value="${escapeQuote(popEdit ? popEdit.codigo : '')}" ${popEdit ? 'readonly' : ''} required>
+                        <input type="text" id="pop-codigo" class="mono" value="${escapeQuote(base.codigo || '')}" ${popEdit ? 'readonly' : ''} required>
                     </div>
                     <div class="input-group">
                         <label for="pop-titulo">Título</label>
-                        <input type="text" id="pop-titulo" value="${escapeQuote(popEdit ? popEdit.titulo : '')}" required>
+                        <input type="text" id="pop-titulo" value="${escapeQuote(base.titulo || '')}" required>
                     </div>
                     <div class="input-group">
                         <label for="pop-versao">Versão</label>
@@ -110,11 +136,11 @@ window.openPopModal = function(codigoEdicao = null) {
                     </div>
                     <div class="input-group">
                         <label for="pop-data">Data de emissão</label>
-                        <input type="text" id="pop-data" class="mono" value="${escapeQuote(dadosEdit.data_emissao || dataHoje)}" readonly>
+                        <input type="text" id="pop-data" class="mono" value="${escapeQuote(dadosEdit.data_emissao || dataHoje)}" ${travaOrigem}>
                     </div>
                     <div class="input-group span-2">
                         <label for="pop-responsavel">Responsável</label>
-                        <input type="text" id="pop-responsavel" value="${escapeQuote(dadosEdit.responsavel || user.nome || '')}" readonly>
+                        <input type="text" id="pop-responsavel" value="${escapeQuote(dadosEdit.responsavel || user.nome || '')}" ${travaOrigem}>
                     </div>
                 </div>
 
@@ -207,6 +233,41 @@ window.openPopModal = function(codigoEdicao = null) {
             });
         }
     }, 100);
+};
+
+// ==========================================
+// 2.1 IMPORTAR POP DE UM .DOCX
+// ==========================================
+window.importarPopDocx = async function(input) {
+    const file = input.files[0];
+    input.value = ''; // permite escolher o mesmo arquivo de novo
+    if (!file) return;
+
+    const btn = document.getElementById('btn-importar-pop');
+    if (btn) { btn.disabled = true; btn.innerText = 'Lendo...'; }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+        const res = await window.api.fetchProtected('/pops/importar-docx', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!res.ok) {
+            const erro = await res.json().catch(() => ({}));
+            throw new Error(erro.detail || "Não foi possível ler este .docx.");
+        }
+
+        const importado = await res.json();
+        importado.arquivo = file.name;
+        window.openPopModal(null, importado);
+    } catch (err) {
+        window.UI.showToast(err.message || "Erro ao importar o POP.", "error");
+    } finally {
+        if (btn) { btn.disabled = false; btn.innerText = 'Importar .docx'; }
+    }
 };
 
 // ==========================================
