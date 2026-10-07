@@ -1,65 +1,75 @@
 // ==========================================
 // 1. CONSTRUÇÃO DA TELA DE POPs
 // ==========================================
-// Importar POP de .docx é só para admin/técnico/coordenador — espelha
-// IMPORTADORES em routers/pops.py, que é quem de fato barra o acesso.
-function podeImportarPop(user) {
-    return ['admin', 'tecnico', 'coordenador'].includes(user.role);
-}
-
 document.addEventListener('viewChanged', (e) => {
     if (e.detail.view === 'pops' || e.detail.view === 'pop') {
         const container = document.getElementById('dynamic-content');
-        const user = JSON.parse(localStorage.getItem('user_data') || '{}');
 
-        if (!document.getElementById('popsTableBody')) {
-            container.innerHTML = `
-                <header class="page-head fade-in">
-                    <div>
-                        <p class="eyebrow">laboratório</p>
-                        <h1>Procedimentos operacionais padrão</h1>
-                        <p class="lede">Os POPs vigentes do laboratório, prontos para consulta e exportação em .docx.</p>
-                    </div>
-                    <div class="page-actions">
-                        ${podeImportarPop(user) ? `
-                        <button class="btn btn-secondary" id="btn-importar-pop" onclick="document.getElementById('pop-import-file').click()">Importar .docx</button>
-                        <input type="file" id="pop-import-file" class="hidden" accept=".docx" onchange="window.importarPopDocx(this)">` : ''}
-                        <button class="btn btn-primary" onclick="window.openPopModal()">Novo POP</button>
-                    </div>
-                </header>
-
-                <div class="table-container fade-in">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Código</th>
-                                <th>Título</th>
-                                <th>Status</th>
-                                <th>Emissão</th>
-                                <th class="end">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="popsTableBody">
-                            <tr><td colspan="5">${window.UI.loading()}</td></tr>
-                        </tbody>
-                    </table>
+        container.innerHTML = `
+            <header class="page-head fade-in">
+                <div>
+                    <p class="eyebrow">laboratório</p>
+                    <h1>Procedimentos operacionais padrão</h1>
+                    <p class="lede">Os POPs vigentes do laboratório, com histórico de revisões e exportação em .docx.</p>
                 </div>
-            `;
-        }
-                if (typeof loadPopsTable === 'function') loadPopsTable();
+                <div class="page-actions">
+                    <button class="btn btn-primary" onclick="window.openPopModal()">Novo POP</button>
+                </div>
+            </header>
+            <div id="pops-container" class="fade-in"></div>
+        `;
+        loadPopsTable();
     }
 });
 
+const SECOES_DO_POP = [
+    ['pop-obj', 'Objetivo', 'objetivo', 2],
+    ['pop-escopo', 'Aplicação e escopo', 'escopo', 2],
+    ['pop-resp-detalhe', 'Responsabilidades', 'responsabilidades', 2],
+    ['pop-materiais', 'Materiais e equipamentos necessários', 'materiais', 2],
+    ['pop-procedimento', 'Procedimento operacional', 'procedimento', 6],
+    ['pop-qualidade', 'Controle de qualidade', 'qualidade', 2],
+    ['pop-seguranca', 'Segurança e riscos', 'seguranca', 2],
+    ['pop-manutencao', 'Manutenção e calibração', 'manutencao', 2],
+    ['pop-referencias', 'Referências', 'referencias', 2],
+];
+
 // ==========================================
-// 2. CRIAR E EDITAR POP
+// 2. LEITURA DE UM POP
 // ==========================================
-// `importado` é a resposta de POST /pops/importar-docx: abre o formulário de
-// um POP novo já preenchido com o que foi lido do .docx, para revisão.
-window.openPopModal = function(codigoEdicao = null, importado = null) {
+function lerSecoesDoPop(descricao) {
+    try {
+        const dados = JSON.parse(descricao);
+        return dados && typeof dados === 'object' ? dados : { objetivo: descricao };
+    } catch (e) {
+        return { objetivo: descricao };
+    }
+}
+
+async function buscarPop(codigo) {
+    try {
+        const res = await window.api.fetchProtected(`/pops/${encodeURIComponent(codigo)}`);
+        return res.ok ? await res.json() : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+async function buscarRevisoesDoPop(codigo) {
+    try {
+        const res = await window.api.fetchProtected(`/pops/${encodeURIComponent(codigo)}/revisoes`);
+        return res.ok ? await res.json() : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+// ==========================================
+// 3. CRIAR E EDITAR POP
+// ==========================================
+window.openPopModal = async function(codigoEdicao = null) {
     const modalAntigo = document.getElementById('popModal');
     if (modalAntigo) modalAntigo.remove();
-
-    window.currentEditPopCode = codigoEdicao;
 
     const user = JSON.parse(localStorage.getItem('user_data') || '{}');
     const dataHoje = new Date().toLocaleDateString('pt-BR');
@@ -68,45 +78,39 @@ window.openPopModal = function(codigoEdicao = null, importado = null) {
     let dadosEdit = {};
 
     if (codigoEdicao) {
-        popEdit = window.popsDataList.find(p => p.codigo === codigoEdicao);
-        if (popEdit) {
-            try {
-                dadosEdit = JSON.parse(popEdit.descricao);
-            } catch(e) {
-                dadosEdit = { objetivo: popEdit.descricao };
-            }
+        popEdit = await buscarPop(codigoEdicao);
+        if (!popEdit) {
+            window.UI.showToast('POP não encontrado.', 'error');
+            return;
         }
+        dadosEdit = lerSecoesDoPop(popEdit.descricao);
     }
+    window.currentEditPopCode = popEdit ? popEdit.codigo : null;
 
-    if (importado) dadosEdit = importado.dados || {};
-    const base = popEdit || importado || {};
-
-    const tituloModal = popEdit ? `Editar ${window.escapeHTML(popEdit.codigo)}` : (importado ? 'Importar POP' : 'Novo POP');
+    const tituloModal = popEdit ? `Editar ${window.escapeHTML(popEdit.codigo)}` : 'Novo POP';
     const textoBotaoSalvar = popEdit ? 'Salvar alterações' : 'Salvar POP';
+    const versaoAtual = dadosEdit.versao || '1.0';
+    const escapeQuote = (str) => str ? String(str).replace(/"/g, '&quot;') : '';
 
-    // Data e responsável são travados num POP criado aqui (hoje / quem está
-    // logado), mas num POP importado valem os do documento original.
-    const travaOrigem = importado ? '' : 'readonly';
-    const avisoImportacao = importado ? `
-                <div class="note warn">
-                    <strong>Lido de ${window.escapeHTML(importado.arquivo || 'arquivo .docx')}.</strong>
-                    Confira cada seção antes de salvar — nada foi gravado ainda.
-                    ${(importado.avisos || []).map(a => `<br>• ${window.escapeHTML(a)}`).join('')}
+    const blocoRevisao = popEdit ? `
+                <div class="note accent">
+                    <strong>Controle de revisão.</strong>
+                    Se você alterar o título ou alguma seção, o sistema registra uma nova versão a partir da ${window.escapeHTML(versaoAtual)} e guarda a anterior no histórico.
+                </div>
+                <div class="field-grid">
+                    <div class="input-group span-2">
+                        <label for="pop-mudancas">O que mudou nesta revisão</label>
+                        <textarea id="pop-mudancas" rows="2" placeholder="Ex.: atualizado o passo de calibração conforme o novo manual"></textarea>
+                        <span class="help">Obrigatório quando o conteúdo do POP é alterado.</span>
+                    </div>
+                    <div class="input-group">
+                        <label for="pop-tipo-revisao">Tipo de revisão</label>
+                        <select id="pop-tipo-revisao">
+                            <option value="menor">Menor (ex.: 1.0 para 1.1)</option>
+                            <option value="maior">Maior (ex.: 1.0 para 2.0)</option>
+                        </select>
+                    </div>
                 </div>` : '';
-
-    const secoes = [
-        ['pop-obj', 'Objetivo', 'objetivo', 2],
-        ['pop-escopo', 'Aplicação e escopo', 'escopo', 2],
-        ['pop-resp-detalhe', 'Responsabilidades', 'responsabilidades', 2],
-        ['pop-materiais', 'Materiais e equipamentos necessários', 'materiais', 2],
-        ['pop-procedimento', 'Procedimento operacional', 'procedimento', 6],
-        ['pop-qualidade', 'Controle de qualidade', 'qualidade', 2],
-        ['pop-seguranca', 'Segurança e riscos', 'seguranca', 2],
-        ['pop-manutencao', 'Manutenção e calibração', 'manutencao', 2],
-        ['pop-referencias', 'Referências', 'referencias', 2],
-    ];
-
-    const escapeQuote = (str) => str ? str.replace(/"/g, '&quot;') : '';
 
     const modalHTML = `
     <div id="popModal" class="modal-overlay is-open">
@@ -120,27 +124,32 @@ window.openPopModal = function(codigoEdicao = null, importado = null) {
             </div>
 
             <form id="popForm" onsubmit="window.handleSavePop(event)">
-                ${avisoImportacao}
                 <div class="field-grid">
                     <div class="input-group">
                         <label for="pop-codigo">Código do documento</label>
-                        <input type="text" id="pop-codigo" class="mono" value="${escapeQuote(base.codigo || '')}" ${popEdit ? 'readonly' : ''} required>
+                        <input type="text" id="pop-codigo" class="mono" value="${escapeQuote(popEdit ? popEdit.codigo : '')}" ${popEdit ? 'readonly' : ''} required>
                     </div>
                     <div class="input-group">
                         <label for="pop-titulo">Título</label>
-                        <input type="text" id="pop-titulo" value="${escapeQuote(base.titulo || '')}" required>
+                        <input type="text" id="pop-titulo" value="${escapeQuote(popEdit ? popEdit.titulo : '')}" required>
                     </div>
                     <div class="input-group">
                         <label for="pop-versao">Versão</label>
-                        <input type="text" id="pop-versao" class="mono" value="${escapeQuote(dadosEdit.versao || '1.0')}">
+                        <input type="text" id="pop-versao" class="mono" value="${escapeQuote(versaoAtual)}" ${popEdit ? 'readonly' : ''}>
                     </div>
                     <div class="input-group">
                         <label for="pop-data">Data de emissão</label>
-                        <input type="text" id="pop-data" class="mono" value="${escapeQuote(dadosEdit.data_emissao || dataHoje)}" ${travaOrigem}>
+                        <input type="text" id="pop-data" class="mono" value="${escapeQuote(dadosEdit.data_emissao || dataHoje)}" readonly>
                     </div>
-                    <div class="input-group span-2">
+                    <div class="input-group">
                         <label for="pop-responsavel">Responsável</label>
-                        <input type="text" id="pop-responsavel" value="${escapeQuote(dadosEdit.responsavel || user.nome || '')}" ${travaOrigem}>
+                        <input type="text" id="pop-responsavel" value="${escapeQuote(dadosEdit.responsavel || user.nome || '')}" readonly>
+                    </div>
+                    <div class="input-group">
+                        <label for="pop-equipamento">Equipamento</label>
+                        <select id="pop-equipamento">
+                            <option value="">Sem equipamento vinculado</option>
+                        </select>
                     </div>
                 </div>
 
@@ -154,7 +163,7 @@ window.openPopModal = function(codigoEdicao = null, importado = null) {
                     <span id="ia-loading" class="help hidden">Lendo o manual. Isso pode levar um minuto.</span>
                 </div>
 
-                ${secoes.map(([id, rotulo, chave, linhas], i) => `
+                ${SECOES_DO_POP.map(([id, rotulo, chave, linhas], i) => `
                 <div class="input-group">
                     <label for="${id}"><span class="mono text-faint">${i + 1}</span> ${rotulo}</label>
                     <textarea id="${id}" rows="${linhas}">${window.escapeHTML(dadosEdit[chave] || '')}</textarea>
@@ -179,6 +188,8 @@ window.openPopModal = function(codigoEdicao = null, importado = null) {
                     <p id="anexo-status" class="help text-success${dadosEdit.anexo_dados ? '' : ' hidden'}">Há um arquivo anexado. Envie outro para substituir.</p>
                 </div>
 
+                ${blocoRevisao}
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" onclick="document.getElementById('popModal').remove()">Cancelar</button>
                     <button type="submit" class="btn btn-primary">${textoBotaoSalvar}</button>
@@ -188,90 +199,73 @@ window.openPopModal = function(codigoEdicao = null, importado = null) {
     </div>`;
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
+    document.getElementById('popModal').dataset.imagemAtual = popEdit && popEdit.imagem_url ? popEdit.imagem_url : '';
 
-    setTimeout(() => {
-        const fileInput = document.getElementById('pop-anexos-file');
-        if (fileInput) {
-            fileInput.addEventListener('change', async function(e) {
-                if (!e.target.files[0]) return;
-                // JPG/PNG são comprimidos antes da checagem de tamanho, então
-                // fotos grandes cabem no limite de 10MB do anexo
-                const file = await window.comprimirImagem(e.target.files[0]);
-                if (file.size > 10 * 1024 * 1024) {
-                    window.UI.showToast("Arquivo muito grande! Máximo de 10MB.", "error");
-                    this.value = ''; return;
-                }
-
-                const statusText = document.getElementById('anexo-status');
-                statusText.className = 'help';
-                statusText.innerText = 'Enviando arquivo...';
-
-                const formData = new FormData();
-                formData.append("file", file);
-
-                try {
-                    const res = await window.api.fetchProtected('/upload-anexo', {
-                        method: 'POST',
-                        body: formData
-                    });
-
-                    if (!res.ok) throw new Error("Erro ao fazer upload do anexo");
-
-                    const data = await res.json();
-
-                    document.getElementById('pop-anexos-b64').value = data.url_arquivo;
-                    document.getElementById('pop-anexos-meta').value = JSON.stringify({ name: data.nome_original });
-
-                    statusText.className = 'help text-success';
-                    statusText.innerText = 'Arquivo anexado.';
-
-                } catch (err) {
-                    statusText.className = 'help text-danger';
-                    statusText.innerText = 'O envio falhou. Tente novamente.';
-                    window.UI.showToast("Falha ao anexar arquivo.", "error");
-                }
-            });
-        }
-    }, 100);
+    preencherEquipamentosDoPop(popEdit ? popEdit.equipamento_id : null);
+    ligarEnvioDeAnexoDoPop();
 };
 
 // ==========================================
-// 2.1 IMPORTAR POP DE UM .DOCX
+// 4. CAMPOS AUXILIARES DO FORMULÁRIO
 // ==========================================
-window.importarPopDocx = async function(input) {
-    const file = input.files[0];
-    input.value = ''; // permite escolher o mesmo arquivo de novo
-    if (!file) return;
-
-    const btn = document.getElementById('btn-importar-pop');
-    if (btn) { btn.disabled = true; btn.innerText = 'Lendo...'; }
-
-    const formData = new FormData();
-    formData.append("file", file);
-
+async function preencherEquipamentosDoPop(selecionado) {
+    const select = document.getElementById('pop-equipamento');
+    if (!select) return;
     try {
-        const res = await window.api.fetchProtected('/pops/importar-docx', {
-            method: 'POST',
-            body: formData
-        });
+        const opcoes = await window.Vinculos.opcoesDeEquipamento();
+        select.insertAdjacentHTML('beforeend', opcoes.map(o =>
+            `<option value="${o.valor}" ${o.valor === selecionado ? 'selected' : ''}>${window.escapeHTML(o.rotulo)}</option>`
+        ).join(''));
+    } catch (e) {
+        select.disabled = true;
+    }
+}
 
-        if (!res.ok) {
-            const erro = await res.json().catch(() => ({}));
-            throw new Error(erro.detail || "Não foi possível ler este .docx.");
+function ligarEnvioDeAnexoDoPop() {
+    const fileInput = document.getElementById('pop-anexos-file');
+    if (!fileInput) return;
+
+    fileInput.addEventListener('change', async function(e) {
+        if (!e.target.files[0]) return;
+        const file = await window.comprimirImagem(e.target.files[0]);
+        if (file.size > 10 * 1024 * 1024) {
+            window.UI.showToast("Arquivo muito grande! Máximo de 10MB.", "error");
+            this.value = ''; return;
         }
 
-        const importado = await res.json();
-        importado.arquivo = file.name;
-        window.openPopModal(null, importado);
-    } catch (err) {
-        window.UI.showToast(err.message || "Erro ao importar o POP.", "error");
-    } finally {
-        if (btn) { btn.disabled = false; btn.innerText = 'Importar .docx'; }
-    }
-};
+        const statusText = document.getElementById('anexo-status');
+        statusText.className = 'help';
+        statusText.innerText = 'Enviando arquivo...';
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            const res = await window.api.fetchProtected('/upload-anexo', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!res.ok) throw new Error("Erro ao fazer upload do anexo");
+
+            const data = await res.json();
+
+            document.getElementById('pop-anexos-b64').value = data.url_arquivo;
+            document.getElementById('pop-anexos-meta').value = JSON.stringify({ name: data.nome_original });
+
+            statusText.className = 'help text-success';
+            statusText.innerText = 'Arquivo anexado.';
+
+        } catch (err) {
+            statusText.className = 'help text-danger';
+            statusText.innerText = 'O envio falhou. Tente novamente.';
+            window.UI.showToast("Falha ao anexar arquivo.", "error");
+        }
+    });
+}
 
 // ==========================================
-// 3. SALVAR / ATUALIZAR POP
+// 5. SALVAR / ATUALIZAR POP
 // ==========================================
 window.handleSavePop = async function(event) {
     event.preventDefault();
@@ -280,113 +274,106 @@ window.handleSavePop = async function(event) {
     btn.innerText = "Salvando...";
     btn.disabled = true;
 
+    const editando = window.currentEditPopCode;
+    const valor = (id) => document.getElementById(id).value;
+
     try {
-        let linkDaImagem = await window.fazerUploadImagem('pop-imagem-visual');
+        const novaImagem = await window.fazerUploadImagem('pop-imagem-visual');
+        const imagemAtual = document.getElementById('popModal').dataset.imagemAtual || null;
+
         const conteudoCompleto = {
-            versao: document.getElementById('pop-versao').value,
-            data_emissao: document.getElementById('pop-data').value,
-            responsavel: document.getElementById('pop-responsavel').value,
-            objetivo: document.getElementById('pop-obj').value,
-            escopo: document.getElementById('pop-escopo').value,
-            responsabilidades: document.getElementById('pop-resp-detalhe').value,
-            materiais: document.getElementById('pop-materiais').value,
-            procedimento: document.getElementById('pop-procedimento').value,
-            qualidade: document.getElementById('pop-qualidade').value,
-            seguranca: document.getElementById('pop-seguranca').value,
-            manutencao: document.getElementById('pop-manutencao').value,
-            referencias: document.getElementById('pop-referencias').value,
-            anexo_dados: document.getElementById('pop-anexos-b64').value,
-            anexo_meta: document.getElementById('pop-anexos-meta').value
+            versao: valor('pop-versao'),
+            data_emissao: valor('pop-data'),
+            responsavel: valor('pop-responsavel'),
+            objetivo: valor('pop-obj'),
+            escopo: valor('pop-escopo'),
+            responsabilidades: valor('pop-resp-detalhe'),
+            materiais: valor('pop-materiais'),
+            procedimento: valor('pop-procedimento'),
+            qualidade: valor('pop-qualidade'),
+            seguranca: valor('pop-seguranca'),
+            manutencao: valor('pop-manutencao'),
+            referencias: valor('pop-referencias'),
+            anexo_dados: valor('pop-anexos-b64'),
+            anexo_meta: valor('pop-anexos-meta')
         };
 
         const popData = {
-            codigo: document.getElementById('pop-codigo').value,
-            titulo: document.getElementById('pop-titulo').value,
+            codigo: valor('pop-codigo'),
+            titulo: valor('pop-titulo'),
             descricao: JSON.stringify(conteudoCompleto),
-            imagem_url: linkDaImagem
+            imagem_url: novaImagem || imagemAtual,
+            equipamento_id: valor('pop-equipamento') ? Number(valor('pop-equipamento')) : null
         };
 
-        let res;
-        if (window.currentEditPopCode) {
-            res = await window.api.fetchProtected(`/pops/${window.currentEditPopCode}/`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(popData)
-            });
-        } else {
-            res = await window.api.fetchProtected('/pops/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(popData)
-            });
+        if (editando) {
+            popData.mudancas = valor('pop-mudancas').trim();
+            popData.tipo_revisao = valor('pop-tipo-revisao');
         }
 
-        if (!res.ok) throw new Error("Erro ao salvar no banco de dados.");
+        const res = await window.api.fetchProtected(editando ? `/pops/${encodeURIComponent(editando)}` : '/pops/', {
+            method: editando ? 'PUT' : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(popData)
+        });
+
+        if (!res.ok) {
+            const erro = await res.json().catch(() => ({}));
+            throw new Error(typeof erro.detail === 'string' ? erro.detail : "Erro ao salvar no banco de dados.");
+        }
 
         document.getElementById('popModal').remove();
-        loadPopsTable();
-        window.UI.showToast(window.currentEditPopCode ? "POP atualizado com sucesso!" : "Procedimento salvo com sucesso!", "success");
+        if (window.listagemAtual) window.listagemAtual.recarregar();
+        window.UI.showToast(editando ? "POP atualizado com sucesso!" : "Procedimento salvo com sucesso!", "success");
 
     } catch (err) {
         window.UI.showToast(err.message || "Erro ao salvar POP.", "error");
+        if (/mudou/.test(err.message || '')) {
+            const campo = document.getElementById('pop-mudancas');
+            if (campo) campo.focus();
+        }
     } finally {
         btn.innerText = textoOriginal;
         btn.disabled = false;
     }
 };
+
 // ==========================================
-// 4. TABELA DE EXIBIÇÃO
+// 6. LISTA COM BUSCA E PAGINAÇÃO
 // ==========================================
-async function loadPopsTable() {
-    try {
-        const response = await window.api.fetchProtected('/pops/');
-        if (!response.ok) throw new Error('Falha ao carregar');
-        const pops = await response.json();
-        window.popsDataList = pops;
-
-        const tbody = document.getElementById('popsTableBody');
-        if (!tbody) return;
-        if (pops.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5">${window.UI.emptyState({ title: 'Nenhum POP registrado', description: 'Crie o primeiro Procedimento Operacional Padrão do laboratório.' })}</td></tr>`;
-            return;
-        }
-
-        let html = '';
-        pops.forEach(pop => {
-            const escCodigo = window.escapeHTML ? window.escapeHTML(pop.codigo) : pop.codigo.replace(/'/g, "&apos;");
-            const escTitulo = window.escapeHTML ? window.escapeHTML(pop.titulo) : pop.titulo.replace(/'/g, "&apos;");
-            let dataCriacao = "—";
-            try {
-                const d = JSON.parse(pop.descricao);
-                if(d.data_emissao) dataCriacao = d.data_emissao;
-            } catch(e) {}
-
-            html += `
+function loadPopsTable() {
+    window.listagemAtual = window.Listagem.criar({
+        alvo: 'pops-container',
+        endpoint: '/pops/',
+        placeholder: 'Buscar por código, título ou conteúdo',
+        cabecalho: '<th>Código</th><th>Título</th><th>Equipamento</th><th>Versão</th><th>Status</th><th class="end">Ações</th>',
+        filtros: [{ param: 'equipamento_id', rotulo: 'Todos os equipamentos', opcoes: window.Vinculos.opcoesDeEquipamento }],
+        vazio: { title: 'Nenhum POP registrado', description: 'Crie o primeiro Procedimento Operacional Padrão do laboratório.' },
+        erro: 'Erro ao carregar lista de procedimentos.',
+        renderLinha: (pop) => {
+            const codigo = window.escapeHTML(pop.codigo);
+            const status = pop.status || 'ativo';
+            return `
                 <tr>
-                    <td class="code">${escCodigo}</td>
-                    <td><strong>${escTitulo}</strong></td>
-                    <td><span class="badge badge-success">ativo</span></td>
-                    <td class="num">${window.escapeHTML(dataCriacao)}</td>
+                    <td class="code">${codigo}</td>
+                    <td><strong>${window.escapeHTML(pop.titulo)}</strong></td>
+                    <td>${pop.equipamento_nome ? window.escapeHTML(pop.equipamento_nome) : '<span class="text-faint">—</span>'}</td>
+                    <td class="num">${window.escapeHTML(lerSecoesDoPop(pop.descricao).versao || '1.0')}</td>
+                    <td><span class="badge ${status === 'ativo' ? 'badge-success' : ''}">${window.escapeHTML(status)}</span></td>
                     <td>
                         <div class="row-actions">
-                            <button onclick="viewPopDetails(this.getAttribute('data-id'))" data-id="${escCodigo}" class="link-btn">Abrir</button>
-                            <button onclick="window.openPopModal(this.getAttribute('data-id'))" data-id="${escCodigo}" class="link-btn muted">Editar</button>
-                            <button onclick="window.removerPopOficial(this.getAttribute('data-id'))" data-id="${escCodigo}" class="link-btn danger">Excluir</button>
+                            <button onclick="viewPopDetails(this.getAttribute('data-id'))" data-id="${codigo}" class="link-btn">Abrir</button>
+                            <button onclick="window.openPopModal(this.getAttribute('data-id'))" data-id="${codigo}" class="link-btn muted">Editar</button>
+                            <button onclick="window.removerPopOficial(this.getAttribute('data-id'))" data-id="${codigo}" class="link-btn danger">Excluir</button>
                         </div>
                     </td>
                 </tr>`;
-
-        });
-        tbody.innerHTML = html;
-    } catch (error) {
-        window.UI.showToast("Erro ao carregar lista de procedimentos", "error");
-        const tbody = document.getElementById('popsTableBody');
-        if (tbody) tbody.innerHTML = `<tr><td colspan="5">${window.UI.errorState('Erro ao carregar lista de procedimentos.')}</td></tr>`;
-    }
+        }
+    });
 }
 
 // ==========================================
-// 5. VISUALIZAÇÃO E DOWNLOAD
+// 7. DOCUMENTO DO POP
 // ==========================================
 function formatPopSection(title, content) {
     return `<div class="pop-sec" style="margin-bottom: 15px; width: 100%; max-width: 100%;">
@@ -395,7 +382,54 @@ function formatPopSection(title, content) {
             </div>`;
 }
 
-function renderPopDocxTemplate(pop, dados) {
+function renderHistoricoDeRevisoes(pop, dados, revisoes, revisaoAberta) {
+    const celula = 'border: 1px solid #000; padding: 8px;';
+    const dataDe = (iso) => iso ? new Date(iso.endsWith('Z') ? iso : iso + 'Z').toLocaleDateString('pt-BR') : '';
+
+    const linhas = revisoes.length
+        ? revisoes.slice().reverse().map((r, indice, lista) => {
+            const vigente = indice === lista.length - 1;
+            const aberta = revisaoAberta ? revisaoAberta === r.id : vigente;
+            const acao = aberta
+                ? '<span data-html2canvas-ignore="true">aberta</span>'
+                : `<button type="button" class="link-btn" data-html2canvas-ignore="true" data-codigo="${window.escapeHTML(pop.codigo)}" onclick="viewPopDetails(this.dataset.codigo, ${vigente ? 'null' : r.id})">ver</button>`;
+            return `
+                <tr>
+                    <td style="${celula}">${dataDe(r.criado_em)}</td>
+                    <td style="${celula}">${window.escapeHTML(r.versao)}${vigente ? ' (vigente)' : ''}</td>
+                    <td style="${celula}">${window.escapeHTML(r.mudancas)}</td>
+                    <td style="${celula}">${window.escapeHTML(r.autor_nome || '')}</td>
+                    <td style="${celula}">${acao}</td>
+                </tr>`;
+        }).join('')
+        : `
+                <tr>
+                    <td style="${celula}">${window.escapeHTML(dados.data_emissao || '')}</td>
+                    <td style="${celula}">${window.escapeHTML(dados.versao || '1.0')}</td>
+                    <td style="${celula}">Criação do documento</td>
+                    <td style="${celula}">${window.escapeHTML(dados.responsavel || '')}</td>
+                    <td style="${celula}"></td>
+                </tr>`;
+
+    return `
+        <div class="pop-sec" style="margin-top: 25px; width: 100%; max-width: 100%; overflow-x: auto;">
+            <h4 style="margin: 0 0 10px 0; font-size: 12pt; font-weight: bold; color: #000;">11. Histórico de Revisões</h4>
+            <table style="width: 100%; border-collapse: collapse; font-size: 11pt; border: 1px solid #000; text-align: left;">
+                <thead>
+                    <tr style="background: #f9f9f9;">
+                        <th style="${celula}">Data</th>
+                        <th style="${celula}">Versão</th>
+                        <th style="${celula}">Descrição das Alterações</th>
+                        <th style="${celula}">Responsável</th>
+                        <th style="${celula}"></th>
+                    </tr>
+                </thead>
+                <tbody>${linhas}</tbody>
+            </table>
+        </div>`;
+}
+
+function renderPopDocxTemplate(pop, dados, revisoes = [], revisaoAberta = null) {
     const renderField = (value) => {
         if (!value) return 'Não informado.';
         if (value === '[object Object]') return 'Aviso: dados corrompidos. Edite o POP e passe a IA novamente.';
@@ -403,8 +437,6 @@ function renderPopDocxTemplate(pop, dados) {
         let strValue = typeof value === 'object' ? JSON.stringify(value, null, 2).replace(/[\{\}\[\]"]/g, '') : String(value);
         return window.escapeHTML(strValue);
     };
-
-    const version = dados.versao || '1.0';
 
     return `
         <div style="font-family: Arial, sans-serif; color: #000; width: 100%; max-width: 100%; box-sizing: border-box; overflow-x: hidden;">
@@ -414,9 +446,10 @@ function renderPopDocxTemplate(pop, dados) {
             <div style="margin-bottom: 25px; line-height: 1.6; font-size: 11pt; word-wrap: break-word;">
                 <strong>Título do Procedimento:</strong> ${renderField(pop.titulo)}<br>
                 <strong>Código do Documento:</strong> ${renderField(pop.codigo)}<br>
-                <strong>Versão:</strong> ${version}<br>
+                <strong>Versão:</strong> ${renderField(dados.versao || '1.0')}<br>
                 <strong>Data de Emissão:</strong> ${renderField(dados.data_emissao)}<br>
-                <strong>Responsável:</strong> ${renderField(dados.responsavel)}
+                <strong>Responsável:</strong> ${renderField(dados.responsavel)}<br>
+                <strong>Equipamento:</strong> ${renderField(pop.equipamento_nome)}
             </div>
 
             ${formatPopSection('1. Objetivo', dados.objetivo)}
@@ -441,58 +474,67 @@ function renderPopDocxTemplate(pop, dados) {
                 <h4 style="margin: 0 0 5px 0; font-size: 12pt; font-weight: bold; color: #000;">10. Anexos</h4>
                 <div style="margin: 0; font-size: 11pt; color: #000;">
                     ${dados.anexo_dados
-                        ? `<a href="${dados.anexo_dados.startsWith('http') ? dados.anexo_dados : window.API_URL + dados.anexo_dados}" target="_blank" style="display: inline-block; padding: 8px 15px; background: #333; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; font-family: Arial;">Baixar Anexo Oficial</a>`
+                        ? `<a href="${window.escapeHTML(dados.anexo_dados.startsWith('http') ? dados.anexo_dados : window.API_URL + dados.anexo_dados)}" target="_blank" style="display: inline-block; padding: 8px 15px; background: #333; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; font-family: Arial;">Baixar Anexo Oficial</a>`
                         : 'Não informado.'}
                 </div>
             </div>
 
-            <div class="pop-sec" style="margin-top: 25px; width: 100%; max-width: 100%; overflow-x: auto;">
-                <h4 style="margin: 0 0 10px 0; font-size: 12pt; font-weight: bold; color: #000;">11. Histórico de Revisões</h4>
-                <table style="width: 100%; border-collapse: collapse; font-size: 11pt; border: 1px solid #000; text-align: left;">
-                    <thead>
-                        <tr style="background: #f9f9f9;">
-                            <th style="border: 1px solid #000; padding: 8px;">Data</th>
-                            <th style="border: 1px solid #000; padding: 8px;">Versão</th>
-                            <th style="border: 1px solid #000; padding: 8px;">Descrição das Atividades</th>
-                            <th style="border: 1px solid #000; padding: 8px;">Responsável</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td style="border: 1px solid #000; padding: 8px;">${renderField(dados.data_emissao)}</td>
-                            <td style="border: 1px solid #000; padding: 8px;">${version}</td>
-                            <td style="border: 1px solid #000; padding: 8px;">Criação do documento oficial</td>
-                            <td style="border: 1px solid #000; padding: 8px;">${renderField(dados.responsavel)}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            ${renderHistoricoDeRevisoes(pop, dados, revisoes, revisaoAberta)}
         </div>`;
 }
 
-window.viewPopDetails = function(codigo) {
-    const pop = window.popsDataList.find(p => p.codigo === codigo);
-    if (!pop) return;
+// ==========================================
+// 8. ABRIR O POP OU UMA VERSÃO ANTERIOR
+// ==========================================
+window.viewPopDetails = async function(codigo, revisaoId = null) {
+    const pop = await buscarPop(codigo);
+    if (!pop) {
+        window.UI.showToast('POP não encontrado.', 'error');
+        return;
+    }
 
-    let dados = {};
-    try { dados = JSON.parse(pop.descricao); } catch(e) { dados = { objetivo: pop.descricao }; }
+    const revisoes = await buscarRevisoesDoPop(codigo);
+    let exibido = pop;
+    let avisoVersao = '';
+
+    if (revisaoId) {
+        const res = await window.api.fetchProtected(`/pops/${encodeURIComponent(codigo)}/revisoes/${revisaoId}`);
+        if (!res.ok) {
+            window.UI.showToast('Não foi possível abrir esta versão.', 'error');
+            return;
+        }
+        const revisao = await res.json();
+        exibido = { ...pop, titulo: revisao.titulo, descricao: revisao.descricao };
+        avisoVersao = `
+            <div class="note warn" data-html2canvas-ignore="true">
+                <strong>Versão ${window.escapeHTML(revisao.versao)}, que não é a vigente.</strong>
+                <button type="button" class="link-btn" data-codigo="${window.escapeHTML(pop.codigo)}" onclick="viewPopDetails(this.dataset.codigo)">Abrir a versão vigente</button>
+            </div>`;
+    }
+
+    const antigo = document.getElementById('pop-document-container');
+    if (antigo) antigo.remove();
 
     const divDocumento = document.createElement('div');
     divDocumento.id = "pop-document-container";
-
     divDocumento.className = 'doc-viewer';
 
     divDocumento.innerHTML = `
         <div class="doc-toolbar" data-html2canvas-ignore="true">
             <button onclick="document.getElementById('pop-document-container').remove()" class="link-btn">${window.Icon('arrow-left', { size: 14 })} Voltar</button>
-            <button onclick="downloadPopDocx(this.getAttribute('data-id'), this)" data-id="${window.escapeHTML(pop.codigo)}" class="btn btn-secondary btn-sm">Baixar .docx</button>
+            ${revisaoId ? '' : `<button onclick="downloadPopDocx(this.getAttribute('data-id'), this)" data-id="${window.escapeHTML(pop.codigo)}" class="btn btn-secondary btn-sm">Baixar .docx</button>`}
         </div>
         <div class="doc-page">
+            ${avisoVersao}
             <div id="conteudo-para-pdf">
-                ${renderPopDocxTemplate(pop, dados)}
+                ${renderPopDocxTemplate(exibido, lerSecoesDoPop(exibido.descricao), revisoes, revisaoId)}
             </div>
         </div>`;
     document.body.appendChild(divDocumento);
+};
+
+window.abrirPopPorCodigo = function(codigo) {
+    return window.viewPopDetails(codigo);
 };
 
 window.downloadPopDocx = async function(codigo, btn) {
@@ -520,7 +562,7 @@ window.downloadPopDocx = async function(codigo, btn) {
 };
 
 // ==========================================
-// 6. INTEGRAÇÃO COM IA
+// 9. INTEGRAÇÃO COM IA
 // ==========================================
 window.gerarComIA = async function() {
     const fileInput = document.getElementById('manual-ia');
@@ -578,15 +620,18 @@ window.gerarComIA = async function() {
     }
 };
 
+// ==========================================
+// 10. EXCLUSÃO
+// ==========================================
 window.removerPopOficial = async function(codigo) {
     const ok = await window.UI.confirm(
-        `Você está prestes a excluir permanentemente o POP ${codigo}. Essa ação não pode ser desfeita.`,
+        `Você está prestes a excluir permanentemente o POP ${codigo} e todo o seu histórico de revisões. Essa ação não pode ser desfeita.`,
         { title: 'Excluir POP?', danger: true }
     );
     if (!ok) return;
 
     try {
-        const res = await window.api.fetchProtected(`/pops/admin/${codigo}/`, {
+        const res = await window.api.fetchProtected(`/pops/admin/${encodeURIComponent(codigo)}`, {
             method: 'DELETE'
         });
 
@@ -596,7 +641,7 @@ window.removerPopOficial = async function(codigo) {
         }
 
         window.UI.showToast("POP removido com sucesso!", "success");
-        loadPopsTable();
+        if (window.listagemAtual) window.listagemAtual.recarregar();
     } catch (err) {
         window.UI.showToast(err.message, "error");
     }

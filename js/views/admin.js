@@ -332,79 +332,52 @@ window.switchPdTab = function(tab) {
     if (tab === 'proc') loadAdminProcesses(container); else loadAdminPtaTopics(container);
 };
 
-async function loadAdminEquipments(container) {
-    container.innerHTML = window.UI.loading();
-    try {
-        const res = await window.api.fetchProtected('/equipments');
-        const eq = await res.json();
-        eq.sort((a, b) => a.nome.localeCompare(b.nome));
-        if (!Array.isArray(eq) || eq.length === 0) {
-            container.innerHTML = window.UI.emptyState({ title: 'Nenhum equipamento cadastrado' });
-            return;
-        }
-
-        let html = '<div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>Equipamento</th><th class="end">Ações</th></tr></thead><tbody>';
-        eq.forEach(e => {
-            html += `<tr><td class="num">${e.id}</td><td>${window.escapeHTML(e.nome)}</td>
+function loadAdminEquipments(container) {
+    window.listagemAtual = window.Listagem.criar({
+        alvo: container,
+        endpoint: '/equipments/',
+        placeholder: 'Buscar equipamento',
+        cabecalho: '<th>ID</th><th>Equipamento</th><th class="end">Ações</th>',
+        vazio: { title: 'Nenhum equipamento cadastrado' },
+        erro: 'Erro ao carregar equipamentos.',
+        renderLinha: (e) => `<tr><td class="num">${e.id}</td><td>${window.escapeHTML(e.nome)}</td>
             <td><div class="row-actions">
                 <button class="link-btn" onclick="openDeepView('equipments', ${e.id}, 'Equipamento')">Editar</button>
                 <button class="link-btn danger" onclick="adminDelete('equipments', ${e.id}, 'eq')">Excluir</button>
-            </div></td></tr>`;
-        });
-        container.innerHTML = html + '</tbody></table></div>';
-    } catch (err) {
-        container.innerHTML = window.UI.errorState('Erro ao carregar equipamentos.');
-    }
+            </div></td></tr>`
+    });
 }
 
-async function loadAdminPops(container) {
-    container.innerHTML = window.UI.loading();
-    try {
-        const res = await window.api.fetchProtected('/pops');
-        const pops = await res.json();
-        pops.sort((a, b) => a.titulo.localeCompare(b.titulo));
-        if (!Array.isArray(pops) || pops.length === 0) {
-            container.innerHTML = window.UI.emptyState({ title: 'Nenhum POP disponível' });
-            return;
-        }
-
-        let html = '<div class="table-container"><table class="data-table"><thead><tr><th>Código</th><th>Título</th><th class="end">Ações</th></tr></thead><tbody>';
-        pops.forEach(p => {
-            html += `<tr><td class="code">${window.escapeHTML(p.codigo)}</td><td>${window.escapeHTML(p.titulo)}</td>
+function loadAdminPops(container) {
+    window.listagemAtual = window.Listagem.criar({
+        alvo: container,
+        endpoint: '/pops/',
+        placeholder: 'Buscar POP por código, título ou conteúdo',
+        cabecalho: '<th>Código</th><th>Título</th><th class="end">Ações</th>',
+        vazio: { title: 'Nenhum POP disponível' },
+        erro: 'Erro ao carregar POPs.',
+        renderLinha: (p) => `<tr><td class="code">${window.escapeHTML(p.codigo)}</td><td>${window.escapeHTML(p.titulo)}</td>
             <td><div class="row-actions">
-                <button class="link-btn" data-id="${window.escapeHTML(p.codigo)}" onclick="openDeepView('pops', this.dataset.id, 'POP')">Editar</button>
+                <button class="link-btn" data-id="${window.escapeHTML(p.codigo)}" onclick="window.openPopModal(this.dataset.id)">Editar</button>
                 <button class="link-btn danger" data-id="${window.escapeHTML(p.codigo)}" onclick="adminDelete('pops', this.dataset.id, 'pop')">Excluir</button>
-            </div></td></tr>`;
-        });
-        container.innerHTML = html + '</tbody></table></div>';
-    } catch (err) {
-        container.innerHTML = window.UI.errorState('Erro ao carregar POPs.');
-    }
+            </div></td></tr>`
+    });
 }
 
-async function loadAdminProcesses(container) {
-    container.innerHTML = window.UI.loading();
-    try {
-        const res = await window.api.fetchProtected('/processes');
-        const procs = await res.json();
-        procs.sort((a, b) => b.id - a.id);
-        if (!Array.isArray(procs) || procs.length === 0) {
-            container.innerHTML = window.UI.emptyState({ title: 'Nenhum processo cadastrado' });
-            return;
-        }
-
-        let html = '<div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>Processo</th><th class="end">Ações</th></tr></thead><tbody>';
-        procs.forEach(p => {
-            html += `<tr><td class="num">${p.id}</td><td>${window.escapeHTML(p.nome_processo)}</td>
+function loadAdminProcesses(container) {
+    window.listagemAtual = window.Listagem.criar({
+        alvo: container,
+        endpoint: '/processes/',
+        placeholder: 'Buscar processo',
+        cabecalho: '<th>ID</th><th>Processo</th><th class="end">Ações</th>',
+        vazio: { title: 'Nenhum processo cadastrado' },
+        erro: 'Erro ao carregar processos.',
+        renderLinha: (p) => `<tr><td class="num">${p.id}</td><td>${window.escapeHTML(p.nome_processo)}</td>
             <td><div class="row-actions">
-                <button class="link-btn" onclick="openDeepView('processes', ${p.id}, 'Processo')">Editar</button>
+                <button class="link-btn" onclick="window.openProcessModal(${p.id})">Editar</button>
                 <button class="link-btn danger" onclick="adminDelete('processes', ${p.id}, 'proc')">Excluir</button>
-            </div></td></tr>`;
-        });
-        container.innerHTML = html + '</tbody></table></div>';
-    } catch (err) {
-        container.innerHTML = window.UI.errorState('Erro ao carregar processos.');
-    }
+            </div></td></tr>`
+    });
 }
 
 async function loadAdminPtaTopics(container) {

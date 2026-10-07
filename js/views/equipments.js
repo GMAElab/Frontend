@@ -7,7 +7,7 @@ document.addEventListener('viewChanged', (e) => {
     }
 });
 
-async function renderEquipments() {
+function renderEquipments() {
     const main = document.getElementById('dynamic-content');
     if (!main) return;
 
@@ -16,13 +16,13 @@ async function renderEquipments() {
             <div>
                 <p class="eyebrow">laboratório</p>
                 <h1>Equipamentos</h1>
-                <p class="lede">Cada equipamento com seu vídeo de treinamento e o POP correspondente.</p>
+                <p class="lede">Cada equipamento com seu vídeo de treinamento, seus POPs e os processos em que é usado.</p>
             </div>
             <div class="page-actions">
                 <button id="btn-novo-equip" class="btn btn-primary">Novo equipamento</button>
             </div>
         </header>
-        <div id="eq-container" class="fade-in">${window.UI.loading()}</div>
+        <div id="eq-container" class="fade-in"></div>
     `;
 
     const btnNovo = document.getElementById('btn-novo-equip');
@@ -33,55 +33,33 @@ async function renderEquipments() {
     loadEquipmentsTable();
 }
 
-
-async function loadEquipmentsTable() {
-    const container = document.getElementById('eq-container');
-    try {
-        const res = await api.fetchProtected('equipments');
-        if (!res.ok) throw new Error('Falha ao carregar equipamentos.');
-        const data = await res.json();
-
-        if (data.length === 0) {
-            container.innerHTML = window.UI.emptyState({ title: 'Nenhum equipamento registrado', description: 'Cadastre o primeiro equipamento do laboratório.' });
-            return;
-        }
-
-        container.innerHTML = `
-            <div class="table-container">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Equipamento</th>
-                            <th>Status</th>
-                            <th class="end">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${data.map(eq => `
-                            <tr>
-                                <td><strong>${window.escapeHTML(eq.nome)}</strong></td>
-                                <td><span class="badge badge-success">${window.escapeHTML(eq.status || 'ativo')}</span></td>
-                                <td>
-                                    <div class="row-actions">
-                                        <button class="link-btn" onclick="window.viewDossier(${eq.id})">Abrir</button>
-                                        <button class="link-btn muted" onclick="openDeepView('equipments', ${eq.id}, 'Equipamento')">Editar</button>
-                                    </div>
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            </div>
-        `;
-    } catch (err) {
-        console.error("Erro ao carregar equipamentos:", err);
-        container.innerHTML = window.UI.errorState('Não foi possível carregar os equipamentos.');
-    }
+// ==========================================
+// 2. LISTA COM BUSCA E PAGINAÇÃO
+// ==========================================
+function loadEquipmentsTable() {
+    window.listagemAtual = window.Listagem.criar({
+        alvo: 'eq-container',
+        endpoint: '/equipments/',
+        placeholder: 'Buscar por nome ou descrição',
+        cabecalho: '<th>Equipamento</th><th>Status</th><th class="end">Ações</th>',
+        vazio: { title: 'Nenhum equipamento registrado', description: 'Cadastre o primeiro equipamento do laboratório.' },
+        erro: 'Não foi possível carregar os equipamentos.',
+        renderLinha: (eq) => `
+            <tr>
+                <td><strong>${window.escapeHTML(eq.nome)}</strong></td>
+                <td><span class="badge badge-success">${window.escapeHTML(eq.status || 'ativo')}</span></td>
+                <td>
+                    <div class="row-actions">
+                        <button class="link-btn" onclick="window.viewDossier(${eq.id})">Abrir</button>
+                        <button class="link-btn muted" onclick="openDeepView('equipments', ${eq.id}, 'Equipamento')">Editar</button>
+                    </div>
+                </td>
+            </tr>`
+    });
 }
 
-
 // ==========================================
-// 2. MODAL DE NOVO EQUIPAMENTO
+// 3. MODAL DE NOVO EQUIPAMENTO
 // ==========================================
 window.openAddEquipmentModal = function() {
     const modal = document.getElementById('modal-eq');
@@ -120,7 +98,8 @@ window.handleSaveEquipment = async function(e) {
         if (res.ok) {
             UI.showToast('Equipamento registrado.', 'success');
             window.closeEquipModal();
-            loadEquipmentsTable();
+            e.target.reset();
+            if (window.listagemAtual) window.listagemAtual.recarregar();
         } else {
             const errData = await res.json().catch(() => ({}));
             let msg = 'Erro ao processar registro.';
@@ -139,15 +118,51 @@ window.handleSaveEquipment = async function(e) {
 };
 
 // ==========================================
-// 3. DETALHES DO EQUIPAMENTO
+// 4. VÍNCULOS DO EQUIPAMENTO
+// ==========================================
+function renderVinculosEquipamento(vinculos, manualUrl) {
+    const esc = window.escapeHTML;
+
+    const pops = vinculos.pops.map(p => `
+        <li><button type="button" class="link-btn" data-codigo="${esc(p.codigo)}" onclick="window.closeDossierModal(); window.abrirPopPorCodigo(this.dataset.codigo)">${esc(p.codigo)} · ${esc(p.titulo)}</button></li>`).join('');
+
+    const linkExterno = manualUrl
+        ? `<li><a href="${esc(manualUrl)}" target="_blank" rel="noopener">Abrir link externo do POP</a></li>`
+        : '';
+
+    const processos = vinculos.processos.map(p => `
+        <li><button type="button" class="link-btn" onclick="window.closeDossierModal(); viewProcessDetails(${p.id})">${esc(p.nome_processo)}</button>
+        <span class="meta"> · ${esc((p.status || 'rascunho').replace('_', ' '))}</span></li>`).join('');
+
+    return `
+        <div>
+            <dt>pops</dt>
+            <dd class="plain">${pops || linkExterno
+                ? `<ul class="link-list">${pops}${linkExterno}</ul>`
+                : '<span class="text-faint">Nenhum POP vinculado. Vincule pelo formulário do POP.</span>'}</dd>
+        </div>
+        <div>
+            <dt>processos</dt>
+            <dd class="plain">${processos
+                ? `<ul class="link-list">${processos}</ul>`
+                : '<span class="text-faint">Nenhum processo usa este equipamento.</span>'}</dd>
+        </div>`;
+}
+
+// ==========================================
+// 5. DETALHES DO EQUIPAMENTO
 // ==========================================
 window.viewDossier = async function(id) {
     try {
-        const res = await api.fetchProtected(`equipments/${id}`);
+        const [res, resVinculos] = await Promise.all([
+            api.fetchProtected(`equipments/${id}`),
+            api.fetchProtected(`equipments/${id}/vinculos`)
+        ]);
 
         if (!res.ok) throw new Error('Equipamento não encontrado');
 
         const eq = await res.json();
+        const vinculos = resVinculos.ok ? await resVinculos.json() : { pops: [], processos: [] };
 
         const videoEmbed = window.escapeHTML(eq.video_url);
 
@@ -169,12 +184,7 @@ window.viewDossier = async function(id) {
                         <dt>treinamento</dt>
                         <dd class="plain">${videoEmbed ? 'Vídeo acima.' : '<span class="text-faint">Nenhum vídeo cadastrado.</span>'}</dd>
                     </div>
-                    <div>
-                        <dt>pop</dt>
-                        <dd class="plain">${eq.manual_url
-                            ? `<a href="${window.escapeHTML(eq.manual_url)}" target="_blank" rel="noopener">Abrir o POP do equipamento</a>`
-                            : '<span class="text-faint">Nenhum POP vinculado.</span>'}</dd>
-                    </div>
+                    ${renderVinculosEquipamento(vinculos, eq.manual_url)}
                 </dl>
             `;
         }

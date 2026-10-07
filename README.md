@@ -48,17 +48,26 @@ Se um deploy der problema, abra o projeto na Vercel, vá em **Deployments** e pr
 * **Cadastro com aprovação**: O pedido feito em `registro.html` só vira conta depois de aprovado por um administrador e de o usuário confirmar o e-mail (`verificar-email.html`).
 * **Login com 2FA**: Verificação em 2 etapas opcional por aplicativo autenticador, com códigos de backup e recuperação de senha.
 
+### Tela inicial
+* **Painel do gestor**: Técnicos, coordenadores e administradores veem as tarefas atrasadas e aguardando revisão, a carga e o desempenho de cada pessoa e quem ainda não enviou o relato do mês.
+* **Painel do colaborador**: Cada pessoa vê as próprias tarefas em aberto e o aviso de relato pendente.
+
 ### Gestão de Equipamentos
 * **Cadastro de Ativos**: Registro detalhado com especificações técnicas, links para manuais e anexos.
+* **Vínculos**: O detalhe do equipamento lista os POPs e os processos ligados a ele.
+* **Busca e Paginação**: A lista é buscada no servidor, 20 itens por página.
 * **Treinamento Integrado**: Visualização rápida de instruções de uso (SOPs) com player de vídeo do YouTube embutido, permitindo capacitação sem sair da plataforma.
 
 ### Processos de P&D
 * **Fluxo de 3 Etapas**: Mapeamento de processos estruturado metodicamente em **Planejamento**, **Execução** e **Resultados/Anexos**.
+* **Pessoas e Equipamentos**: Responsável, equipe e equipamentos são escolhidos entre os cadastros do sistema, e a lista pode ser filtrada por pessoa, equipamento ou status.
 * **Gerenciamento de Dados**: Controle rigoroso de parâmetros técnicos, indicadores de desempenho (KPIs) e registro de lições aprendidas.
 * **Integridade de Dados**: Prevenção de perda de dados através do sincronismo estrito de IDs entre a interface (HTML) e a lógica (JS).
 
 ### POPs
 * **Criação e Edição**: Procedimentos Operacionais Padrão com código próprio e anexos.
+* **Equipamento**: Cada POP pode ser ligado a um equipamento cadastrado.
+* **Controle de Revisões**: Alterar o conteúdo exige descrever a mudança e gera uma nova versão; as anteriores ficam no histórico e podem ser reabertas.
 * **Exportação em Word**: Download de qualquer POP em `.docx`, no modelo do laboratório.
 * **Geração por IA**: Envio do manual do equipamento em PDF (até 15 MB) para gerar um rascunho do POP.
 
@@ -101,8 +110,11 @@ A arquitetura de pastas foi pensada para manter a separação de responsabilidad
     ├── auth.js           # Login, 2FA e recuperação de senha
     ├── register.js       # Envio do pedido de cadastro
     ├── ui.js             # Roteador de telas, manipulação de DOM e Toasts
+    ├── listagem.js       # Tabela com busca, filtros e paginação, usada pelas listas
+    ├── vinculos.js       # Opções de equipamentos e pessoas para filtros e formulários
     ├── dashboard.js      # Inicialização do sistema e listeners globais
     └── views/
+        ├── inicio.js     # Tela inicial: painel do gestor e do colaborador
         ├── equipments.js # Lógica de gestão de ativos e dossiers técnicos
         ├── processes.js  # Lógica do fluxo de P&D (Planejamento a Resultados)
         ├── pops.js       # POPs, exportação e geração por IA

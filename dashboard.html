@@ -7,7 +7,7 @@
 
     <link rel="stylesheet" href="css/global.css">
     <link rel="stylesheet" href="css/layout.css">
-    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/components.css?v=2">
 </head>
 <body class="dashboard-layout">
 
@@ -130,7 +130,7 @@
     <div id="processModal" class="modal-overlay">
         <div class="modal-content modal-lg">
             <div class="modal-header">
-                <h3>Novo processo de P&amp;D</h3>
+                <h3 id="processModalTitle">Novo processo de P&amp;D</h3>
                 <button type="button" class="modal-close" onclick="window.closeProcessModal()" aria-label="Fechar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
             </div>
 
@@ -149,7 +149,9 @@
                         </div>
                         <div class="input-group">
                             <label for="proc-resp">Responsável</label>
-                            <input type="text" id="proc-resp">
+                            <select id="proc-resp">
+                                <option value="">Selecione</option>
+                            </select>
                         </div>
                         <div class="input-group span-2">
                             <label for="proc-objetivo">Objetivo da fase</label>
@@ -164,8 +166,13 @@
 
                 <div id="tab-execucao" class="tab-content hidden">
                     <div class="input-group">
-                        <label for="proc-equipe">Equipe envolvida</label>
-                        <input type="text" id="proc-equipe">
+                        <label>Equipe envolvida</label>
+                        <div id="proc-equipe-container"></div>
+                        <span class="help hidden" id="proc-equipe-legado"></span>
+                    </div>
+                    <div class="input-group">
+                        <label>Equipamentos utilizados</label>
+                        <div id="proc-equipamentos-container"></div>
                     </div>
                     <div class="input-group">
                         <label for="proc-etapas">Detalhamento das etapas</label>
@@ -287,15 +294,18 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="js/api.js?v=3"></script>
-    <script src="js/ui.js?v=3100"></script>
+    <script src="js/ui.js?v=3101"></script>
     <script src="js/auth.js?v=2001"></script>
-    <script src="js/views/equipments.js?v=2"></script>
-    <script src="js/views/processes.js?v=2"></script>
+    <script src="js/listagem.js?v=1"></script>
+    <script src="js/vinculos.js?v=1"></script>
+    <script src="js/views/inicio.js?v=1"></script>
+    <script src="js/views/equipments.js?v=3"></script>
+    <script src="js/views/processes.js?v=3"></script>
     <script src="js/dashboard.js?v=1200"></script>
     <script src="js/views/pta.js?v=9"></script>
     <script src="js/views/tarefas.js?v=4"></script>
-    <script src="js/views/pops.js?v=289"></script>
-    <script src="js/views/admin.js?v=551"></script>
+    <script src="js/views/pops.js?v=290"></script>
+    <script src="js/views/admin.js?v=552"></script>
     <script src="js/views/articles.js?v=2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </body>

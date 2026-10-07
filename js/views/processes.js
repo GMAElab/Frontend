@@ -1,72 +1,160 @@
 // ==========================================
-// 1. MODAL DE NOVO PROCESSO
+// 1. CONSTRUÇÃO DA TELA DE PROCESSOS
 // ==========================================
-window.openProcessModal = async function() {
+document.addEventListener('viewChanged', (e) => {
+    if (e.detail.view !== 'processes') return;
+    const conteudo = document.getElementById('dynamic-content');
 
+    conteudo.innerHTML = `
+        <header class="page-head fade-in">
+            <div>
+                <p class="eyebrow">pesquisa e desenvolvimento</p>
+                <h1>Processos</h1>
+                <p class="lede">Mapeamento, acompanhamento e histórico de cada processo, com as pessoas e os equipamentos envolvidos.</p>
+            </div>
+            <div class="page-actions">
+                <button class="btn btn-primary" onclick="window.openProcessModal()">Novo processo</button>
+            </div>
+        </header>
+        <div id="processes-container" class="fade-in"></div>
+    `;
+
+    loadProcessesTable();
+});
+
+const STATUS_DE_PROCESSO = [
+    { valor: 'rascunho', rotulo: 'Rascunho' },
+    { valor: 'em_andamento', rotulo: 'Em andamento' },
+    { valor: 'concluido', rotulo: 'Concluído' },
+];
+
+// ==========================================
+// 2. LISTA COM BUSCA, FILTROS E PAGINAÇÃO
+// ==========================================
+function loadProcessesTable() {
+    window.listagemAtual = window.Listagem.criar({
+        alvo: 'processes-container',
+        endpoint: '/processes/',
+        placeholder: 'Buscar por processo, responsável ou equipe',
+        cabecalho: '<th>Processo</th><th>Responsável</th><th>Equipe</th><th>Status</th><th>Registrado em</th><th class="end">Ações</th>',
+        filtros: [
+            { param: 'status', rotulo: 'Todos os status', opcoes: STATUS_DE_PROCESSO },
+            { param: 'membro_id', rotulo: 'Todas as pessoas', opcoes: window.Vinculos.opcoesDePessoa },
+            { param: 'equipamento_id', rotulo: 'Todos os equipamentos', opcoes: window.Vinculos.opcoesDeEquipamento },
+        ],
+        vazio: { title: 'Nenhum processo registrado', description: 'Use “Novo processo” para mapear o primeiro.' },
+        erro: 'Erro ao carregar lista de processos.',
+        renderLinha: (proc) => {
+            const status = proc.status || 'rascunho';
+            return `
+                <tr>
+                    <td><strong>${window.escapeHTML(proc.nome_processo)}</strong></td>
+                    <td>${window.escapeHTML(proc.responsavel || 'Não definido')}</td>
+                    <td>${proc.equipe ? window.escapeHTML(proc.equipe) : '<span class="text-faint">—</span>'}</td>
+                    <td><span class="status-badge status-${window.escapeHTML(status)}">${window.escapeHTML(status.replace('_', ' '))}</span></td>
+                    <td class="num">${new Date(proc.data_registro).toLocaleDateString('pt-BR')}</td>
+                    <td>
+                        <div class="row-actions">
+                            <button onclick="viewProcessDetails(${proc.id})" class="link-btn">Abrir</button>
+                            <button onclick="window.openProcessModal(${proc.id})" class="link-btn muted">Editar</button>
+                        </div>
+                    </td>
+                </tr>`;
+        }
+    });
+}
+
+// ==========================================
+// 3. ABRIR MODAL DE PROCESSO (NOVO OU EDIÇÃO)
+// ==========================================
+window.openProcessModal = async function(id = null) {
     const modal = document.getElementById('processModal');
-    if (modal) {
-        modal.style.setProperty('display', 'flex', 'important');
-        modal.style.setProperty('opacity', '1', 'important');
-        modal.style.setProperty('visibility', 'visible', 'important');
-        document.body.style.overflow = 'hidden';
-    } else {
-        console.error("ERRO: Elemento 'processModal' não encontrado no HTML!");
+    if (!modal) return;
+
+    let processo = null;
+    if (id) {
+        const res = await window.api.fetchProtected(`/processes/${id}`);
+        if (!res.ok) {
+            window.UI.showToast('Processo não encontrado.', 'error');
+            return;
+        }
+        processo = await res.json();
     }
+    window.currentEditProcessId = processo ? processo.id : null;
+    modal.dataset.imagemAtual = processo && processo.imagem_url ? processo.imagem_url : '';
 
     const form = document.getElementById('processForm');
-    if (form) form.reset();
-
-    const firstTab = document.querySelector('#processModal .tab-btn');
-    if (firstTab) firstTab.click();
+    form.reset();
+    document.getElementById('processModalTitle').innerHTML = processo ? 'Editar processo de P&amp;D' : 'Novo processo de P&amp;D';
+    form.querySelector('button[type="submit"]').innerText = processo ? 'Salvar alterações' : 'Salvar processo';
 
     const previewProc = document.getElementById('preview-proc');
     if (previewProc) previewProc.style.display = 'none';
 
-    const userString = localStorage.getItem('user_data');
-    let nomeLogado = '';
-    if (userString) {
-        const user = JSON.parse(userString);
-        nomeLogado = user.nome;
-        const inputResp = document.getElementById('proc-resp');
-        if (inputResp) inputResp.value = nomeLogado;
-    }
+    const definir = (campo, valor) => { document.getElementById(campo).value = valor || ''; };
+    definir('proc-nome', processo && processo.nome_processo);
+    definir('proc-objetivo', processo && processo.objetivo_fase);
+    definir('proc-visao', processo && processo.visao_geral);
+    definir('proc-etapas', processo && processo.detalhamento_etapas);
+    definir('proc-indicadores', processo && processo.indicadores_desempenho);
+    definir('proc-anexos', processo && processo.anexos_url);
+    document.getElementById('proc-status').value = (processo && processo.status) || 'rascunho';
 
-    const equipeInput = document.getElementById('proc-equipe');
-    if (equipeInput) {
-        equipeInput.style.display = 'none';
-        let containerEquipe = document.getElementById('smart-equipe-container');
-        if (!containerEquipe) {
-            containerEquipe = document.createElement('div');
-            containerEquipe.id = 'smart-equipe-container';
-            equipeInput.parentNode.insertBefore(containerEquipe, equipeInput.nextSibling);
-        }
+    modal.style.setProperty('display', 'flex', 'important');
+    modal.style.setProperty('opacity', '1', 'important');
+    modal.style.setProperty('visibility', 'visible', 'important');
+    document.body.style.overflow = 'hidden';
 
-        containerEquipe.innerHTML = window.UI.loading('Carregando equipe');
+    const primeiraAba = modal.querySelector('.tab-btn');
+    if (primeiraAba) primeiraAba.click();
 
-        try {
-            const res = await window.api.fetchProtected('/usuarios/equipe');
-            if (res.ok) {
-                const equipe = await res.json();
-                let htmlEquipe = '<div class="check-chips">';
-
-                equipe.forEach(membro => {
-                    if (membro.nome !== nomeLogado) {
-                        const nomeSeguro = window.escapeHTML(membro.nome);
-                        htmlEquipe += `
-                        <label class="check-chip">
-                            <input type="checkbox" name="smart_equipe_cb" value="${nomeSeguro}">
-                            ${nomeSeguro}
-                        </label>`;
-                    }
-                });
-                htmlEquipe += '</div>';
-                containerEquipe.innerHTML = htmlEquipe;
-            }
-        } catch (err) {
-            containerEquipe.innerHTML = '<span class="help text-danger">Não foi possível carregar a equipe.</span>';
-        }
-    }
+    preencherVinculosDoProcesso(processo);
 };
+
+// ==========================================
+// 4. PESSOAS E EQUIPAMENTOS DO FORMULÁRIO
+// ==========================================
+async function preencherVinculosDoProcesso(processo) {
+    const user = JSON.parse(localStorage.getItem('user_data') || '{}');
+    const selectResp = document.getElementById('proc-resp');
+    const boxEquipe = document.getElementById('proc-equipe-container');
+    const boxEquip = document.getElementById('proc-equipamentos-container');
+    const legado = document.getElementById('proc-equipe-legado');
+
+    selectResp.innerHTML = '<option value="">Selecione</option>';
+    boxEquipe.innerHTML = window.UI.loading('Carregando equipe');
+    boxEquip.innerHTML = window.UI.loading('Carregando equipamentos');
+    legado.classList.add('hidden');
+
+    const membros = processo ? processo.membros.map(m => m.id) : [];
+    const equipamentos = processo ? processo.equipamentos.map(eq => eq.id) : [];
+    const responsavel = processo ? processo.responsavel_id : user.id;
+
+    try {
+        const equipe = await window.Vinculos.equipe();
+        selectResp.insertAdjacentHTML('beforeend', equipe.map(u =>
+            `<option value="${u.id}" ${u.id === responsavel ? 'selected' : ''}>${window.escapeHTML(u.nome)}</option>`
+        ).join(''));
+        boxEquipe.innerHTML = window.Vinculos.chips('proc_membro', equipe, membros, u => u.nome);
+
+        if (processo && !processo.membros.length && processo.equipe) {
+            legado.textContent = `Equipe registrada em texto antes do vínculo por pessoa: ${processo.equipe}. Marque as pessoas acima para substituir.`;
+            legado.classList.remove('hidden');
+        }
+        if (processo && !processo.responsavel_id && processo.responsavel) {
+            selectResp.options[0].textContent = `${processo.responsavel} (texto livre)`;
+        }
+    } catch (err) {
+        boxEquipe.innerHTML = '<span class="help text-danger">Não foi possível carregar a equipe.</span>';
+    }
+
+    try {
+        const lista = await window.Vinculos.equipamentos();
+        boxEquip.innerHTML = window.Vinculos.chips('proc_equipamento', lista, equipamentos, eq => eq.nome);
+    } catch (err) {
+        boxEquip.innerHTML = '<span class="help text-danger">Não foi possível carregar os equipamentos.</span>';
+    }
+}
 
 window.closeProcessModal = function() {
     const modal = document.getElementById('processModal');
@@ -89,53 +177,7 @@ window.openTab = function(evt, tabName) {
 };
 
 // ==========================================
-// 2. TABELA DE PROCESSOS
-// ==========================================
-async function loadProcessesTable() {
-    try {
-        const response = await window.api.fetchProtected('/processes');
-        if (!response.ok) throw new Error('Falha ao carregar processos');
-        const processes = await response.json();
-        renderProcesses(processes);
-    } catch (error) {
-        console.error("Erro ao carregar tabela:", error);
-        if (window.UI) window.UI.showToast("Erro ao carregar lista de processos", "error");
-    }
-}
-
-function renderProcesses(processes) {
-    const tbody = document.getElementById('processesTableBody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-
-    if (processes.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5">${window.UI.emptyState({ title: 'Nenhum processo registrado', description: 'Use “Novo processo” para mapear o primeiro.' })}</td></tr>`;
-        return;
-    }
-
-    processes.forEach(proc => {
-        const row = document.createElement('tr');
-        const dataFormatada = new Date(proc.data_registro).toLocaleDateString('pt-BR');
-        const statusFormatado = (proc.status || 'rascunho').replace('_', ' ');
-
-        row.innerHTML = `
-            <td><strong>${window.escapeHTML(proc.nome_processo)}</strong></td>
-            <td>${window.escapeHTML(proc.responsavel || 'Não definido')}</td>
-            <td><span class="status-badge status-${window.escapeHTML(proc.status)}">${window.escapeHTML(statusFormatado)}</span></td>
-            <td class="num">${dataFormatada}</td>
-            <td>
-                <div class="row-actions">
-                    <button onclick="viewProcessDetails(${proc.id})" class="link-btn">Abrir</button>
-                    <button onclick="openDeepView('processes', ${proc.id}, 'Processo')" class="link-btn muted">Editar</button>
-                </div>
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
-}
-
-// ==========================================
-// 3. SALVAR NOVO PROCESSO
+// 5. SALVAR PROCESSO
 // ==========================================
 window.handleSaveProcess = async function(event) {
     event.preventDefault();
@@ -144,44 +186,47 @@ window.handleSaveProcess = async function(event) {
     btn.innerText = "Enviando (Aguarde)...";
     btn.disabled = true;
 
-    const checkboxes = document.querySelectorAll('input[name="smart_equipe_cb"]:checked');
-    const equipeSelecionada = Array.from(checkboxes).map(cb => cb.value).join(', ');
-    const inputTextoOriginal = document.getElementById('proc-equipe').value;
-    const equipeFinal = equipeSelecionada ? equipeSelecionada : inputTextoOriginal;
+    const editando = window.currentEditProcessId;
+    const valor = (id) => document.getElementById(id).value;
 
     try {
-        let linkDaImagem = null;
-        if (window.fazerUploadImagem) {
-            linkDaImagem = await window.fazerUploadMultiplo('proc-imagem');
-        }
-        const processData = {
-            nome_processo: document.getElementById('proc-nome').value,
-            responsavel: document.getElementById('proc-resp').value,
-            objetivo_fase: document.getElementById('proc-objetivo').value,
-            visao_geral: document.getElementById('proc-visao').value,
-            equipe: equipeFinal,
-            detalhamento_etapas: document.getElementById('proc-etapas').value,
-            indicadores_desempenho: document.getElementById('proc-indicadores').value,
-            anexos_url: document.getElementById('proc-anexos').value,
-            imagem_url: linkDaImagem,
-            status: document.getElementById('proc-status').value || "Em Desenvolvimento"
-        };
+        const novasImagens = await window.fazerUploadMultiplo('proc-imagem');
+        const imagemAtual = document.getElementById('processModal').dataset.imagemAtual || null;
 
-        const response = await window.api.fetchProtected('/processes', {
-            method: 'POST',
+        const processData = {
+            nome_processo: valor('proc-nome'),
+            objetivo_fase: valor('proc-objetivo'),
+            visao_geral: valor('proc-visao'),
+            detalhamento_etapas: valor('proc-etapas'),
+            indicadores_desempenho: valor('proc-indicadores'),
+            anexos_url: valor('proc-anexos'),
+            imagem_url: novasImagens || imagemAtual,
+            status: valor('proc-status') || 'rascunho',
+            membros_ids: window.Vinculos.idsMarcados('proc_membro'),
+            equipamento_ids: window.Vinculos.idsMarcados('proc_equipamento')
+        };
+        if (valor('proc-resp')) processData.responsavel_id = Number(valor('proc-resp'));
+
+        const response = await window.api.fetchProtected(editando ? `/processes/${editando}` : '/processes/', {
+            method: editando ? 'PUT' : 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(processData)
         });
 
-        if (!response.ok) throw new Error('Erro ao salvar');
+        if (!response.ok) {
+            if (editando && response.status === 404) {
+                throw new Error('Você só pode editar processos que você registrou.');
+            }
+            const erro = await response.json().catch(() => ({}));
+            throw new Error(typeof erro.detail === 'string' ? erro.detail : 'Falha ao salvar processo. Verifique os campos.');
+        }
 
         window.closeProcessModal();
-        if (typeof loadProcessesTable === 'function') loadProcessesTable();
-        if (window.UI) window.UI.showToast("Processo salvo com sucesso!", "success");
+        if (window.listagemAtual) window.listagemAtual.recarregar();
+        window.UI.showToast(editando ? "Processo atualizado com sucesso!" : "Processo salvo com sucesso!", "success");
 
     } catch (error) {
-        console.error("Erro ao salvar:", error);
-        if (window.UI) window.UI.showToast("Falha ao salvar processo. Verifique os campos.", "error");
+        window.UI.showToast(error.message || "Falha ao salvar processo.", "error");
     } finally {
         btn.innerText = textoOriginal;
         btn.disabled = false;
@@ -189,7 +234,7 @@ window.handleSaveProcess = async function(event) {
 };
 
 // ==========================================
-// 4. DETALHES DO PROCESSO
+// 6. DETALHES DO PROCESSO
 // ==========================================
 window.viewProcessDetails = async function(id) {
     try {
@@ -202,7 +247,7 @@ window.viewProcessDetails = async function(id) {
             const resAct = await window.api.fetchProtected(`/processes/${id}/activities`);
             if (resAct.ok) atividades = await resAct.json();
         } catch (e) {
-            console.log("Ainda sem histórico ou erro ao buscar atividades.");
+            atividades = [];
         }
 
         renderProcessDetailsModal(proc, atividades);
@@ -210,6 +255,29 @@ window.viewProcessDetails = async function(id) {
         if (window.UI) window.UI.showToast("Falha ao abrir detalhes.", "error");
     }
 };
+
+function renderVinculosDoProcesso(proc) {
+    const esc = window.escapeHTML;
+
+    const pessoas = proc.membros.length
+        ? proc.membros.map(m => `<span class="badge">${esc(m.nome)}</span>`).join(' ')
+        : (proc.equipe ? esc(proc.equipe) : '<span class="text-faint">Nenhuma pessoa vinculada.</span>');
+
+    const equipamentos = proc.equipamentos.length
+        ? `<ul class="link-list">${proc.equipamentos.map(eq => `
+            <li><button type="button" class="link-btn" onclick="document.getElementById('processDetailsModal').remove(); window.viewDossier(${eq.id})">${esc(eq.nome)}</button></li>`).join('')}</ul>`
+        : '<span class="text-faint">Nenhum equipamento vinculado.</span>';
+
+    return `
+        <div>
+            <dt>equipe</dt>
+            <dd class="plain">${pessoas}</dd>
+        </div>
+        <div>
+            <dt>equipamentos</dt>
+            <dd class="plain">${equipamentos}</dd>
+        </div>`;
+}
 
 window.renderProcessDetailsModal = function(proc, atividades) {
     const oldModal = document.getElementById('processDetailsModal');
@@ -249,7 +317,7 @@ window.renderProcessDetailsModal = function(proc, atividades) {
                 <div>
                     <p class="eyebrow">processo de P&amp;D</p>
                     <h3>${esc(proc.nome_processo || 'Processo sem nome')}</h3>
-                    <p class="meta">responsável: ${esc(proc.responsavel || 'não definido')} · equipe: ${esc(proc.equipe || 'não definida')}</p>
+                    <p class="meta">responsável: ${esc(proc.responsavel || 'não definido')}</p>
                 </div>
                 <div class="cluster">
                     <span class="status-badge status-${esc(statusProc)}">${esc(statusProc.replace('_', ' '))}</span>
@@ -260,6 +328,7 @@ window.renderProcessDetailsModal = function(proc, atividades) {
             <div class="split-sheet">
                 <section>
                     <dl class="dl">
+                        ${renderVinculosDoProcesso(proc)}
                         ${campo('visão geral', proc.visao_geral, 'Não definida.')}
                         ${campo('objetivo da fase', proc.objetivo_fase, 'Não definido.')}
                         ${campo('etapas', proc.detalhamento_etapas, 'Nenhuma etapa registrada.')}
@@ -309,7 +378,7 @@ window.renderProcessDetailsModal = function(proc, atividades) {
 };
 
 // ==========================================
-// 5. REGISTRAR ATIVIDADE NA LINHA DO TEMPO
+// 7. REGISTRAR ATIVIDADE NA LINHA DO TEMPO
 // ==========================================
 window.submitProcessActivity = async function(e, processId) {
     e.preventDefault();
@@ -349,7 +418,7 @@ window.submitProcessActivity = async function(e, processId) {
 };
 
 // ==========================================
-// 6. MODAL DE DETALHE DE ATIVIDADE
+// 8. MODAL DE DETALHE DE ATIVIDADE
 // ==========================================
 window.abrirModalAtividade = function(title, note, imgUrl) {
     const modalId = 'activityDetailsModal';
@@ -391,16 +460,15 @@ window.abrirModalAtividade = function(title, note, imgUrl) {
 
     document.body.insertAdjacentHTML('beforeend', html);
 };
+
 window.handleActivityClick = function(index) {
     const atividade = window.currentProcessActivities[index];
     if (!atividade) return;
-
-    console.log("Abrindo nota da linha do tempo:", atividade);
     window.abrirModalAtividade(atividade.title, atividade.note, atividade.imagem_url);
 };
 
 // ==========================================
-// 7. UPLOAD DE IMAGENS (PREVIEW E MÚLTIPLO)
+// 9. UPLOAD DE IMAGENS (PREVIEW E MÚLTIPLO)
 // ==========================================
 window.previewMultiplasImagens = function(event, previewContainerId) {
     const files = event.target.files;
