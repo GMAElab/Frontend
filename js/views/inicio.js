@@ -3,6 +3,7 @@
 // ==========================================
 (function () {
     const esc = (valor) => window.escapeHTML(valor);
+    const LIMITE_DE_ATENCAO = 5;
 
     const SECOES = [
         { view: 'pta', label: 'Planejamento mensal', desc: 'Registre o avanço do mês em cada tópico de pesquisa.' },
@@ -19,13 +20,6 @@
     function formatarPrazo(prazo) {
         if (!prazo) return 'sem prazo';
         return new Date(prazo).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-    }
-
-    function formatarDuracao(segundos) {
-        if (segundos === null || segundos === undefined) return '—';
-        const dias = segundos / 86400;
-        if (dias >= 1) return `${dias.toFixed(dias >= 10 ? 0 : 1).replace('.', ',')} d`;
-        return `${Math.max(1, Math.round(segundos / 3600))} h`;
     }
 
     function numero(valor, classeSeAlerta) {
@@ -90,6 +84,10 @@
                 ${tarefas}`)}`;
     }
 
+    function renderMinhasTarefasDoGestor(eu) {
+        return eu.proximas.length ? secao('Atribuídas a mim', '', listaDeTarefas(eu.proximas.slice(0, LIMITE_DE_ATENCAO), false)) : '';
+    }
+
     // ==========================================
     // VISÃO DO GESTOR
     // ==========================================
@@ -109,18 +107,24 @@
             </div>`).join('');
     }
 
+    function pessoasRelevantes(pessoas) {
+        return pessoas
+            .filter(p => p.abertas > 0 || p.concluidas > 0 || p.relata_no_mes)
+            .sort((a, b) => b.atrasadas - a.atrasadas || b.abertas - a.abertas || a.nome.localeCompare(b.nome));
+    }
+
     function renderTabelaDePessoas(equipe) {
-        const linhas = equipe.pessoas.map(p => `
+        const pessoas = pessoasRelevantes(equipe.pessoas);
+        if (!pessoas.length) {
+            return window.UI.emptyState({ title: 'Ninguém com tarefas ou relatos', description: 'Atribua uma tarefa para começar a acompanhar a equipe.' });
+        }
+
+        const linhas = pessoas.map(p => `
             <tr>
-                <td><strong>${esc(p.nome)}</strong><br><span class="meta">${esc(p.role)}</span></td>
+                <td><strong>${esc(p.nome)}</strong></td>
                 <td class="num">${p.abertas}</td>
                 <td class="num">${numero(p.atrasadas, 'text-danger')}</td>
-                <td class="num">${p.em_revisao}</td>
-                <td class="num">${p.concluidas}</td>
                 <td class="num">${p.no_prazo_pct === null ? '—' : p.no_prazo_pct + '%'}</td>
-                <td class="num">${formatarDuracao(p.tempo_medio_segundos)}</td>
-                <td class="num">${p.devolucoes}</td>
-                <td class="num">${p.processos_ativos}</td>
                 <td>${!p.relata_no_mes ? '<span class="text-faint">—</span>' : p.relato_do_mes_enviado
                     ? '<span class="badge badge-success">enviado</span>'
                     : '<span class="badge badge-warning">pendente</span>'}</td>
@@ -134,19 +138,14 @@
                             <th>Pessoa</th>
                             <th>Abertas</th>
                             <th>Atrasadas</th>
-                            <th>Em revisão</th>
-                            <th>Concluídas</th>
                             <th>No prazo</th>
-                            <th>Tempo médio</th>
-                            <th>Devoluções</th>
-                            <th>Processos</th>
-                            <th>Relato do mês</th>
+                            <th>Relato</th>
                         </tr>
                     </thead>
                     <tbody>${linhas}</tbody>
                 </table>
             </div>
-            <p class="help">Concluídas, no prazo, tempo médio e devoluções consideram os últimos ${equipe.janela_dias} dias. Processos conta os que não estão concluídos.</p>`;
+            <p class="help">No prazo: entregas dos últimos ${equipe.janela_dias} dias.</p>`;
     }
 
     function renderVisaoDoGestor(resumo) {
@@ -154,31 +153,24 @@
         const t = equipe.tarefas;
         const relatos = equipe.relatos;
 
-        const atencao = equipe.atencao.length
-            ? listaDeTarefas(equipe.atencao, true)
+        const visiveis = equipe.atencao.slice(0, LIMITE_DE_ATENCAO);
+        const restante = equipe.atencao_total - visiveis.length;
+        const atencao = visiveis.length
+            ? listaDeTarefas(visiveis, true)
             : window.UI.emptyState({ title: 'Nada pendente', description: 'Nenhuma tarefa atrasada ou aguardando revisão.' });
-        const restante = equipe.atencao_total - equipe.atencao.length;
-
-        const faltam = relatos.faltam.length
-            ? `<p class="dialog-text">Ainda não enviaram: ${relatos.faltam.map(esc).join(', ')}.</p>`
-            : '<p class="dialog-text">Todos já enviaram o relato deste mês.</p>';
 
         return `
             ${renderAvisosDoGestor(resumo)}
-            ${secao('Tarefas da equipe', '', `
-                <div class="figures">
-                    ${cartao(t.abertas, 'em aberto')}
-                    ${cartao(t.atrasadas, 'atrasadas', 'text-danger')}
-                    ${cartao(t.em_revisao, 'aguardando revisão', 'text-primary')}
-                    ${cartao(t.vencem_em_breve, 'vencem em 7 dias', 'text-warning')}
-                    ${cartao(t.sem_prazo, 'sem prazo')}
-                    ${cartao(t.concluidas_na_janela, `concluídas em ${equipe.janela_dias} dias`)}
-                </div>`)}
-            <div class="columns">
-                ${secao('Precisa de atenção', restante > 0 ? `mais ${restante} na tela de tarefas` : '', atencao)}
-                ${secao(`Relatos de ${esc(relatos.mes_nome)}`, `${relatos.enviaram} de ${relatos.esperados} enviados`, faltam)}
+            <div class="figures fade-in">
+                ${cartao(t.atrasadas, 'atrasadas', 'text-danger')}
+                ${cartao(t.em_revisao, 'aguardando revisão', 'text-primary')}
+                ${cartao(t.vencem_em_breve, 'vencem em 7 dias', 'text-warning')}
+                ${cartao(t.abertas, 'em aberto')}
             </div>
-            ${secao('Pessoas', 'carga atual e desempenho recente', renderTabelaDePessoas(equipe))}`;
+            <div class="columns">
+                ${secao('Precisa de atenção', restante > 0 ? `mais ${restante} em tarefas` : '', atencao)}
+                ${secao('Equipe', `relatos de ${esc(relatos.mes_nome)}: ${relatos.enviaram} de ${relatos.esperados}`, renderTabelaDePessoas(equipe))}
+            </div>`;
     }
 
     // ==========================================
@@ -212,8 +204,8 @@
             if (!document.getElementById('painel-inicio')) return;
 
             alvo.innerHTML = resumo.gestor
-                ? renderVisaoDoGestor(resumo) + (resumo.eu.abertas > 0 ? renderVisaoPessoal(resumo.eu) : '')
-                : renderVisaoPessoal(resumo.eu);
+                ? renderVisaoDoGestor(resumo) + renderMinhasTarefasDoGestor(resumo.eu)
+                : renderVisaoPessoal(resumo.eu) + renderAtalhos();
         } catch (erro) {
             if (document.getElementById('painel-inicio')) {
                 alvo.innerHTML = window.UI.errorState('Não foi possível carregar o painel.');
@@ -242,8 +234,7 @@
                     <h1>${saudacao}, ${esc(primeiroNome)}.</h1>
                 </div>
             </header>
-            <div id="painel-inicio">${window.UI.loading('Carregando o painel')}</div>
-            ${renderAtalhos()}`;
+            <div id="painel-inicio">${window.UI.loading('Carregando o painel')}</div>`;
 
         carregarPainel();
     });
