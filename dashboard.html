@@ -1,57 +1,82 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark light">
     <title>SGCI · GMAE</title>
+    <script>try { var t = localStorage.getItem('sgci-theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}</script>
 
-    <link rel="stylesheet" href="css/global.css">
-    <link rel="stylesheet" href="css/layout.css">
-    <link rel="stylesheet" href="css/components.css?v=2">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap">
+    <link rel="stylesheet" href="css/global.css?v=4">
+    <link rel="stylesheet" href="css/layout.css?v=4">
+    <link rel="stylesheet" href="css/components.css?v=4">
 </head>
 <body class="dashboard-layout">
 
-    <aside class="sidebar">
+    <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
-            <span class="brand-mark">SGCI / GMAE</span>
-            <span class="brand-sub">Gestão de Conhecimento e Inovação</span>
+            <span class="brand-glyph" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6.34L4.24 17.5A2 2 0 0 0 6 20.5h12a2 2 0 0 0 1.76-3L15 8.34V2"/><path d="M8.5 2h7"/><path d="M6.5 14.5h11"/></svg></span>
+            <span class="brand-text">
+                <span class="brand-mark">SGCI / GMAE</span>
+                <span class="brand-sub">Conhecimento e inovação</span>
+            </span>
         </div>
+
+        <button type="button" class="search-trigger" id="btn-palette" aria-label="Buscar ou executar um comando">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <span class="label">Ir para…</span>
+            <span class="keys"><kbd data-mod>Ctrl</kbd><kbd>K</kbd></span>
+        </button>
 
         <nav class="sidebar-nav" aria-label="Seções">
             <ul>
-                <li><button class="nav-item active" data-view="inicio" data-label="Início"><span class="nav-index">01</span>Início</button></li>
-                <li class="nav-sep" role="presentation"></li>
-                <li><button class="nav-item" data-view="equipments" data-label="Equipamentos"><span class="nav-index">02</span>Equipamentos</button></li>
-                <li><button class="nav-item" data-view="processes" data-label="Processos de P&amp;D"><span class="nav-index">03</span>Processos de P&amp;D</button></li>
-                <li><button class="nav-item" data-view="pops" data-label="POPs"><span class="nav-index">04</span>POPs</button></li>
-                <li class="nav-sep" role="presentation"></li>
-                <li><button class="nav-item" data-view="pta" data-label="Planejamento mensal"><span class="nav-index">05</span>Planejamento mensal</button></li>
-                <li><button class="nav-item" data-view="tarefas" data-label="Tarefas"><span class="nav-index">06</span>Tarefas</button></li>
-                <li><button class="nav-item" data-view="articles" data-label="Artigos"><span class="nav-index">07</span>Artigos</button></li>
+                <li><button class="nav-item active" data-view="inicio" data-label="Início" data-key="i"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg><span class="nav-label">Início</span><span class="nav-index">G I</span></button></li>
+
+                <li class="nav-group" role="presentation">Conhecimento</li>
+                <li><button class="nav-item" data-view="equipments" data-label="Equipamentos" data-key="e"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18h8"/><path d="M3 22h18"/><path d="M14 22a7 7 0 1 0 0-14h-1"/><path d="M9 14h2"/><path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z"/><path d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3"/></svg><span class="nav-label">Equipamentos</span><span class="nav-index">G E</span></button></li>
+                <li><button class="nav-item" data-view="processes" data-label="Processos de P&amp;D" data-key="p"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6.34L4.24 17.5A2 2 0 0 0 6 20.5h12a2 2 0 0 0 1.76-3L15 8.34V2"/><path d="M8.5 2h7"/><path d="M6.5 14.5h11"/></svg><span class="nav-label">Processos de P&amp;D</span><span class="nav-index">G P</span></button></li>
+                <li><button class="nav-item" data-view="pops" data-label="POPs" data-key="o"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span class="nav-label">POPs</span><span class="nav-index">G O</span></button></li>
+
+                <li class="nav-group" role="presentation">Rotina</li>
+                <li><button class="nav-item" data-view="pta" data-label="Planejamento mensal" data-key="m"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="nav-label">Planejamento mensal</span><span class="nav-index">G M</span></button></li>
+                <li><button class="nav-item" data-view="tarefas" data-label="Tarefas" data-key="t"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="nav-label">Tarefas</span><span class="nav-index">G T</span></button></li>
+                <li><button class="nav-item" data-view="articles" data-label="Artigos" data-key="a"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span class="nav-label">Artigos</span><span class="nav-index">G A</span></button></li>
+
                 <li id="menu-admin" style="display: none;">
-                    <div class="nav-sep" role="presentation"></div>
-                    <button class="nav-item" data-view="admin" data-label="Administração"><span class="nav-index">08</span>Administração</button>
+                    <div class="nav-group" role="presentation">Sistema</div>
+                    <button class="nav-item" data-view="admin" data-label="Administração" data-key="d"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 6v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6l-8-4Z"/></svg><span class="nav-label">Administração</span><span class="nav-index">G D</span></button>
                 </li>
             </ul>
         </nav>
 
         <div class="sidebar-footer">
-            <div class="sidebar-user" id="user-greeting">&nbsp;</div>
-            <div class="sidebar-role" id="user-role"></div>
-            <button id="btn-logout" class="link-btn muted">Sair</button>
+            <span class="avatar" id="user-avatar" aria-hidden="true"></span>
+            <div class="sidebar-who">
+                <div class="sidebar-user" id="user-greeting">&nbsp;</div>
+                <div class="sidebar-role" id="user-role"></div>
+            </div>
+            <div class="sidebar-tools">
+                <button type="button" class="icon-btn" id="btn-theme" aria-label="Alternar tema" title="Alternar tema"></button>
+                <button type="button" class="icon-btn" id="btn-logout" aria-label="Sair" title="Sair"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+            </div>
         </div>
     </aside>
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
 
     <div class="main-wrapper">
         <header class="topbar">
             <div class="topbar-left">
-                <button class="menu-toggle" id="menu-toggle" aria-label="Abrir menu">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="17" x2="21" y2="17"/></svg>
+                <button class="icon-btn bordered menu-toggle" id="menu-toggle" aria-label="Abrir menu">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="4" y1="8" x2="20" y2="8"/><line x1="4" y1="16" x2="20" y2="16"/></svg>
                 </button>
-                <p class="crumbs">sgci / <strong id="current-page-title">início</strong></p>
+                <p class="crumbs"><span>SGCI</span><span class="sep">/</span><strong id="current-page-title">Início</strong></p>
             </div>
             <div class="topbar-right">
                 <button id="btn-setup-2fa" onclick="abrirSetup2FA()" class="link-btn" style="display: none;"><span class="long">Ativar verificação em duas etapas</span><span class="short">Ativar 2FA</span></button>
+                <span class="sys-status" id="sys-status" role="status"><span class="dot"></span><span class="label">online</span></span>
             </div>
         </header>
 
@@ -292,21 +317,21 @@
 
     <div id="toast-container"></div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
     <script src="js/api.js?v=3"></script>
-    <script src="js/ui.js?v=3101"></script>
+    <script src="js/ui.js?v=3200"></script>
+    <script src="js/shell.js?v=1"></script>
     <script src="js/auth.js?v=2001"></script>
     <script src="js/listagem.js?v=1"></script>
     <script src="js/vinculos.js?v=1"></script>
-    <script src="js/views/inicio.js?v=2"></script>
+    <script src="js/views/inicio.js?v=3"></script>
     <script src="js/views/equipments.js?v=3"></script>
     <script src="js/views/processes.js?v=3"></script>
-    <script src="js/dashboard.js?v=1200"></script>
+    <script src="js/dashboard.js?v=1300"></script>
     <script src="js/views/pta.js?v=9"></script>
-    <script src="js/views/tarefas.js?v=4"></script>
+    <script src="js/views/tarefas.js?v=5"></script>
     <script src="js/views/pops.js?v=290"></script>
     <script src="js/views/admin.js?v=552"></script>
     <script src="js/views/articles.js?v=2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </body>
 </html>

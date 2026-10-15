@@ -15,6 +15,8 @@ Este projeto foi construído priorizando leveza, acessibilidade e ausência de d
 * **HTML5 & Acessibilidade**: Construído de forma estruturada (semântico) para garantir compatibilidade e usabilidade na maioria dos dispositivos com acesso à internet.
 * **JavaScript Moderno**: Código assíncrono (`async/await`), integração modular via escopo global (`window`) e comunicação orientada a eventos (`CustomEvents`).
 * **CSS Dinâmico**: Estilização baseada em variáveis CSS e estados controlados via JS para renderização de modais e transições de abas.
+* **Design system próprio**: Tokens em `css/global.css` (cores, tipografia Geist / Geist Mono, espaçamento em escala de 4px). Tema escuro por padrão e tema claro opcional, guardado no navegador (`sgci-theme`). Cores vivas só para estado: âmbar = atenção, vermelho = atraso/erro, ciano pulsando = em andamento.
+* **Atalhos**: `Ctrl/⌘ + K` abre a paleta de comandos (ir para uma seção ou criar um registro), `/` foca a busca da lista, `G` seguido de uma letra navega (`G I` início, `G E` equipamentos, `G P` processos, `G O` POPs, `G M` planejamento, `G T` tarefas, `G A` artigos, `G D` administração). A tela atual fica no endereço (`#tarefas`), então recarregar a página não volta ao início.
 * **Sessão por cookie**: O login fica em um cookie `HttpOnly` enviado pela API; as requisições que alteram dados levam o header `X-CSRF-Token`. Tudo isso é tratado em `js/api.js`.
 
 ---
@@ -110,6 +112,7 @@ A arquitetura de pastas foi pensada para manter a separação de responsabilidad
     ├── auth.js           # Login, 2FA e recuperação de senha
     ├── register.js       # Envio do pedido de cadastro
     ├── ui.js             # Roteador de telas, manipulação de DOM e Toasts
+    ├── shell.js          # Tema, paleta de comandos, atalhos de teclado e indicador de conexão
     ├── listagem.js       # Tabela com busca, filtros e paginação, usada pelas listas
     ├── vinculos.js       # Opções de equipamentos e pessoas para filtros e formulários
     ├── dashboard.js      # Inicialização do sistema e listeners globais

@@ -17,7 +17,7 @@ const STATUS_LABEL = {
 };
 const STATUS_BADGE = {
     pendente: 'badge-warning',
-    em_andamento: 'badge-warning',
+    em_andamento: 'badge-info badge-live',
     concluida: 'badge-success',
     cancelada: 'badge-danger'
 };

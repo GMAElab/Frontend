@@ -1,20 +1,45 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solicitar acesso · SGCI</title>
 
-    <link rel="stylesheet" href="css/global.css">
-    <link rel="stylesheet" href="css/layout.css">
-    <link rel="stylesheet" href="css/components.css">
+    <meta name="color-scheme" content="dark light">
+    <script>try { var t = localStorage.getItem('sgci-theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}</script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap">
+    <link rel="stylesheet" href="css/global.css?v=4">
+    <link rel="stylesheet" href="css/layout.css?v=4">
+    <link rel="stylesheet" href="css/components.css?v=4">
 </head>
 <body>
     <div class="auth-layout">
         <aside class="auth-aside">
-            <span class="brand-mark">SGCI / GMAE</span>
+            <div class="auth-brand">
+                <span class="brand-glyph" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6.34L4.24 17.5A2 2 0 0 0 6 20.5h12a2 2 0 0 0 1.76-3L15 8.34V2"/><path d="M8.5 2h7"/><path d="M6.5 14.5h11"/></svg></span>
+                <span class="brand-text">
+                    <span class="brand-mark">SGCI / GMAE</span>
+                    <span class="brand-sub">Gestão de Conhecimento e Inovação</span>
+                </span>
+            </div>
+
             <p class="auth-statement">Peça seu acesso. Um administrador <em>aprova</em> e define seu perfil.</p>
-            <p class="auth-note">Sistema de Gestão de Conhecimento e Inovação<br>Equipamentos · Processos de P&amp;D · POPs · Planejamento mensal</p>
+
+            <div class="auth-readout" aria-hidden="true">
+                <div class="auth-readout-head"><span>acervo do laboratório</span><span class="live">sincronizado</span></div>
+                <ul>
+                    <li><span class="n">01</span><span>Equipamentos</span><span class="s">treinamento · POPs</span></li>
+                    <li><span class="n">02</span><span>Processos de P&amp;D</span><span class="s">etapas · lições</span></li>
+                    <li><span class="n">03</span><span>POPs</span><span class="s">revisões · .docx</span></li>
+                    <li><span class="n">04</span><span>Planejamento mensal</span><span class="s">avanço · síntese</span></li>
+                    <li><span class="n">05</span><span>Tarefas</span><span class="s">prazos · acervo</span></li>
+                </ul>
+            </div>
+
+            <p class="auth-note">Comece do que já foi feito. Evite repetir o que não funcionou.</p>
         </aside>
 
         <main class="auth-main">

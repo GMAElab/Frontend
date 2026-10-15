@@ -45,6 +45,13 @@ const ICON_PATHS = {
     x: '<line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/>',
     'arrow-right': '<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>',
     'eye-off': '<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/>',
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>',
+    moon: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',
+    'log-out': '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
+    calendar: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+    'check-square': '<polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+    'book-open': '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+    microscope: '<path d="M6 18h8"/><path d="M3 22h18"/><path d="M14 22a7 7 0 1 0 0-14h-1"/><path d="M9 14h2"/><path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z"/><path d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3"/>',
 };
 
 window.Icon = function (name, opts = {}) {
@@ -197,9 +204,16 @@ const UI = {
             btn.classList.remove('active');
             if (btn.getAttribute('data-view') === viewName) {
                 btn.classList.add('active');
-                if (pageTitle) pageTitle.textContent = (btn.dataset.label || btn.textContent).trim().toLowerCase();
+                const rotulo = (btn.dataset.label || btn.textContent).trim();
+                if (pageTitle) pageTitle.textContent = rotulo;
+                document.title = `${rotulo} · SGCI`;
             }
         });
+
+        // A tela atual fica no endereço: recarregar a página não volta ao início.
+        if (location.hash.slice(1) !== viewName) history.replaceState(null, '', `#${viewName}`);
+
+        mainContent.scrollTop = 0;
         mainContent.innerHTML = UI.loading();
         const event = new CustomEvent('viewChanged', { detail: { view: viewName } });
         document.dispatchEvent(event);
@@ -224,7 +238,10 @@ document.addEventListener('DOMContentLoaded', () => {
             sidebar.classList.toggle('open');
         });
     }
-    UI.switchView('inicio');
+
+    const pedida = location.hash.slice(1);
+    const existe = pedida && document.querySelector(`.nav-item[data-view="${CSS.escape(pedida)}"]`);
+    UI.switchView(existe ? pedida : 'inicio');
 });
 
 document.addEventListener('keydown', (e) => {

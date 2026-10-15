@@ -36,7 +36,7 @@
     function etiquetaDaTarefa(tarefa) {
         if (tarefa.status === 'em_revisao') return '<span class="badge badge-accent">em revisão</span>';
         if (tarefa.atrasada) return '<span class="badge badge-danger">atrasada</span>';
-        return '<span class="badge">em andamento</span>';
+        return '<span class="badge badge-info badge-live">em andamento</span>';
     }
 
     function listaDeTarefas(tarefas, mostrarPessoas) {
