@@ -1,9 +1,9 @@
 /* ==========================================
    TOKENS
    Dark-first. Superfícies em degraus de cinza
-   frio, bordas hairline, um acento (verde de
-   bancada) para ação, foco e progresso. Cores
-   vivas só para estado: alerta, erro, ao vivo.
+   frio, bordas hairline, acento monocromático
+   para ação, foco e progresso. Cores vivas só
+   para estado: alerta, erro, ao vivo.
    ========================================== */
 :root,
 :root[data-theme="dark"] {
@@ -29,18 +29,18 @@
     --line-strong: #30353d;
     --line-focus: #454b55;
 
-    /* --- Acento: verde de bancada --- */
-    --accent: #3ddc97;
-    --accent-solid: #2fbf80;
-    --accent-solid-hover: #3ddc97;
-    --accent-ink: #04140c;
-    --accent-tint: rgba(61, 220, 151, 0.10);
-    --accent-line: rgba(61, 220, 151, 0.32);
-    --accent-ring: rgba(61, 220, 151, 0.26);
+    /* --- Acento: monocromático --- */
+    --accent: #f1f3f5;
+    --accent-solid: #e7e9ec;
+    --accent-solid-hover: #ffffff;
+    --accent-ink: #0d0f12;
+    --accent-tint: rgba(255, 255, 255, 0.06);
+    --accent-line: rgba(255, 255, 255, 0.22);
+    --accent-ring: rgba(255, 255, 255, 0.16);
 
-    /* --- Estados --- */
-    --success: #3ddc97;
-    --success-tint: rgba(61, 220, 151, 0.10);
+    /* --- Estados (concluído é neutro: não pede atenção) --- */
+    --success: #c9cdd3;
+    --success-tint: rgba(255, 255, 255, 0.07);
     --warning: #f5b544;
     --warning-tint: rgba(245, 181, 68, 0.11);
     --danger: #f2646a;
@@ -74,16 +74,16 @@
     --line-strong: #cfd3d9;
     --line-focus: #aeb4bd;
 
-    --accent: #0c8a5a;
-    --accent-solid: #0f9d66;
-    --accent-solid-hover: #0c8a5a;
+    --accent: #15181c;
+    --accent-solid: #15181c;
+    --accent-solid-hover: #2c3138;
     --accent-ink: #ffffff;
-    --accent-tint: rgba(15, 157, 102, 0.09);
-    --accent-line: rgba(15, 157, 102, 0.35);
-    --accent-ring: rgba(15, 157, 102, 0.22);
+    --accent-tint: rgba(0, 0, 0, 0.05);
+    --accent-line: rgba(0, 0, 0, 0.22);
+    --accent-ring: rgba(0, 0, 0, 0.12);
 
-    --success: #0c8a5a;
-    --success-tint: rgba(15, 157, 102, 0.09);
+    --success: #3a3f47;
+    --success-tint: rgba(0, 0, 0, 0.06);
     --warning: #a96a00;
     --warning-tint: rgba(214, 140, 0, 0.11);
     --danger: #c9343b;

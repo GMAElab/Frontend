@@ -92,12 +92,21 @@ function renderPTAPesquisador() {
                     </div>
 
                     <div class="input-group">
-                        <label for="pta-avanco" class="label-row">
-                            <span>Avanço geral da pesquisa</span>
-                            <span id="valor-avanco" class="mono">50%</span>
-                        </label>
-                        <input type="range" id="pta-avanco" min="0" max="100" value="50"
-                               oninput="document.getElementById('valor-avanco').innerText = this.value + '%'">
+                        <label for="pta-avanco-num" id="rotulo-avanco">Avanço geral da pesquisa</label>
+                        <div class="range-field">
+                            <input type="range" id="pta-avanco" min="0" max="100" value="50"
+                                   aria-labelledby="rotulo-avanco" aria-describedby="ajuda-avanco" aria-valuetext="50%"
+                                   oninput="window.sincronizarAvanco('controle')">
+                            <div class="num-suffix">
+                                <input type="number" id="pta-avanco-num" min="0" max="100" step="1" value="50"
+                                       inputmode="numeric" required aria-describedby="ajuda-avanco"
+                                       onfocus="this.select()"
+                                       oninput="window.sincronizarAvanco('caixa')"
+                                       onchange="window.sincronizarAvanco('confirmar')">
+                                <span aria-hidden="true">%</span>
+                            </div>
+                        </div>
+                        <span class="help" id="ajuda-avanco" aria-live="polite">De 0 a 100. Digite o número ou arraste o controle; as setas ajustam de 1 em 1.</span>
                     </div>
 
                     <div id="ultimo-pta-aviso" class="note hidden">
@@ -138,6 +147,74 @@ function renderPTAPesquisador() {
     document.getElementById('form-pta').addEventListener('submit', window.prepararEnvioRelatorio);
 }
 
+// ==========================================
+// AVANÇO: CONTROLE DESLIZANTE + CAIXA NUMÉRICA
+// Os dois mostram o mesmo valor. O envio lê o
+// controle (#pta-avanco); a caixa só o alimenta.
+// ==========================================
+function elementosDoAvanco() {
+    return {
+        controle: document.getElementById('pta-avanco'),
+        caixa: document.getElementById('pta-avanco-num'),
+        ajuda: document.getElementById('ajuda-avanco'),
+    };
+}
+
+function textoDeAjudaAvanco(minimo, ajustadoPara) {
+    const base = minimo > 0
+        ? `De ${minimo} a 100. O mínimo é ${minimo}%, o avanço do seu último relato neste tópico.`
+        : 'De 0 a 100. Digite o número ou arraste o controle; as setas ajustam de 1 em 1.';
+    return ajustadoPara === undefined ? base : `Ajustado para ${ajustadoPara}%. ${base}`;
+}
+
+function definirAvanco(valor) {
+    const { controle, caixa } = elementosDoAvanco();
+    if (!controle || !caixa) return;
+    controle.value = valor;
+    // O controle já limita ao mínimo/máximo; a caixa mostra o valor final.
+    caixa.value = controle.value;
+    controle.setAttribute('aria-valuetext', `${controle.value}%`);
+}
+
+function definirMinimoAvanco(minimo) {
+    const { controle, caixa, ajuda } = elementosDoAvanco();
+    if (!controle || !caixa) return;
+    controle.min = minimo;
+    caixa.min = minimo;
+    definirAvanco(Math.max(parseInt(controle.value, 10) || 0, minimo));
+    if (ajuda) ajuda.textContent = textoDeAjudaAvanco(minimo);
+}
+
+window.sincronizarAvanco = function(origem) {
+    const { controle, caixa, ajuda } = elementosDoAvanco();
+    if (!controle || !caixa) return;
+    const minimo = parseInt(controle.min, 10) || 0;
+
+    if (origem === 'controle') {
+        caixa.value = controle.value;
+        controle.setAttribute('aria-valuetext', `${controle.value}%`);
+        return;
+    }
+
+    const digitado = Number(caixa.value);
+    const valido = caixa.value !== '' && Number.isFinite(digitado);
+
+    // Enquanto digita: só acompanha valores já dentro da faixa,
+    // para não "pular" o número no meio da digitação (ex.: 7 → 75).
+    if (origem === 'caixa') {
+        if (valido && digitado >= minimo && digitado <= 100) {
+            controle.value = Math.round(digitado);
+            controle.setAttribute('aria-valuetext', `${controle.value}%`);
+        }
+        return;
+    }
+
+    // Ao confirmar (sair da caixa ou Enter): arredonda e traz para a faixa.
+    const ajustado = valido ? Math.min(100, Math.max(minimo, Math.round(digitado))) : parseInt(controle.value, 10);
+    definirAvanco(ajustado);
+    if (ajuda) ajuda.textContent = textoDeAjudaAvanco(minimo, valido && ajustado === digitado ? undefined : ajustado);
+};
+
 window.atualizarAvisoUltimoPTA = function() {
     const topicoElement = document.getElementById('pta-topico');
     if (!topicoElement) return;
@@ -145,11 +222,10 @@ window.atualizarAvisoUltimoPTA = function() {
     const topicoId = topicoElement.value;
     const avisoContainer = document.getElementById('ultimo-pta-aviso');
     const inputAvanco = document.getElementById('pta-avanco');
-    const spanAvanco = document.getElementById('valor-avanco');
 
     if (!topicoId || !window.meusPtasCache || window.meusPtasCache.length === 0) {
         if (avisoContainer) avisoContainer.classList.add('hidden');
-        if (inputAvanco) inputAvanco.min = 0;
+        if (inputAvanco) definirMinimoAvanco(0);
         return;
     }
 
@@ -174,16 +250,11 @@ window.atualizarAvisoUltimoPTA = function() {
         document.getElementById('ultimo-pta-texto').innerText = ultimoRelato.descricao_atividades;
         document.getElementById('ultimo-pta-avanco').innerText = ultimoRelato.percentual_avanco;
 
-        inputAvanco.min = ultimoRelato.percentual_avanco;
-
-        if (parseInt(inputAvanco.value) < ultimoRelato.percentual_avanco) {
-            inputAvanco.value = ultimoRelato.percentual_avanco;
-            spanAvanco.innerText = ultimoRelato.percentual_avanco + '%';
-        }
+        definirMinimoAvanco(ultimoRelato.percentual_avanco);
 
     } else {
         avisoContainer.classList.add('hidden');
-        inputAvanco.min = 0;
+        definirMinimoAvanco(0);
     }
 };
 async function carregarMeusPTAs() {
@@ -267,6 +338,7 @@ async function carregarMeusPTAs() {
 window.prepararEnvioRelatorio = function(e) {
     e.preventDefault();
 
+    window.sincronizarAvanco('confirmar');
     const topicoId = parseInt(document.getElementById('pta-topico').value);
     const avancoNovo = parseInt(document.getElementById('pta-avanco').value);
     if (!window.ptaEditandoId && window.meusPtasCache) {
@@ -328,7 +400,7 @@ window.executarEnvioPTA = async function() {
                 window.cancelarEdicaoPTA();
             } else {
                 document.getElementById('form-pta').reset();
-                document.getElementById('valor-avanco').innerText = '50%';
+                definirAvanco(50);
             }
             carregarMeusPTAs();
         } else {
@@ -774,8 +846,7 @@ window.carregarParaEdicao = function(id) {
 
     window.atualizarAvisoUltimoPTA();
 
-    document.getElementById('pta-avanco').value = rel.percentual_avanco;
-    document.getElementById('valor-avanco').innerText = rel.percentual_avanco + '%';
+    definirAvanco(rel.percentual_avanco);
     document.getElementById('pta-descricao').value = rel.descricao_atividades;
 
     const btnSubmit = document.querySelector('#form-pta button[type="submit"]');
@@ -798,7 +869,7 @@ window.carregarParaEdicao = function(id) {
 window.cancelarEdicaoPTA = function() {
     window.ptaEditandoId = null;
     document.getElementById('form-pta').reset();
-    document.getElementById('valor-avanco').innerText = '50%';
+    definirAvanco(50);
 
     const btnSubmit = document.querySelector('#form-pta button[type="submit"]');
     btnSubmit.innerText = "Enviar Planejamento Mensal";

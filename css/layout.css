@@ -364,95 +364,11 @@
 /* ==========================================
    AUTENTICAÇÃO
    ========================================== */
-.auth-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-    min-height: 100vh;
-    min-height: 100dvh;
-}
-
-.auth-aside {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: var(--space-8);
-    padding: var(--space-8) var(--space-10);
-    border-right: 1px solid var(--line);
-    background-color: var(--surface-sunk);
-    background-image: radial-gradient(var(--line-strong) 1px, transparent 1px);
-    background-size: 20px 20px;
-    background-position: -10px -10px;
-    overflow: hidden;
-}
-
-.auth-aside::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, transparent 0%, var(--surface-sunk) 78%);
-    pointer-events: none;
-}
-
-.auth-aside > * { position: relative; z-index: 1; }
-
-.auth-brand { display: flex; align-items: center; gap: 10px; }
-
-.auth-statement {
-    font-size: clamp(1.6rem, 2.6vw, 2.25rem);
-    font-weight: 500;
-    line-height: 1.15;
-    letter-spacing: -0.03em;
-    max-width: 17ch;
-    color: var(--text);
-}
-
-.auth-statement em { font-style: normal; color: var(--accent); }
-
-/* Leitura estilo instrumento: o que o sistema guarda */
-.auth-readout {
-    max-width: 420px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
-    background: var(--bg);
-    font-family: var(--font-mono);
-    font-size: var(--fs-sm);
-}
-.auth-readout-head {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px 12px;
-    border-bottom: 1px solid var(--line);
-    color: var(--muted);
-    font-size: var(--fs-xs);
-}
-.auth-readout-head .live { display: inline-flex; align-items: center; gap: 6px; color: var(--accent); }
-.auth-readout-head .live::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: pulse 2s var(--ease) infinite; }
-.auth-readout ul { list-style: none; }
-.auth-readout li {
-    display: grid;
-    grid-template-columns: 28px 1fr auto;
-    gap: var(--space-2);
-    padding: 7px 12px;
-    color: var(--text-2);
-}
-.auth-readout li + li { border-top: 1px solid var(--line); }
-.auth-readout li .n { color: var(--faint); }
-.auth-readout li .s { color: var(--muted); }
-
-.auth-note {
-    font-family: var(--font-mono);
-    font-size: var(--fs-xs);
-    color: var(--faint);
-    line-height: 1.7;
-}
-
-.auth-main {
+.auth-brand {
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding: var(--space-10) var(--space-6);
-    background: var(--bg);
+    gap: 10px;
+    margin-bottom: var(--space-8);
 }
 
 .auth-panel { width: 100%; max-width: 360px; }
@@ -537,12 +453,6 @@
     padding: var(--space-8) var(--space-4);
 }
 
-.auth-single .auth-panel {
-    padding: var(--space-6);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-xl);
-    background: var(--surface);
-}
 
 /* ==========================================
    MODAIS
@@ -705,15 +615,6 @@
     .content-area { padding: var(--space-5) var(--space-4) var(--space-10); }
     .split-sheet { grid-template-columns: minmax(0, 1fr); }
     .split-sheet > section + section { border-left: 0; border-top: 1px solid var(--line); }
-    .auth-layout { grid-template-columns: minmax(0, 1fr); }
-    .auth-aside {
-        padding: var(--space-5) var(--space-4);
-        border-right: 0;
-        border-bottom: 1px solid var(--line);
-        gap: var(--space-5);
-    }
-    .auth-statement { font-size: 1.35rem; }
-    .auth-readout, .auth-aside .auth-note { display: none; }
 }
 
 @media (max-width: 640px) {
@@ -724,5 +625,4 @@
     .modal-content { padding: var(--space-4); border-radius: var(--radius-xl); }
     .modal-footer { margin: var(--space-4) calc(var(--space-4) * -1) calc(var(--space-4) * -1); padding: var(--space-3) var(--space-4); flex-wrap: wrap; }
     .split-sheet > section, .sheet-head { padding: var(--space-4); }
-    .auth-main { padding: var(--space-6) var(--space-4); }
 }
