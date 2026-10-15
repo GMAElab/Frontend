@@ -203,6 +203,10 @@ window.openPopModal = async function(codigoEdicao = null) {
 
     preencherEquipamentosDoPop(popEdit ? popEdit.equipamento_id : null);
     ligarEnvioDeAnexoDoPop();
+    window.Salvaguardas?.vincularRascunho(document.getElementById('popForm'), `pop-${codigoEdicao || 'novo'}`);
+    if (!popEdit) {
+        window.UI.avisarSemelhantes({ campo: 'pop-titulo', endpoint: '/pops/', rotulo: p => p.titulo, tipo: 'POP' });
+    }
 };
 
 // ==========================================

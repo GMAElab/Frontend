@@ -82,25 +82,120 @@ document.addEventListener('DOMContentLoaded', () => {
 // NÚCLEO DE UI
 // ==========================================
 const UI = {
+    /**
+     * Erros e avisos ficam na tela até a pessoa fechar: quem está na bancada
+     * pode não estar olhando no momento. Confirmações somem sozinhas.
+     */
     showToast: (message, type = 'info') => {
         const container = document.getElementById('toast-container');
         if (!container) return;
 
+        const persistente = type === 'error' || type === 'warning';
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
-        toast.setAttribute('role', 'alert');
-        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('role', persistente ? 'alert' : 'status');
 
         const tagByType = { success: 'ok', error: 'erro', warning: 'aviso', info: 'info' };
-        toast.innerHTML = `<span class="tag">${tagByType[type] || 'info'}</span><span></span>`;
-        toast.lastElementChild.textContent = message;
+        toast.innerHTML = `
+            <span class="tag">${tagByType[type] || 'info'}</span>
+            <span class="toast-msg"></span>
+            <button type="button" class="toast-close" aria-label="Fechar aviso">${window.Icon('x', { size: 14 })}</button>`;
+        toast.querySelector('.toast-msg').textContent = UI.mensagemLegivel(message);
 
-        container.appendChild(toast);
-        setTimeout(() => {
+        const remover = () => {
             toast.style.transition = 'opacity 0.2s ease';
             toast.style.opacity = '0';
             setTimeout(() => toast.remove(), 200);
-        }, 4000);
+        };
+        toast.querySelector('.toast-close').addEventListener('click', remover);
+
+        if (!persistente) {
+            let timer = setTimeout(remover, 4000);
+            toast.addEventListener('mouseenter', () => clearTimeout(timer));
+            toast.addEventListener('mouseleave', () => { timer = setTimeout(remover, 2000); });
+        }
+
+        container.appendChild(toast);
+        while (container.children.length > 4) container.firstElementChild.remove();
+    },
+
+    /** Traduz mensagens técnicas da API e do navegador para algo que a pessoa entenda. */
+    mensagemLegivel: (mensagem) => {
+        if (mensagem === null || mensagem === undefined || mensagem === '') return 'Algo deu errado. Tente novamente.';
+        if (Array.isArray(mensagem)) mensagem = mensagem.map(d => (d && d.msg) || String(d)).join(' ');
+        else if (typeof mensagem === 'object') mensagem = mensagem.msg || mensagem.detail || mensagem.message || '';
+
+        const texto = String(mensagem).replace(/^Value error,\s*/i, '').trim();
+        const traducoes = [
+            [/^(failed to fetch|load failed)$|networkerror/i, 'Sem conexão com o servidor. Verifique a internet e tente de novo.'],
+            [/^internal server error$/i, 'Erro no servidor. Tente de novo em instantes.'],
+            [/^not authenticated$|could not validate credentials/i, 'Sua sessão expirou. Entre novamente.'],
+            [/^(forbidden|not enough permissions)$/i, 'Você não tem permissão para esta ação.'],
+            [/^not found$/i, 'Registro não encontrado. Ele pode ter sido excluído.'],
+            [/^field required$/i, 'Preencha os campos obrigatórios.'],
+            [/^string should have at least (\d+) characters?$/i, (m, n) => `O texto precisa ter pelo menos ${n} caracteres.`],
+            [/^input should be a valid integer/i, 'Use apenas números inteiros.'],
+            [/value is not a valid email/i, 'E-mail inválido.'],
+            [/^\[object object\]$/i, 'Algo deu errado. Tente novamente.'],
+        ];
+        for (const [padrao, traducao] of traducoes) {
+            if (padrao.test(texto)) return typeof traducao === 'function' ? texto.replace(padrao, traducao) : traducao;
+        }
+        return texto || 'Algo deu errado. Tente novamente.';
+    },
+
+    /**
+     * Converte qualquer link do YouTube (watch, youtu.be, shorts, live, embed)
+     * no endereço que funciona dentro da página. Devolve null se não for YouTube.
+     */
+    youtubeEmbed: (url) => {
+        const m = String(url || '').trim().match(/(?:youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/|v\/)|youtu\.be\/)([\w-]{11})/i);
+        return m ? `https://www.youtube.com/embed/${m[1]}` : null;
+    },
+
+    /**
+     * Ao digitar o nome de um novo registro, mostra os já cadastrados com nome parecido.
+     * O objetivo do portal é partir do que existe, não duplicar.
+     */
+    avisarSemelhantes: ({ campo, endpoint, rotulo, tipo = 'registro', ativo = () => true }) => {
+        const input = typeof campo === 'string' ? document.getElementById(campo) : campo;
+        if (!input || input.dataset.semelhantes) return;
+        input.dataset.semelhantes = '1';
+
+        const aviso = document.createElement('span');
+        aviso.className = 'help similar-hint';
+        aviso.setAttribute('aria-live', 'polite');
+        aviso.id = `${input.id}-semelhantes`;
+        (input.closest('.input-group') || input.parentElement).appendChild(aviso);
+        input.setAttribute('aria-describedby', [input.getAttribute('aria-describedby'), aviso.id].filter(Boolean).join(' '));
+
+        const normalizar = (t) => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+        let timer = null;
+        let pedido = 0;
+
+        const limpar = () => { aviso.textContent = ''; aviso.classList.remove('is-warning'); };
+
+        input.addEventListener('input', () => {
+            clearTimeout(timer);
+            const termo = input.value.trim();
+            if (!ativo() || termo.length < 3) { pedido++; limpar(); return; }
+            timer = setTimeout(async () => {
+                const atual = ++pedido;
+                try {
+                    const res = await window.api.fetchProtected(`${endpoint}?q=${encodeURIComponent(termo)}&limit=5`);
+                    if (!res.ok || atual !== pedido) return;
+                    const itens = await res.json();
+                    if (atual !== pedido || !Array.isArray(itens)) return;
+                    if (!itens.length) { limpar(); return; }
+
+                    const igual = itens.some(i => normalizar(rotulo(i)) === normalizar(termo));
+                    aviso.classList.toggle('is-warning', igual);
+                    aviso.innerHTML = igual
+                        ? `Já existe um ${tipo} com este nome. Confira antes de criar outro.`
+                        : `Parecidos já cadastrados: <strong>${itens.map(i => window.escapeHTML(rotulo(i))).join('</strong>, <strong>')}</strong>. Confira se não é o mesmo.`;
+                } catch (e) { /* o aviso é opcional: sem conexão, segue sem ele */ }
+            }, 350);
+        });
     },
 
     setButtonLoading: (buttonId, isLoading) => {
@@ -194,11 +289,22 @@ const UI = {
             </div>`;
     },
 
-    switchView: (viewName) => {
+    /**
+     * Troca a tela. Se houver texto não enviado na tela atual, pergunta antes.
+     * Devolve uma promessa: true se trocou, false se a pessoa preferiu ficar.
+     */
+    switchView: (viewName, opcoes = {}) => {
         const mainContent = document.getElementById('dynamic-content');
         const pageTitle = document.getElementById('current-page-title');
 
-        if (!mainContent) return;
+        if (!mainContent) return Promise.resolve(false);
+
+        if (!opcoes.forcar && window.Salvaguardas && window.Salvaguardas.formularioSujoNaTela()) {
+            return UI.confirm(
+                'Você tem um texto não enviado nesta tela. Ele fica guardado como rascunho neste navegador, mas não será enviado.',
+                { title: 'Sair sem enviar?', confirmText: 'Sair da tela', cancelText: 'Continuar editando' }
+            ).then(sair => (sair ? UI.switchView(viewName, { forcar: true }) : false));
+        }
 
         document.querySelectorAll('.nav-item').forEach(btn => {
             btn.classList.remove('active');
@@ -217,6 +323,7 @@ const UI = {
         mainContent.innerHTML = UI.loading();
         const event = new CustomEvent('viewChanged', { detail: { view: viewName } });
         document.dispatchEvent(event);
+        return Promise.resolve(true);
     }
 };
 
@@ -244,15 +351,20 @@ document.addEventListener('DOMContentLoaded', () => {
     UI.switchView(existe ? pedida : 'inicio');
 });
 
-document.addEventListener('keydown', (e) => {
-    if (e.key !== 'Escape') return;
-    document.querySelectorAll('.modal-overlay').forEach(modal => {
-        if (modal.classList.contains('is-locked')) return;
-        if (getComputedStyle(modal).display !== 'none') {
-            modal.style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
-    });
+// Esc fecha só o modal de cima, e pergunta antes se houver texto não salvo.
+document.addEventListener('keydown', async (e) => {
+    if (e.key !== 'Escape' || e.defaultPrevented) return;
+    const abertos = Array.from(document.querySelectorAll('.modal-overlay')).filter(m => getComputedStyle(m).display !== 'none');
+    const modal = (window.Salvaguardas && window.Salvaguardas.modalDoTopo()) || abertos[abertos.length - 1];
+    if (!modal || modal.classList.contains('is-locked')) return;
+    e.preventDefault();
+
+    const cancelar = modal.querySelector('[data-role="cancel"]');
+    if (cancelar) { cancelar.click(); return; }
+
+    if (window.Salvaguardas && !(await window.Salvaguardas.podeDescartar(modal))) return;
+    modal.style.display = 'none';
+    if (abertos.length <= 1) document.body.style.overflow = 'auto';
 });
 
 document.querySelectorAll('.nav-item').forEach(item => {

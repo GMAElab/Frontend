@@ -3,6 +3,7 @@
 // ==========================================
 (function () {
     const CHAVE_TEMA = 'sgci-theme';
+    const CHAVE_DENSIDADE = 'sgci-densidade';
     const JANELA_DO_G_MS = 1000;
     const ehMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
 
@@ -30,6 +31,24 @@
     }
 
     // ==========================================
+    // MODO BANCADA: letras e botões maiores
+    // Para tablet, luvas ou leitura a distância.
+    // ==========================================
+    const emModoBancada = () => document.documentElement.dataset.densidade === 'bancada';
+
+    function aplicarDensidade(bancada) {
+        if (bancada) document.documentElement.dataset.densidade = 'bancada';
+        else delete document.documentElement.dataset.densidade;
+        try { localStorage.setItem(CHAVE_DENSIDADE, bancada ? 'bancada' : 'compacta'); } catch (e) { /* bloqueado */ }
+        document.getElementById('btn-densidade')?.setAttribute('aria-pressed', String(bancada));
+    }
+
+    function alternarDensidade() {
+        aplicarDensidade(!emModoBancada());
+        window.UI?.showToast(emModoBancada() ? 'Modo bancada ativado: letras e botões maiores.' : 'Modo compacto ativado.', 'info');
+    }
+
+    // ==========================================
     // CONTEXTO DE DIGITAÇÃO
     // ==========================================
     function digitando(alvo) {
@@ -46,15 +65,16 @@
     // ==========================================
     // COMANDOS
     // ==========================================
-    function irPara(view) {
-        window.UI.switchView(view);
+    // Respeita a pergunta "Sair sem enviar?": só segue se a troca de tela aconteceu.
+    async function irPara(view) {
         document.getElementById('sidebar')?.classList.remove('open');
+        return window.UI.switchView(view);
     }
 
     function abrirEm(view, abrir) {
-        return () => {
-            irPara(view);
-            if (typeof abrir === 'function') abrir();
+        return async () => {
+            const trocou = await irPara(view);
+            if (trocou && typeof abrir === 'function') abrir();
         };
     }
 
@@ -85,6 +105,7 @@
         const btn2fa = document.getElementById('btn-setup-2fa');
         const sistema = [
             { rotulo: temaAtual() === 'dark' ? 'Usar tema claro' : 'Usar tema escuro', icone: temaAtual() === 'dark' ? 'sun' : 'moon', termos: 'tema aparência modo', executar: alternarTema },
+            { rotulo: emModoBancada() ? 'Voltar ao modo compacto' : 'Modo bancada (letras e botões maiores)', icone: 'eye', termos: 'acessibilidade tamanho fonte zoom tablet luva densidade', executar: alternarDensidade },
             btn2fa && btn2fa.style.display !== 'none' && { rotulo: 'Ativar verificação em duas etapas', icone: 'lock', termos: '2fa segurança', executar: () => window.abrirSetup2FA?.() },
             { rotulo: 'Sair', icone: 'log-out', termos: 'logout encerrar sessão', executar: () => document.getElementById('btn-logout')?.click() },
         ].filter(Boolean).map(c => ({ grupo: 'Sistema', ...c }));
@@ -267,8 +288,10 @@
     // ==========================================
     document.addEventListener('DOMContentLoaded', () => {
         aplicarTema(temaAtual());
+        aplicarDensidade(emModoBancada());
 
         document.getElementById('btn-theme')?.addEventListener('click', alternarTema);
+        document.getElementById('btn-densidade')?.addEventListener('click', alternarDensidade);
         document.getElementById('btn-palette')?.addEventListener('click', abrirPaleta);
         document.querySelectorAll('kbd[data-mod]').forEach(k => { k.textContent = ehMac ? '⌘' : 'Ctrl'; });
 
@@ -289,5 +312,5 @@
         });
     });
 
-    window.Shell = { abrirPaleta, alternarTema };
+    window.Shell = { abrirPaleta, alternarTema, alternarDensidade };
 })();

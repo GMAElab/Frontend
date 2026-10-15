@@ -6,14 +6,14 @@
     <title>Solicitar acesso · SGCI</title>
 
     <meta name="color-scheme" content="dark light">
-    <script>try { var t = localStorage.getItem('sgci-theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}</script>
+    <script>try { var t = localStorage.getItem('sgci-theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; if (localStorage.getItem('sgci-densidade') === 'bancada') document.documentElement.dataset.densidade = 'bancada'; } catch (e) {}</script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap">
-    <link rel="stylesheet" href="css/global.css?v=5">
-    <link rel="stylesheet" href="css/layout.css?v=5">
-    <link rel="stylesheet" href="css/components.css?v=5">
+    <link rel="stylesheet" href="css/global.css?v=7">
+    <link rel="stylesheet" href="css/layout.css?v=7">
+    <link rel="stylesheet" href="css/components.css?v=7">
 </head>
 <body>
     <main class="auth-single">
@@ -67,6 +67,7 @@
 
     <script src="js/api.js"></script>
     <script src="js/ui.js"></script>
+    <script src="js/salvaguardas.js?v=1"></script>
     <script src="js/register.js"></script>
 </body>
 </html>

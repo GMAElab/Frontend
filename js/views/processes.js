@@ -109,6 +109,11 @@ window.openProcessModal = async function(id = null) {
     if (primeiraAba) primeiraAba.click();
 
     preencherVinculosDoProcesso(processo);
+    window.Salvaguardas?.vincularRascunho(form, `processo-${processo ? processo.id : 'novo'}`);
+    window.UI.avisarSemelhantes({
+        campo: 'proc-nome', endpoint: '/processes/', rotulo: p => p.nome_processo, tipo: 'processo',
+        ativo: () => !window.currentEditProcessId,
+    });
 };
 
 // ==========================================

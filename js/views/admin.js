@@ -481,11 +481,11 @@ window.viewLogPayload = function(index) {
             </div>
             <div class="stack">
                 <div>
-                    <label>Antes</label>
+                    <p class="label">Antes</p>
                     <pre>${window.escapeHTML(oldData)}</pre>
                 </div>
                 <div>
-                    <label>Depois</label>
+                    <p class="label">Depois</p>
                     <pre>${window.escapeHTML(newData)}</pre>
                 </div>
             </div>
@@ -560,7 +560,7 @@ window.openDeepView = async function(route, id, entityName) {
                 const papeis = ['pesquisador', 'tecnico', 'coordenador', 'admin'];
                 html += `
                     <div class="input-group">
-                        <label>${labelAmigavel}</label>
+                        <label for="dv-input-${key}">${labelAmigavel}</label>
                         <select id="dv-input-${key}" class="form-control">
                             ${papeis.map(p => `<option value="${p}" ${value === p ? 'selected' : ''}>${p}</option>`).join('')}
                         </select>
@@ -586,7 +586,7 @@ window.openDeepView = async function(route, id, entityName) {
 
             html += `
                 <div class="input-group">
-                    <label>${labelAmigavel}</label>
+                    <label for="dv-input-${key}">${labelAmigavel}</label>
                     <input type="text" id="dv-input-${key}" class="form-control" value="${safeValue}">
                 </div>
             `;

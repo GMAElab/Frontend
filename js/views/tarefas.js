@@ -112,6 +112,11 @@ function buscarTarefaEmCache(id) {
     return todas.find(t => t.id === id);
 }
 
+function agoraLocal() {
+    const agora = new Date();
+    return new Date(agora.getTime() - agora.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+}
+
 function fecharModais(...ids) {
     ids.forEach(id => { const el = document.getElementById(id); if (el) el.remove(); });
 }
@@ -236,7 +241,6 @@ function renderLinhaTarefaGestor(t) {
                 <div class="row-actions">
                     <button class="link-btn" onclick="window.abrirModalConcluir(${t.id})">Concluir</button>
                     <button class="link-btn muted" onclick="window.abrirModalTarefa(${t.id})">Editar</button>
-                    <button class="link-btn danger" onclick="window.excluirTarefa(${t.id})">Excluir</button>
                 </div>
             </td>
         </tr>
@@ -478,7 +482,7 @@ window.abrirModalTarefa = async function (id = null) {
                 <div class="field-grid">
                     <div class="input-group">
                         <label for="tarefa-prazo">Prazo</label>
-                        <input type="datetime-local" id="tarefa-prazo" value="${tarefa && tarefa.prazo ? tarefa.prazo.substring(0, 16) : ''}">
+                        <input type="datetime-local" id="tarefa-prazo" value="${tarefa && tarefa.prazo ? tarefa.prazo.substring(0, 16) : ''}" ${editando ? '' : `min="${agoraLocal()}"`}>
                     </div>
                     <div class="input-group">
                         <label for="tarefa-prioridade">Prioridade</label>
@@ -491,8 +495,8 @@ window.abrirModalTarefa = async function (id = null) {
                 </div>
                 ${htmlSelectsVinculo('tarefa')}
                 <div class="input-group">
-                    <label>Atribuir a</label>
-                    <div id="tarefa-equipe-container" class="check-chips">${window.UI.loading('Carregando equipe')}</div>
+                    <span class="label" id="rotulo-tarefa-equipe">Atribuir a</span>
+                    <div id="tarefa-equipe-container" class="check-chips" role="group" aria-labelledby="rotulo-tarefa-equipe">${window.UI.loading('Carregando equipe')}</div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" onclick="document.getElementById('modalTarefa').remove()">Cancelar</button>
@@ -503,6 +507,7 @@ window.abrirModalTarefa = async function (id = null) {
     </div>`);
 
     if (tarefa) document.getElementById('tarefa-prioridade').value = tarefa.prioridade;
+    window.Salvaguardas?.vincularRascunho(document.getElementById('formTarefa'), `tarefa-${id || 'nova'}`);
     carregarOpcoesVinculo('tarefa-processo', 'tarefa-topico', tarefa ? tarefa.processo_id : null, tarefa ? tarefa.topico_id : null);
 
     const atribuidosAtuais = tarefa ? tarefa.atribuidos.map(a => a.id) : [];
@@ -539,7 +544,24 @@ window.salvarTarefa = async function (e, id) {
         window.UI.showToast('Selecione ao menos um responsável.', 'warning');
         btn.disabled = false;
         btn.innerText = textoOriginal;
+        document.querySelector('input[name="tarefa_atribuido_cb"]')?.focus();
         return;
+    }
+
+    const prazoDigitado = document.getElementById('tarefa-prazo').value;
+    const tarefaAtual = id ? (window.tarefasEquipeCache || []).find(t => t.id === id) : null;
+    const prazoOriginal = tarefaAtual && tarefaAtual.prazo ? tarefaAtual.prazo.substring(0, 16) : '';
+    if (prazoDigitado && prazoDigitado !== prazoOriginal && new Date(prazoDigitado) < new Date()) {
+        const seguir = await window.UI.confirm(
+            'O prazo escolhido já passou. A tarefa vai aparecer como atrasada desde o início.',
+            { title: 'Prazo no passado', confirmText: 'Salvar assim mesmo', cancelText: 'Corrigir prazo' }
+        );
+        if (!seguir) {
+            btn.disabled = false;
+            btn.innerText = textoOriginal;
+            document.getElementById('tarefa-prazo').focus();
+            return;
+        }
     }
 
     const payload = {
@@ -577,6 +599,7 @@ window.excluirTarefa = async function (id) {
     try {
         const res = await window.api.fetchProtected(`/tarefas/${id}`, { method: 'DELETE' });
         if (!res.ok) throw new Error(await mensagemDeErro(res, 'Falha ao excluir tarefa.'));
+        fecharModais('modalDetalhesTarefa');
         window.UI.showToast('Tarefa excluída.', 'success');
         recarregarTarefas();
     } catch (err) {
@@ -642,6 +665,7 @@ window.abrirDetalhesTarefa = function (id) {
         <div class="cluster mb-md">
             <button type="button" class="btn btn-primary btn-sm" onclick="window.abrirModalConcluir(${tarefa.id})">Concluir tarefa</button>
             ${emRevisao ? `<button type="button" class="btn btn-secondary btn-sm" onclick="window.abrirModalDevolver(${tarefa.id})">Devolver para ajustes</button>` : ''}
+            <button type="button" class="btn btn-outline-danger btn-sm push-end" onclick="window.excluirTarefa(${tarefa.id})">Excluir tarefa</button>
         </div>` : '';
 
     const progressoHtml = souAtribuido ? `
@@ -928,8 +952,8 @@ window.abrirModalConcluir = function (id) {
                     <textarea id="concluir-licoes" rows="3" placeholder="O que faria diferente? O que evitar?"></textarea>
                 </div>
                 <div class="input-group">
-                    <label>Palavras-chave</label>
-                    <div id="concluir-tags"></div>
+                    <span class="label" id="rotulo-concluir-tags">Palavras-chave</span>
+                    <div id="concluir-tags" role="group" aria-labelledby="rotulo-concluir-tags"></div>
                     <span class="help">Ajudam a encontrar este registro na busca. Reaproveite as já existentes.</span>
                 </div>
                 ${htmlSelectsVinculo('concluir')}
@@ -943,6 +967,7 @@ window.abrirModalConcluir = function (id) {
 
     const tagInput = criarInputDeTags('concluir-tags', tarefa.tags || []);
     carregarOpcoesVinculo('concluir-processo', 'concluir-topico', tarefa.processo_id, tarefa.topico_id);
+    window.Salvaguardas?.vincularRascunho(document.getElementById('formConcluirTarefa'), `concluir-${id}`);
 
     document.getElementById('formConcluirTarefa').addEventListener('submit', async (e) => {
         e.preventDefault();

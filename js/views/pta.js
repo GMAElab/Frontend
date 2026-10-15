@@ -83,11 +83,15 @@ function renderPTAPesquisador() {
                     <div class="field-grid">
                         <div class="input-group">
                             <label for="pta-mes">Mês</label>
-                            <input type="number" id="pta-mes" class="mono" value="${dataAtual.getMonth() + 1}" min="1" max="12" required onchange="window.carregarPTAUnificadoEquipe()">
+                            <select id="pta-mes" required onchange="window.carregarPTAUnificadoEquipe()">
+                                ${MESES_DO_ANO.map((nome, i) => `<option value="${i + 1}" ${i === dataAtual.getMonth() ? 'selected' : ''}>${nome[0].toUpperCase() + nome.slice(1)}</option>`).join('')}
+                            </select>
                         </div>
                         <div class="input-group">
                             <label for="pta-ano">Ano</label>
-                            <input type="number" id="pta-ano" class="mono" value="${dataAtual.getFullYear()}" required onchange="window.carregarPTAUnificadoEquipe()">
+                            <select id="pta-ano" required onchange="window.carregarPTAUnificadoEquipe()">
+                                ${[-2, -1, 0, 1].map(d => dataAtual.getFullYear() + d).map(a => `<option value="${a}" ${a === dataAtual.getFullYear() ? 'selected' : ''}>${a}</option>`).join('')}
+                            </select>
                         </div>
                     </div>
 
@@ -119,6 +123,7 @@ function renderPTAPesquisador() {
                         <textarea id="pta-descricao" rows="7" placeholder="Experimentos realizados, resultados obtidos, próximos passos" required></textarea>
                     </div>
 
+                    <p class="pta-resumo" id="pta-resumo" aria-live="polite"></p>
                     <button type="submit" class="btn btn-primary btn-block">Enviar planejamento</button>
                 </form>
             </section>
@@ -144,7 +149,41 @@ function renderPTAPesquisador() {
 
     carregarDropdownTopicos('pta-topico');
     carregarMeusPTAs();
-    document.getElementById('form-pta').addEventListener('submit', window.prepararEnvioRelatorio);
+    const form = document.getElementById('form-pta');
+    form.addEventListener('submit', window.prepararEnvioRelatorio);
+    form.addEventListener('change', atualizarResumoPTA);
+    form.addEventListener('reset', () => setTimeout(atualizarResumoPTA, 0));
+    window.Salvaguardas?.vincularRascunho(form, 'pta');
+    atualizarResumoPTA();
+}
+
+// ==========================================
+// RESUMO DO RELATO ANTES DE ENVIAR
+// Evita o erro mais comum: relatar no mês errado.
+// ==========================================
+const MESES_DO_ANO = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+
+function atualizarResumoPTA() {
+    const resumo = document.getElementById('pta-resumo');
+    if (!resumo) return;
+
+    const topico = document.getElementById('pta-topico');
+    const mes = parseInt(document.getElementById('pta-mes').value, 10);
+    const ano = parseInt(document.getElementById('pta-ano').value, 10);
+    const opcao = topico && topico.value ? topico.selectedOptions[0] : null;
+    const hoje = new Date();
+    const foraDoMes = mes !== hoje.getMonth() + 1 || ano !== hoje.getFullYear();
+
+    const acao = window.ptaEditandoId ? 'Você está editando o relato de' : 'Você está registrando';
+    resumo.innerHTML = `${acao} <strong>${MESES_DO_ANO[mes - 1]} de ${ano}</strong>${opcao ? ` · ${window.escapeHTML(opcao.textContent)}` : ''}${foraDoMes ? ' <span class="badge badge-warning">não é o mês atual</span>' : ''}`;
+}
+
+function garantirAnoNoSeletor(ano) {
+    const select = document.getElementById('pta-ano');
+    if (!select || select.querySelector(`option[value="${ano}"]`)) return;
+    const opcao = new Option(String(ano), String(ano));
+    const depois = Array.from(select.options).find(o => parseInt(o.value, 10) > ano);
+    select.insertBefore(opcao, depois || null);
 }
 
 // ==========================================
@@ -218,6 +257,7 @@ window.sincronizarAvanco = function(origem) {
 window.atualizarAvisoUltimoPTA = function() {
     const topicoElement = document.getElementById('pta-topico');
     if (!topicoElement) return;
+    atualizarResumoPTA();
 
     const topicoId = topicoElement.value;
     const avisoContainer = document.getElementById('ultimo-pta-aviso');
@@ -840,6 +880,7 @@ window.carregarParaEdicao = function(id) {
 
     document.getElementById('pta-topico').value = rel.topico_id;
     document.getElementById('pta-mes').value = rel.mes_referencia;
+    garantirAnoNoSeletor(rel.ano_referencia);
     document.getElementById('pta-ano').value = rel.ano_referencia;
 
     window.ptaEditandoId = rel.id;
@@ -848,6 +889,8 @@ window.carregarParaEdicao = function(id) {
 
     definirAvanco(rel.percentual_avanco);
     document.getElementById('pta-descricao').value = rel.descricao_atividades;
+    window.Salvaguardas?.vincularRascunho(document.getElementById('form-pta'), `pta-edicao-${rel.id}`);
+    atualizarResumoPTA();
 
     const btnSubmit = document.querySelector('#form-pta button[type="submit"]');
     btnSubmit.innerText = "Atualizar Planejamento Mensal";
@@ -869,6 +912,7 @@ window.carregarParaEdicao = function(id) {
 window.cancelarEdicaoPTA = function() {
     window.ptaEditandoId = null;
     document.getElementById('form-pta').reset();
+    document.getElementById('form-pta').dataset.rascunho = 'pta';
     definirAvanco(50);
 
     const btnSubmit = document.querySelector('#form-pta button[type="submit"]');
@@ -1022,7 +1066,9 @@ window.abrirModalDevolucao = function(relatorioId) {
             </div>
         `;
         document.body.appendChild(modal);
-        modal.addEventListener('click', (e) => { if (e.target === modal) window.fecharModalDevolucao(); });
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal && !document.getElementById('texto-motivo-devolucao').value.trim()) window.fecharModalDevolucao();
+        });
     }
     document.getElementById('texto-motivo-devolucao').value = '';
     modal.style.display = 'flex';

@@ -66,8 +66,37 @@ window.openAddEquipmentModal = function() {
     if (modal) {
         modal.style.setProperty('display', 'flex', 'important');
         document.body.style.overflow = 'hidden';
+        window.Salvaguardas?.vincularRascunho(document.getElementById('form-new-eq'), 'equipamento-novo');
     }
 };
+
+// ==========================================
+// AJUDA AO PREENCHER: VÍDEO E NOME REPETIDO
+// ==========================================
+function conferirLinkDoVideo() {
+    const input = document.getElementById('eq-video');
+    const ajuda = document.getElementById('eq-video-ajuda');
+    if (!input || !ajuda) return;
+    const url = input.value.trim();
+    const embed = window.UI.youtubeEmbed(url);
+
+    ajuda.classList.remove('text-warning');
+    if (!url) {
+        ajuda.textContent = 'Cole o link do YouTube como aparece no navegador. Qualquer formato serve.';
+    } else if (embed) {
+        const id = embed.split('/').pop();
+        ajuda.innerHTML = `<span class="video-ok"><img src="https://img.youtube.com/vi/${id}/default.jpg" alt="" width="48" height="36" loading="lazy"> Vídeo do YouTube reconhecido.</span>`;
+    } else {
+        ajuda.classList.add('text-warning');
+        ajuda.textContent = 'Não parece um link do YouTube. Ele será mostrado como link externo, não como vídeo na página.';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('eq-video')?.addEventListener('input', conferirLinkDoVideo);
+    conferirLinkDoVideo();
+    window.UI.avisarSemelhantes({ campo: 'eq-name', endpoint: '/equipments/', rotulo: e => e.nome, tipo: 'equipamento' });
+});
 
 window.closeEquipModal = function() {
     const modal = document.getElementById('modal-eq');
@@ -164,7 +193,9 @@ window.viewDossier = async function(id) {
         const eq = await res.json();
         const vinculos = resVinculos.ok ? await resVinculos.json() : { pops: [], processos: [] };
 
-        const videoEmbed = window.escapeHTML(eq.video_url);
+        const embed = window.UI.youtubeEmbed(eq.video_url);
+        const videoEmbed = embed ? window.escapeHTML(embed) : '';
+        const linkExterno = !embed && eq.video_url ? window.escapeHTML(eq.video_url) : '';
 
         const dossierTitle = document.getElementById('dossier-title');
         const dossierBody = document.getElementById('dossier-body');
@@ -182,7 +213,7 @@ window.viewDossier = async function(id) {
                     </div>
                     <div>
                         <dt>treinamento</dt>
-                        <dd class="plain">${videoEmbed ? 'Vídeo acima.' : '<span class="text-faint">Nenhum vídeo cadastrado.</span>'}</dd>
+                        <dd class="plain">${videoEmbed ? 'Vídeo acima.' : linkExterno ? `<a href="${linkExterno}" target="_blank" rel="noopener">Abrir vídeo (link externo)</a>` : '<span class="text-faint">Nenhum vídeo cadastrado.</span>'}</dd>
                     </div>
                     ${renderVinculosEquipamento(vinculos, eq.manual_url)}
                 </dl>

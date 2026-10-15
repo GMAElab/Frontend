@@ -626,3 +626,17 @@
     .modal-footer { margin: var(--space-4) calc(var(--space-4) * -1) calc(var(--space-4) * -1); padding: var(--space-3) var(--space-4); flex-wrap: wrap; }
     .split-sheet > section, .sheet-head { padding: var(--space-4); }
 }
+
+/* ==========================================
+   MODO BANCADA
+   Letras e alvos de toque maiores para tablet,
+   luvas ou leitura a distância.
+   ========================================== */
+:root[data-densidade="bancada"] .content-area,
+:root[data-densidade="bancada"] .modal-content,
+:root[data-densidade="bancada"] .cmdk,
+:root[data-densidade="bancada"] #toast-container,
+:root[data-densidade="bancada"] .auth-panel { zoom: 1.2; }
+:root[data-densidade="bancada"] .sidebar,
+:root[data-densidade="bancada"] .topbar { zoom: 1.1; }
+:root[data-densidade="bancada"] #btn-densidade { color: var(--text); background: var(--surface-2); }

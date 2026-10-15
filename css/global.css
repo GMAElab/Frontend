@@ -22,7 +22,7 @@
     --text: #e7e9ec;
     --text-2: #b7bcc4;
     --muted: #8a919b;
-    --faint: #5c636d;
+    --faint: #878e98;
 
     /* --- Bordas --- */
     --line: #23272d;
@@ -43,7 +43,7 @@
     --success-tint: rgba(255, 255, 255, 0.07);
     --warning: #f5b544;
     --warning-tint: rgba(245, 181, 68, 0.11);
-    --danger: #f2646a;
+    --danger: #f47a7f;
     --danger-solid: #d9434a;
     --danger-tint: rgba(242, 100, 106, 0.11);
     --info: #4cc3f0;
@@ -67,8 +67,8 @@
 
     --text: #15181c;
     --text-2: #3a3f47;
-    --muted: #666d77;
-    --faint: #9aa0a8;
+    --muted: #565d67;
+    --faint: #60666f;
 
     --line: #e1e3e7;
     --line-strong: #cfd3d9;
@@ -84,12 +84,12 @@
 
     --success: #3a3f47;
     --success-tint: rgba(0, 0, 0, 0.06);
-    --warning: #a96a00;
+    --warning: #845200;
     --warning-tint: rgba(214, 140, 0, 0.11);
-    --danger: #c9343b;
+    --danger: #ad272e;
     --danger-solid: #c9343b;
     --danger-tint: rgba(201, 52, 59, 0.08);
-    --info: #0a7fb0;
+    --info: #066490;
     --info-tint: rgba(10, 127, 176, 0.09);
 
     --shadow-pop: 0 0 0 1px var(--line-strong), 0 16px 40px -10px rgba(20, 23, 28, 0.22);

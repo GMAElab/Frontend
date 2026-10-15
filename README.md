@@ -17,6 +17,12 @@ Este projeto foi construído priorizando leveza, acessibilidade e ausência de d
 * **CSS Dinâmico**: Estilização baseada em variáveis CSS e estados controlados via JS para renderização de modais e transições de abas.
 * **Design system próprio**: Tokens em `css/global.css` (cores, tipografia Geist / Geist Mono, espaçamento em escala de 4px). Tema escuro por padrão e tema claro opcional, guardado no navegador (`sgci-theme`). Cores vivas só para estado: âmbar = atenção, vermelho = atraso/erro, ciano pulsando = em andamento.
 * **Atalhos**: `Ctrl/⌘ + K` abre a paleta de comandos (ir para uma seção ou criar um registro), `/` foca a busca da lista, `G` seguido de uma letra navega (`G I` início, `G E` equipamentos, `G P` processos, `G O` POPs, `G M` planejamento, `G T` tarefas, `G A` artigos, `G D` administração). A tela atual fica no endereço (`#tarefas`), então recarregar a página não volta ao início.
+* **Proteção contra erros** (`js/salvaguardas.js`, vale para todas as telas):
+  * Texto não salvo: fechar um modal com `Esc` ou trocar de tela pergunta antes. Formulários longos (relato mensal, tarefa, conclusão de tarefa, POP, processo, equipamento) guardam um rascunho no navegador, separado por pessoa, por 7 dias; ao reabrir, aparece a opção de restaurar. O rascunho é apagado quando o envio dá certo.
+  * Envio em duplicidade: enquanto a resposta não chega, o botão fica travado (`aria-busy`).
+  * Erros aparecem ao lado do campo inválido; avisos de erro ficam na tela até serem fechados; mensagens técnicas da API são traduzidas.
+  * Ao cadastrar equipamento, POP ou processo, o sistema mostra os registros com nome parecido.
+* **Acessibilidade**: modais anunciados como diálogo, com foco no primeiro campo e retorno ao ponto de origem; linhas e cartões clicáveis funcionam com Tab + Enter; contraste mínimo de 4,5:1 nos dois temas; **modo bancada** (botão ao lado do tema ou `Ctrl/⌘ + K`) amplia letras e botões para tablet, luvas ou leitura a distância.
 * **Sessão por cookie**: O login fica em um cookie `HttpOnly` enviado pela API; as requisições que alteram dados levam o header `X-CSRF-Token`. Tudo isso é tratado em `js/api.js`.
 
 ---
@@ -113,6 +119,7 @@ A arquitetura de pastas foi pensada para manter a separação de responsabilidad
     ├── register.js       # Envio do pedido de cadastro
     ├── ui.js             # Roteador de telas, manipulação de DOM e Toasts
     ├── shell.js          # Tema, paleta de comandos, atalhos de teclado e indicador de conexão
+    ├── salvaguardas.js   # Rascunhos, envio duplicado, foco dos modais, teclado e validação
     ├── listagem.js       # Tabela com busca, filtros e paginação, usada pelas listas
     ├── vinculos.js       # Opções de equipamentos e pessoas para filtros e formulários
     ├── dashboard.js      # Inicialização do sistema e listeners globais
