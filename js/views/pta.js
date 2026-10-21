@@ -65,7 +65,7 @@ function renderPTAPesquisador() {
     main.innerHTML = `
         <header class="page-head fade-in">
             <div>
-                <p class="eyebrow">relato mensal</p>
+                <p class="eyebrow">PTA mensal</p>
                 <h1>Planejamento mensal</h1>
                 <p class="lede">Registre o avanço do mês em cada tópico de pesquisa e veja o que a equipe já enviou.</p>
             </div>
@@ -73,7 +73,7 @@ function renderPTAPesquisador() {
 
         <div class="columns fade-in">
             <section>
-                <div class="section-head"><h3>Novo relato</h3></div>
+                <div class="section-head"><h3>Novo PTA</h3></div>
                 <form id="form-pta">
                     <div class="input-group">
                         <label for="pta-topico">Tópico de pesquisa</label>
@@ -114,7 +114,7 @@ function renderPTAPesquisador() {
                     </div>
 
                     <div id="ultimo-pta-aviso" class="note hidden">
-                        <p class="mono">último relato · <span id="ultimo-pta-mes"></span> · avanço <span id="ultimo-pta-avanco"></span>%</p>
+                        <p class="mono">último PTA · <span id="ultimo-pta-mes"></span> · avanço <span id="ultimo-pta-avanco"></span>%</p>
                         <p id="ultimo-pta-texto" class="pre-wrap"></p>
                     </div>
 
@@ -174,7 +174,7 @@ function atualizarResumoPTA() {
     const hoje = new Date();
     const foraDoMes = mes !== hoje.getMonth() + 1 || ano !== hoje.getFullYear();
 
-    const acao = window.ptaEditandoId ? 'Você está editando o relato de' : 'Você está registrando';
+    const acao = window.ptaEditandoId ? 'Você está editando o PTA de' : 'Você está registrando';
     resumo.innerHTML = `${acao} <strong>${MESES_DO_ANO[mes - 1]} de ${ano}</strong>${opcao ? ` · ${window.escapeHTML(opcao.textContent)}` : ''}${foraDoMes ? ' <span class="badge badge-warning">não é o mês atual</span>' : ''}`;
 }
 
@@ -201,7 +201,7 @@ function elementosDoAvanco() {
 
 function textoDeAjudaAvanco(minimo, ajustadoPara) {
     const base = minimo > 0
-        ? `De ${minimo} a 100. O mínimo é ${minimo}%, o avanço do seu último relato neste tópico.`
+        ? `De ${minimo} a 100. O mínimo é ${minimo}%, o avanço do seu último PTA neste tópico.`
         : 'De 0 a 100. Digite o número ou arraste o controle; as setas ajustam de 1 em 1.';
     return ajustadoPara === undefined ? base : `Ajustado para ${ajustadoPara}%. ${base}`;
 }
@@ -304,7 +304,7 @@ async function carregarMeusPTAs() {
         const relatorios = await res.json();
 
         if (relatorios.length === 0) {
-            container.innerHTML = window.UI.emptyState({ title: 'Nenhum relato enviado', description: 'Seu histórico aparece aqui depois do primeiro envio.' });
+            container.innerHTML = window.UI.emptyState({ title: 'Nenhum PTA enviado', description: 'Seu histórico aparece aqui depois do primeiro envio.' });
             return;
         }
 
@@ -467,7 +467,7 @@ function renderPTACoordenador() {
             <div>
                 <p class="eyebrow">coordenação</p>
                 <h1>Planejamento mensal</h1>
-                <p class="lede">Escolha um mês para avaliar os relatos enviados e gerar o texto consolidado.</p>
+                <p class="lede">Escolha um mês para avaliar os PTAs enviados e gerar o texto consolidado.</p>
             </div>
             <div class="year-nav">
                 <button class="icon-btn" onclick="mudarAnoCalendario(-1)" aria-label="Ano anterior">${window.Icon('chevron-left', { size: 16 })}</button>
@@ -492,7 +492,7 @@ function renderPTACoordenador() {
 
                 <section>
                     <div class="section-head"><h3>Texto consolidado</h3></div>
-                    <p class="text-muted text-small mb-md">Reúne em um único texto os relatos <strong>aprovados</strong> do tópico neste mês.</p>
+                    <p class="text-muted text-small mb-md">Reúne em um único texto os PTAs <strong>aprovados</strong> do tópico neste mês.</p>
 
                     <div class="input-group">
                         <label for="ia-topico-id">Tópico</label>
@@ -610,7 +610,7 @@ window.carregarPendenciasChefia = async function(mes, ano) {
         const relatorios = await res.json();
 
         if (relatorios.length === 0) {
-            container.innerHTML = window.UI.emptyState({ title: 'Nada aguardando avaliação', description: 'Nenhum relato pendente neste mês.' });
+            container.innerHTML = window.UI.emptyState({ title: 'Nada aguardando avaliação', description: 'Nenhum PTA pendente neste mês.' });
             return;
         }
 
@@ -658,7 +658,7 @@ window.carregarAprovadosChefia = async function(mes, ano) {
         const aprovados = await res.json();
 
         if (aprovados.length === 0) {
-            container.innerHTML = window.UI.emptyState({ title: 'Nenhum relato aprovado neste mês' });
+            container.innerHTML = window.UI.emptyState({ title: 'Nenhum PTA aprovado neste mês' });
             return;
         }
         const mapaRelatorios = new Map();
@@ -688,7 +688,7 @@ window.carregarAprovadosChefia = async function(mes, ano) {
         });
         container.innerHTML = html;
     } catch (err) {
-        container.innerHTML = window.UI.errorState('Não foi possível carregar os relatos aprovados.');
+        container.innerHTML = window.UI.errorState('Não foi possível carregar os PTAs aprovados.');
     }
 }
 
@@ -935,7 +935,7 @@ window.carregarPTAUnificadoEquipe = async function() {
 
     if (!topicoId || !mes || !ano) return;
 
-    container.innerHTML = window.UI.loading('Buscando relatos da equipe');
+    container.innerHTML = window.UI.loading('Buscando PTAs da equipe');
 
     try {
         const res = await window.api.fetchProtected(`/pta/equipe/ptaunificado?topico_id=${topicoId}&mes=${mes}&ano=${ano}`);
@@ -944,7 +944,7 @@ window.carregarPTAUnificadoEquipe = async function() {
         const relatoriosExibir = relatorios;
 
         if (relatoriosExibir.length === 0) {
-            container.innerHTML = window.UI.emptyState({ title: 'Ninguém enviou ainda', description: 'Nenhum relato deste tópico no mês selecionado.' });
+            container.innerHTML = window.UI.emptyState({ title: 'Ninguém enviou ainda', description: 'Nenhum PTA deste tópico no mês selecionado.' });
             return;
         }
 
@@ -1054,7 +1054,7 @@ window.abrirModalDevolucao = function(relatorioId) {
         modal.innerHTML = `
             <div class="modal-content modal-sm">
                 <div class="modal-header"><h3>Devolver para revisão</h3></div>
-                <p class="dialog-text mb-md">A observação fica anexada ao relato para orientar a correção.</p>
+                <p class="dialog-text mb-md">A observação fica anexada ao PTA para orientar a correção.</p>
 
                 <label for="texto-motivo-devolucao">O que precisa ser ajustado</label>
                 <textarea id="texto-motivo-devolucao" rows="4" placeholder="Ex.: faltou detalhar a curva de temperatura do experimento 2"></textarea>

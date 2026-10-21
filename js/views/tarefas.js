@@ -134,7 +134,7 @@ function routerTarefas() {
             <div>
                 <p class="eyebrow">${gestor ? 'equipe' : 'atribuídas a você'}</p>
                 <h1>Tarefas</h1>
-                <p class="lede">${gestor ? 'Atribua tarefas, revise entregas e consulte o que já foi concluído.' : 'Reporte seu progresso e consulte o que a equipe já concluiu.'}</p>
+                <p class="lede">${gestor ? 'Atribua tarefas, revise entregas e consulte o que já foi concluído.' : ' Consulte aqui as tarefas que você e a equipe já concluiram.'}</p>
             </div>
             <div class="page-actions" id="tarefas-acoes-topo"></div>
         </header>

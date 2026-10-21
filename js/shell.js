@@ -99,7 +99,7 @@
             { rotulo: 'Novo processo de P&D', icone: 'plus', termos: 'mapear pesquisa', executar: abrirEm('processes', () => window.openProcessModal?.()) },
             { rotulo: 'Novo POP', icone: 'file-plus', termos: 'procedimento operacional', executar: abrirEm('pops', () => window.openPopModal?.()) },
             ehGestor() && { rotulo: 'Nova tarefa', icone: 'plus', termos: 'atribuir', executar: abrirEm('tarefas', () => window.abrirModalTarefa?.()) },
-            { rotulo: 'Registrar relato do mês', icone: 'calendar', termos: 'planejamento pta avanço', executar: () => irPara('pta') },
+            { rotulo: 'Registrar PTA do mês', icone: 'calendar', termos: 'planejamento pta avanço', executar: () => irPara('pta') },
         ].filter(Boolean).map(c => ({ grupo: 'Criar', ...c }));
 
         const btn2fa = document.getElementById('btn-setup-2fa');

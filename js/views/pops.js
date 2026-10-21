@@ -10,7 +10,7 @@ document.addEventListener('viewChanged', (e) => {
                 <div>
                     <p class="eyebrow">laboratório</p>
                     <h1>Procedimentos operacionais padrão</h1>
-                    <p class="lede">Os POPs vigentes do laboratório, com histórico de revisões e exportação em .docx.</p>
+                    <p class="lede">Os POPs do laboratório, com histórico de revisões e exportação em .docx.</p>
                 </div>
                 <div class="page-actions">
                     <button class="btn btn-primary" onclick="window.openPopModal()">Novo POP</button>
