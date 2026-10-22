@@ -3,338 +3,299 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="color-scheme" content="dark light">
-    <title>SGCI · GMAE</title>
-    <script>try { var t = localStorage.getItem('sgci-theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; if (localStorage.getItem('sgci-densidade') === 'bancada') document.documentElement.dataset.densidade = 'bancada'; } catch (e) {}</script>
-
+    <title>LEQM Hub - Gestão de PD&I</title>
+    
+    <!-- Importação das fontes otimizadas para leitura de dados -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap">
-    <link rel="stylesheet" href="css/global.css?v=8">
-    <link rel="stylesheet" href="css/layout.css?v=8">
-    <link rel="stylesheet" href="css/components.css?v=8">
+    <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Link para os seus arquivos de estilo -->
+    <link rel="stylesheet" href="global.css">
+    <link rel="stylesheet" href="layout.css">
+    <link rel="stylesheet" href="components.css">
 </head>
-<body class="dashboard-layout">
+<body>
 
-    <aside class="sidebar" id="sidebar">
+<div class="dashboard-layout">
+    
+    <!-- ==========================================
+         BARRA LATERAL
+         ========================================== -->
+    <aside class="sidebar">
         <div class="sidebar-brand">
-            <span class="brand-glyph" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6.34L4.24 17.5A2 2 0 0 0 6 20.5h12a2 2 0 0 0 1.76-3L15 8.34V2"/><path d="M8.5 2h7"/><path d="M6.5 14.5h11"/></svg></span>
-            <span class="brand-text">
-                <span class="brand-mark">SGCI / GMAE</span>
-                <span class="brand-sub">Conhecimento e inovação</span>
-            </span>
+            <div class="brand-glyph">
+                <!-- Ícone geométrico minimalista (Lucide: Hexagon) -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+            </div>
+            <div class="brand-text">
+                <span class="brand-mark">LEQM Hub</span>
+                <span class="brand-sub">Ecossistema de Inovação</span>
+            </div>
         </div>
 
-        <button type="button" class="search-trigger" id="btn-palette" aria-label="Buscar ou executar um comando">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-            <span class="label">Ir para…</span>
-            <span class="keys"><kbd data-mod>Ctrl</kbd><kbd>K</kbd></span>
+        <button class="search-trigger">
+            <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <span class="label">Buscar registros...</span>
+            <div class="keys">
+                <kbd>⌘</kbd><kbd>K</kbd>
+            </div>
         </button>
 
-        <nav class="sidebar-nav" aria-label="Seções">
+        <nav class="sidebar-nav">
             <ul>
-                <li><button class="nav-item active" data-view="inicio" data-label="Início" data-key="i"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg><span class="nav-label">Início</span><span class="nav-index">G I</span></button></li>
+                <li class="nav-group">Workspace</li>
+                <li>
+                    <button class="nav-item">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                        <span class="nav-label">Dashboard</span>
+                        <span class="nav-index">G D</span>
+                    </button>
+                </li>
+                <li>
+                    <button class="nav-item active">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                        <span class="nav-label">Pesquisa & Projetos</span>
+                        <span class="nav-index">G P</span>
+                    </button>
+                </li>
+                <li>
+                    <button class="nav-item">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path><path d="M12 12v9"></path><path d="m8 17 4 4 4-4"></path></svg>
+                        <span class="nav-label">Patentes & PI</span>
+                        <span class="nav-index">G I</span>
+                    </button>
+                </li>
 
-                <li class="nav-group" role="presentation">Conhecimento</li>
-                <li><button class="nav-item" data-view="equipments" data-label="Equipamentos" data-key="e"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18h8"/><path d="M3 22h18"/><path d="M14 22a7 7 0 1 0 0-14h-1"/><path d="M9 14h2"/><path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z"/><path d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3"/></svg><span class="nav-label">Equipamentos</span><span class="nav-index">G E</span></button></li>
-                <li><button class="nav-item" data-view="processes" data-label="Processos de P&amp;D" data-key="p"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6.34L4.24 17.5A2 2 0 0 0 6 20.5h12a2 2 0 0 0 1.76-3L15 8.34V2"/><path d="M8.5 2h7"/><path d="M6.5 14.5h11"/></svg><span class="nav-label">Processos de P&amp;D</span><span class="nav-index">G P</span></button></li>
-                <li><button class="nav-item" data-view="pops" data-label="POPs" data-key="o"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span class="nav-label">POPs</span><span class="nav-index">G O</span></button></li>
-
-                <li class="nav-group" role="presentation">Rotina</li>
-                <li><button class="nav-item" data-view="pta" data-label="Planejamento mensal" data-key="m"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="nav-label">Planejamento mensal</span><span class="nav-index">G M</span></button></li>
-                <li><button class="nav-item" data-view="tarefas" data-label="Tarefas" data-key="t"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="nav-label">Tarefas</span><span class="nav-index">G T</span></button></li>
-                <li><button class="nav-item" data-view="articles" data-label="Artigos" data-key="a"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span class="nav-label">Artigos</span><span class="nav-index">G A</span></button></li>
-
-                <li id="menu-admin" style="display: none;">
-                    <div class="nav-group" role="presentation">Sistema</div>
-                    <button class="nav-item" data-view="admin" data-label="Administração" data-key="d"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 6v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6l-8-4Z"/></svg><span class="nav-label">Administração</span><span class="nav-index">G D</span></button>
+                <li class="nav-group">Laboratório</li>
+                <li>
+                    <button class="nav-item">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
+                        <span class="nav-label">Equipamentos</span>
+                        <span class="nav-index">G E</span>
+                    </button>
+                </li>
+                <li>
+                    <button class="nav-item">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        <span class="nav-label">POPs & Diretrizes</span>
+                        <span class="nav-index">G D</span>
+                    </button>
                 </li>
             </ul>
         </nav>
 
         <div class="sidebar-footer">
-            <span class="avatar" id="user-avatar" aria-hidden="true"></span>
+            <div class="avatar">GF</div>
             <div class="sidebar-who">
-                <div class="sidebar-user" id="user-greeting">&nbsp;</div>
-                <div class="sidebar-role" id="user-role"></div>
+                <div class="sidebar-user">Gabriel Freitas</div>
+                <div class="sidebar-role">Pesquisador IC</div>
             </div>
             <div class="sidebar-tools">
-                <button type="button" class="icon-btn" id="btn-densidade" aria-pressed="false" aria-label="Modo bancada: letras e botões maiores" title="Modo bancada: letras e botões maiores"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg></button>
-                <button type="button" class="icon-btn" id="btn-theme" aria-label="Alternar tema" title="Alternar tema"></button>
-                <button type="button" class="icon-btn" id="btn-logout" aria-label="Sair" title="Sair"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+                <button class="icon-btn" title="Configurações">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                </button>
             </div>
         </div>
     </aside>
-    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
 
-    <div class="main-wrapper">
+    <!-- ==========================================
+         ÁREA PRINCIPAL
+         ========================================== -->
+    <main class="main-wrapper">
+        
         <header class="topbar">
             <div class="topbar-left">
-                <button class="icon-btn bordered menu-toggle" id="menu-toggle" aria-label="Abrir menu">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="4" y1="8" x2="20" y2="8"/><line x1="4" y1="16" x2="20" y2="16"/></svg>
-                </button>
-                <p class="crumbs"><span>SGCI</span><span class="sep">/</span><strong id="current-page-title">Início</strong></p>
+                <div class="crumbs">
+                    <span>Projetos de Pesquisa</span>
+                    <span class="sep">/</span>
+                    <strong>CAPSNANO</strong>
+                </div>
             </div>
             <div class="topbar-right">
-                <button id="btn-setup-2fa" onclick="abrirSetup2FA()" class="link-btn" style="display: none;"><span class="long">Ativar verificação em duas etapas</span><span class="short">Ativar 2FA</span></button>
-                <span class="sys-status" id="sys-status" role="status"><span class="dot"></span><span class="label">online</span></span>
+                <div class="sys-status">
+                    <span class="dot"></span>
+                    <span class="label">Sincronizado</span>
+                </div>
             </div>
         </header>
 
-        <main id="dynamic-content" class="content-area"></main>
-    </div>
-
-    <!-- Novo equipamento -->
-    <div id="modal-eq" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Novo equipamento</h3>
-                <button type="button" class="modal-close" onclick="window.closeEquipModal()" aria-label="Fechar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
-            </div>
-
-            <form id="form-new-eq" onsubmit="window.handleSaveEquipment(event)">
-                <div class="input-group">
-                    <label for="eq-name">Nome do equipamento</label>
-                    <input type="text" id="eq-name" required>
+        <div class="content-area">
+            
+            <!-- Cabeçalho da Página -->
+            <div class="page-head">
+                <div>
+                    <span class="eyebrow">PORTFÓLIO DE INOVAÇÃO</span>
+                    <h1>Visão Geral: Projeto CAPSNANO</h1>
+                    <p class="lede">Sistema de monitoramento de síntese e caracterização de nanomateriais. Consolidação de métricas operacionais e marcos de engenharia.</p>
                 </div>
-                <div class="input-group">
-                    <label for="eq-desc">Descrição</label>
-                    <textarea id="eq-desc" rows="3" placeholder="Especificações, localização, observações de uso"></textarea>
-                </div>
-                <div class="field-grid">
-                    <div class="input-group">
-                        <label for="eq-video">Vídeo de treinamento (YouTube)</label>
-                        <input type="url" id="eq-video" placeholder="https://" aria-describedby="eq-video-ajuda">
-                        <span class="help" id="eq-video-ajuda" aria-live="polite"></span>
-                    </div>
-                    <div class="input-group">
-                        <label for="eq-manual">POP do equipamento (URL)</label>
-                        <input type="url" id="eq-manual" placeholder="https://">
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" onclick="window.closeEquipModal()" class="btn btn-secondary">Cancelar</button>
-                    <button type="submit" id="btn-save-eq" class="btn btn-primary">
-                        <span class="btn-text">Salvar equipamento</span>
-                        <span class="spinner hidden" aria-hidden="true"></span>
+                <div class="page-actions">
+                    <button class="btn btn-secondary">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        Exportar Dados
+                    </button>
+                    <button class="btn btn-primary">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        Novo Marco (Milestone)
                     </button>
                 </div>
-            </form>
-        </div>
-    </div>
+            </div>
 
-    <!-- Detalhes do equipamento -->
-    <div id="modal-dossier" class="modal-overlay">
-        <div class="modal-content modal-lg">
-            <div class="modal-header">
-                <div>
-                    <p class="eyebrow">equipamento</p>
-                    <h3 id="dossier-title">Carregando</h3>
+            <!-- Faixa de Alerta (Ação Requerida) -->
+            <div class="notice-row fade-in">
+                <p>
+                    <span class="mono">Pendência Técnica</span>
+                    Validação do protocolo de segurança para a Estação de Eletroquímica requer assinatura digital do responsável.
+                </p>
+                <button class="link-btn">Revisar Protocolo →</button>
+            </div>
+
+            <!-- Grade de Indicadores (Estilo Bento) -->
+            <div class="figures fade-in">
+                <div class="figure">
+                    <div class="v">TRL 4</div>
+                    <div class="k text-muted">Maturidade Tecnológica</div>
                 </div>
-                <button type="button" class="modal-close" onclick="window.closeDossierModal()" aria-label="Fechar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
-            </div>
-            <div id="dossier-body"></div>
-        </div>
-    </div>
-
-    <!-- Edição genérica de registro -->
-    <div id="deep-view-modal" class="modal-overlay">
-        <div class="modal-content modal-md">
-            <div class="modal-header">
-                <h3 id="dv-title">Editar registro</h3>
-                <button type="button" class="modal-close" onclick="window.closeDeepView()" aria-label="Fechar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
-            </div>
-            <div id="dv-body"></div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="window.closeDeepView()">Cancelar</button>
-                <button class="btn btn-primary" id="dv-save-btn">Salvar alterações</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Novo processo -->
-    <div id="processModal" class="modal-overlay">
-        <div class="modal-content modal-lg">
-            <div class="modal-header">
-                <h3 id="processModalTitle">Novo processo de P&amp;D</h3>
-                <button type="button" class="modal-close" onclick="window.closeProcessModal()" aria-label="Fechar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
-            </div>
-
-            <div class="tabs-nav">
-                <button type="button" class="tab-btn active" onclick="window.openTab(event, 'tab-planejamento')"><span class="mono">1</span>Planejamento</button>
-                <button type="button" class="tab-btn" onclick="window.openTab(event, 'tab-execucao')"><span class="mono">2</span>Execução</button>
-                <button type="button" class="tab-btn" onclick="window.openTab(event, 'tab-resultados')"><span class="mono">3</span>Resultados e anexos</button>
-            </div>
-
-            <form id="processForm" onsubmit="window.handleSaveProcess(event)">
-                <div id="tab-planejamento" class="tab-content">
-                    <div class="field-grid">
-                        <div class="input-group">
-                            <label for="proc-nome">Nome do processo</label>
-                            <input type="text" id="proc-nome" required>
-                        </div>
-                        <div class="input-group">
-                            <label for="proc-resp">Responsável</label>
-                            <select id="proc-resp">
-                                <option value="">Selecione</option>
-                            </select>
-                        </div>
-                        <div class="input-group span-2">
-                            <label for="proc-objetivo">Objetivo da fase</label>
-                            <input type="text" id="proc-objetivo">
-                        </div>
-                        <div class="input-group span-2">
-                            <label for="proc-visao">Visão geral</label>
-                            <textarea id="proc-visao" rows="3"></textarea>
-                        </div>
-                    </div>
+                <div class="figure">
+                    <div class="v">2</div>
+                    <div class="k text-muted">Patentes Depositadas</div>
                 </div>
-
-                <div id="tab-execucao" class="tab-content hidden">
-                    <div class="input-group">
-                        <span class="label" id="rotulo-proc-equipe">Equipe envolvida</span>
-                        <div id="proc-equipe-container" role="group" aria-labelledby="rotulo-proc-equipe"></div>
-                        <span class="help hidden" id="proc-equipe-legado"></span>
-                    </div>
-                    <div class="input-group">
-                        <span class="label" id="rotulo-proc-equipamentos">Equipamentos utilizados</span>
-                        <div id="proc-equipamentos-container" role="group" aria-labelledby="rotulo-proc-equipamentos"></div>
-                    </div>
-                    <div class="input-group">
-                        <label for="proc-etapas">Detalhamento das etapas</label>
-                        <textarea id="proc-etapas" rows="6" placeholder="Uma etapa por linha"></textarea>
-                    </div>
+                <div class="figure">
+                    <div class="v">R$ 1.2M</div>
+                    <div class="k text-muted">Orçamento Empenhado</div>
                 </div>
-
-                <div id="tab-resultados" class="tab-content hidden">
-                    <div class="input-group">
-                        <label for="proc-indicadores">Indicadores e resultados</label>
-                        <textarea id="proc-indicadores" rows="3"></textarea>
-                    </div>
-                    <div class="file-field">
-                        <label for="proc-imagem">Imagens do processo</label>
-                        <input type="file" id="proc-imagem" accept="image/png, image/jpeg, image/jpg" multiple onchange="previewMultiplasImagens(event, 'preview-proc')">
-                        <span class="help">PNG ou JPG, até 10 MB cada.</span>
-                        <div id="preview-proc" class="thumbs"></div>
-                    </div>
-                    <div class="field-grid">
-                        <div class="input-group">
-                            <label for="proc-anexos">Link de anexos</label>
-                            <input type="url" id="proc-anexos" placeholder="https://">
-                        </div>
-                        <div class="input-group">
-                            <label for="proc-status">Status</label>
-                            <select id="proc-status">
-                                <option value="rascunho">Rascunho</option>
-                                <option value="em_andamento">Em andamento</option>
-                                <option value="concluido">Concluído</option>
-                            </select>
-                        </div>
-                    </div>
+                <div class="figure">
+                    <div class="v">9</div>
+                    <div class="k text-muted">Pesquisadores Alocados</div>
                 </div>
-
-                <div class="modal-footer">
-                    <button type="button" onclick="window.closeProcessModal()" class="btn btn-secondary">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar processo</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Detalhes de um relato do planejamento mensal -->
-    <div id="pta-detalhes-modal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div>
-                    <p class="eyebrow" id="modal-detalhes-mes"></p>
-                    <h3 id="modal-detalhes-topico"></h3>
-                </div>
-                <button type="button" class="modal-close" onclick="fecharModalDetalhesPTA()" aria-label="Fechar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
             </div>
 
-            <div class="figure">
-                <span class="v" id="modal-detalhes-avanco"></span>
-                <span class="k">de avanço na pesquisa</span>
-            </div>
+            <!-- Colunas de Dados -->
+            <div class="columns">
+                
+                <!-- Coluna Esquerda: Cronograma -->
+                <section class="section">
+                    <div class="section-head">
+                        <h3>Cronograma de Marcos (Milestones)</h3>
+                        <span class="badge badge-live">Fase Executiva</span>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Marco Técnico</th>
+                                    <th>Status</th>
+                                    <th>Data Limite</th>
+                                    <th class="end">Progresso</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="is-flagged clickable">
+                                    <td>
+                                        <strong>M1: Modelagem Estrutural</strong>
+                                        <span class="sub">Definição da arquitetura de software no GitHub</span>
+                                    </td>
+                                    <td><span class="status-badge status-concluido">Concluído</span></td>
+                                    <td class="num">20/08/2025</td>
+                                    <td class="end">
+                                        <div class="meter">
+                                            <div class="meter-track"><div class="meter-fill ok" style="width: 100%"></div></div>
+                                            <span class="meter-value">100%</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr class="clickable">
+                                    <td>
+                                        <strong>M2: Integração API / C#</strong>
+                                        <span class="sub">Implementação dos endpoints de coleta do laboratório</span>
+                                    </td>
+                                    <td><span class="status-badge status-em_andamento">Em Andamento</span></td>
+                                    <td class="num">15/11/2025</td>
+                                    <td class="end">
+                                        <div class="meter">
+                                            <div class="meter-track"><div class="meter-fill" style="width: 65%"></div></div>
+                                            <span class="meter-value">65%</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr class="is-dimmed">
+                                    <td>
+                                        <strong>M3: GUI Desktop</strong>
+                                        <span class="sub">Interface PyQt6 para operação local das máquinas</span>
+                                    </td>
+                                    <td><span class="status-badge status-pendente">Pendente</span></td>
+                                    <td class="num">10/02/2026</td>
+                                    <td class="end">
+                                        <div class="meter">
+                                            <div class="meter-track"><div class="meter-fill" style="width: 0%"></div></div>
+                                            <span class="meter-value">0%</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
 
-            <dl class="dl">
-                <div>
-                    <dt>atividades</dt>
-                    <dd id="modal-detalhes-descricao"></dd>
-                </div>
-            </dl>
-        </div>
-    </div>
+                <!-- Coluna Direita: Equipamentos e Gestão de Conhecimento -->
+                <section class="section">
+                    <div class="section-head">
+                        <h3>Matriz de Equipamentos Alocados</h3>
+                    </div>
 
-    <!-- Confirmação: avanço igual ao do último relato -->
-    <div id="modal-confirmacao-avanco" class="modal-overlay">
-        <div class="modal-content modal-sm">
-            <div class="modal-header">
-                <h3>Avanço sem alteração</h3>
-            </div>
-            <p class="dialog-text">O avanço informado (<span class="mono"><span id="span-avanco-repetido"></span>%</span>) é o mesmo do seu último relato neste tópico. Enviar assim mesmo?</p>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="fecharModalAvanco()">Revisar</button>
-                <button type="button" class="btn btn-primary" onclick="confirmarEnvioAvancoRepetido()">Enviar assim mesmo</button>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Equipamento (ID)</th>
+                                    <th>Responsável</th>
+                                    <th class="end">Gestão de Conhecimento</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <span class="code">EQP-042</span>
+                                        <strong>Estação de Eletroquímica</strong>
+                                    </td>
+                                    <td>G. Freitas</td>
+                                    <td class="end">
+                                        <!-- Design granular: ação diretamente vinculada à entidade, sem modais globais desnecessários -->
+                                        <button class="link-btn">
+                                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                                            Lições Aprendidas
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <span class="code">EQP-018</span>
+                                        <strong>Espectrômetro de Massa</strong>
+                                    </td>
+                                    <td>A. Barni</td>
+                                    <td class="end">
+                                        <button class="link-btn">
+                                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                                            Lições Aprendidas
+                                        </button>
+                                    </td>
+                                </tr>
+                                <!-- Exemplo de Skeleton Loader para alta densidade -->
+                                <tr class="is-skeleton">
+                                    <td><span class="skeleton w-60"></span></td>
+                                    <td><span class="skeleton w-80"></span></td>
+                                    <td class="end"><span class="skeleton w-40 push-end"></span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
             </div>
         </div>
-    </div>
+    </main>
+</div>
 
-    <!-- Configuração do 2FA -->
-    <div id="modal-setup-2fa" class="modal-overlay">
-        <div class="modal-content modal-sm">
-            <div class="modal-header">
-                <h3>Verificação em duas etapas</h3>
-                <button type="button" class="modal-close" onclick="fecharSetup2FA()" aria-label="Fechar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
-            </div>
-
-            <div id="2fa-step-1">
-                <p class="eyebrow">etapa 1 de 2</p>
-                <p class="dialog-text">Escaneie o código com seu aplicativo Autenticador.</p>
-
-                <div id="qrcode-container" class="qr-box"></div>
-
-                <p class="help">Não consegue escanear? Digite a chave manualmente:</p>
-                <p id="secret-text" class="secret-key"></p>
-
-                <div class="modal-footer">
-                    <button class="btn btn-primary" onclick="avancarPasso2FA()">Continuar</button>
-                </div>
-            </div>
-
-            <div id="2fa-step-2" class="hidden">
-                <p class="eyebrow">etapa 2 de 2</p>
-                <p class="dialog-text mb-md">Digite o código de 6 dígitos que o aplicativo está mostrando. Em seguida, seus códigos de backup serão baixados.</p>
-
-                <input type="text" id="codigo-confirmacao-2fa" class="code-input" maxlength="6" inputmode="numeric" placeholder="000000">
-
-                <div class="modal-footer split">
-                    <button class="btn btn-secondary" onclick="voltarPasso2FA()">Voltar</button>
-                    <button class="btn btn-primary" onclick="confirmarAtivacao2FA()" id="btn-confirmar-2fa">Ativar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="toast-container"></div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
-    <script src="js/api.js?v=3"></script>
-    <script src="js/ui.js?v=3300"></script>
-    <script src="js/salvaguardas.js?v=1"></script>
-    <script src="js/shell.js?v=2"></script>
-    <script src="js/auth.js?v=2001"></script>
-    <script src="js/listagem.js?v=1"></script>
-    <script src="js/vinculos.js?v=1"></script>
-    <script src="js/views/inicio.js?v=3"></script>
-    <script src="js/views/equipments.js?v=3b"></script>
-    <script src="js/views/processes.js?v=3b"></script>
-    <script src="js/dashboard.js?v=1300"></script>
-    <script src="js/views/pta.js?v=10b"></script>
-    <script src="js/views/tarefas.js?v=5b"></script>
-    <script src="js/views/pops.js?v=290b"></script>
-    <script src="js/views/admin.js?v=552b"></script>
-    <script src="js/views/articles.js?v=2"></script>
 </body>
 </html>
