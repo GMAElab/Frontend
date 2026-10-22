@@ -1356,3 +1356,13 @@ tbody tr:has(td[colspan]):hover { background: none; }
     color: var(--muted);
 }
 .cmdk-foot span { display: inline-flex; align-items: center; gap: 5px; }
+
+/* ==========================================
+   CARREGAMENTO
+   Skeleton em vez de spinner onde o formato do conteúdo é conhecido.
+   ========================================== */
+.data-table .is-skeleton td { height: 40px; padding: 0 12px; border-bottom: 1px solid var(--line); }
+.data-table .is-skeleton:last-child td { border-bottom: 0; }
+.data-table .is-skeleton .skeleton { height: 9px; }
+
+.toast.is-leaving { opacity: 0; transition: opacity var(--t-fast) var(--ease); }

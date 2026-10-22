@@ -249,7 +249,7 @@
     font-size: 11px;
     color: var(--muted);
     border: 1px solid var(--line);
-    border-radius: var(--radius-full);
+    border-radius: var(--radius-sm);
 }
 .sys-status .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 3px var(--success-tint); }
 .sys-status.is-offline { color: var(--danger); border-color: var(--danger-tint); background: var(--danger-tint); }
@@ -472,7 +472,7 @@
 
 .modal-overlay.is-open { display: flex; }
 .modal-overlay.is-top { z-index: 9999999; }
-.modal-overlay.is-locked { background: rgba(4, 5, 7, 0.86); }
+.modal-overlay.is-locked { background: color-mix(in srgb, var(--bg) 88%, transparent); }
 
 .modal-overlay[style*="flex"],
 .modal-overlay.is-open { animation: overlayIn .14s var(--ease) both; }
@@ -640,3 +640,6 @@
 :root[data-densidade="bancada"] .sidebar,
 :root[data-densidade="bancada"] .topbar { zoom: 1.1; }
 :root[data-densidade="bancada"] #btn-densidade { color: var(--text); background: var(--surface-2); }
+
+/* Rolagem do fundo travada enquanto há modal aberto */
+body.is-modal-open { overflow: hidden; }
