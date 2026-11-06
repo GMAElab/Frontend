@@ -43,8 +43,7 @@
 
     <script>
         (async function () {
-            const host = (window.location && window.location.hostname) || '';
-            const API_URL = localStorage.getItem('sgci_api_url') || (host.endsWith('.vercel.app') ? '/api' : 'https://api-hzrz.onrender.com');
+            const API_URL = localStorage.getItem('sgci_api_url') || 'https://api-hzrz.onrender.com';
             const params = new URLSearchParams(window.location.search);
             const token = params.get('token');
 

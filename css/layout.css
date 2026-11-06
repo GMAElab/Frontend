@@ -562,7 +562,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(145deg, var(--accent-tint), rgba(16, 185, 129, 0.04));
+    background: linear-gradient(145deg, var(--accent-tint), rgba(59, 130, 246, 0.04));
     color: var(--accent);
     border: 1px solid var(--accent-border);
     box-shadow: 0 8px 24px -6px var(--accent-tint), inset 0 1px 0 rgba(255, 255, 255, 0.15);

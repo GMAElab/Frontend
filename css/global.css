@@ -65,51 +65,51 @@
 }
 
 /* ==========================================
-   MODO ESCURO — ARDÓSIA PROFUNDA & ESMERALDA ANALÍTICO
+   MODO ESCURO — ARDÓSIA PROFUNDA & AZUL COBALTO
    ========================================== */
 :root,
 [data-theme="dark"] {
     color-scheme: dark;
 
-    --bg: #080B11;
-    --surface: #0E131D;
-    --surface-2: #151C28;
-    --surface-3: #1D2636;
-    --surface-sunk: #06080D;
-    --surface-hover: #172030;
+    --bg: #080B12;
+    --surface: #0E131F;
+    --surface-2: #151C2C;
+    --surface-3: #1D263B;
+    --surface-sunk: #06080E;
+    --surface-hover: #172033;
 
-    --line: #1C2536;
-    --line-strong: #28344B;
-    --line-focus: #10B981;
+    --line: #1C2538;
+    --line-strong: #28344E;
+    --line-focus: #3B82F6;
 
     --text: #F3F6FA;
     --text-2: #C3CDDC;
     --muted: #7E8CA1;
     --faint: #526075;
 
-    /* Esmeralda / Teal Analítico de Laboratório */
-    --accent: #10B981;
-    --accent-solid: #0D9668;
-    --accent-hover: #10B981;
+    /* Azul Cobalto / Índigo Científico (Zero Verde) */
+    --accent: #3B82F6;
+    --accent-solid: #2563EB;
+    --accent-hover: #3B82F6;
     --accent-ink: #FFFFFF;
-    --accent-tint: rgba(16, 185, 129, 0.12);
-    --accent-border: rgba(16, 185, 129, 0.32);
+    --accent-tint: rgba(59, 130, 246, 0.13);
+    --accent-border: rgba(59, 130, 246, 0.34);
 
-    /* Semânticos */
-    --success: #10B981;
-    --success-tint: rgba(16, 185, 129, 0.12);
+    /* Semânticos (Sem verde: confirmação/ativo em Azul-Celeste) */
+    --success: #38BDF8;
+    --success-tint: rgba(56, 189, 248, 0.13);
     --warning: #F59E0B;
     --warning-tint: rgba(245, 158, 11, 0.13);
     --danger: #EF4444;
     --danger-tint: rgba(239, 68, 68, 0.13);
-    --info: #38BDF8;
-    --info-tint: rgba(56, 189, 248, 0.12);
+    --info: #818CF8;
+    --info-tint: rgba(129, 140, 248, 0.13);
 
     --overlay: rgba(4, 7, 13, 0.75);
     --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.02);
     --shadow-pop: 0 0 0 1px rgba(255, 255, 255, 0.07), 0 24px 48px -12px rgba(0, 0, 0, 0.7);
     --grid-line: rgba(255, 255, 255, 0.035);
-    --ambient-glow: radial-gradient(800px 360px at 50% -100px, rgba(16, 185, 129, 0.10), transparent 70%);
+    --ambient-glow: radial-gradient(800px 360px at 50% -100px, rgba(59, 130, 246, 0.11), transparent 70%);
 
     /* Alias de compatibilidade */
     --bg-primary: var(--bg);
@@ -124,50 +124,50 @@
 }
 
 /* ==========================================
-   MODO CLARO — ALABASTRO CIENTÍFICO & TEAL PROFUNDO
+   MODO CLARO — ALABASTRO & AZUL COBALTO PROFUNDO
    ========================================== */
 [data-theme="light"] {
     color-scheme: light;
 
-    --bg: #F6F8FA;
+    --bg: #F6F8FB;
     --surface: #FFFFFF;
-    --surface-2: #EEF2F6;
+    --surface-2: #EEF2F7;
     --surface-3: #E2E8F0;
-    --surface-sunk: #EDF1F5;
+    --surface-sunk: #EDF1F6;
     --surface-hover: #F1F5F9;
 
     --line: #E2E8F0;
     --line-strong: #CBD5E1;
-    --line-focus: #0D9488;
+    --line-focus: #2563EB;
 
     --text: #0F172A;
     --text-2: #334155;
     --muted: #64748B;
     --faint: #94A3B8;
 
-    /* Teal / Esmeralda Profundo */
-    --accent: #0D9488;
-    --accent-solid: #0F766E;
-    --accent-hover: #0D9488;
+    /* Azul Cobalto Profundo (Zero Verde) */
+    --accent: #2563EB;
+    --accent-solid: #1D4ED8;
+    --accent-hover: #2563EB;
     --accent-ink: #FFFFFF;
-    --accent-tint: rgba(13, 148, 136, 0.09);
-    --accent-border: rgba(13, 148, 136, 0.28);
+    --accent-tint: rgba(37, 99, 235, 0.09);
+    --accent-border: rgba(37, 99, 235, 0.28);
 
-    /* Semânticos */
-    --success: #059669;
-    --success-tint: rgba(5, 150, 105, 0.10);
+    /* Semânticos (Sem verde: confirmação/ativo em Azul Oceano) */
+    --success: #0284C7;
+    --success-tint: rgba(2, 132, 199, 0.10);
     --warning: #D97706;
     --warning-tint: rgba(217, 119, 6, 0.10);
     --danger: #DC2626;
     --danger-tint: rgba(220, 38, 38, 0.10);
-    --info: #0284C7;
-    --info-tint: rgba(2, 132, 199, 0.10);
+    --info: #4F46E5;
+    --info-tint: rgba(79, 70, 229, 0.10);
 
     --overlay: rgba(15, 23, 42, 0.45);
     --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.05);
     --shadow-pop: 0 0 0 1px rgba(15, 23, 42, 0.06), 0 20px 44px -12px rgba(15, 23, 42, 0.16);
     --grid-line: rgba(15, 23, 42, 0.04);
-    --ambient-glow: radial-gradient(800px 360px at 50% -100px, rgba(13, 148, 136, 0.07), transparent 70%);
+    --ambient-glow: radial-gradient(800px 360px at 50% -100px, rgba(37, 99, 235, 0.07), transparent 70%);
 }
 
 /* ==========================================

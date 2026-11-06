@@ -1,8 +1,6 @@
 const API_URL = (function () {
     const customUrl = localStorage.getItem('sgci_api_url');
     if (customUrl) return customUrl.replace(/\/+$/, '');
-    const host = (window.location && window.location.hostname) || '';
-    if (host.endsWith('.vercel.app')) return '/api';
     return 'https://api-hzrz.onrender.com';
 })();
 const APP_START_TIME = Date.now();
