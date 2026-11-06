@@ -3,24 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Confirmar e-mail · SGCI</title>
+    <title>Confirmar e-mail · SGCI / GMAE</title>
 
     <meta name="color-scheme" content="dark light">
     <script>try { var t = localStorage.getItem('sgci-theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; if (localStorage.getItem('sgci-densidade') === 'bancada') document.documentElement.dataset.densidade = 'bancada'; } catch (e) {}</script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap">
-    <link rel="stylesheet" href="css/global.css?v=7">
-    <link rel="stylesheet" href="css/layout.css?v=7">
-    <link rel="stylesheet" href="css/components.css?v=7">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
+    <link rel="stylesheet" href="css/global.css?v=9">
+    <link rel="stylesheet" href="css/layout.css?v=9">
+    <link rel="stylesheet" href="css/components.css?v=9">
 </head>
 <body>
     <main class="auth-single">
         <section class="auth-panel">
             <div class="auth-brand">
                 <span class="brand-glyph" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6.34L4.24 17.5A2 2 0 0 0 6 20.5h12a2 2 0 0 0 1.76-3L15 8.34V2"/><path d="M8.5 2h7"/><path d="M6.5 14.5h11"/></svg></span>
-                <span class="brand-mark">SGCI / GMAE</span>
+                <span class="brand-copy">
+                    <span class="brand-mark">SGCI / GMAE</span>
+                    <span class="brand-sub">LEQM · Verificação</span>
+                </span>
             </div>
             <h1>Confirmação de e-mail</h1>
 
@@ -30,14 +33,15 @@
 
             <div id="verificacao-resultado" class="hidden">
                 <p id="verificacao-mensagem" class="feedback-msg mt-md" aria-live="polite"></p>
-                <a href="index.html" class="btn btn-primary">Ir para o login</a>
+                <a href="index.html" class="btn btn-primary btn-block">Ir para o login</a>
             </div>
         </section>
     </main>
 
     <script>
         (async function () {
-            const API_URL = 'https://api-hzrz.onrender.com';
+            const host = (window.location && window.location.hostname) || '';
+            const API_URL = localStorage.getItem('sgci_api_url') || (host.endsWith('.vercel.app') ? '/api' : 'https://api-hzrz.onrender.com');
             const params = new URLSearchParams(window.location.search);
             const token = params.get('token');
 

@@ -52,6 +52,10 @@ const ICON_PATHS = {
     'check-square': '<polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
     'book-open': '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
     microscope: '<path d="M6 18h8"/><path d="M3 22h18"/><path d="M14 22a7 7 0 1 0 0-14h-1"/><path d="M9 14h2"/><path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z"/><path d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3"/>',
+    play: '<polygon points="6 4 20 12 6 20 6 4"/>',
+    video: '<polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/>',
+    'external-link': '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>',
+    link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
 };
 
 window.Icon = function (name, opts = {}) {
@@ -287,6 +291,53 @@ const UI = {
                 <h4>${message}</h4>
                 <p>Verifique a conexão e tente novamente.</p>
             </div>`;
+    },
+
+    /** Extrai até 2 iniciais de um nome completo. */
+    initials: (nome) => {
+        const partes = String(nome || '').trim().split(/\s+/).filter(Boolean);
+        if (!partes.length) return '·';
+        return (partes[0][0] + (partes.length > 1 ? partes[partes.length - 1][0] : '')).toUpperCase();
+    },
+
+    /** Renderiza um avatar circular compacto com cor mineral determinística e opcionalmente o nome ao lado. */
+    avatar: (nome, opts = {}) => {
+        const limpo = String(nome || '').trim();
+        if (!limpo) return '<span class="text-faint">—</span>';
+        let hash = 0;
+        for (let i = 0; i < limpo.length; i++) hash = ((hash << 5) - hash) + limpo.charCodeAt(i);
+        const tone = Math.abs(hash) % 4;
+        const chip = `<span class="avatar-chip tone-${tone}" title="${window.escapeHTML(limpo)}" aria-hidden="true">${window.escapeHTML(UI.initials(limpo))}</span>`;
+        if (opts.onlyChip) return chip;
+        return `<span class="person-cell">${chip}<span>${opts.strong ? `<strong>${window.escapeHTML(limpo)}</strong>` : window.escapeHTML(limpo)}</span></span>`;
+    },
+
+    /** Renderiza uma pilha de avatares da equipe com contador de excedente e nomes. */
+    avatarStack: (itens, max = 3) => {
+        const nomes = (Array.isArray(itens) ? itens : [])
+            .map(x => (typeof x === 'string' ? x : (x && x.nome) || '')).map(s => s.trim()).filter(Boolean);
+        if (!nomes.length) return '<span class="text-faint">—</span>';
+        const visiveis = nomes.slice(0, max);
+        const resto = nomes.length - visiveis.length;
+        const chips = visiveis.map(n => UI.avatar(n, { onlyChip: true })).join('') +
+            (resto > 0 ? `<span class="avatar-chip tone-0" title="${window.escapeHTML(nomes.slice(max).join(', '))}">+${resto}</span>` : '');
+        return `<span class="avatar-stack-wrap" title="${window.escapeHTML(nomes.join(', '))}">
+            <span class="avatar-stack">${chips}</span>
+            <span class="avatar-stack-names">${window.escapeHTML(nomes.join(', '))}</span>
+        </span>`;
+    },
+
+    /** Renderiza uma barra de progresso inline compacta para células de tabela. */
+    progressBar: (pct, opts = {}) => {
+        if (pct === null || pct === undefined || Number.isNaN(Number(pct))) {
+            return '<span class="text-faint">—</span>';
+        }
+        const val = Math.max(0, Math.min(100, Math.round(Number(pct))));
+        const toneClass = opts.tone || (val >= 80 ? 'is-success' : val >= 50 ? 'is-warning' : 'is-danger');
+        return `<span class="inline-progress" title="${val}%">
+            <span class="progress-track" aria-hidden="true"><span class="progress-fill ${toneClass}" style="width: ${val}%;"></span></span>
+            <span class="progress-val">${val}%</span>
+        </span>`;
     },
 
     /**

@@ -16,7 +16,11 @@
 
         alvo.innerHTML = `
             <div class="toolbar">
-                <input type="search" class="form-control grow" data-busca placeholder="${opcoes.placeholder || 'Buscar'}" aria-label="Buscar">
+                <div class="search-box">
+                    ${window.Icon ? window.Icon('search', { size: 15 }) : ''}
+                    <input type="search" class="form-control" data-busca placeholder="${opcoes.placeholder || 'Buscar'}" aria-label="Buscar">
+                    <kbd title="Pressione / para focar na busca">/</kbd>
+                </div>
                 ${filtros}
             </div>
             <div class="table-container">
@@ -28,8 +32,8 @@
             <div class="pagination">
                 <span data-contador></span>
                 <div class="cluster">
-                    <button type="button" class="link-btn" data-anterior>Anterior</button>
-                    <button type="button" class="link-btn" data-proxima>Próxima</button>
+                    <button type="button" class="link-btn" data-anterior>${window.Icon ? window.Icon('chevron-left', { size: 14 }) : ''} Anterior</button>
+                    <button type="button" class="link-btn" data-proxima>Próxima ${window.Icon ? window.Icon('chevron-right', { size: 14 }) : ''}</button>
                 </div>
             </div>`;
     }

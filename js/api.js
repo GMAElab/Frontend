@@ -1,4 +1,10 @@
-const API_URL = 'https://api-hzrz.onrender.com';
+const API_URL = (function () {
+    const customUrl = localStorage.getItem('sgci_api_url');
+    if (customUrl) return customUrl.replace(/\/+$/, '');
+    const host = (window.location && window.location.hostname) || '';
+    if (host.endsWith('.vercel.app')) return '/api';
+    return 'https://api-hzrz.onrender.com';
+})();
 const APP_START_TIME = Date.now();
 
 // ==========================================
@@ -52,22 +58,25 @@ window.api = {
         const method = (options.method || 'GET').toUpperCase();
         const csrfToken = localStorage.getItem('csrf_token');
 
-        const fetchOptions = {
-            ...options,
-            headers: {
-                ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
-                ...(!['GET', 'HEAD', 'OPTIONS'].includes(method) && csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
-                ...(options.headers || {})
-            },
-            credentials: 'include'
+        const montarOpcoes = () => {
+            const tokenCsrfAtual = localStorage.getItem('csrf_token');
+            return {
+                ...options,
+                headers: {
+                    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+                    ...(!['GET', 'HEAD', 'OPTIONS'].includes(method) && tokenCsrfAtual ? { 'X-CSRF-Token': tokenCsrfAtual } : {}),
+                    ...(options.headers || {})
+                },
+                credentials: 'include'
+            };
         };
 
         try {
-            let response = await fetch(`${API_URL}/${cleanEndpoint}`, fetchOptions);
-            
+            let response = await fetch(`${API_URL}/${cleanEndpoint}`, montarOpcoes());
+
             if (response.status === 401) {
                 const tempoDeUso = Date.now() - APP_START_TIME;
-                
+
                 if (tempoDeUso < 3000) {
                     window.api.exibirModalErroCookies();
                     throw new Error('Cookies bloqueados pelo navegador.');
@@ -76,8 +85,8 @@ window.api = {
                 const sucesso = await window.api.reauthSilencioso();
 
                 if (sucesso) {
-                    response = await fetch(`${API_URL}/${cleanEndpoint}`, fetchOptions);
-                    
+                    response = await fetch(`${API_URL}/${cleanEndpoint}`, montarOpcoes());
+
                     if (response.status === 401) {
                         window.api.exibirModalErroCookies();
                         throw new Error('Cookies bloqueados ativamente pelo navegador.');
@@ -87,13 +96,13 @@ window.api = {
                     throw new Error('Unauthorized');
                 }
             }
-            
+
             return response;
         } catch (error) {
             throw error;
         }
     },
-    
+
     // Pede reconfirmação de identidade (senha, ou código do Autenticador se o admin
     // tiver 2FA ativo) antes de uma ação administrativa sensível. Resolve com o
     // step_up_token a ser enviado no header X-Step-Up-Token, ou null se cancelado.
@@ -187,16 +196,27 @@ window.api = {
             const userDataStr = localStorage.getItem('user_data');
             if (!userDataStr) { resolve(false); return; }
             const user = JSON.parse(userDataStr);
-            
+
+            const existente = document.getElementById('reauth-modal');
+            if (existente) existente.remove();
+
             const modalHtml = `
             <div id="reauth-modal" class="modal-overlay is-open is-top is-locked">
                 <div class="modal-content modal-sm">
                     <div class="modal-header"><h3>Sessão expirada</h3></div>
-                    <p class="dialog-text mb-md">A sessão foi encerrada por inatividade. Digite sua senha para continuar de onde parou.</p>
+                    <p id="reauth-desc" class="dialog-text mb-md">A sessão foi encerrada por inatividade. Digite sua senha para continuar de onde parou.</p>
 
-                    <label for="reauth-pass">Senha</label>
-                    <input type="password" id="reauth-pass" class="form-control" autocomplete="current-password">
-                    <p id="reauth-error" class="form-error">Senha incorreta. Tente novamente.</p>
+                    <div id="reauth-step-pass">
+                        <label for="reauth-pass">Senha</label>
+                        <input type="password" id="reauth-pass" class="form-control" autocomplete="current-password">
+                    </div>
+
+                    <div id="reauth-step-2fa" class="hidden">
+                        <label for="reauth-2fa-code">Código do Autenticador (6 dígitos)</label>
+                        <input type="text" id="reauth-2fa-code" class="code-input" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000">
+                    </div>
+
+                    <p id="reauth-error" class="form-error">Credenciais inválidas. Tente novamente.</p>
 
                     <div class="modal-footer split">
                         <button id="btn-reauth-cancel" class="btn btn-secondary">Sair</button>
@@ -206,12 +226,18 @@ window.api = {
             </div>`;
 
             document.body.insertAdjacentHTML('beforeend', modalHtml);
-            
+
             const modal = document.getElementById('reauth-modal');
+            const desc = document.getElementById('reauth-desc');
+            const stepPass = document.getElementById('reauth-step-pass');
+            const step2fa = document.getElementById('reauth-step-2fa');
             const passInput = document.getElementById('reauth-pass');
+            const codeInput = document.getElementById('reauth-2fa-code');
             const btnConfirm = document.getElementById('btn-reauth-confirm');
             const btnCancel = document.getElementById('btn-reauth-cancel');
             const errorMsg = document.getElementById('reauth-error');
+
+            let preAuthToken = null;
 
             passInput.focus();
             btnCancel.onclick = () => { modal.remove(); resolve(false); };
@@ -222,37 +248,80 @@ window.api = {
                 errorMsg.style.display = 'none';
 
                 try {
-                    const formData = new URLSearchParams();
-                    formData.append('username', user.email);
-                    formData.append('password', passInput.value);
+                    if (!preAuthToken) {
+                        const formData = new URLSearchParams();
+                        formData.append('username', user.email);
+                        formData.append('password', passInput.value);
 
-                    const res = await fetch(`${API_URL}/login`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        credentials: 'include',
-                        body: formData
-                    });
+                        const res = await fetch(`${API_URL}/login`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            credentials: 'include',
+                            body: formData
+                        });
 
-                    if (res.ok) {
-                        const data = await res.json();
-                        if (data.csrf_token) localStorage.setItem('csrf_token', data.csrf_token);
-                        modal.remove();
-                        if(window.UI) window.UI.showToast("Sessão renovada!", "success");
-                        resolve(true);
+                        const data = await res.json().catch(() => ({}));
+                        if (res.ok) {
+                            if (data.requires_2fa && data.pre_auth_token) {
+                                preAuthToken = data.pre_auth_token;
+                                stepPass.classList.add('hidden');
+                                step2fa.classList.remove('hidden');
+                                desc.innerText = data.mensagem || "Insira o código de 6 dígitos do seu aplicativo Autenticador.";
+                                btnConfirm.innerText = "Confirmar 2FA";
+                                btnConfirm.disabled = false;
+                                codeInput.focus();
+                                return;
+                            }
+                            if (data.csrf_token) localStorage.setItem('csrf_token', data.csrf_token);
+                            modal.remove();
+                            if (window.UI) window.UI.showToast("Sessão renovada!", "success");
+                            resolve(true);
+                        } else {
+                            errorMsg.innerText = data.detail || "Senha incorreta. Tente novamente.";
+                            errorMsg.style.display = 'block';
+                            btnConfirm.innerText = "Continuar";
+                            btnConfirm.disabled = false;
+                            passInput.value = '';
+                            passInput.focus();
+                        }
                     } else {
-                        errorMsg.style.display = 'block';
-                        btnConfirm.innerText = "Continuar";
-                        btnConfirm.disabled = false;
-                        passInput.value = '';
+                        const res2fa = await fetch(`${API_URL}/login/2fa`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify({
+                                pre_auth_token: preAuthToken,
+                                codigo: codeInput.value.trim()
+                            })
+                        });
+
+                        const data2fa = await res2fa.json().catch(() => ({}));
+                        if (res2fa.ok) {
+                            if (data2fa.csrf_token) localStorage.setItem('csrf_token', data2fa.csrf_token);
+                            modal.remove();
+                            if (window.UI) window.UI.showToast("Sessão renovada!", "success");
+                            resolve(true);
+                        } else {
+                            errorMsg.innerText = data2fa.detail || "Código 2FA incorreto ou expirado.";
+                            errorMsg.style.display = 'block';
+                            btnConfirm.innerText = "Confirmar 2FA";
+                            btnConfirm.disabled = false;
+                            codeInput.value = '';
+                            codeInput.focus();
+                        }
                     }
-                } catch(e) {
+                } catch (e) {
+                    errorMsg.innerText = "Falha de conexão. Tente novamente.";
                     errorMsg.style.display = 'block';
-                    btnConfirm.innerText = "Continuar";
+                    btnConfirm.innerText = preAuthToken ? "Confirmar 2FA" : "Continuar";
                     btnConfirm.disabled = false;
                 }
             };
 
             passInput.addEventListener("keypress", (e) => {
+                if (e.key === "Enter") { e.preventDefault(); btnConfirm.click(); }
+            });
+            codeInput.addEventListener("keypress", (e) => {
                 if (e.key === "Enter") { e.preventDefault(); btnConfirm.click(); }
             });
         });
@@ -271,9 +340,9 @@ window.previewImagem = function(event, previewDivId, imgId) {
     const imgElement = document.getElementById(imgId);
 
     if (file) {
-        if (file.size > 10 * 1024 * 1024) { 
+        if (file.size > 10 * 1024 * 1024) {
             window.UI.showToast("A imagem é muito grande. Máximo 10MB.", "warning");
-            event.target.value = ''; 
+            event.target.value = '';
             return;
         }
         imgElement.src = URL.createObjectURL(file);
@@ -337,7 +406,7 @@ window.fazerUploadImagem = async function(inputId) {
 
     const file = await window.comprimirImagem(fileInput.files[0]);
     const formData = new FormData();
-    formData.append("file", file); 
+    formData.append("file", file);
 
     try {
         const res = await window.api.fetchProtected('/upload-imagem', {
@@ -346,9 +415,9 @@ window.fazerUploadImagem = async function(inputId) {
         });
 
         if (!res.ok) throw new Error("Falha no servidor ao enviar imagem");
-        
+
         const data = await res.json();
-        return data.url; 
+        return data.url;
     } catch (error) {
         console.error("Erro no upload:", error);
         window.UI.showToast("Erro ao processar a imagem na nuvem.", "error");

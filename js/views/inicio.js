@@ -6,12 +6,12 @@
     const LIMITE_DE_ATENCAO = 5;
 
     const SECOES = [
-        { view: 'pta', label: 'Planejamento mensal', desc: 'Registre o avanço do mês em cada tópico de pesquisa.' },
-        { view: 'tarefas', label: 'Tarefas', desc: 'O que está em andamento e o que a equipe já concluiu.' },
-        { view: 'processes', label: 'Processos de P&amp;D', desc: 'Mapeie um processo e acompanhe sua linha do tempo.' },
-        { view: 'equipments', label: 'Equipamentos', desc: 'Consulte vídeos de treinamento e os POPs de cada equipamento.' },
-        { view: 'pops', label: 'POPs', desc: 'Procedimentos operacionais padrão do laboratório.' },
-        { view: 'articles', label: 'Artigos', desc: 'Busque literatura científica e guarde o que importa.' },
+        { view: 'pta', icon: 'calendar', label: 'Planejamento mensal', desc: 'Registre o avanço do mês em cada tópico de pesquisa.' },
+        { view: 'tarefas', icon: 'check-square', label: 'Tarefas', desc: 'O que está em andamento e o que a equipe já concluiu.' },
+        { view: 'processes', icon: 'flask', label: 'Processos de P&amp;D', desc: 'Mapeie um processo e acompanhe sua linha do tempo.' },
+        { view: 'equipments', icon: 'microscope', label: 'Equipamentos', desc: 'Consulte vídeos de treinamento e os POPs de cada equipamento.' },
+        { view: 'pops', icon: 'file-text', label: 'POPs', desc: 'Procedimentos operacionais padrão do laboratório.' },
+        { view: 'articles', icon: 'book-open', label: 'Artigos', desc: 'Busque literatura científica e guarde o que importa.' },
     ];
 
     // ==========================================
@@ -23,14 +23,19 @@
     }
 
     function numero(valor, classeSeAlerta) {
-        return valor > 0 && classeSeAlerta ? `<span class="${classeSeAlerta}">${valor}</span>` : String(valor);
+        return valor > 0 && classeSeAlerta ? `<span class="${classeSeAlerta} font-bold">${valor}</span>` : String(valor);
     }
 
     // ==========================================
     // BLOCOS REUTILIZÁVEIS
     // ==========================================
-    function cartao(valor, rotulo, classe) {
-        return `<div class="figure"><span class="v${classe && valor > 0 ? ' ' + classe : ''}">${valor}</span><span class="k">${rotulo}</span></div>`;
+    function cartao(valor, rotulo, classe, icone, tone) {
+        const toneCls = (valor > 0 && tone) ? ` ${tone}` : '';
+        const iconHtml = icone && window.Icon ? window.Icon(icone, { size: 14 }) : '';
+        return `<div class="figure${toneCls}">
+            <span class="v${classe && valor > 0 ? ' ' + classe : ''}">${valor}</span>
+            <span class="k"><span>${rotulo}</span>${iconHtml}</span>
+        </div>`;
     }
 
     function etiquetaDaTarefa(tarefa) {
@@ -46,7 +51,10 @@
                     <h4 class="entry-title">${esc(t.titulo)}</h4>
                     ${etiquetaDaTarefa(t)}
                 </div>
-                <p class="meta">prazo: ${formatarPrazo(t.prazo)}${mostrarPessoas && t.atribuidos.length ? ` · ${esc(t.atribuidos.join(', '))}` : ''}</p>
+                <div class="entry-foot">
+                    <span class="meta">${window.Icon ? window.Icon('clock', { size: 12 }) : ''} prazo: ${formatarPrazo(t.prazo)}</span>
+                    ${mostrarPessoas && t.atribuidos && t.atribuidos.length ? window.UI.avatarStack(t.atribuidos, 2) : ''}
+                </div>
             </article>`).join('')}</div>`;
     }
 
@@ -64,8 +72,8 @@
     function renderVisaoPessoal(eu) {
         const avisoRelato = eu.relata_no_mes && !eu.relato_do_mes_enviado ? `
             <div class="notice-row">
-                <p><span class="mono">relato</span>Você ainda não registrou seu relato de ${esc(eu.mes_nome)}.</p>
-                <button type="button" class="link-btn" onclick="UI.switchView('pta')">Registrar agora</button>
+                <p><span class="mono">relato mensal</span>Você ainda não registrou seu relato de ${esc(eu.mes_nome)}.</p>
+                <button type="button" class="link-btn" onclick="UI.switchView('pta')">Registrar agora ${window.Icon ? window.Icon('arrow-right', { size: 13 }) : ''}</button>
             </div>` : '';
 
         const tarefas = eu.proximas.length
@@ -76,10 +84,10 @@
             ${avisoRelato}
             ${secao('Minhas tarefas', '', `
                 <div class="figures">
-                    ${cartao(eu.abertas, 'em aberto')}
-                    ${cartao(eu.atrasadas, 'atrasadas', 'text-danger')}
-                    ${cartao(eu.vencem_em_breve, 'vencem em 7 dias', 'text-warning')}
-                    ${cartao(eu.em_revisao, 'em revisão')}
+                    ${cartao(eu.abertas, 'em aberto', '', 'clipboard', '')}
+                    ${cartao(eu.atrasadas, 'atrasadas', 'text-danger', 'alert-triangle', 'tone-danger')}
+                    ${cartao(eu.vencem_em_breve, 'vencem em 7 dias', 'text-warning', 'clock', 'tone-warning')}
+                    ${cartao(eu.em_revisao, 'em revisão', 'text-primary', 'check-circle', '')}
                 </div>
                 ${tarefas}`)}`;
     }
@@ -103,7 +111,7 @@
         return avisos.map(([tag, texto, view, acao]) => `
             <div class="notice-row fade-in">
                 <p><span class="mono">${tag}</span>${texto}</p>
-                <button type="button" class="link-btn" onclick="UI.switchView('${view}')">${acao}</button>
+                <button type="button" class="link-btn" onclick="UI.switchView('${view}')">${acao} ${window.Icon ? window.Icon('arrow-right', { size: 13 }) : ''}</button>
             </div>`).join('');
     }
 
@@ -121,10 +129,10 @@
 
         const linhas = pessoas.map(p => `
             <tr>
-                <td><strong>${esc(p.nome)}</strong></td>
+                <td>${window.UI.avatar ? window.UI.avatar(p.nome, { strong: true }) : `<strong>${esc(p.nome)}</strong>`}</td>
                 <td class="num">${p.abertas}</td>
                 <td class="num">${numero(p.atrasadas, 'text-danger')}</td>
-                <td class="num">${p.no_prazo_pct === null ? '—' : p.no_prazo_pct + '%'}</td>
+                <td>${window.UI.progressBar ? window.UI.progressBar(p.no_prazo_pct) : (p.no_prazo_pct === null ? '—' : p.no_prazo_pct + '%')}</td>
                 <td>${!p.relata_no_mes ? '<span class="text-faint">—</span>' : p.relato_do_mes_enviado
                     ? '<span class="badge badge-success">enviado</span>'
                     : '<span class="badge badge-warning">pendente</span>'}</td>
@@ -135,17 +143,17 @@
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>Pessoa</th>
+                            <th>Pesquisador</th>
                             <th>Abertas</th>
                             <th>Atrasadas</th>
                             <th>No prazo</th>
-                            <th>Relato</th>
+                            <th>Relato PTA</th>
                         </tr>
                     </thead>
                     <tbody>${linhas}</tbody>
                 </table>
             </div>
-            <p class="help">No prazo: entregas dos últimos ${equipe.janela_dias} dias.</p>`;
+            <p class="help mt-xs">No prazo: taxa de entregas pontuais dos últimos ${equipe.janela_dias} dias.</p>`;
     }
 
     function renderVisaoDoGestor(resumo) {
@@ -162,10 +170,10 @@
         return `
             ${renderAvisosDoGestor(resumo)}
             <div class="figures fade-in">
-                ${cartao(t.atrasadas, 'atrasadas', 'text-danger')}
-                ${cartao(t.em_revisao, 'aguardando revisão', 'text-primary')}
-                ${cartao(t.vencem_em_breve, 'vencem em 7 dias', 'text-warning')}
-                ${cartao(t.abertas, 'em aberto')}
+                ${cartao(t.atrasadas, 'atrasadas', 'text-danger', 'alert-triangle', 'tone-danger')}
+                ${cartao(t.em_revisao, 'aguardando revisão', 'text-primary', 'check-circle', '')}
+                ${cartao(t.vencem_em_breve, 'vencem em 7 dias', 'text-warning', 'clock', 'tone-warning')}
+                ${cartao(t.abertas, 'em aberto', '', 'clipboard', '')}
             </div>
             <div class="columns">
                 ${secao('Precisa de atenção', restante > 0 ? `mais ${restante} em tarefas` : '', atencao)}
@@ -177,12 +185,13 @@
     // ATALHOS PARA AS SEÇÕES
     // ==========================================
     function renderAtalhos() {
-        return secao('Seções', '', `
+        return secao('Módulos do laboratório', '', `
             <ul class="index-list">
                 ${SECOES.map((s, i) => `
                     <li>
                         <button type="button" class="index-row" onclick="UI.switchView('${s.view}')">
                             <span class="n">${String(i + 1).padStart(2, '0')}</span>
+                            <span class="ic">${window.Icon(s.icon, { size: 15 })}</span>
                             <span class="t">${s.label}</span>
                             <span class="d">${s.desc}</span>
                             <span class="go">${window.Icon('arrow-right', { size: 16 })}</span>
@@ -232,6 +241,7 @@
                 <div>
                     <p class="eyebrow">${dataExtenso}</p>
                     <h1>${saudacao}, ${esc(primeiroNome)}.</h1>
+                    <p class="lede">Painel operacional de pesquisa, procedimentos e entregas do laboratório GMAE / LEQM.</p>
                 </div>
             </header>
             <div id="painel-inicio">${window.UI.loading('Carregando o painel')}</div>`;

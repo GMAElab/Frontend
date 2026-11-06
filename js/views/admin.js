@@ -30,11 +30,11 @@ function routerAdmin() {
 function renderAdminPanel() {
     const container = document.getElementById('dynamic-content');
     const modulos = [
-        { acao: "openAdminModule('users')", titulo: 'Usuários', desc: 'Pedidos de cadastro, cargos, senhas e bloqueios.' },
-        { acao: "openAdminModule('lab')", titulo: 'Laboratório', desc: 'Equipamentos e POPs cadastrados.' },
-        { acao: "openAdminModule('pd')", titulo: 'P&amp;D e planejamento', desc: 'Processos e tópicos de pesquisa.' },
-        { acao: "openAdminModule('audit')", titulo: 'Auditoria', desc: 'Quem alterou o quê, e quando.' },
-        { acao: 'abrirSetup2FA()', titulo: 'Verificação em duas etapas', desc: 'Proteja a sua conta com um aplicativo Autenticador.' },
+        { acao: "openAdminModule('users')", icon: 'users', titulo: 'Usuários', desc: 'Pedidos de cadastro, cargos, senhas e bloqueios.' },
+        { acao: "openAdminModule('lab')", icon: 'microscope', titulo: 'Laboratório', desc: 'Equipamentos e POPs cadastrados.' },
+        { acao: "openAdminModule('pd')", icon: 'flask', titulo: 'P&amp;D e planejamento', desc: 'Processos e tópicos de pesquisa.' },
+        { acao: "openAdminModule('audit')", icon: 'shield', titulo: 'Auditoria', desc: 'Quem alterou o quê, e quando.' },
+        { acao: 'abrirSetup2FA()', icon: 'lock', titulo: 'Verificação em duas etapas', desc: 'Proteja a sua conta com um aplicativo Autenticador.' },
     ];
 
     container.innerHTML = `
@@ -42,6 +42,7 @@ function renderAdminPanel() {
             <div>
                 <p class="eyebrow">sistema</p>
                 <h1>Administração</h1>
+                <p class="lede">Governança de acessos, ativos laboratoriais, processos de P&amp;D e trilha de auditoria.</p>
             </div>
         </header>
 
@@ -50,6 +51,7 @@ function renderAdminPanel() {
                 <li>
                     <button type="button" class="index-row" onclick="${m.acao}">
                         <span class="n">${String(i + 1).padStart(2, '0')}</span>
+                        <span class="ic">${window.Icon(m.icon, { size: 15 })}</span>
                         <span class="t">${m.titulo}</span>
                         <span class="d">${m.desc}</span>
                         <span class="go">${window.Icon('arrow-right', { size: 16 })}</span>
@@ -174,17 +176,22 @@ window.handleApproval = async (id, isApproved) => {
     );
     if (!ok) return;
 
-    let stepUpToken = null;
-    if (isApproved) {
-        stepUpToken = await window.api.confirmStepUp({ title: 'Confirme para aprovar', message: 'Você está concedendo acesso ao sistema a um novo usuário.' });
-        if (!stepUpToken) return;
-    }
+    const stepUpToken = await window.api.confirmStepUp({
+        title: isApproved ? 'Confirme para aprovar' : 'Confirme para rejeitar',
+        message: isApproved
+            ? 'Você está concedendo acesso ao sistema a um novo usuário.'
+            : 'Você está descartando esta solicitação de cadastro.'
+    });
+    if (!stepUpToken) return;
 
     try {
         const endpoint = isApproved ? `/aprovar-registro/${id}` : `/rejeitar-registro/${id}`;
-        let opts = { method: 'POST' };
+        const opts = {
+            method: 'POST',
+            headers: { 'X-Step-Up-Token': stepUpToken }
+        };
         if (isApproved) {
-            opts.headers = { 'Content-Type': 'application/json', 'X-Step-Up-Token': stepUpToken };
+            opts.headers['Content-Type'] = 'application/json';
             opts.body = JSON.stringify({ role_atribuida: document.getElementById(`role-${id}`).value });
         }
         const res = await window.api.fetchProtected(endpoint, opts);
@@ -215,8 +222,6 @@ async function loadActiveUsers(container) {
                 ? '<span class="badge badge-success">ativo</span>'
                 : '<span class="badge badge-danger">bloqueado</span>';
 
-            // Admins também podem ser alvo destas ações — cada uma já exige reconfirmação
-            // de identidade (senha ou código do Autenticador) do admin que a executa.
             const nomeJs = window.escapeHTML(u.nome).replace(/'/g, "\\'");
             let btn = '';
             if (!isActive) {
@@ -234,9 +239,9 @@ async function loadActiveUsers(container) {
 
             html += `<tr class="${!isActive ? 'is-dimmed' : ''}">
                 <td class="num">${u.id}</td>
-                <td><strong>${window.escapeHTML(u.nome)}</strong></td>
+                <td>${window.UI?.avatar ? window.UI.avatar(u.nome, { strong: true }) : `<strong>${window.escapeHTML(u.nome)}</strong>`}</td>
                 <td>${window.escapeHTML(u.email)}</td>
-                <td>${window.escapeHTML(u.role)}</td>
+                <td><span class="resource-chip">${window.escapeHTML(u.role)}</span></td>
                 <td>${statusBadge}</td>
                 <td>${btn}</td>
             </tr>`;
@@ -436,7 +441,7 @@ async function loadAuditLogs(container) {
 
         logs.forEach((log, index) => {
             const dataFormatada = new Date(log.timestamp).toLocaleString('pt-BR');
-            const isDelete = (log.action === "DELETE" || log.action === "SOFT_DELETE");
+            const isDelete = (log.action === "DELETE" || log.action === "SOFT_DELETE" || log.action === "BLOCK_USER");
             const isUpdate = log.action === "UPDATE";
             const corClasse = isDelete ? 'badge-danger' : isUpdate ? 'badge-accent' : 'badge-success';
 
@@ -497,6 +502,12 @@ window.viewLogPayload = function(index) {
 // ==========================================
 // 6. Edição dos Dados
 // ==========================================
+const CAMPOS_IGNORADOS_DEEP_VIEW = new Set([
+    'senha', 'id', 'descricao', 'anexo_dados', 'anexo_meta',
+    'equipamentos', 'membros', 'data_registro', 'data_criacao',
+    'equipamento_nome', 'created_at', 'responsavel_id', 'equipamento_id'
+]);
+
 window.closeDeepView = function() {
     document.getElementById('deep-view-modal').style.display = 'none';
 }
@@ -541,18 +552,21 @@ window.openDeepView = async function(route, id, entityName) {
 
         const tradutorDeRotulos = {
             "nome": "Nome",
+            "email": "E-mail",
             "description": "Descrição",
             "video_url": "Link do YouTube",
-            "manual_url": "Link do POP",
+            "manual_url": "Link do Manual",
             "status": "Status",
             "titulo": "Título",
+            "ano": "Ano",
             "is_active": "Conta ativa",
             "role": "Cargo"
         };
 
         let html = '';
         for (const [key, value] of Object.entries(data)) {
-            if (key === 'senha' || key === 'id' || key === 'descricao' || key === 'anexo_dados' || key === 'anexo_meta') continue;
+            if (CAMPOS_IGNORADOS_DEEP_VIEW.has(key)) continue;
+            if (typeof value === 'object' && value !== null) continue;
 
             const labelAmigavel = tradutorDeRotulos[key] || key;
 
@@ -587,7 +601,7 @@ window.openDeepView = async function(route, id, entityName) {
             html += `
                 <div class="input-group">
                     <label for="dv-input-${key}">${labelAmigavel}</label>
-                    <input type="text" id="dv-input-${key}" class="form-control" value="${safeValue}">
+                    <input type="${key === 'ano' ? 'number' : 'text'}" id="dv-input-${key}" class="form-control" value="${safeValue}">
                 </div>
             `;
         }
@@ -611,11 +625,18 @@ async function saveDeepView(route, id, originalData) {
     const payload = {};
     const saveBtn = document.getElementById('dv-save-btn');
 
-    for (const key of Object.keys(originalData)) {
-        if (key === 'senha' || key === 'id' || key === 'descricao' || key === 'anexo_dados' || key === 'anexo_meta') continue;
+    for (const [key, origVal] of Object.entries(originalData)) {
+        if (CAMPOS_IGNORADOS_DEEP_VIEW.has(key)) continue;
+        if (typeof origVal === 'object' && origVal !== null) continue;
         const input = document.getElementById(`dv-input-${key}`);
         if (!input) continue;
-        payload[key] = key === 'is_active' ? (input.checked ? 1 : 0) : input.value;
+        if (key === 'is_active') {
+            payload[key] = input.checked ? 1 : 0;
+        } else if (key === 'ano') {
+            payload[key] = parseInt(input.value, 10) || origVal;
+        } else {
+            payload[key] = input.value;
+        }
     }
 
     let stepUpToken = null;
@@ -672,7 +693,7 @@ async function saveDeepView(route, id, originalData) {
 // 7. EXCLUSÃO E BLOQUEIO
 // ==========================================
 window.adminDelete = async (route, id, tabToReload) => {
-    if(!id) return;
+    if (!id) return;
 
     const isUser = route === 'usuarios';
     const ok = await window.UI.confirm(
@@ -683,23 +704,25 @@ window.adminDelete = async (route, id, tabToReload) => {
     );
     if (!ok) return;
 
-    let stepUpToken = null;
-    if (isUser) {
-        stepUpToken = await window.api.confirmStepUp({ title: 'Confirme para bloquear', message: 'Você está revogando o acesso deste usuário ao sistema.' });
-        if (!stepUpToken) return;
-    }
+    const stepUpToken = await window.api.confirmStepUp({
+        title: isUser ? 'Confirme para bloquear' : 'Confirme para excluir',
+        message: isUser
+            ? 'Você está revogando o acesso deste usuário ao sistema.'
+            : `Você está excluindo permanentemente o registro [${id}].`
+    });
+    if (!stepUpToken) return;
 
     let endpoint = '';
     if (route === 'usuarios') endpoint = `/admin/usuarios/${id}`;
     else if (route === 'equipments') endpoint = `/equipments/admin/${id}`;
-    else if (route === 'pops') endpoint = `/pops/admin/${id}`;
+    else if (route === 'pops') endpoint = `/pops/admin/${encodeURIComponent(id)}`;
     else if (route === 'processes') endpoint = `/processes/admin/${id}`;
     else if (route === 'pta/topicos') endpoint = `/pta/admin/topicos/${id}`;
 
     try {
         const res = await window.api.fetchProtected(endpoint, {
             method: 'DELETE',
-            headers: isUser ? { 'X-Step-Up-Token': stepUpToken } : {}
+            headers: { 'X-Step-Up-Token': stepUpToken }
         });
 
         if (res.ok) {

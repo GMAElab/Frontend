@@ -13,7 +13,7 @@ document.addEventListener('viewChanged', (e) => {
                 <p class="lede">Mapeamento, acompanhamento e histórico de cada processo, com as pessoas e os equipamentos envolvidos.</p>
             </div>
             <div class="page-actions">
-                <button class="btn btn-primary" onclick="window.openProcessModal()">Novo processo</button>
+                <button class="btn btn-primary" onclick="window.openProcessModal()">${window.Icon ? window.Icon('plus', { size: 14 }) : ''} Novo processo</button>
             </div>
         </header>
         <div id="processes-container" class="fade-in"></div>
@@ -36,7 +36,7 @@ function loadProcessesTable() {
         alvo: 'processes-container',
         endpoint: '/processes/',
         placeholder: 'Buscar por processo, responsável ou equipe',
-        cabecalho: '<th>Processo</th><th>Responsável</th><th>Equipe</th><th>Status</th><th>Registrado em</th><th class="end">Ações</th>',
+        cabecalho: '<th>Processo &amp; objetivo</th><th>Responsável</th><th>Equipe</th><th>Status</th><th>Registrado em</th><th class="end">Ações</th>',
         filtros: [
             { param: 'status', rotulo: 'Todos os status', opcoes: STATUS_DE_PROCESSO },
             { param: 'membro_id', rotulo: 'Todas as pessoas', opcoes: window.Vinculos.opcoesDePessoa },
@@ -46,11 +46,30 @@ function loadProcessesTable() {
         erro: 'Erro ao carregar lista de processos.',
         renderLinha: (proc) => {
             const status = proc.status || 'rascunho';
+            const objetivo = proc.objetivo_fase ? window.escapeHTML(proc.objetivo_fase) : '';
+            const respHtml = proc.responsavel && window.UI?.avatar
+                ? window.UI.avatar(proc.responsavel)
+                : `<span class="text-faint">${window.escapeHTML(proc.responsavel || 'Não definido')}</span>`;
+            const listaMembros = (proc.membros && proc.membros.length)
+                ? proc.membros
+                : (proc.equipe ? proc.equipe.split(',').map(s => s.trim()).filter(Boolean) : []);
+            const equipeHtml = listaMembros.length && window.UI?.avatarStack
+                ? window.UI.avatarStack(listaMembros, 3)
+                : '<span class="text-faint">—</span>';
+
             return `
                 <tr>
-                    <td><strong>${window.escapeHTML(proc.nome_processo)}</strong></td>
-                    <td>${window.escapeHTML(proc.responsavel || 'Não definido')}</td>
-                    <td>${proc.equipe ? window.escapeHTML(proc.equipe) : '<span class="text-faint">—</span>'}</td>
+                    <td>
+                        <div class="cell-title-row">
+                            <span class="cell-icon">${window.Icon ? window.Icon('flask', { size: 14 }) : ''}</span>
+                            <div class="cell-stack">
+                                <strong>${window.escapeHTML(proc.nome_processo)}</strong>
+                                ${objetivo ? `<span class="cell-sub">${objetivo}</span>` : ''}
+                            </div>
+                        </div>
+                    </td>
+                    <td>${respHtml}</td>
+                    <td>${equipeHtml}</td>
                     <td><span class="status-badge status-${window.escapeHTML(status)}">${window.escapeHTML(status.replace('_', ' '))}</span></td>
                     <td class="num">${new Date(proc.data_registro).toLocaleDateString('pt-BR')}</td>
                     <td>

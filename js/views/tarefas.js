@@ -226,16 +226,21 @@ async function carregarTarefasEquipe() {
 }
 
 function renderLinhaTarefaGestor(t) {
-    const nomes = t.atribuidos.map(a => escT(a.nome)).join(', ') || '—';
-    const vinculo = t.processo_nome ? `<span class="sub">Processo: ${escT(t.processo_nome)}</span>` : '';
+    const atribuidosHtml = (t.atribuidos && t.atribuidos.length && window.UI?.avatarStack)
+        ? window.UI.avatarStack(t.atribuidos, 3)
+        : (t.atribuidos.map(a => escT(a.nome)).join(', ') || '<span class="text-faint">—</span>');
+    const vinculo = t.processo_nome ? `<span class="cell-sub">Processo: ${escT(t.processo_nome)}</span>` : '';
+    const progHtml = window.UI?.progressBar
+        ? window.UI.progressBar(t.percentual_conclusao)
+        : `${t.percentual_conclusao}%`;
 
     return `
         <tr class="clickable${t.status === 'em_revisao' ? ' is-flagged' : ''}" onclick="window.abrirDetalhesTarefa(${t.id})">
-            <td><strong>${escT(t.titulo)}</strong>${vinculo}</td>
-            <td>${nomes}</td>
+            <td><div class="cell-stack"><strong>${escT(t.titulo)}</strong>${vinculo}</div></td>
+            <td>${atribuidosHtml}</td>
             <td>${badgePrioridade(t)}</td>
             <td class="num">${fmtPrazo(t.prazo)}</td>
-            <td class="num">${t.percentual_conclusao}%</td>
+            <td>${progHtml}</td>
             <td>${badgeStatus(t)}</td>
             <td onclick="event.stopPropagation()">
                 <div class="row-actions">

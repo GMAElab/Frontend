@@ -19,7 +19,7 @@ function renderEquipments() {
                 <p class="lede">Cada equipamento com seu vídeo de treinamento, seus POPs e os processos em que é usado.</p>
             </div>
             <div class="page-actions">
-                <button id="btn-novo-equip" class="btn btn-primary">Novo equipamento</button>
+                <button id="btn-novo-equip" class="btn btn-primary">${window.Icon ? window.Icon('plus', { size: 14 }) : ''} Novo equipamento</button>
             </div>
         </header>
         <div id="eq-container" class="fade-in"></div>
@@ -40,21 +40,40 @@ function loadEquipmentsTable() {
     window.listagemAtual = window.Listagem.criar({
         alvo: 'eq-container',
         endpoint: '/equipments/',
-        placeholder: 'Buscar por nome ou descrição',
-        cabecalho: '<th>Equipamento</th><th>Status</th><th class="end">Ações</th>',
+        placeholder: 'Buscar por nome ou especificação do equipamento',
+        cabecalho: '<th>Equipamento</th><th>Recursos de bancada</th><th>Status</th><th class="end">Ações</th>',
         vazio: { title: 'Nenhum equipamento registrado', description: 'Cadastre o primeiro equipamento do laboratório.' },
         erro: 'Não foi possível carregar os equipamentos.',
-        renderLinha: (eq) => `
+        renderLinha: (eq) => {
+            const desc = eq.description ? window.escapeHTML(eq.description) : '';
+            const temVideo = Boolean(eq.video_url && eq.video_url.trim());
+            const temManual = Boolean(eq.manual_url && eq.manual_url.trim());
+            const chips = [];
+            if (temVideo) chips.push(`<span class="resource-chip">${window.Icon ? window.Icon('video', { size: 12 }) : ''} Vídeo de treino</span>`);
+            if (temManual) chips.push(`<span class="resource-chip">${window.Icon ? window.Icon('file-text', { size: 12 }) : ''} Manual / POP</span>`);
+            if (!chips.length) chips.push('<span class="resource-chip is-empty">Sem mídia anexada</span>');
+
+            return `
             <tr>
-                <td><strong>${window.escapeHTML(eq.nome)}</strong></td>
+                <td>
+                    <div class="cell-title-row">
+                        <span class="cell-icon">${window.Icon ? window.Icon('microscope', { size: 14 }) : ''}</span>
+                        <div class="cell-stack">
+                            <strong>${window.escapeHTML(eq.nome)}</strong>
+                            ${desc ? `<span class="cell-sub">${desc}</span>` : ''}
+                        </div>
+                    </div>
+                </td>
+                <td><div class="resource-chips">${chips.join('')}</div></td>
                 <td><span class="badge badge-success">${window.escapeHTML(eq.status || 'ativo')}</span></td>
                 <td>
                     <div class="row-actions">
-                        <button class="link-btn" onclick="window.viewDossier(${eq.id})">Abrir</button>
+                        <button class="link-btn" onclick="window.viewDossier(${eq.id})">Abrir dossiê</button>
                         <button class="link-btn muted" onclick="openDeepView('equipments', ${eq.id}, 'Equipamento')">Editar</button>
                     </div>
                 </td>
-            </tr>`
+            </tr>`;
+        }
     });
 }
 

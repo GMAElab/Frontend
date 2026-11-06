@@ -13,7 +13,7 @@ document.addEventListener('viewChanged', (e) => {
                     <p class="lede">Os POPs do laboratório, com histórico de revisões e exportação em .docx.</p>
                 </div>
                 <div class="page-actions">
-                    <button class="btn btn-primary" onclick="window.openPopModal()">Novo POP</button>
+                    <button class="btn btn-primary" onclick="window.openPopModal()">${window.Icon ? window.Icon('plus', { size: 14 }) : ''} Novo POP</button>
                 </div>
             </header>
             <div id="pops-container" class="fade-in"></div>
@@ -346,6 +346,9 @@ window.handleSavePop = async function(event) {
 // 6. LISTA COM BUSCA E PAGINAÇÃO
 // ==========================================
 function loadPopsTable() {
+    const user = JSON.parse(localStorage.getItem('user_data') || '{}');
+    const ehAdmin = user.role === 'admin';
+
     window.listagemAtual = window.Listagem.criar({
         alvo: 'pops-container',
         endpoint: '/pops/',
@@ -357,18 +360,29 @@ function loadPopsTable() {
         renderLinha: (pop) => {
             const codigo = window.escapeHTML(pop.codigo);
             const status = pop.status || 'ativo';
+            const secoes = lerSecoesDoPop(pop.descricao);
+            const versao = window.escapeHTML(secoes.versao || '1.0');
+            const objetivo = secoes.objetivo ? window.escapeHTML(secoes.objetivo) : '';
+            const equipHtml = pop.equipamento_nome
+                ? `<span class="resource-chip">${window.Icon ? window.Icon('microscope', { size: 12 }) : ''} ${window.escapeHTML(pop.equipamento_nome)}</span>`
+                : '<span class="text-faint">—</span>';
             return `
                 <tr>
-                    <td class="code">${codigo}</td>
-                    <td><strong>${window.escapeHTML(pop.titulo)}</strong></td>
-                    <td>${pop.equipamento_nome ? window.escapeHTML(pop.equipamento_nome) : '<span class="text-faint">—</span>'}</td>
-                    <td class="num">${window.escapeHTML(lerSecoesDoPop(pop.descricao).versao || '1.0')}</td>
+                    <td class="code"><span class="code-pill">${codigo}</span></td>
+                    <td>
+                        <div class="cell-stack">
+                            <strong>${window.escapeHTML(pop.titulo)}</strong>
+                            ${objetivo ? `<span class="cell-sub">${objetivo}</span>` : ''}
+                        </div>
+                    </td>
+                    <td>${equipHtml}</td>
+                    <td class="num"><span class="resource-chip">v${versao}</span></td>
                     <td><span class="badge ${status === 'ativo' ? 'badge-success' : ''}">${window.escapeHTML(status)}</span></td>
                     <td>
                         <div class="row-actions">
                             <button onclick="viewPopDetails(this.getAttribute('data-id'))" data-id="${codigo}" class="link-btn">Abrir</button>
                             <button onclick="window.openPopModal(this.getAttribute('data-id'))" data-id="${codigo}" class="link-btn muted">Editar</button>
-                            <button onclick="window.removerPopOficial(this.getAttribute('data-id'))" data-id="${codigo}" class="link-btn danger">Excluir</button>
+                            ${ehAdmin ? `<button onclick="window.removerPopOficial(this.getAttribute('data-id'))" data-id="${codigo}" class="link-btn danger">Excluir</button>` : ''}
                         </div>
                     </td>
                 </tr>`;
@@ -583,7 +597,7 @@ window.gerarComIA = async function() {
     if (aviso) aviso.classList.remove('hidden');
 
     try {
-        const res = await window.api.fetchProtected('/pops/ai/gerar-pop/', {
+        const res = await window.api.fetchProtected('/pops/ai/gerar-pop', {
             method: 'POST',
             body: formData
         });
@@ -634,9 +648,16 @@ window.removerPopOficial = async function(codigo) {
     );
     if (!ok) return;
 
+    const stepUpToken = await window.api.confirmStepUp({
+        title: 'Confirme para excluir o POP',
+        message: `Você está excluindo permanentemente o POP ${codigo}.`
+    });
+    if (!stepUpToken) return;
+
     try {
         const res = await window.api.fetchProtected(`/pops/admin/${encodeURIComponent(codigo)}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: { 'X-Step-Up-Token': stepUpToken }
         });
 
         if (!res.ok) {
