@@ -988,7 +988,6 @@ select.form-control {
     padding: var(--space-6);
     background: var(--surface);
     border: 1px solid var(--line-strong);
-    border-top: 3px solid var(--accent);
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow-pop);
     color: var(--text);
@@ -1693,7 +1692,6 @@ select.form-control {
     max-height: min(460px, 72vh);
     background: var(--surface);
     border: 1px solid var(--line-strong);
-    border-top: 3px solid var(--accent);
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow-pop);
     overflow: hidden;

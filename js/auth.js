@@ -46,7 +46,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (loginForm) {
         loginForm.addEventListener('submit', async (event) => {
             event.preventDefault();
-            const email = document.getElementById('email').value.trim();
+            const emailInput = document.getElementById('email') || document.getElementById('username');
+            const email = emailInput ? emailInput.value.trim() : '';
             const password = document.getElementById('password').value.trim();
             UI.showFormFeedback('login-feedback', '', false);
             UI.setButtonLoading('btn-login', true);
@@ -70,6 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (response.ok) {
                     if (data.requires_2fa) {
                         preAuthTokenPara2FA = data.pre_auth_token;
+                        document.querySelector('.auth-switcher')?.classList.add('hidden');
                         document.getElementById('login-form').classList.add('hidden');
                         document.getElementById('2fa-form').classList.remove('hidden');
                         document.getElementById('codigo-2fa').focus();
@@ -191,12 +193,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 window.mostrarEsqueciSenha = function(event) {
     event.preventDefault();
+    document.querySelector('.auth-switcher')?.classList.add('hidden');
     document.getElementById('login-form').classList.add('hidden');
     document.getElementById('2fa-form').classList.add('hidden');
     document.getElementById('forgot-password-form').classList.remove('hidden');
 };
 
 window.voltarParaLogin = function() {
+    document.querySelector('.auth-switcher')?.classList.remove('hidden');
     document.getElementById('forgot-password-form').classList.add('hidden');
     document.getElementById('2fa-form').classList.add('hidden');
     document.getElementById('login-form').classList.remove('hidden');

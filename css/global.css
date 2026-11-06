@@ -1,12 +1,12 @@
 /* ==========================================
    VARIÁVEIS E BASE DO SISTEMA
-   Direção Visual: Editorial Científico & Mineral (SGCI / GMAE · LEQM)
-   Inspirado na paleta editorial do próprio SGCI (#F6F4EF pedra quente,
-   #1B1815 grafite profundo e #B85028 cobre/terracota científico).
+   Direção Visual: Precisão Científica Moderna (SGCI / GMAE · LEQM)
+   Alto contraste, superfícies em ardósia profunda / alabastro e acento
+   Esmeralda-Teal de instrumentação laboratorial.
    ========================================== */
 :root {
     --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --font-serif: 'Newsreader', Georgia, 'Times New Roman', serif;
+    --font-serif: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
     /* Escala de espaçamento (base 4) */
@@ -21,32 +21,32 @@
     --space-10: 40px;
     --space-12: 48px;
 
-    /* Raios de borda — precisão instrumental */
-    --radius-xs: 3px;
-    --radius-sm: 4px;
-    --radius: 6px;
-    --radius-lg: 8px;
-    --radius-xl: 12px;
+    /* Raios de borda */
+    --radius-xs: 4px;
+    --radius-sm: 6px;
+    --radius: 8px;
+    --radius-lg: 10px;
+    --radius-xl: 14px;
     --radius-pill: 999px;
 
-    /* Escala tipográfica com contraste editorial */
+    /* Escala tipográfica nítida */
     --fs-2xs: 10.5px;
     --fs-xs: 11.5px;
     --fs-sm: 12.5px;
     --fs-base: 13.5px;
     --fs-md: 14.5px;
     --fs-lg: 16px;
-    --fs-xl: 24px;
-    --fs-2xl: 30px;
+    --fs-xl: 22px;
+    --fs-2xl: 26px;
 
     /* Alturas de controles */
     --ctrl-sm: 28px;
-    --ctrl-md: 34px;
-    --ctrl-lg: 38px;
+    --ctrl-md: 36px;
+    --ctrl-lg: 42px;
 
     /* Layout */
-    --sidebar-w: 236px;
-    --topbar-h: 50px;
+    --sidebar-w: 240px;
+    --topbar-h: 52px;
     --content-max: 1180px;
 
     /* Movimento */
@@ -65,51 +65,51 @@
 }
 
 /* ==========================================
-   MODO ESCURO — GRAFITE MINERAL & COBRE
+   MODO ESCURO — ARDÓSIA PROFUNDA & ESMERALDA ANALÍTICO
    ========================================== */
 :root,
 [data-theme="dark"] {
     color-scheme: dark;
 
-    --bg: #12100E;
-    --surface: #1B1815;
-    --surface-2: #231F1B;
-    --surface-3: #2C2722;
-    --surface-sunk: #0D0B0A;
-    --surface-hover: #26211C;
+    --bg: #080B11;
+    --surface: #0E131D;
+    --surface-2: #151C28;
+    --surface-3: #1D2636;
+    --surface-sunk: #06080D;
+    --surface-hover: #172030;
 
-    --line: #2C2620;
-    --line-strong: #3D352D;
-    --line-focus: #D96B43;
+    --line: #1C2536;
+    --line-strong: #28344B;
+    --line-focus: #10B981;
 
-    --text: #F4F0EA;
-    --text-2: #C9C1B6;
-    --muted: #91877B;
-    --faint: #665E54;
+    --text: #F3F6FA;
+    --text-2: #C3CDDC;
+    --muted: #7E8CA1;
+    --faint: #526075;
 
-    /* Cobre / Terracota Científico */
-    --accent: #D96B43;
-    --accent-solid: #C2552D;
-    --accent-hover: #D4633A;
-    --accent-ink: #FFFDF9;
-    --accent-tint: rgba(217, 107, 67, 0.14);
-    --accent-border: rgba(217, 107, 67, 0.34);
+    /* Esmeralda / Teal Analítico de Laboratório */
+    --accent: #10B981;
+    --accent-solid: #0D9668;
+    --accent-hover: #10B981;
+    --accent-ink: #FFFFFF;
+    --accent-tint: rgba(16, 185, 129, 0.12);
+    --accent-border: rgba(16, 185, 129, 0.32);
 
-    /* Semânticos minerais */
-    --success: #46A77D;
-    --success-tint: rgba(70, 167, 125, 0.13);
-    --warning: #E09F3E;
-    --warning-tint: rgba(224, 159, 62, 0.13);
-    --danger: #E25B4B;
-    --danger-tint: rgba(226, 91, 75, 0.13);
-    --info: #6299C9;
-    --info-tint: rgba(98, 153, 201, 0.13);
+    /* Semânticos */
+    --success: #10B981;
+    --success-tint: rgba(16, 185, 129, 0.12);
+    --warning: #F59E0B;
+    --warning-tint: rgba(245, 158, 11, 0.13);
+    --danger: #EF4444;
+    --danger-tint: rgba(239, 68, 68, 0.13);
+    --info: #38BDF8;
+    --info-tint: rgba(56, 189, 248, 0.12);
 
-    --overlay: rgba(10, 8, 7, 0.72);
-    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35);
-    --shadow-pop: 0 0 0 1px rgba(255, 248, 238, 0.07), 0 18px 44px -8px rgba(0, 0, 0, 0.65);
-    --grid-line: rgba(244, 240, 234, 0.035);
-    --ambient-glow: radial-gradient(900px 380px at 50% -120px, rgba(194, 85, 45, 0.12), transparent 70%);
+    --overlay: rgba(4, 7, 13, 0.75);
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.02);
+    --shadow-pop: 0 0 0 1px rgba(255, 255, 255, 0.07), 0 24px 48px -12px rgba(0, 0, 0, 0.7);
+    --grid-line: rgba(255, 255, 255, 0.035);
+    --ambient-glow: radial-gradient(800px 360px at 50% -100px, rgba(16, 185, 129, 0.10), transparent 70%);
 
     /* Alias de compatibilidade */
     --bg-primary: var(--bg);
@@ -124,51 +124,50 @@
 }
 
 /* ==========================================
-   MODO CLARO — PEDRA QUENTE & TERRACOTA EDITORIAL
-   (Harmonia direta com os e-mails institucionais do SGCI)
+   MODO CLARO — ALABASTRO CIENTÍFICO & TEAL PROFUNDO
    ========================================== */
 [data-theme="light"] {
     color-scheme: light;
 
-    --bg: #F6F4EF;
-    --surface: #FCFBF8;
-    --surface-2: #EFECE4;
-    --surface-3: #E5E0D5;
-    --surface-sunk: #EAE6DC;
-    --surface-hover: #F2EFE7;
+    --bg: #F6F8FA;
+    --surface: #FFFFFF;
+    --surface-2: #EEF2F6;
+    --surface-3: #E2E8F0;
+    --surface-sunk: #EDF1F5;
+    --surface-hover: #F1F5F9;
 
-    --line: #DFDBD0;
-    --line-strong: #C9C3B4;
-    --line-focus: #B85028;
+    --line: #E2E8F0;
+    --line-strong: #CBD5E1;
+    --line-focus: #0D9488;
 
-    --text: #1B1815;
-    --text-2: #48423A;
-    --muted: #726A5F;
-    --faint: #9B9286;
+    --text: #0F172A;
+    --text-2: #334155;
+    --muted: #64748B;
+    --faint: #94A3B8;
 
-    /* Terracota / Cobre Editorial */
-    --accent: #B85028;
-    --accent-solid: #B85028;
-    --accent-hover: #9E411E;
-    --accent-ink: #FAF8F5;
-    --accent-tint: rgba(184, 80, 40, 0.10);
-    --accent-border: rgba(184, 80, 40, 0.28);
+    /* Teal / Esmeralda Profundo */
+    --accent: #0D9488;
+    --accent-solid: #0F766E;
+    --accent-hover: #0D9488;
+    --accent-ink: #FFFFFF;
+    --accent-tint: rgba(13, 148, 136, 0.09);
+    --accent-border: rgba(13, 148, 136, 0.28);
 
-    /* Semânticos minerais */
-    --success: #216E4E;
-    --success-tint: rgba(33, 110, 78, 0.10);
-    --warning: #B26B15;
-    --warning-tint: rgba(178, 107, 21, 0.11);
-    --danger: #B93829;
-    --danger-tint: rgba(185, 56, 41, 0.10);
-    --info: #2B5B84;
-    --info-tint: rgba(43, 91, 132, 0.10);
+    /* Semânticos */
+    --success: #059669;
+    --success-tint: rgba(5, 150, 105, 0.10);
+    --warning: #D97706;
+    --warning-tint: rgba(217, 119, 6, 0.10);
+    --danger: #DC2626;
+    --danger-tint: rgba(220, 38, 38, 0.10);
+    --info: #0284C7;
+    --info-tint: rgba(2, 132, 199, 0.10);
 
-    --overlay: rgba(27, 24, 21, 0.48);
-    --shadow-card: 0 1px 2px rgba(27, 24, 21, 0.05);
-    --shadow-pop: 0 0 0 1px rgba(27, 24, 21, 0.08), 0 18px 42px -10px rgba(27, 24, 21, 0.18);
-    --grid-line: rgba(27, 24, 21, 0.04);
-    --ambient-glow: radial-gradient(900px 380px at 50% -120px, rgba(184, 80, 40, 0.07), transparent 70%);
+    --overlay: rgba(15, 23, 42, 0.45);
+    --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.05);
+    --shadow-pop: 0 0 0 1px rgba(15, 23, 42, 0.06), 0 20px 44px -12px rgba(15, 23, 42, 0.16);
+    --grid-line: rgba(15, 23, 42, 0.04);
+    --ambient-glow: radial-gradient(800px 360px at 50% -100px, rgba(13, 148, 136, 0.07), transparent 70%);
 }
 
 /* ==========================================
@@ -181,8 +180,8 @@
     --fs-base: 15px;
     --fs-md: 16px;
     --fs-lg: 18px;
-    --fs-xl: 27px;
-    --fs-2xl: 34px;
+    --fs-xl: 24px;
+    --fs-2xl: 28px;
 
     --ctrl-sm: 36px;
     --ctrl-md: 42px;
@@ -220,16 +219,16 @@ html, body {
 
 h1, h2, h3, h4, h5, h6 {
     color: var(--text);
+    font-family: var(--font-sans);
     font-weight: 600;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.022em;
     line-height: 1.25;
 }
 
 h1 {
-    font-family: var(--font-serif);
     font-size: var(--fs-xl);
-    font-weight: 500;
-    letter-spacing: -0.025em;
+    font-weight: 600;
+    letter-spacing: -0.028em;
 }
 h2 { font-size: var(--fs-lg); }
 h3 { font-size: var(--fs-md); font-weight: 600; }
@@ -239,15 +238,14 @@ p { color: var(--text-2); }
 
 a {
     color: var(--accent);
-    text-decoration: underline;
-    text-decoration-color: var(--accent-border);
-    text-underline-offset: 3px;
-    transition: color var(--t-fast) var(--ease), text-decoration-color var(--t-fast) var(--ease);
+    text-decoration: none;
+    transition: color var(--t-fast) var(--ease);
 }
 
 a:hover {
     color: var(--accent-hover);
-    text-decoration-color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
 }
 
 button, input, select, textarea {
@@ -274,7 +272,7 @@ kbd {
     background: var(--surface-2);
     border: 1px solid var(--line-strong);
     border-bottom-width: 2px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-xs);
 }
 
 hr {
@@ -373,7 +371,7 @@ hr {
     display: inline-block;
     width: 6px;
     height: 6px;
-    border-radius: 1px;
+    border-radius: 50%;
     background: var(--accent);
 }
 
@@ -427,11 +425,11 @@ hr {
 }
 
 @media print {
-    .sidebar, .top-bar, .sidebar-backdrop, .toast-region, .cmdk-overlay,
+    .sidebar, .top-bar, .topbar, .sidebar-backdrop, .toast-region, #toast-container, .cmdk-overlay,
     .page-actions, .toolbar, .pagination, .row-actions, .doc-toolbar {
         display: none !important;
     }
-    html, body, .app-layout, .main-content, .content-area {
+    html, body, .app-layout, .dashboard-layout, .main-content, .main-wrapper, .content-area {
         height: auto !important;
         overflow: visible !important;
         background: #fff !important;

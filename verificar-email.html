@@ -10,32 +10,35 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
-    <link rel="stylesheet" href="css/global.css?v=9">
-    <link rel="stylesheet" href="css/layout.css?v=9">
-    <link rel="stylesheet" href="css/components.css?v=9">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap">
+    <link rel="stylesheet" href="css/global.css?v=10">
+    <link rel="stylesheet" href="css/layout.css?v=10">
+    <link rel="stylesheet" href="css/components.css?v=10">
 </head>
 <body>
-    <main class="auth-single">
-        <section class="auth-panel">
-            <div class="auth-brand">
-                <span class="brand-glyph" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6.34L4.24 17.5A2 2 0 0 0 6 20.5h12a2 2 0 0 0 1.76-3L15 8.34V2"/><path d="M8.5 2h7"/><path d="M6.5 14.5h11"/></svg></span>
-                <span class="brand-copy">
-                    <span class="brand-mark">SGCI / GMAE</span>
-                    <span class="brand-sub">LEQM · Verificação</span>
-                </span>
-            </div>
-            <h1>Confirmação de e-mail</h1>
+    <main class="auth-shell">
+        <div class="auth-container">
+            <header class="auth-hero-brand">
+                <div class="auth-logo-mark" aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6.34L4.24 17.5A2 2 0 0 0 6 20.5h12a2 2 0 0 0 1.76-3L15 8.34V2"/><path d="M8.5 2h7"/><path d="M6.5 14.5h11"/></svg>
+                </div>
+                <span class="auth-badge-pill"><span class="dot"></span>SGCI · GMAE / LEQM</span>
+            </header>
 
-            <div id="verificacao-spinner" class="loading">
-                <span class="spinner"></span> Confirmando seu e-mail...
-            </div>
+            <section class="auth-panel">
+                <h1>Confirmação de e-mail</h1>
+                <p class="lede">Validando seu token de credenciamento junto ao servidor.</p>
 
-            <div id="verificacao-resultado" class="hidden">
-                <p id="verificacao-mensagem" class="feedback-msg mt-md" aria-live="polite"></p>
-                <a href="index.html" class="btn btn-primary btn-block">Ir para o login</a>
-            </div>
-        </section>
+                <div id="verificacao-spinner" class="loading">
+                    <span class="spinner"></span> Confirmando seu e-mail...
+                </div>
+
+                <div id="verificacao-resultado" class="hidden">
+                    <p id="verificacao-mensagem" class="feedback-msg mt-md" aria-live="polite"></p>
+                    <a href="index.html" class="btn btn-primary btn-block">Ir para o login</a>
+                </div>
+            </section>
+        </div>
     </main>
 
     <script>
