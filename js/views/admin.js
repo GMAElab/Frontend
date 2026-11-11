@@ -225,7 +225,7 @@ async function loadActiveUsers(container) {
             const nomeJs = window.escapeHTML(u.nome).replace(/'/g, "\\'");
             let btn = '';
             if (!isActive) {
-                btn = `<div class="row-actions"><button class="link-btn" onclick="openDeepView('usuarios', ${u.id}, 'Usuário')">Abrir</button></div>`;
+                btn = `<div class="row-actions"><button class="link-btn" onclick="openDeepView('usuarios', ${u.id}, 'Usuário')">Ver</button></div>`;
             } else {
                 btn = `
                     <div class="row-actions">

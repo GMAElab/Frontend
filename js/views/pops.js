@@ -353,7 +353,7 @@ function loadPopsTable() {
         alvo: 'pops-container',
         endpoint: '/pops/',
         placeholder: 'Buscar por código, título ou conteúdo',
-        cabecalho: '<th>Código</th><th>Título</th><th>Equipamento</th><th>Versão</th><th>Status</th><th class="end">Ações</th>',
+        cabecalho: '<th>Código</th><th>Título</th><th class="col-hide-sm">Equipamento</th><th class="col-hide-xs">Versão</th><th class="col-hide-xs">Status</th><th class="end">Ações</th>',
         filtros: [{ param: 'equipamento_id', rotulo: 'Todos os equipamentos', opcoes: window.Vinculos.opcoesDeEquipamento }],
         vazio: { title: 'Nenhum POP registrado', description: 'Crie o primeiro Procedimento Operacional Padrão do laboratório.' },
         erro: 'Erro ao carregar lista de procedimentos.',
@@ -367,7 +367,7 @@ function loadPopsTable() {
                 ? `<span class="resource-chip">${window.Icon ? window.Icon('microscope', { size: 12 }) : ''} ${window.escapeHTML(pop.equipamento_nome)}</span>`
                 : '<span class="text-faint">—</span>';
             return `
-                <tr>
+                <tr class="clickable" data-id="${codigo}" onclick="viewPopDetails(this.getAttribute('data-id'))">
                     <td class="code"><span class="code-pill">${codigo}</span></td>
                     <td>
                         <div class="cell-stack">
@@ -375,12 +375,12 @@ function loadPopsTable() {
                             ${objetivo ? `<span class="cell-sub">${objetivo}</span>` : ''}
                         </div>
                     </td>
-                    <td>${equipHtml}</td>
-                    <td class="num"><span class="resource-chip">v${versao}</span></td>
-                    <td><span class="badge ${status === 'ativo' ? 'badge-success' : ''}">${window.escapeHTML(status)}</span></td>
-                    <td>
+                    <td class="col-hide-sm">${equipHtml}</td>
+                    <td class="num col-hide-xs"><span class="resource-chip">v${versao}</span></td>
+                    <td class="col-hide-xs"><span class="badge ${status === 'ativo' ? 'badge-success' : ''}">${window.escapeHTML(status)}</span></td>
+                    <td class="end" onclick="event.stopPropagation()">
                         <div class="row-actions">
-                            <button onclick="viewPopDetails(this.getAttribute('data-id'))" data-id="${codigo}" class="link-btn">Abrir</button>
+                            <button onclick="viewPopDetails(this.getAttribute('data-id'))" data-id="${codigo}" class="link-btn">Ver</button>
                             <button onclick="window.openPopModal(this.getAttribute('data-id'))" data-id="${codigo}" class="link-btn muted">Editar</button>
                             ${ehAdmin ? `<button onclick="window.removerPopOficial(this.getAttribute('data-id'))" data-id="${codigo}" class="link-btn danger">Excluir</button>` : ''}
                         </div>

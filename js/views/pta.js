@@ -119,7 +119,12 @@ function renderPTAPesquisador() {
                     </div>
 
                     <div class="input-group">
-                        <label for="pta-descricao">Atividades do mês</label>
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                            <label for="pta-descricao">Atividades do mês</label>
+                            <button type="button" class="link-btn" onclick="window.importarExperimentosRSpaceParaPTA()">
+                                ${window.Icon ? window.Icon('layers', { size: 13 }) : ''} Importar do RSpace (mês selecionado)
+                            </button>
+                        </div>
                         <textarea id="pta-descricao" rows="7" placeholder="Experimentos realizados, resultados obtidos, próximos passos" required></textarea>
                     </div>
 
@@ -1099,5 +1104,41 @@ window.confirmarDevolucao = async function() {
 
     } catch (err) {
         window.UI.showToast("Falha ao processar o feedback de devolução.", "error");
+    }
+};
+
+// ==========================================
+// IMPORTAR EXPERIMENTOS DO RSPACE PARA O PTA DO MÊS
+// ==========================================
+window.importarExperimentosRSpaceParaPTA = async function() {
+    const mes = document.getElementById('pta-mes')?.value;
+    const ano = document.getElementById('pta-ano')?.value;
+    const textarea = document.getElementById('pta-descricao');
+    if (!textarea) return;
+
+    try {
+        window.UI.showToast('Consultando experimentos do mês no RSpace...', 'info');
+        const res = await window.api.fetchProtected(`/rspace/documents?mes=${encodeURIComponent(mes || '')}&ano=${encodeURIComponent(ano || '')}&limit=30`);
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            throw new Error(data.detail || 'Não foi possível buscar experimentos no RSpace.');
+        }
+
+        const docs = data.documents || [];
+        if (!docs.length) {
+            window.UI.showToast(`Nenhum experimento modificado em ${mes}/${ano} foi encontrado no RSpace.`, 'warning');
+            return;
+        }
+
+        const linhas = docs.map((d) => {
+            const tags = (d.tags && d.tags.length) ? ` [${d.tags.join(', ')}]` : '';
+            return `• [${d.global_id}] ${d.titulo} (${d.formulario || 'ELN'})${tags}`;
+        });
+        const bloco = `Experimentos registrados no RSpace (${mes}/${ano}):\n${linhas.join('\n')}`;
+        textarea.value = textarea.value.trim() ? `${textarea.value.trim()}\n\n${bloco}` : bloco;
+        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+        window.UI.showToast(`${docs.length} experimento(s) do RSpace importado(s) para o relato!`, 'success');
+    } catch (err) {
+        window.UI.showToast(err.message || 'Erro ao importar do RSpace.', 'error');
     }
 };

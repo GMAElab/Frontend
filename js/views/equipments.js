@@ -41,20 +41,14 @@ function loadEquipmentsTable() {
         alvo: 'eq-container',
         endpoint: '/equipments/',
         placeholder: 'Buscar por nome ou especificação do equipamento',
-        cabecalho: '<th>Equipamento</th><th>Recursos de bancada</th><th>Status</th><th class="end">Ações</th>',
+        cabecalho: '<th>Equipamento</th><th>Status</th><th class="end">Ações</th>',
         vazio: { title: 'Nenhum equipamento registrado', description: 'Cadastre o primeiro equipamento do laboratório.' },
         erro: 'Não foi possível carregar os equipamentos.',
         renderLinha: (eq) => {
             const desc = eq.description ? window.escapeHTML(eq.description) : '';
-            const temVideo = Boolean(eq.video_url && eq.video_url.trim());
-            const temManual = Boolean(eq.manual_url && eq.manual_url.trim());
-            const chips = [];
-            if (temVideo) chips.push(`<span class="resource-chip">${window.Icon ? window.Icon('video', { size: 12 }) : ''} Vídeo de treino</span>`);
-            if (temManual) chips.push(`<span class="resource-chip">${window.Icon ? window.Icon('file-text', { size: 12 }) : ''} Manual / POP</span>`);
-            if (!chips.length) chips.push('<span class="resource-chip is-empty">Sem mídia anexada</span>');
 
             return `
-            <tr>
+            <tr class="clickable" onclick="window.viewDossier(${eq.id})">
                 <td>
                     <div class="cell-title-row">
                         <span class="cell-icon">${window.Icon ? window.Icon('microscope', { size: 14 }) : ''}</span>
@@ -64,11 +58,10 @@ function loadEquipmentsTable() {
                         </div>
                     </div>
                 </td>
-                <td><div class="resource-chips">${chips.join('')}</div></td>
                 <td><span class="badge badge-success">${window.escapeHTML(eq.status || 'ativo')}</span></td>
-                <td>
+                <td class="end" onclick="event.stopPropagation()">
                     <div class="row-actions">
-                        <button class="link-btn" onclick="window.viewDossier(${eq.id})">Abrir dossiê</button>
+                        <button class="link-btn" onclick="window.viewDossier(${eq.id})">Ver</button>
                         <button class="link-btn muted" onclick="openDeepView('equipments', ${eq.id}, 'Equipamento')">Editar</button>
                     </div>
                 </td>

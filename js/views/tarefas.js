@@ -189,10 +189,10 @@ function renderTabelaGestor() {
                 <thead>
                     <tr>
                         <th>Tarefa</th>
-                        <th>Atribuída a</th>
-                        <th>Prioridade</th>
-                        <th>Prazo</th>
-                        <th>Progresso</th>
+                        <th class="col-hide-xs">Atribuída a</th>
+                        <th class="col-hide-sm">Prioridade</th>
+                        <th class="col-hide-xs">Prazo</th>
+                        <th class="col-hide-md">Progresso</th>
                         <th>Status</th>
                         <th class="end">Ações</th>
                     </tr>
@@ -237,13 +237,14 @@ function renderLinhaTarefaGestor(t) {
     return `
         <tr class="clickable${t.status === 'em_revisao' ? ' is-flagged' : ''}" onclick="window.abrirDetalhesTarefa(${t.id})">
             <td><div class="cell-stack"><strong>${escT(t.titulo)}</strong>${vinculo}</div></td>
-            <td>${atribuidosHtml}</td>
-            <td>${badgePrioridade(t)}</td>
-            <td class="num">${fmtPrazo(t.prazo)}</td>
-            <td>${progHtml}</td>
+            <td class="col-hide-xs">${atribuidosHtml}</td>
+            <td class="col-hide-sm">${badgePrioridade(t)}</td>
+            <td class="num col-hide-xs">${fmtPrazo(t.prazo)}</td>
+            <td class="col-hide-md">${progHtml}</td>
             <td>${badgeStatus(t)}</td>
-            <td onclick="event.stopPropagation()">
+            <td class="end" onclick="event.stopPropagation()">
                 <div class="row-actions">
+                    <button class="link-btn" onclick="window.abrirDetalhesTarefa(${t.id})">Ver</button>
                     <button class="link-btn" onclick="window.abrirModalConcluir(${t.id})">Concluir</button>
                     <button class="link-btn muted" onclick="window.abrirModalTarefa(${t.id})">Editar</button>
                 </div>

@@ -36,7 +36,7 @@ function loadProcessesTable() {
         alvo: 'processes-container',
         endpoint: '/processes/',
         placeholder: 'Buscar por processo, responsável ou equipe',
-        cabecalho: '<th>Processo &amp; objetivo</th><th>Responsável</th><th>Equipe</th><th>Status</th><th>Registrado em</th><th class="end">Ações</th>',
+        cabecalho: '<th>Processo &amp; objetivo</th><th class="col-hide-xs">Responsável</th><th class="col-hide-md">Equipe</th><th>Status</th><th class="col-hide-sm">Registrado em</th><th class="end">Ações</th>',
         filtros: [
             { param: 'status', rotulo: 'Todos os status', opcoes: STATUS_DE_PROCESSO },
             { param: 'membro_id', rotulo: 'Todas as pessoas', opcoes: window.Vinculos.opcoesDePessoa },
@@ -58,7 +58,7 @@ function loadProcessesTable() {
                 : '<span class="text-faint">—</span>';
 
             return `
-                <tr>
+                <tr class="clickable" onclick="viewProcessDetails(${proc.id})">
                     <td>
                         <div class="cell-title-row">
                             <span class="cell-icon">${window.Icon ? window.Icon('flask', { size: 14 }) : ''}</span>
@@ -68,13 +68,13 @@ function loadProcessesTable() {
                             </div>
                         </div>
                     </td>
-                    <td>${respHtml}</td>
-                    <td>${equipeHtml}</td>
+                    <td class="col-hide-xs">${respHtml}</td>
+                    <td class="col-hide-md">${equipeHtml}</td>
                     <td><span class="status-badge status-${window.escapeHTML(status)}">${window.escapeHTML(status.replace('_', ' '))}</span></td>
-                    <td class="num">${new Date(proc.data_registro).toLocaleDateString('pt-BR')}</td>
-                    <td>
+                    <td class="num col-hide-sm">${new Date(proc.data_registro).toLocaleDateString('pt-BR')}</td>
+                    <td class="end" onclick="event.stopPropagation()">
                         <div class="row-actions">
-                            <button onclick="viewProcessDetails(${proc.id})" class="link-btn">Abrir</button>
+                            <button onclick="viewProcessDetails(${proc.id})" class="link-btn">Ver</button>
                             <button onclick="window.openProcessModal(${proc.id})" class="link-btn muted">Editar</button>
                         </div>
                     </td>
