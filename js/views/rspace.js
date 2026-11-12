@@ -39,9 +39,6 @@
                     <p class="lede">Gerencie experimentos, cadernos, galeria de arquivos, formulários, amostras de inventário, auditoria e integração direta com Processos, POPs e PTA.</p>
                 </div>
                 <div class="page-actions" style="display:flex; gap:8px; flex-wrap:wrap;">
-                    <button type="button" class="btn btn-secondary" onclick="window.rspaceAbrirModalConfig()">
-                        ${window.Icon('key', { size: 14 })} Credenciais API
-                    </button>
                     <button type="button" class="btn btn-secondary" onclick="window.rspaceAbrirModalExportarSGCI()">
                         ${window.Icon('upload', { size: 14 })} Enviar do SGCI
                     </button>
@@ -50,8 +47,6 @@
                     </button>
                 </div>
             </header>
-
-            <div id="rspace-status-banner" class="fade-in" style="margin-bottom: 16px;"></div>
 
             <div class="tabs-nav fade-in" style="margin-bottom: 18px; overflow-x: auto;">
                 <button type="button" class="tab-btn active" data-rtab="documents" onclick="window.rspaceTrocarAba('documents')">
@@ -1661,8 +1656,8 @@ Procedimento e Observações | Text</textarea>
                     <div class="section-head"><h3>Compartilhar Documento ou Caderno</h3></div>
                     <form id="form-rspace-share">
                         <div class="input-group">
-                            <label for="rshare-item-id">ID Numérico do Documento/Caderno no RSpace</label>
-                            <input type="number" id="rshare-item-id" required placeholder="Ex.: 123456 (sem o prefixo SD)">
+                            <label for="rshare-item-id">ID do Documento ou Caderno no RSpace</label>
+                            <input type="text" id="rshare-item-id" required placeholder="Ex.: SD123456 ou 123456">
                         </div>
                         <div class="input-group">
                             <label for="rshare-group-id">Grupo de Pesquisa destino</label>
@@ -1726,7 +1721,8 @@ Procedimento e Observações | Text</textarea>
 
         document.getElementById('form-rspace-share').onsubmit = async (e) => {
             e.preventDefault();
-            const itemId = Number(document.getElementById('rshare-item-id').value);
+            const rawShareId = (document.getElementById('rshare-item-id').value || '').trim().replace(/^[A-Za-z]+/, '');
+            const itemId = Number(rawShareId);
             const groupId = Number(document.getElementById('rshare-group-id').value);
             const perm = document.getElementById('rshare-perm').value;
             if (!itemId || !groupId) {
@@ -1791,7 +1787,7 @@ Procedimento e Observações | Text</textarea>
     // ABA 7: AUDITORIA (ACTIVITY), EXPORTAÇÃO (JOBS) & IMPORTAÇÃO WORD
     // ==========================================
 
-    function renderAbaFerramentas() {
+    async function renderAbaFerramentas() {
         const body = document.getElementById('rspace-tab-body');
         if (!body) return;
 
@@ -1808,7 +1804,6 @@ Procedimento e Observações | Text</textarea>
                                 <select id="rexp-format">
                                     <option value="html">HTML Navegável (ZIP)</option>
                                     <option value="xml">RSpace XML Archive (.eln)</option>
-                                    <option value="pdf">Documento PDF</option>
                                 </select>
                             </div>
                             <div class="input-group">
@@ -1821,9 +1816,13 @@ Procedimento e Observações | Text</textarea>
                         </div>
                         <div class="input-group" id="rexp-ids-group" style="margin-top:12px;">
                             <label for="rexp-ids">IDs dos Documentos ou Cadernos (separados por vírgula)</label>
-                            <input type="text" id="rexp-ids" placeholder="Ex.: 10452, 10459">
+                            <input type="text" id="rexp-ids" placeholder="Ex.: SD10452, 10459">
+                            <select id="rexp-quick-doc" style="margin-top:6px;" onchange="if(this.value){ const inp=document.getElementById('rexp-ids'); inp.value = inp.value.trim() ? inp.value.trim()+', '+this.value : this.value; this.value=''; }">
+                                <option value="">+ Adicionar documento recente à seleção...</option>
+                            </select>
+                            <span class="help">Aceita tanto o ID numérico (ex.: 10452) quanto o Global ID (ex.: SD10452).</span>
                         </div>
-                        <button type="submit" class="btn btn-primary btn-block">Iniciar Job de Exportação</button>
+                        <button type="submit" class="btn btn-primary btn-block" style="margin-top:12px;">Iniciar Job de Exportação</button>
                     </form>
                     <div id="rspace-job-monitor" style="margin-top:12px;"></div>
                 </section>
@@ -1875,16 +1874,40 @@ Procedimento e Observações | Text</textarea>
             </section>
         `;
 
+        // Popula seletor rápido de documentos para exportação
+        (async () => {
+            try {
+                let docs = state.docs || [];
+                if (!docs.length) {
+                    const rDocs = await window.api.fetchProtected('/rspace/documents?limit=25');
+                    const dJson = await rDocs.json().catch(() => ({}));
+                    docs = dJson.documents || [];
+                }
+                const selQuick = document.getElementById('rexp-quick-doc');
+                if (selQuick && docs.length) {
+                    selQuick.innerHTML = `<option value="">+ Adicionar documento recente à seleção...</option>` +
+                        docs.map((d) => `<option value="${d.id}">${window.escapeHTML(d.global_id || ('ID ' + d.id))} — ${window.escapeHTML(d.nome || 'Sem título')}</option>`).join('');
+                }
+            } catch (_) {
+                // ignora silenciosamente se falhar
+            }
+        })();
+
         // Handler Export
         document.getElementById('form-rspace-export').onsubmit = async (e) => {
             e.preventDefault();
             const fmt = document.getElementById('rexp-format').value;
             const scope = document.getElementById('rexp-scope').value;
-            const rawIds = document.getElementById('rexp-ids').value;
-            const itemIds = rawIds.split(',').map((x) => parseInt(x.trim(), 10)).filter((n) => Number.isFinite(n) && n > 0);
+            const rawIds = document.getElementById('rexp-ids').value || '';
+            const itemIds = scope === 'selection'
+                ? rawIds
+                    .split(',')
+                    .map((x) => parseInt(x.trim().replace(/^[A-Za-z]+/, ''), 10))
+                    .filter((n) => Number.isFinite(n) && n > 0)
+                : [];
 
             if (scope === 'selection' && !itemIds.length) {
-                window.UI.showToast('Informe pelo menos um ID numérico para exportar.', 'warning');
+                window.UI.showToast('Informe pelo menos um ID de documento ou caderno (ex.: SD10452 ou 10452) para exportar.', 'warning');
                 return;
             }
 
