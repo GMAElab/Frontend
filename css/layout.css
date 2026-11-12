@@ -4,9 +4,10 @@
 .app-layout,
 .dashboard-layout {
     display: flex;
-    height: 100vh;
-    width: 100vw;
-    overflow: hidden;
+    align-items: stretch;
+    min-height: 100vh;
+    min-height: 100dvh;
+    width: 100%;
     background: var(--bg);
 }
 
@@ -18,6 +19,11 @@
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    height: 100dvh;
+    overflow-y: auto;
     background: var(--surface);
     border-right: 1px solid var(--line);
     z-index: var(--z-sidebar);
@@ -284,16 +290,19 @@
 .main-wrapper {
     flex: 1;
     min-width: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
-    height: 100vh;
-    overflow: hidden;
     background-color: var(--bg);
 }
 
 .top-bar,
 .topbar {
-    height: var(--topbar-h);
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    min-height: var(--topbar-h);
     flex-shrink: 0;
     display: flex;
     align-items: center;
@@ -315,6 +324,7 @@
     display: none;
     width: 30px;
     height: 30px;
+    flex-shrink: 0;
     align-items: center;
     justify-content: center;
     border: 1px solid var(--line);
@@ -348,6 +358,7 @@
     display: flex;
     align-items: center;
     gap: var(--space-2);
+    flex-shrink: 0;
 }
 
 .topbar-right .short { display: none; }
@@ -380,8 +391,9 @@
    ========================================== */
 .content-area {
     flex: 1;
-    overflow-y: auto;
-    padding: var(--space-6);
+    width: 100%;
+    min-width: 0;
+    padding: var(--space-6) var(--space-6) var(--space-10);
 }
 
 .content-area > * {
@@ -429,6 +441,7 @@
     display: flex;
     justify-content: space-between;
     align-items: baseline;
+    flex-wrap: wrap;
     gap: var(--space-3);
     margin-bottom: var(--space-3);
     padding-bottom: var(--space-2);
@@ -462,12 +475,14 @@
 .auth-single,
 .auth-shell {
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
-    padding: var(--space-6) var(--space-4);
+    padding: var(--space-8) var(--space-4);
     background-color: var(--bg);
+    overflow-y: auto;
 }
 
 .auth-topbar {
@@ -483,6 +498,7 @@
 .auth-container {
     width: 100%;
     max-width: 400px;
+    margin: auto 0;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -680,13 +696,49 @@
         top: 0;
         left: 0;
         bottom: 0;
+        height: 100vh;
+        height: 100dvh;
+        width: min(260px, 85vw);
         display: none;
+        box-shadow: var(--shadow-pop);
     }
     .sidebar.open { display: flex; }
     .sidebar.open ~ .sidebar-backdrop { display: block; }
 
     .menu-toggle { display: inline-flex; }
     .top-bar, .topbar { padding: 0 var(--space-4); }
-    .content-area { padding: var(--space-4); }
-    .columns, .columns-main-aside { grid-template-columns: 1fr; }
+    .content-area { padding: var(--space-4) var(--space-4) var(--space-8); }
+    .columns, .columns-main-aside { grid-template-columns: 1fr; gap: var(--space-4); }
+    .page-head {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-3);
+    }
+    .page-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 640px) {
+    .top-bar, .topbar {
+        padding: 0 var(--space-3);
+        gap: var(--space-2);
+    }
+    .crumbs strong,
+    .crumbs .current {
+        max-width: 48vw;
+    }
+    .content-area {
+        padding: var(--space-3) var(--space-3) var(--space-8);
+    }
+    .page-head h1 {
+        font-size: var(--fs-xl);
+    }
+    .page-actions .btn {
+        flex: 1 1 auto;
+    }
+    .auth-panel {
+        padding: 18px;
+    }
 }

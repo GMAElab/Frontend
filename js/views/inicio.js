@@ -11,6 +11,7 @@
         { view: 'processes', icon: 'flask', label: 'Processos de P&amp;D', desc: 'Mapeie um processo e acompanhe sua linha do tempo.' },
         { view: 'equipments', icon: 'microscope', label: 'Equipamentos', desc: 'Consulte vídeos de treinamento e os POPs de cada equipamento.' },
         { view: 'pops', icon: 'file-text', label: 'POPs', desc: 'Procedimentos operacionais padrão do laboratório.' },
+        { view: 'rspace', icon: 'layers', label: 'RSpace ELN', desc: 'Caderno eletrônico de laboratório, amostras e integração de experimentos.' },
         { view: 'articles', icon: 'book-open', label: 'Artigos', desc: 'Busque literatura científica e guarde o que importa.' },
     ];
 

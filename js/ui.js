@@ -378,6 +378,7 @@ const UI = {
         if (location.hash.slice(1) !== viewName) history.replaceState(null, '', `#${viewName}`);
 
         mainContent.scrollTop = 0;
+        window.scrollTo(0, 0);
         mainContent.innerHTML = UI.loading();
         const event = new CustomEvent('viewChanged', { detail: { view: viewName } });
         document.dispatchEvent(event);

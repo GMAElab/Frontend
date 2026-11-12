@@ -73,6 +73,7 @@
             return false;
         });
         atuais.forEach(m => { if (!abertos.some(item => item.modal === m)) aoAbrir(m); });
+        document.body.style.overflow = atuais.length > 0 ? 'hidden' : '';
     }
 
     function modalDoTopo() {

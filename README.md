@@ -92,6 +92,20 @@ Se um deploy der problema, abra o projeto na Vercel, vá em **Deployments** e pr
 * **Busca Científica**: Pesquisa na base Scopus, com filtro por ano e ordenação.
 * **Lista Pessoal**: Cada usuário salva os artigos que interessam.
 
+### RSpace ELN & Inventory
+* **Status e Credenciais (`Credenciais API`)**: Exibe o estado da conexão com o servidor RSpace, permite testar o ping ao vivo e configurar uma API Key pessoal cifrada (ou usar a chave institucional do `.env`).
+* **Documentos (ELN)**: Busca rápida, busca avançada por múltiplos critérios (`AND`/`OR`), leitura de experimentos com HTML sanitizado, criação (em branco ou a partir de formulário) e edição de campos.
+* **Integração com Processos, POPs e PTA**:
+  * **Enviar do SGCI**: Exporta qualquer Processo de P&D ou POP cadastrado no SGCI diretamente para um documento estruturado no RSpace.
+  * **Vincular a Processo**: Registra o documento do RSpace na linha do tempo de um Processo de P&D no SGCI.
+  * **Importar no PTA**: Na tela de Planejamento Mensal, importa os experimentos realizados no mês no RSpace para o relato mensal.
+* **Pastas & Cadernos**: Navegação por pastas do Workspace e criação de novas pastas (`FOLDER`) e cadernos (`NOTEBOOK`).
+* **Galeria / Arquivos**: Listagem, upload seguro de arquivos/imagens, download e vínculo direto com campos de documentos.
+* **Formulários**: Consulta de modelos de formulário do RSpace, criação de novos formulários e publicação.
+* **Inventário**: Controle completo de amostras (`Samples`), subamostras (`Subsamples`), recipientes/freezers (`Containers`), modelos (`Sample Templates`) e leitura por código de barras (`Barcode`).
+* **Grupos & Compartilhamento**: Consulta de grupos de pesquisa e compartilhamento de documentos/cadernos com permissão de leitura (`READ`) ou edição (`EDIT`).
+* **Auditoria, Exportar & Word**: Consulta da trilha de auditoria (`Activity`), exportação em lote (HTML/XML/PDF) com barra de progresso em tempo real e importação de documentos `.docx` para o RSpace.
+
 ### Administração
 * **Usuários**: Aprovação de cadastros, mudança de tipo de usuário, redefinição de senha e de 2FA, exclusão de contas.
 * **Histórico**: Consulta dos registros de auditoria do sistema.
@@ -131,5 +145,6 @@ A arquitetura de pastas foi pensada para manter a separação de responsabilidad
         ├── pta.js        # Planejamento mensal
         ├── tarefas.js    # Tarefas da equipe
         ├── articles.js   # Busca e lista de artigos
+        ├── rspace.js     # Módulo completo RSpace ELN & Inventory (7 abas + integrações SGCI)
         └── admin.js      # Administração de usuários e auditoria
 ```
