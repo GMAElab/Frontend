@@ -39,9 +39,7 @@
                     <p class="lede">Gerencie experimentos, cadernos, galeria de arquivos, formulários, amostras de inventário, auditoria e integração direta com Processos, POPs e PTA.</p>
                 </div>
                 <div class="page-actions" style="display:flex; gap:8px; flex-wrap:wrap;">
-                    <button type="button" class="btn btn-secondary" onclick="window.rspaceAbrirModalConfig()">
-                        ${window.Icon('key', { size: 14 })} Credenciais API
-                    </button>
+                    <span id="rspace-top-key-action"></span>
                     <button type="button" class="btn btn-secondary" onclick="window.rspaceAbrirModalExportarSGCI()">
                         ${window.Icon('upload', { size: 14 })} Enviar do SGCI
                     </button>
@@ -51,7 +49,7 @@
                 </div>
             </header>
 
-            <div id="rspace-status-banner" class="fade-in" style="margin-bottom: 14px;"></div>
+            <div id="rspace-status-banner" class="fade-in" style="margin-bottom: 14px; display: none;"></div>
 
             <div class="tabs-nav fade-in" style="margin-bottom: 18px; overflow-x: auto;">
                 <button type="button" class="tab-btn active" data-rtab="documents" onclick="window.rspaceTrocarAba('documents')">
@@ -90,6 +88,7 @@
 
     async function carregarConfigRSpace() {
         const banner = document.getElementById('rspace-status-banner');
+        const topKeyAction = document.getElementById('rspace-top-key-action');
         if (!banner) return;
 
         try {
@@ -98,61 +97,67 @@
             const cfg = await res.json();
             state.config = cfg;
 
+            const temChavePropria = Boolean(cfg.has_personal_key || cfg.mode === 'pessoal');
+
+            // Quando o usuário já colocou a própria API Key: a mensagem desaparece
+            // completamente e resta apenas 1 botão "Apagar chave API" no topo.
+            if (temChavePropria) {
+                banner.innerHTML = '';
+                banner.style.display = 'none';
+                if (topKeyAction) {
+                    topKeyAction.innerHTML = `
+                        <button type="button" class="btn btn-danger-outline" onclick="window.rspaceRemoverChavePessoal()" title="Remover sua chave pessoal do RSpace (${window.escapeHTML(cfg.masked_key || '')})">
+                            ${window.Icon('trash-2', { size: 14 })} Apagar chave API
+                        </button>`;
+                }
+                return;
+            }
+
+            // Enquanto o usuário NÃO colocou a própria API Key: limpa o botão de apagar do topo
+            // e exibe o aviso até ele cadastrar a chave dele.
+            if (topKeyAction) {
+                topKeyAction.innerHTML = '';
+            }
+            banner.style.display = 'block';
+
             if (!cfg.configured) {
                 banner.innerHTML = `
                     <div class="note" style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; border-left: 3px solid var(--warning);">
                         <div>
-                            <strong>${window.Icon('alert-triangle', { size: 14 })} Chave do RSpace ainda não configurada</strong>
+                            <strong>${window.Icon('alert-triangle', { size: 14 })} Cadastre sua API Key do RSpace</strong>
                             <p class="help" style="margin-top:4px;">
-                                Insira a variável <code class="mono">RSPACE_API_KEY</code> no arquivo <code class="mono">API/.env</code> (ou no Render) ou clique ao lado para vincular sua API Key pessoal cifrada.
+                                Vincule sua API Key pessoal do RSpace para enviar seus experimentos diretamente na sua conta.
                             </p>
                         </div>
                         <button type="button" class="btn btn-primary btn-sm" onclick="window.rspaceAbrirModalConfig()">
-                            Conectar API Key
+                            ${window.Icon('key', { size: 13 })} Vincular minha API Key
                         </button>
                     </div>`;
                 return;
             }
 
-            const ehPessoal = cfg.mode === 'pessoal' || cfg.mode === 'pessoal_env';
             const nomeUsuario = cfg.user_nome || 'Pesquisador';
             const tagAutor = cfg.author_tag || `Autor:${nomeUsuario}`;
-            const modoLabel = ehPessoal
-                ? `Chave Pessoal Ativa · ${nomeUsuario}`
-                : `Modo Híbrido (Chave Compartilhada) · Identificado como ${nomeUsuario}`;
-
-            const explicacaoHibrida = ehPessoal
-                ? `<p class="help" style="margin-top:4px;">Sua API Key pessoal foi reconhecida automaticamente pelo seu login. Todos os seus envios vão direto para sua conta individual no RSpace.</p>`
-                : `<p class="help" style="margin-top:4px;">Você está usando a chave compartilhada do laboratório: seus envios recebem automaticamente seu nome no título e a tag <code class="mono">${window.escapeHTML(tagAutor)}</code>. Para que o sistema troque para sua conta individual do RSpace a cada login, clique em <strong>Vincular minha API Key</strong>.</p>`;
 
             banner.innerHTML = `
-                <div class="note ${ehPessoal ? 'ok' : 'accent'}" style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+                <div class="note accent" style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
                     <div style="flex:1; min-width:260px;">
                         <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                            <span class="code-pill">${window.Icon('check-circle', { size: 12 })} Conectado</span>
-                            <strong style="font-size:13px;">${window.escapeHTML(modoLabel)}</strong>
-                            ${cfg.masked_key ? `<span class="mono text-faint" style="font-size:12px;">Key: ${window.escapeHTML(cfg.masked_key)}</span>` : ''}
-                            <span class="mono text-faint" style="font-size:12px;">Servidor: <a href="${window.escapeHTML(cfg.base_url)}" target="_blank" rel="noopener" class="link-btn">${window.escapeHTML(cfg.base_url)}</a></span>
-                            <span id="rspace-live-ping" class="mono text-faint" style="font-size:12px;"></span>
+                            <span class="code-pill">${window.Icon('alert-triangle', { size: 12 })} Chave Compartilhada em uso</span>
+                            <strong style="font-size:13px;">Identificado como ${window.escapeHTML(nomeUsuario)}</strong>
                         </div>
-                        ${explicacaoHibrida}
+                        <p class="help" style="margin-top:4px;">
+                            Você ainda não cadastrou sua própria API Key (seus envios estão usando a chave compartilhada com a tag <code class="mono">${window.escapeHTML(tagAutor)}</code>). Cadastre sua chave ao lado para usar sua conta individual e ocultar este aviso.
+                        </p>
                     </div>
                     <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
-                        <button type="button" class="btn ${ehPessoal ? 'btn-secondary' : 'btn-primary'} btn-sm" onclick="window.rspaceAbrirModalConfig()">
-                            ${window.Icon('key', { size: 13 })} ${ehPessoal ? 'Trocar minha API Key' : 'Vincular minha API Key'}
+                        <button type="button" class="btn btn-primary btn-sm" onclick="window.rspaceAbrirModalConfig()">
+                            ${window.Icon('key', { size: 13 })} Colocar minha API Key
                         </button>
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="window.rspaceFiltrarMeusEnvios()">
-                            Meus envios
-                        </button>
-                        <button type="button" class="link-btn" onclick="window.rspaceTestarStatusAoVivo()">
-                            ${window.Icon('refresh-cw', { size: 13 })} Testar status
-                        </button>
-                        <a href="${window.escapeHTML(cfg.api_docs_url || 'https://community.researchspace.com/public/apiDocs')}" target="_blank" rel="noopener" class="link-btn muted">
-                            ${window.Icon('external-link', { size: 13 })} Docs
-                        </a>
                     </div>
                 </div>`;
         } catch (err) {
+            banner.style.display = 'block';
             banner.innerHTML = `<div class="feedback-msg error">Não foi possível verificar o status do RSpace.</div>`;
         }
     }
@@ -1447,8 +1452,6 @@ Procedimento e Observações | Text</textarea>
                         <option value="containers" ${state.invResource === 'containers' ? 'selected' : ''}>Containers &amp; Caixas (Containers)</option>
                         <option value="templates" ${state.invResource === 'templates' ? 'selected' : ''}>Templates de Amostra</option>
                     </select>
-                    <input type="search" id="rspace-inv-barcode" class="form-control" placeholder="Buscar Barcode / Código" onkeypress="if(event.key==='Enter') window.rspaceBuscarBarcode()">
-                    <button type="button" class="btn btn-secondary" onclick="window.rspaceBuscarBarcode()">Ler Barcode</button>
                 </div>
                 <div style="display:flex; gap:8px;">
                     <button type="button" class="btn btn-secondary" onclick="window.rspaceAbrirModalNovoContainer()">
