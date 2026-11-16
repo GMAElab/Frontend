@@ -213,7 +213,7 @@ async function loadActiveUsers(container) {
         const meuId = (JSON.parse(localStorage.getItem('user_data') || '{}')).id;
 
         let html = '<div class="table-container"><table class="data-table">';
-        html += '<thead><tr><th>ID</th><th>Nome</th><th>E-mail</th><th>Cargo</th><th>Status</th><th class="end">Ações</th></tr></thead><tbody>';
+        html += '<thead><tr><th>ID</th><th>Nome</th><th>E-mail</th><th>Cargo</th><th>RSpace</th><th>Status</th><th class="end">Ações</th></tr></thead><tbody>';
 
         users.forEach(u => {
             const isActive = (u.is_active === 1 || u.is_active === true);
@@ -221,6 +221,9 @@ async function loadActiveUsers(container) {
             const statusBadge = isActive
                 ? '<span class="badge badge-success">ativo</span>'
                 : '<span class="badge badge-danger">bloqueado</span>';
+            const rspaceBadge = u.has_rspace_key
+                ? '<span class="badge badge-accent" title="Possui chave pessoal cifrada vinculada">chave pessoal</span>'
+                : '<span class="badge" title="Usa a chave compartilhada com carimbo de autoria">híbrido (.env)</span>';
 
             const nomeJs = window.escapeHTML(u.nome).replace(/'/g, "\\'");
             let btn = '';
@@ -230,6 +233,7 @@ async function loadActiveUsers(container) {
                 btn = `
                     <div class="row-actions">
                         <button class="link-btn" onclick="openDeepView('usuarios', ${u.id}, 'Usuário')">Editar</button>
+                        <button class="link-btn" onclick="window.configurarRSpaceUsuario(${u.id}, '${nomeJs}', ${!!u.has_rspace_key})">Chave RSpace</button>
                         <button class="link-btn muted" onclick="window.resetUserPassword(${u.id}, '${nomeJs}')">Nova senha</button>
                         <button class="link-btn muted" title="Para quando a pessoa perdeu o celular do Autenticador" onclick="window.resetUser2FA(${u.id}, '${nomeJs}')">Resetar 2FA</button>
                         ${!isSelf ? `<button class="link-btn danger" onclick="adminDelete('usuarios', ${u.id}, 'active')">Bloquear</button>` : ''}
@@ -242,6 +246,7 @@ async function loadActiveUsers(container) {
                 <td>${window.UI?.avatar ? window.UI.avatar(u.nome, { strong: true }) : `<strong>${window.escapeHTML(u.nome)}</strong>`}</td>
                 <td>${window.escapeHTML(u.email)}</td>
                 <td><span class="resource-chip">${window.escapeHTML(u.role)}</span></td>
+                <td>${rspaceBadge}</td>
                 <td>${statusBadge}</td>
                 <td>${btn}</td>
             </tr>`;
@@ -249,6 +254,90 @@ async function loadActiveUsers(container) {
         container.innerHTML = html + '</tbody></table></div>';
     } catch (err) { container.innerHTML = window.UI.errorState('Erro ao carregar usuários.'); }
 }
+
+window.configurarRSpaceUsuario = function (userId, nome, temChave) {
+    const modalId = 'admin-rspace-user-modal';
+    document.getElementById(modalId)?.remove();
+
+    const modal = document.createElement('div');
+    modal.id = modalId;
+    modal.className = 'modal-overlay is-open';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal-content modal-md">
+            <div class="modal-header">
+                <div>
+                    <p class="eyebrow">rspace eln · vínculo por usuário</p>
+                    <h3>Chave RSpace de ${window.escapeHTML(nome)}</h3>
+                </div>
+                ${window.UI.closeButton(`document.getElementById('${modalId}')?.remove()`)}
+            </div>
+            <form id="form-admin-rspace-user">
+                <p class="dialog-text mb-md">
+                    Vincule a API Key individual de <strong>${window.escapeHTML(nome)}</strong> para que o sistema troque automaticamente para a conta dele(a) no RSpace sempre que fizer login no SGCI.
+                </p>
+                <div class="input-group">
+                    <label for="adm-rspace-key">API Key do RSpace de ${window.escapeHTML(nome)}</label>
+                    <input type="password" id="adm-rspace-key" required minlength="6" placeholder="Cole a API Key gerada no RSpace do usuário" autocomplete="off">
+                </div>
+                <div class="input-group">
+                    <label for="adm-rspace-url">Servidor RSpace</label>
+                    <input type="url" id="adm-rspace-url" value="https://community.researchspace.com" required>
+                </div>
+                <div class="modal-footer split">
+                    ${temChave
+                        ? `<button type="button" class="btn btn-danger-outline" id="btn-adm-rspace-del">Remover chave pessoal</button>`
+                        : `<span></span>`}
+                    <div class="cluster">
+                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('${modalId}')?.remove()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" id="btn-adm-rspace-save">Testar e vincular</button>
+                    </div>
+                </div>
+            </form>
+        </div>`;
+    document.body.appendChild(modal);
+
+    const btnDel = document.getElementById('btn-adm-rspace-del');
+    if (btnDel) {
+        btnDel.onclick = async () => {
+            const ok = await window.UI.confirm(`Remover a chave pessoal de ${nome}? Ele(a) voltará para o modo híbrido (chave compartilhada com carimbo de autoria).`, { danger: true });
+            if (!ok) return;
+            const res = await window.api.fetchProtected(`/rspace/admin/users/${userId}/config`, { method: 'DELETE' });
+            if (res.ok) {
+                window.UI.showToast(`Chave pessoal de ${nome} removida.`, 'info');
+                modal.remove();
+                switchUserTab('active');
+            } else {
+                window.UI.showToast('Erro ao remover chave.', 'error');
+            }
+        };
+    }
+
+    document.getElementById('form-admin-rspace-user').onsubmit = async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btn-adm-rspace-save');
+        btn.disabled = true;
+        btn.textContent = 'Validando no RSpace...';
+        try {
+            const res = await window.api.fetchProtected(`/rspace/admin/users/${userId}/config`, {
+                method: 'PUT',
+                body: JSON.stringify({
+                    api_key: document.getElementById('adm-rspace-key').value.trim(),
+                    base_url: document.getElementById('adm-rspace-url').value.trim(),
+                }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.detail || 'Falha ao validar API Key no RSpace.');
+            window.UI.showToast(`Chave RSpace vinculada a ${nome}! (${data.total_documentos ?? 0} docs acessíveis)`, 'success');
+            modal.remove();
+            switchUserTab('active');
+        } catch (err) {
+            window.UI.showToast(err.message || 'Erro ao salvar chave.', 'error');
+            btn.disabled = false;
+            btn.textContent = 'Testar e vincular';
+        }
+    };
+};
 
 window.resetUser2FA = async (userId, nome) => {
     const ok = await window.UI.confirm(

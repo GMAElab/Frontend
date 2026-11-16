@@ -39,6 +39,9 @@
                     <p class="lede">Gerencie experimentos, cadernos, galeria de arquivos, formulários, amostras de inventário, auditoria e integração direta com Processos, POPs e PTA.</p>
                 </div>
                 <div class="page-actions" style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button type="button" class="btn btn-secondary" onclick="window.rspaceAbrirModalConfig()">
+                        ${window.Icon('key', { size: 14 })} Credenciais API
+                    </button>
                     <button type="button" class="btn btn-secondary" onclick="window.rspaceAbrirModalExportarSGCI()">
                         ${window.Icon('upload', { size: 14 })} Enviar do SGCI
                     </button>
@@ -47,6 +50,8 @@
                     </button>
                 </div>
             </header>
+
+            <div id="rspace-status-banner" class="fade-in" style="margin-bottom: 14px;"></div>
 
             <div class="tabs-nav fade-in" style="margin-bottom: 18px; overflow-x: auto;">
                 <button type="button" class="tab-btn active" data-rtab="documents" onclick="window.rspaceTrocarAba('documents')">
@@ -109,22 +114,41 @@
                 return;
             }
 
-            const modoLabel = cfg.mode === 'pessoal' ? 'Chave Pessoal (Cifrada)' : 'Chave Institucional (.env)';
+            const ehPessoal = cfg.mode === 'pessoal' || cfg.mode === 'pessoal_env';
+            const nomeUsuario = cfg.user_nome || 'Pesquisador';
+            const tagAutor = cfg.author_tag || `Autor:${nomeUsuario}`;
+            const modoLabel = ehPessoal
+                ? `Chave Pessoal Ativa · ${nomeUsuario}`
+                : `Modo Híbrido (Chave Compartilhada) · Identificado como ${nomeUsuario}`;
+
+            const explicacaoHibrida = ehPessoal
+                ? `<p class="help" style="margin-top:4px;">Sua API Key pessoal foi reconhecida automaticamente pelo seu login. Todos os seus envios vão direto para sua conta individual no RSpace.</p>`
+                : `<p class="help" style="margin-top:4px;">Você está usando a chave compartilhada do laboratório: seus envios recebem automaticamente seu nome no título e a tag <code class="mono">${window.escapeHTML(tagAutor)}</code>. Para que o sistema troque para sua conta individual do RSpace a cada login, clique em <strong>Vincular minha API Key</strong>.</p>`;
+
             banner.innerHTML = `
-                <div class="note" style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
-                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                        <span class="code-pill">${window.Icon('check-circle', { size: 12 })} Conectado</span>
-                        <span class="mono" style="font-size:12px;">${window.escapeHTML(modoLabel)}</span>
-                        ${cfg.masked_key ? `<span class="mono text-faint" style="font-size:12px;">Key: ${window.escapeHTML(cfg.masked_key)}</span>` : ''}
-                        <span class="mono text-faint" style="font-size:12px;">Servidor: <a href="${window.escapeHTML(cfg.base_url)}" target="_blank" rel="noopener" class="link-btn">${window.escapeHTML(cfg.base_url)}</a></span>
-                        <span id="rspace-live-ping" class="mono text-faint" style="font-size:12px;"></span>
+                <div class="note ${ehPessoal ? 'ok' : 'accent'}" style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+                    <div style="flex:1; min-width:260px;">
+                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                            <span class="code-pill">${window.Icon('check-circle', { size: 12 })} Conectado</span>
+                            <strong style="font-size:13px;">${window.escapeHTML(modoLabel)}</strong>
+                            ${cfg.masked_key ? `<span class="mono text-faint" style="font-size:12px;">Key: ${window.escapeHTML(cfg.masked_key)}</span>` : ''}
+                            <span class="mono text-faint" style="font-size:12px;">Servidor: <a href="${window.escapeHTML(cfg.base_url)}" target="_blank" rel="noopener" class="link-btn">${window.escapeHTML(cfg.base_url)}</a></span>
+                            <span id="rspace-live-ping" class="mono text-faint" style="font-size:12px;"></span>
+                        </div>
+                        ${explicacaoHibrida}
                     </div>
-                    <div style="display:flex; gap:6px; align-items:center;">
+                    <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                        <button type="button" class="btn ${ehPessoal ? 'btn-secondary' : 'btn-primary'} btn-sm" onclick="window.rspaceAbrirModalConfig()">
+                            ${window.Icon('key', { size: 13 })} ${ehPessoal ? 'Trocar minha API Key' : 'Vincular minha API Key'}
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="window.rspaceFiltrarMeusEnvios()">
+                            Meus envios
+                        </button>
                         <button type="button" class="link-btn" onclick="window.rspaceTestarStatusAoVivo()">
                             ${window.Icon('refresh-cw', { size: 13 })} Testar status
                         </button>
                         <a href="${window.escapeHTML(cfg.api_docs_url || 'https://community.researchspace.com/public/apiDocs')}" target="_blank" rel="noopener" class="link-btn muted">
-                            ${window.Icon('external-link', { size: 13 })} Swagger Docs
+                            ${window.Icon('external-link', { size: 13 })} Docs
                         </a>
                     </div>
                 </div>`;
@@ -147,6 +171,21 @@
         } catch (err) {
             if (pingEl) pingEl.textContent = '· falha na verificação';
             window.UI.showToast(err.message || 'Falha ao conectar com o RSpace.', 'error');
+        }
+    };
+
+    window.rspaceFiltrarMeusEnvios = function () {
+        const cfg = state.config || {};
+        const userLocal = JSON.parse(localStorage.getItem('user_data') || '{}');
+        const tagAutor = cfg.author_tag || `Autor:${(cfg.user_nome || userLocal.nome || 'Pesquisador').trim()}`;
+        if (state.tab !== 'documents') {
+            window.rspaceTrocarAba('documents');
+        }
+        const tagInput = document.getElementById('rspace-doc-tag');
+        if (tagInput) {
+            tagInput.value = tagAutor;
+            window.rspaceCarregarDocumentos(1);
+            window.UI.showToast(`Filtrando documentos enviados por ${cfg.user_nome || userLocal.nome || 'você'} (${tagAutor}).`, 'info');
         }
     };
 
@@ -284,6 +323,7 @@
                     <option value="name desc">Nome (Z → A)</option>
                 </select>
                 <button type="button" class="btn btn-primary" onclick="window.rspaceCarregarDocumentos(1)">Buscar</button>
+                <button type="button" class="btn btn-secondary" onclick="window.rspaceFiltrarMeusEnvios()" title="Filtra os experimentos enviados por você no SGCI">Meus envios</button>
             </div>
 
             <div id="rspace-docs-list">${window.UI.loading('Consultando documentos no RSpace')}</div>
@@ -1877,7 +1917,7 @@ Procedimento e Observações | Text</textarea>
         // Popula seletor rápido de documentos para exportação
         (async () => {
             try {
-                let docs = state.docs || [];
+                let docs = state.docsCache || [];
                 if (!docs.length) {
                     const rDocs = await window.api.fetchProtected('/rspace/documents?limit=25');
                     const dJson = await rDocs.json().catch(() => ({}));
@@ -1886,7 +1926,7 @@ Procedimento e Observações | Text</textarea>
                 const selQuick = document.getElementById('rexp-quick-doc');
                 if (selQuick && docs.length) {
                     selQuick.innerHTML = `<option value="">+ Adicionar documento recente à seleção...</option>` +
-                        docs.map((d) => `<option value="${d.id}">${window.escapeHTML(d.global_id || ('ID ' + d.id))} — ${window.escapeHTML(d.nome || 'Sem título')}</option>`).join('');
+                        docs.map((d) => `<option value="${d.id}">${window.escapeHTML(d.global_id || ('ID ' + d.id))} — ${window.escapeHTML(d.titulo || d.nome || 'Sem título')}</option>`).join('');
                 }
             } catch (_) {
                 // ignora silenciosamente se falhar
