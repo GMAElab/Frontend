@@ -34,7 +34,6 @@
         container.innerHTML = `
             <header class="page-head fade-in">
                 <div>
-                    <p class="eyebrow">caderno eletrônico de laboratório &amp; inventário · api v1</p>
                     <h1>RSpace ELN</h1>
                     <p class="lede">Gerencie experimentos, cadernos, galeria de arquivos, formulários, amostras de inventário, auditoria e integração direta com Processos, POPs e PTA.</p>
                 </div>
