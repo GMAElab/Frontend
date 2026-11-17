@@ -48,6 +48,38 @@ function resolverNomeTopicoPTA(rel) {
     return 'Tópico não identificado';
 }
 
+const MESES_ABREV = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+function formatarOpcaoTopicoPTA(topico) {
+    const base = `${topico.titulo} (${topico.ano})`;
+    if (!Array.isArray(window.meusPtasCache) || window.meusPtasCache.length === 0) {
+        return base;
+    }
+    const ultimo = window.meusPtasCache.find(rel => rel.topico_id == topico.id);
+    if (!ultimo) {
+        return `${base} · 0% (sem histórico)`;
+    }
+    const mesAbrev = MESES_ABREV[(ultimo.mes_referencia || 1) - 1] || String(ultimo.mes_referencia).padStart(2, '0');
+    const anoCurto = String(ultimo.ano_referencia || '').slice(-2);
+    return `${base} · ${ultimo.percentual_avanco}% em ${mesAbrev}/${anoCurto}`;
+}
+
+window.atualizarOpcoesDropdownTopicosComProgresso = function() {
+    const select = document.getElementById('pta-topico');
+    if (!select || !Array.isArray(window.topicosPtaCache) || window.topicosPtaCache.length === 0) return;
+
+    const valorAtual = select.value || localStorage.getItem('pta_ultimo_topico') || '';
+    let html = '<option value="">Selecione um tópico...</option>';
+    window.topicosPtaCache.forEach(t => {
+        const label = formatarOpcaoTopicoPTA(t);
+        html += `<option value="${t.id}" data-titulo="${window.escapeHTML(t.titulo)} (${t.ano})">${window.escapeHTML(label)}</option>`;
+    });
+    select.innerHTML = html;
+    if (valorAtual && select.querySelector(`option[value="${valorAtual}"]`)) {
+        select.value = valorAtual;
+    }
+};
+
 async function carregarDropdownTopicos(selectId) {
     const select = document.getElementById(selectId);
     if (!select) return;
@@ -62,18 +94,19 @@ async function carregarDropdownTopicos(selectId) {
             return;
         }
 
-        let html = '<option value="">Selecione um tópico...</option>';
-        topicos.forEach(t => {
-            html += `<option value="${t.id}">${window.escapeHTML(t.titulo)} (${t.ano})</option>`;
-        });
-        select.innerHTML = html;
-
         if (selectId === 'pta-topico') {
+            window.atualizarOpcoesDropdownTopicosComProgresso();
             const ultimoTopico = localStorage.getItem('pta_ultimo_topico');
             if (ultimoTopico && select.querySelector(`option[value="${ultimoTopico}"]`)) {
                 select.value = ultimoTopico;
                 window.carregarPTAUnificadoEquipe();
             }
+        } else {
+            let html = '<option value="">Selecione um tópico...</option>';
+            topicos.forEach(t => {
+                html += `<option value="${t.id}" data-titulo="${window.escapeHTML(t.titulo)} (${t.ano})">${window.escapeHTML(t.titulo)} (${t.ano})</option>`;
+            });
+            select.innerHTML = html;
         }
 
         setTimeout(atualizarAvisoUltimoPTA, 300);
@@ -129,8 +162,19 @@ function renderPTAPesquisador() {
                         </div>
                     </div>
 
+                    <div id="ultimo-pta-aviso" class="note hidden" style="margin-bottom:var(--space-4);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:6px;">
+                            <p class="mono" style="margin:0;">onde paramos · <strong id="ultimo-pta-mes"></strong></p>
+                            <span class="badge badge-success">consolidado em <span id="ultimo-pta-avanco"></span>%</span>
+                        </div>
+                        <p id="ultimo-pta-texto" class="pre-wrap" style="margin:0;"></p>
+                    </div>
+
                     <div class="input-group">
-                        <label for="pta-avanco-num" id="rotulo-avanco">Avanço geral da pesquisa</label>
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+                            <label for="pta-avanco-num" id="rotulo-avanco" style="margin:0;">Avanço geral da pesquisa</label>
+                            <span id="pta-delta-badge" class="badge hidden" aria-live="polite"></span>
+                        </div>
                         <div class="range-field">
                             <input type="range" id="pta-avanco" min="0" max="100" value="50"
                                    aria-labelledby="rotulo-avanco" aria-describedby="ajuda-avanco" aria-valuetext="50%"
@@ -145,11 +189,6 @@ function renderPTAPesquisador() {
                             </div>
                         </div>
                         <span class="help" id="ajuda-avanco" aria-live="polite">De 0 a 100. Digite o número ou arraste o controle; as setas ajustam de 1 em 1.</span>
-                    </div>
-
-                    <div id="ultimo-pta-aviso" class="note hidden">
-                        <p class="mono">último PTA consolidado · <span id="ultimo-pta-mes"></span> · avanço <span id="ultimo-pta-avanco"></span>%</p>
-                        <p id="ultimo-pta-texto" class="pre-wrap"></p>
                     </div>
 
                     <div class="input-group">
@@ -170,16 +209,19 @@ function renderPTAPesquisador() {
             <div class="stack-lg">
                 <section>
                     <div class="section-head">
-                        <h3>Evolução e equipe neste tópico</h3>
-                        <p class="meta">mês selecionado e consolidados</p>
+                        <h3>Linha do tempo deste tópico</h3>
+                        <p class="meta">evolução mês a mês</p>
                     </div>
                     <div id="ptaunificado-equipe-lista" class="entries scroll-pane">
-                        <div class="empty-state"><p>Escolha um tópico para ver o que já foi consolidado e enviado.</p></div>
+                        <div class="empty-state"><p>Escolha um tópico para ver a evolução percentual e o que já foi consolidado em cada mês.</p></div>
                     </div>
                 </section>
 
                 <section>
-                    <div class="section-head"><h3>Meus envios e consolidados</h3></div>
+                    <div class="section-head">
+                        <h3>Meus envios</h3>
+                        <button type="button" id="btn-alternar-filtro-meus" class="link-btn muted" onclick="window.alternarFiltroMeusPTAs()">Ver todos os consolidados</button>
+                    </div>
                     <div id="meus-ptas-lista" class="entries scroll-pane">${window.UI.loading('Buscando histórico')}</div>
                 </section>
             </div>
@@ -210,11 +252,12 @@ function atualizarResumoPTA() {
     const mes = parseInt(document.getElementById('pta-mes').value, 10);
     const ano = parseInt(document.getElementById('pta-ano').value, 10);
     const opcao = topico && topico.value ? topico.selectedOptions[0] : null;
+    const nomeTopico = opcao ? (opcao.dataset.titulo || opcao.textContent) : '';
     const hoje = new Date();
     const foraDoMes = mes !== hoje.getMonth() + 1 || ano !== hoje.getFullYear();
 
     const acao = window.ptaEditandoId ? 'Você está editando o PTA de' : 'Você está registrando';
-    resumo.innerHTML = `${acao} <strong>${MESES_DO_ANO[mes - 1]} de ${ano}</strong>${opcao ? ` · ${window.escapeHTML(opcao.textContent)}` : ''}${foraDoMes ? ' <span class="badge badge-warning">não é o mês atual</span>' : ''}`;
+    resumo.innerHTML = `${acao} <strong>${MESES_DO_ANO[mes - 1]} de ${ano}</strong>${nomeTopico ? ` · ${window.escapeHTML(nomeTopico)}` : ''}${foraDoMes ? ' <span class="badge badge-warning">não é o mês atual</span>' : ''}`;
 }
 
 function garantirAnoNoSeletor(ano) {
@@ -235,7 +278,35 @@ function elementosDoAvanco() {
         controle: document.getElementById('pta-avanco'),
         caixa: document.getElementById('pta-avanco-num'),
         ajuda: document.getElementById('ajuda-avanco'),
+        deltaBadge: document.getElementById('pta-delta-badge'),
     };
+}
+
+function atualizarIndicadorDeltaAvanco(valorAtualOverride) {
+    const { controle, deltaBadge } = elementosDoAvanco();
+    if (!deltaBadge || !controle) return;
+
+    const topicoId = document.getElementById('pta-topico')?.value;
+    if (!topicoId || window.ultimoAvancoReferencia === null || window.ultimoAvancoReferencia === undefined) {
+        deltaBadge.className = 'badge hidden';
+        deltaBadge.textContent = '';
+        return;
+    }
+
+    const anterior = Number(window.ultimoAvancoReferencia) || 0;
+    const atual = valorAtualOverride !== undefined ? Number(valorAtualOverride) : (parseInt(controle.value, 10) || 0);
+    const delta = Math.round(atual - anterior);
+
+    if (delta > 0) {
+        deltaBadge.className = 'badge badge-success';
+        deltaBadge.textContent = `${anterior}% → ${Math.round(atual)}% (+${delta}% neste mês)`;
+    } else if (delta === 0) {
+        deltaBadge.className = 'badge badge-warning';
+        deltaBadge.textContent = `${anterior}% → ${Math.round(atual)}% (+0% neste mês)`;
+    } else {
+        deltaBadge.className = 'badge badge-danger';
+        deltaBadge.textContent = `${anterior}% → ${Math.round(atual)}% (${delta}%)`;
+    }
 }
 
 function textoDeAjudaAvanco(minimo, ajustadoPara) {
@@ -252,6 +323,7 @@ function definirAvanco(valor) {
     // O controle já limita ao mínimo/máximo; a caixa mostra o valor final.
     caixa.value = controle.value;
     controle.setAttribute('aria-valuetext', `${controle.value}%`);
+    atualizarIndicadorDeltaAvanco();
 }
 
 function definirMinimoAvanco(minimo, sincronizarComUltimo = false) {
@@ -275,6 +347,7 @@ window.sincronizarAvanco = function(origem) {
     if (origem === 'controle') {
         caixa.value = controle.value;
         controle.setAttribute('aria-valuetext', `${controle.value}%`);
+        atualizarIndicadorDeltaAvanco();
         return;
     }
 
@@ -287,6 +360,7 @@ window.sincronizarAvanco = function(origem) {
         if (valido && digitado >= minimo && digitado <= 100) {
             controle.value = Math.round(digitado);
             controle.setAttribute('aria-valuetext', `${controle.value}%`);
+            atualizarIndicadorDeltaAvanco(Math.round(digitado));
         }
         return;
     }
@@ -335,6 +409,7 @@ window.atualizarAvisoUltimoPTA = function() {
     const inputAvanco = document.getElementById('pta-avanco');
 
     if (!topicoId || !window.meusPtasCache || window.meusPtasCache.length === 0) {
+        window.ultimoAvancoReferencia = null;
         if (avisoContainer) avisoContainer.classList.add('hidden');
         if (inputAvanco) definirMinimoAvanco(0);
         return;
@@ -343,6 +418,7 @@ window.atualizarAvisoUltimoPTA = function() {
     const ultimoRelato = obterUltimoRelatoDoTopico(topicoId);
 
     if (ultimoRelato) {
+        window.ultimoAvancoReferencia = ultimoRelato.percentual_avanco || 0;
         avisoContainer.classList.remove('hidden');
         const nomeMes = MESES_DO_ANO[(ultimoRelato.mes_referencia || 1) - 1] || String(ultimoRelato.mes_referencia).padStart(2, '0');
         document.getElementById('ultimo-pta-mes').innerText = `${nomeMes} de ${ultimoRelato.ano_referencia} (${String(ultimoRelato.mes_referencia).padStart(2, '0')}/${ultimoRelato.ano_referencia})`;
@@ -352,18 +428,45 @@ window.atualizarAvisoUltimoPTA = function() {
         definirMinimoAvanco(ultimoRelato.percentual_avanco, !window.ptaEditandoId);
 
     } else {
+        window.ultimoAvancoReferencia = null;
         avisoContainer.classList.add('hidden');
         definirMinimoAvanco(0, !window.ptaEditandoId);
     }
 };
 
+window. alternarFiltroMeusPTAs = function() {
+    window.mostrarTodosConsolidadosEmMeus = !window.mostrarTodosConsolidadosEmMeus;
+    const btn = document.getElementById('btn-alternar-filtro-meus');
+    if (btn) {
+        btn.textContent = window.mostrarTodosConsolidadosEmMeus ? 'Apenas meus envios' : 'Ver todos os consolidados';
+    }
+    window.renderizarListaMeusPTAs();
+};
+
 window.renderizarListaMeusPTAs = function() {
     const container = document.getElementById('meus-ptas-lista');
     if (!container) return;
-    const relatorios = Array.isArray(window.meusPtasCache) ? [...window.meusPtasCache] : [];
+    const todos = Array.isArray(window.meusPtasCache) ? [...window.meusPtasCache] : [];
+    const apenasMeus = todos.filter(r => r.is_mine !== false);
+    const exibirTodos = !!window.mostrarTodosConsolidadosEmMeus;
+    const relatorios = exibirTodos ? todos : apenasMeus;
+
+    const btnFiltro = document.getElementById('btn-alternar-filtro-meus');
+    if (btnFiltro) {
+        btnFiltro.textContent = exibirTodos ? 'Apenas meus envios' : `Ver todos os consolidados (${todos.length})`;
+    }
 
     if (relatorios.length === 0) {
-        container.innerHTML = window.UI.emptyState({ title: 'Nenhum PTA registrado', description: 'O histórico consolidado e seus envios aparecem aqui.' });
+        if (!exibirTodos && todos.length > 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <p><strong>Você ainda não enviou PTAs individuais</strong></p>
+                    <p class="help">O histórico consolidado de cada tópico já aparece automaticamente ao escolher um tópico acima.</p>
+                    <button type="button" class="btn btn-secondary btn-sm mt-sm" onclick="window.alternarFiltroMeusPTAs()">Ver todos os ${todos.length} registros consolidados</button>
+                </div>`;
+        } else {
+            container.innerHTML = window.UI.emptyState({ title: 'Nenhum PTA registrado', description: 'O histórico consolidado e seus envios aparecem aqui.' });
+        }
         return;
     }
 
@@ -442,8 +545,9 @@ async function carregarMeusPTAs() {
         relatorios.sort((a, b) => b.ano_referencia - a.ano_referencia || b.mes_referencia - a.mes_referencia);
         window.meusPtasCache = relatorios;
 
+        window.atualizarOpcoesDropdownTopicosComProgresso();
         window.renderizarListaMeusPTAs();
-        setTimeout(atualizarAvisoUltimoPTA, 200);
+        setTimeout(atualizarAvisoUltimoPTA, 100);
     } catch (err) {
         if (container) container.innerHTML = window.UI.errorState('Erro ao carregar histórico.');
     }
@@ -1032,7 +1136,40 @@ window.carregarPTAUnificadoEquipe = async function() {
 
         const userAtual = JSON.parse(localStorage.getItem('user_data') || '{}');
         const isGestor = userAtual.role === 'admin' || userAtual.role === 'coordenador';
+
+        // Calcula o ganho (+% no mês) de cada registro em ordem cronológica
+        const cronologicos = [...relatoriosExibir].sort((a, b) =>
+            (a.ano_referencia || 0) - (b.ano_referencia || 0) ||
+            (a.mes_referencia || 0) - (b.mes_referencia || 0) ||
+            (a.id || 0) - (b.id || 0)
+        );
+        const deltaPorId = {};
+        let percAnterior = null;
+        cronologicos.forEach(item => {
+            const perc = item.percentual_avanco || 0;
+            deltaPorId[item.id] = percAnterior === null ? null : (perc - percAnterior);
+            percAnterior = perc;
+        });
+
         let html = '';
+
+        // Régua rápida de evolução mensal no topo
+        if (cronologicos.length > 1) {
+            const etapasHtml = cronologicos.map((item, idx) => {
+                const mAbrev = MESES_ABREV[(item.mes_referencia || 1) - 1] || item.mes_referencia;
+                const d = deltaPorId[item.id];
+                const dTexto = d === null ? '' : (d > 0 ? ` (+${d}%)` : ` (+0%)`);
+                const seta = idx < cronologicos.length - 1 ? '<span class="muted" style="padding:0 2px;">→</span>' : '';
+                return `<button type="button" class="link-btn" style="padding:2px 6px; font-size:11.5px; border:1px solid var(--line);" onclick="document.getElementById('pta-tl-${item.id}')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })"><strong>${mAbrev}/${String(item.ano_referencia || ano).slice(-2)}</strong> ${item.percentual_avanco || 0}%<span class="muted">${dTexto}</span></button>${seta}`;
+            }).join('');
+
+            html += `
+                <div class="note" style="margin-bottom:var(--space-3);">
+                    <p class="mono" style="margin:0 0 6px 0;">trajetória de evolução do tópico</p>
+                    <div style="display:flex; flex-wrap:wrap; align-items:center; gap:4px;">${etapasHtml}</div>
+                </div>
+            `;
+        }
 
         relatoriosExibir.forEach(rel => {
             let notasHtml = '';
@@ -1056,18 +1193,34 @@ window.carregarPTAUnificadoEquipe = async function() {
 
             const usuarioSeguro = window.escapeHTML(rel.usuario_nome || 'Desconhecido');
             const descricaoSegura = window.escapeHTML(rel.descricao || 'Nenhuma descrição fornecida.');
-            const mesRef = rel.mes_referencia ? `${String(rel.mes_referencia).padStart(2, '0')}/${rel.ano_referencia || ano}` : `${String(mes).padStart(2, '0')}/${ano}`;
+            const numMes = rel.mes_referencia || parseInt(mes, 10);
+            const numAno = rel.ano_referencia || parseInt(ano, 10);
+            const nomeMes = MESES_DO_ANO[(numMes || 1) - 1] || String(numMes).padStart(2, '0');
+            const tituloMes = `${nomeMes[0].toUpperCase() + nomeMes.slice(1)} de ${numAno} (${String(numMes).padStart(2, '0')}/${numAno})`;
+
+            const delta = deltaPorId[rel.id];
+            let deltaBadge = '';
+            if (delta === null || delta === undefined) {
+                deltaBadge = `<span class="badge">início · ${rel.percentual_avanco || 0}%</span>`;
+            } else if (delta > 0) {
+                deltaBadge = `<span class="badge badge-success">+${delta}% no mês</span>`;
+            } else if (delta === 0) {
+                deltaBadge = `<span class="badge">+0% no mês</span>`;
+            } else {
+                deltaBadge = `<span class="badge badge-warning">${delta}% no mês</span>`;
+            }
+
             const statusBadge = rel.status === 'consolidado'
                 ? '<span class="badge badge-success">consolidado</span>'
-                : '<span class="badge">enviado</span>';
+                : `<span class="badge">enviado · ${usuarioSeguro}</span>`;
             const meterClass = rel.status === 'consolidado' ? 'ok' : '';
             const podeAnotar = rel.is_mine || isGestor;
 
             html += `
-                <article class="entry${rel.is_mine ? ' is-mine' : ''}">
-                    <div class="entry-head">
-                        <h4 class="entry-title">${mesRef} · ${usuarioSeguro}</h4>
-                        ${statusBadge}
+                <article class="entry${rel.is_mine ? ' is-mine' : ''}" id="pta-tl-${rel.id}">
+                    <div class="entry-head" style="flex-wrap:wrap; gap:6px;">
+                        <h4 class="entry-title">${tituloMes}</h4>
+                        <div class="cluster">${deltaBadge}${statusBadge}</div>
                     </div>
                     <div class="meter">
                         <div class="meter-track"><div class="meter-fill ${meterClass}" style="width:${rel.percentual_avanco || 0}%"></div></div>
