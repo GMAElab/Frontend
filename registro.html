@@ -1,19 +1,19 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="dark">
+<html lang="pt-BR" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solicitar acesso · SGCI / GMAE</title>
 
-    <meta name="color-scheme" content="dark light">
-    <script>try { var t = localStorage.getItem('sgci-theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; if (localStorage.getItem('sgci-densidade') === 'bancada') document.documentElement.dataset.densidade = 'bancada'; } catch (e) {}</script>
+    <meta name="color-scheme" content="light dark">
+    <script>try { var t = localStorage.getItem('sgci-theme-v2'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; if (localStorage.getItem('sgci-densidade') === 'bancada') document.documentElement.dataset.densidade = 'bancada'; } catch (e) {}</script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap">
-    <link rel="stylesheet" href="css/global.css?v=14">
-    <link rel="stylesheet" href="css/layout.css?v=14">
-    <link rel="stylesheet" href="css/components.css?v=14">
+    <link rel="stylesheet" href="css/global.css?v=16">
+    <link rel="stylesheet" href="css/layout.css?v=16">
+    <link rel="stylesheet" href="css/components.css?v=16">
 </head>
 <body>
     <main class="auth-shell">
@@ -82,7 +82,7 @@
         document.getElementById('auth-theme-btn')?.addEventListener('click', function () {
             var next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
             document.documentElement.dataset.theme = next;
-            try { localStorage.setItem('sgci-theme', next); } catch (e) {}
+            try { localStorage.setItem('sgci-theme-v2', next); } catch (e) {}
         });
     </script>
 </body>

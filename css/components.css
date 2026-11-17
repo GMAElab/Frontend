@@ -12,7 +12,7 @@
     justify-content: center;
     gap: 6px;
     height: var(--ctrl-md);
-    padding: 0 12px;
+    padding: 0 14px;
     font-family: var(--font-sans);
     font-size: 13px;
     font-weight: 500;
@@ -20,16 +20,17 @@
     white-space: nowrap;
     border-radius: var(--radius);
     border: 1px solid var(--line-strong);
-    background: var(--surface-2);
+    background: var(--surface);
     color: var(--text);
     cursor: pointer;
     text-decoration: none;
     user-select: none;
+    transition: all var(--t-fast);
 }
 
 .btn:hover:not(:disabled) {
-    background: var(--surface-hover);
-    border-color: var(--muted);
+    background: var(--surface-2);
+    border-color: var(--line-strong);
     text-decoration: none;
 }
 
@@ -44,14 +45,16 @@
 }
 
 .btn-primary {
-    background: var(--accent-solid);
-    border-color: var(--accent-solid);
+    background: var(--accent-gradient);
+    border-color: transparent;
     color: var(--accent-ink);
+    box-shadow: var(--accent-shadow);
 }
 .btn-primary:hover:not(:disabled) {
     background: var(--accent-hover);
-    border-color: var(--accent-hover);
+    border-color: transparent;
     color: var(--accent-ink);
+    transform: translateY(-1px);
 }
 
 .btn-secondary {
@@ -198,27 +201,28 @@
 .form-control {
     width: 100%;
     height: var(--ctrl-md);
-    padding: 0 10px;
+    padding: 0 12px;
     font-family: var(--font-sans);
     font-size: 13.5px;
     color: var(--text);
-    background: var(--bg);
-    border: 1px solid var(--line-strong);
+    background: var(--surface-2);
+    border: 1px solid var(--line);
     border-radius: var(--radius);
+    transition: border-color var(--t-fast), box-shadow var(--t-fast), background-color var(--t-fast);
 }
 
 .input-group textarea,
 textarea.form-control {
     height: auto;
     min-height: 80px;
-    padding: 8px 10px;
+    padding: 10px 12px;
     line-height: 1.5;
     resize: vertical;
 }
 
 .input-group select,
 select.form-control {
-    padding-right: 24px;
+    padding-right: 28px;
     cursor: pointer;
 }
 
@@ -233,7 +237,9 @@ select.form-control {
 .input-group textarea:focus,
 .form-control:focus {
     outline: none;
+    background: var(--surface);
     border-color: var(--line-focus);
+    box-shadow: 0 0 0 3px var(--accent-tint);
 }
 
 .input-group input[readonly],
@@ -679,13 +685,26 @@ select.form-control {
    ========================================== */
 .entries {
     border: 1px solid var(--line);
-    border-radius: var(--radius);
+    border-radius: var(--radius-lg);
     background: var(--surface);
+    overflow: hidden;
+}
+
+.section .entries,
+section .entries,
+.section .table-container,
+section .table-container,
+.section .index-list,
+section .index-list {
+    border: none;
+    box-shadow: none;
+    border-radius: var(--radius);
 }
 
 .entry {
-    padding: 12px 14px;
+    padding: 14px 16px;
     border-bottom: 1px solid var(--line);
+    transition: background-color var(--t-fast);
 }
 .entry:last-child { border-bottom: 0; }
 .entry.clickable { cursor: pointer; }
@@ -726,23 +745,26 @@ select.form-control {
 .index-list {
     list-style: none;
     border: 1px solid var(--line);
-    border-radius: var(--radius);
+    border-radius: var(--radius-lg);
     background: var(--surface);
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
 }
 
 .index-row {
     width: 100%;
     display: grid;
-    grid-template-columns: 32px 26px minmax(140px, 210px) 1fr auto;
+    grid-template-columns: 32px 34px minmax(140px, 210px) 1fr auto;
     align-items: center;
     gap: var(--space-3);
-    padding: 10px 14px;
+    padding: 12px 16px;
     border: 0;
     border-bottom: 1px solid var(--line);
     background: transparent;
     color: var(--text);
     text-align: left;
     cursor: pointer;
+    transition: background-color var(--t-fast);
 }
 .index-list li:last-child .index-row { border-bottom: 0; }
 .index-row:hover {
@@ -751,18 +773,26 @@ select.form-control {
 .index-row .n {
     font-family: var(--font-mono);
     font-size: 11px;
-    color: var(--muted);
+    color: var(--faint);
 }
 .index-row .ic {
-    width: 24px;
-    height: 24px;
-    border-radius: var(--radius-xs);
-    background: var(--surface-2);
-    border: 1px solid var(--line);
-    color: var(--text-2);
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: var(--accent-tint);
+    border: none;
+    color: var(--accent);
     display: inline-flex;
     align-items: center;
     justify-content: center;
+}
+.index-list li:nth-child(3n+2) .index-row .ic {
+    background: var(--success-tint);
+    color: var(--success);
+}
+.index-list li:nth-child(3n) .index-row .ic {
+    background: rgba(249, 115, 22, 0.12);
+    color: #F97316;
 }
 .index-row .t { font-size: 13.5px; font-weight: 600; }
 .index-row .d { font-size: 12.5px; color: var(--muted); }
@@ -774,7 +804,7 @@ select.form-control {
 }
 
 /* ==========================================
-   BADGES / STATUS (SEM BOLINHA PULSANTE)
+   BADGES / STATUS — PÍLULAS MINIMALISTAS
    ========================================== */
 .badge,
 .status-badge {
@@ -782,47 +812,42 @@ select.form-control {
     --tint: var(--surface-2);
     display: inline-flex;
     align-items: center;
-    height: 20px;
-    padding: 0 7px;
-    border-radius: var(--radius-xs);
+    height: 22px;
+    padding: 0 10px;
+    border-radius: var(--radius-pill);
     background: var(--tint);
-    border: 1px solid var(--line-strong);
+    border: none;
     color: var(--tone);
-    font-family: var(--font-mono);
-    font-size: 11px;
+    font-family: var(--font-sans);
+    font-size: 11.5px;
     font-weight: 500;
     line-height: 1;
     white-space: nowrap;
 }
 
 .badge-success, .status-concluido, .status-aprovado, .status-ativo {
-    --tone: var(--success);
+    --tone: var(--success-ink, var(--success));
     --tint: var(--success-tint);
-    border-color: var(--success);
 }
 
 .badge-warning, .status-rascunho, .status-pendente {
-    --tone: var(--warning);
+    --tone: var(--warning-ink, var(--warning));
     --tint: var(--warning-tint);
-    border-color: var(--warning);
 }
 
 .badge-danger, .status-cancelado, .status-bloqueado {
-    --tone: var(--danger);
+    --tone: var(--danger-ink, var(--danger));
     --tint: var(--danger-tint);
-    border-color: var(--danger);
 }
 
 .badge-info, .status-em_andamento {
-    --tone: var(--info);
+    --tone: var(--info-ink, var(--info));
     --tint: var(--info-tint);
-    border-color: var(--info);
 }
 
 .badge-accent, .status-em_revisao {
     --tone: var(--accent);
     --tint: var(--accent-tint);
-    border-color: var(--accent);
 }
 
 /* ==========================================
@@ -1066,23 +1091,30 @@ select.form-control {
     align-items: center;
     gap: var(--space-3);
     flex-wrap: wrap;
-    padding: 10px 14px;
-    margin-bottom: var(--space-2);
+    padding: 12px 18px;
+    margin-bottom: var(--space-3);
     background: var(--surface);
     border: 1px solid var(--line);
-    border-left: 3px solid var(--warning);
-    border-radius: var(--radius);
-    font-size: 13px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    font-size: 13.5px;
 }
 .notice-row p { color: var(--text); margin: 0; }
 .notice-row .mono {
-    margin-right: 8px;
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    padding: 0 9px;
+    margin-right: 10px;
+    border-radius: var(--radius-pill);
+    background: var(--warning-tint);
+    font-family: var(--font-sans);
     font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
-    color: var(--warning);
+    color: var(--warning-ink, var(--warning));
 }
-.notice-row:last-of-type { margin-bottom: var(--space-4); }
+.notice-row:last-of-type { margin-bottom: var(--space-5); }
 
 /* ==========================================
    LINHA DO TEMPO
@@ -1150,32 +1182,36 @@ select.form-control {
 .meses-grid {
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
-    gap: 2px;
-    padding: 3px;
+    gap: 4px;
+    padding: 5px;
     border: 1px solid var(--line);
-    border-radius: var(--radius);
-    background: var(--surface-2);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    box-shadow: var(--shadow-card);
 }
 
 .mes-card {
-    height: 28px;
+    height: 34px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: var(--font-mono);
-    font-size: 11.5px;
+    font-family: var(--font-sans);
+    font-size: 12.5px;
+    font-weight: 500;
     color: var(--muted);
-    border-radius: var(--radius-xs);
+    border-radius: var(--radius-sm);
     cursor: pointer;
     user-select: none;
+    transition: all var(--t-fast);
 }
 
-.mes-card:hover { background: var(--surface-hover); color: var(--text); }
+.mes-card:hover { background: var(--surface-2); color: var(--text); }
 .mes-card.active {
-    background: var(--surface);
-    color: var(--text);
+    background: var(--accent-gradient);
+    color: #FFFFFF;
     font-weight: 600;
-    border: 1px solid var(--line-strong);
+    border: none;
+    box-shadow: var(--accent-shadow);
 }
 
 @media (max-width: 640px) {
@@ -1429,12 +1465,12 @@ select.form-control {
 .tag-chips:empty { display: none; }
 
 /* ==========================================
-   PAINEL: INDICADORES SIMPLES
+   PAINEL: INDICADORES ESTILO NEXUS
    ========================================== */
 .figures {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-    gap: var(--space-3);
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-4);
     margin-bottom: var(--space-5);
 }
 
@@ -1442,17 +1478,42 @@ select.form-control {
     flex-direction: column-reverse;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 4px;
+    gap: 14px;
     margin: 0;
-    padding: 12px 14px;
+    padding: 20px 22px;
     background: var(--surface);
     border: 1px solid var(--line);
-    border-radius: var(--radius);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Primeiro cartão de destaque em gradiente Índigo (estilo Nexus) */
+.figures .figure:first-child {
+    background: var(--accent-gradient);
+    border-color: transparent;
+    color: #FFFFFF;
+    box-shadow: var(--accent-shadow);
+}
+.figures .figure:first-child .v,
+.figures .figure:first-child .v.text-danger,
+.figures .figure:first-child .v.text-warning,
+.figures .figure:first-child .v.text-primary {
+    color: #FFFFFF !important;
+}
+.figures .figure:first-child .k {
+    color: rgba(255, 255, 255, 0.88);
+}
+.figures .figure:first-child .k svg {
+    background: rgba(255, 255, 255, 0.2);
+    color: #FFFFFF;
 }
 
 .figures .figure .v {
-    font-size: 24px;
+    font-size: 28px;
     font-weight: 600;
+    letter-spacing: -0.02em;
     line-height: 1.1;
 }
 
@@ -1461,9 +1522,34 @@ select.form-control {
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    font-size: 11.5px;
+    font-size: 13px;
     font-weight: 500;
     color: var(--muted);
+}
+
+.figures .figure .k svg {
+    width: 34px;
+    height: 34px;
+    padding: 8px;
+    border-radius: 10px;
+    background: var(--accent-tint);
+    color: var(--accent);
+    flex-shrink: 0;
+}
+
+.figures .figure:nth-child(2) .k svg {
+    background: var(--success-tint);
+    color: var(--success);
+}
+
+.figures .figure:nth-child(3) .k svg {
+    background: rgba(249, 115, 22, 0.12);
+    color: #F97316;
+}
+
+.figures .figure:nth-child(4) .k svg {
+    background: var(--info-tint);
+    color: var(--info);
 }
 
 .link-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
@@ -1619,25 +1705,30 @@ select.form-control {
 .meter {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-top: 6px;
+    gap: 10px;
+    margin-top: 8px;
 }
 .meter-track {
     flex: 1;
-    max-width: 200px;
-    height: 6px;
-    background: var(--surface-3);
-    border-radius: var(--radius-xs);
+    max-width: 220px;
+    height: 7px;
+    background: var(--surface-2);
+    border-radius: var(--radius-pill);
     overflow: hidden;
 }
 .meter-fill {
     height: 100%;
-    background: var(--accent);
+    background: var(--accent-gradient);
+    border-radius: var(--radius-pill);
+    transition: width var(--t-base);
 }
+.meter-fill.ok  { background: var(--success); }
+.meter-fill.bad { background: var(--danger); }
 .meter-value {
     font-family: var(--font-mono);
-    font-size: 11.5px;
-    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-2);
 }
 
 .check-inline {

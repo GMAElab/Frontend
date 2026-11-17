@@ -51,15 +51,16 @@
 }
 
 .brand-glyph {
-    width: 26px;
-    height: 26px;
-    border-radius: var(--radius);
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: var(--surface-2);
-    color: var(--text);
-    border: 1px solid var(--line-strong);
+    background: var(--accent-gradient);
+    color: #FFFFFF;
+    border: none;
+    box-shadow: 0 4px 10px rgba(79, 70, 229, 0.28);
     flex-shrink: 0;
 }
 
@@ -72,8 +73,9 @@
 }
 
 .brand-mark {
-    font-size: 13px;
+    font-size: 14.5px;
     font-weight: 600;
+    letter-spacing: -0.01em;
     color: var(--text);
 }
 
@@ -88,18 +90,20 @@
     align-items: center;
     gap: 8px;
     margin: var(--space-3) var(--space-3) var(--space-1);
-    height: 32px;
-    padding: 0 10px;
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius);
-    background: var(--bg);
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
     color: var(--muted);
     font-size: 12.5px;
     cursor: pointer;
+    transition: all var(--t-fast);
 }
 
 .search-trigger:hover {
-    border-color: var(--accent);
+    border-color: var(--accent-border);
+    background: var(--surface);
     color: var(--text);
 }
 
@@ -145,45 +149,49 @@
 .sidebar-nav {
     flex: 1;
     overflow-y: auto;
-    padding: var(--space-2);
+    padding: var(--space-3);
 }
 
 .sidebar-nav ul {
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 4px;
 }
 
 .nav-section-label,
 .nav-group {
     padding: var(--space-3) var(--space-3) 4px;
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 600;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--faint);
 }
 
 .nav-item {
     width: 100%;
     display: flex;
     align-items: center;
-    gap: 10px;
-    height: 34px;
-    padding: 0 10px;
+    gap: 11px;
+    height: 38px;
+    padding: 0 12px;
     border: 1px solid transparent;
     border-radius: var(--radius);
     background: transparent;
-    color: var(--text-2);
+    color: var(--muted);
     font-size: 13.5px;
+    font-weight: 500;
     text-align: left;
     cursor: pointer;
+    transition: all var(--t-fast);
 }
 
-[data-densidade="bancada"] .nav-item { height: 40px; }
+[data-densidade="bancada"] .nav-item { height: 42px; }
 
 .nav-item .icon {
     color: var(--muted);
+    transition: color var(--t-fast);
 }
 
 .nav-item .nav-label {
@@ -202,19 +210,25 @@
 }
 
 .nav-item:hover {
-    background: var(--surface-hover);
+    background: var(--surface-2);
+    color: var(--text);
+}
+.nav-item:hover .icon {
     color: var(--text);
 }
 
 .nav-item.active {
-    background: var(--surface-2);
-    border-color: var(--line-strong);
-    color: var(--text);
-    font-weight: 600;
+    background: var(--accent-gradient);
+    border-color: transparent;
+    color: #FFFFFF;
+    font-weight: 500;
+    box-shadow: var(--accent-shadow);
 }
 
-.nav-item.active .icon {
-    color: var(--accent);
+.nav-item.active .icon,
+.nav-item.active .nav-index,
+.nav-item.active kbd {
+    color: #FFFFFF;
 }
 
 /* Rodapé da barra lateral */
@@ -410,14 +424,15 @@
     align-items: flex-end;
     gap: var(--space-4);
     flex-wrap: wrap;
-    padding-bottom: var(--space-4);
+    padding-bottom: var(--space-3);
     margin-bottom: var(--space-5);
-    border-bottom: 1px solid var(--line);
+    border-bottom: none;
 }
 
 .page-head h1 {
     font-size: var(--fs-2xl);
     font-weight: 600;
+    letter-spacing: -0.02em;
     margin-top: 2px;
 }
 
@@ -435,25 +450,46 @@
     flex-wrap: wrap;
 }
 
-.section {
-    margin-bottom: var(--space-6);
+.section,
+.columns > section,
+.columns-main-aside > section,
+.stack-lg > section {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 20px 22px;
+    box-shadow: var(--shadow-card);
+    margin-bottom: var(--space-5);
+}
+
+.columns > section,
+.columns-main-aside > section,
+.stack-lg > section {
+    margin-bottom: 0;
+}
+
+.stack-lg {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
 }
 
 .section-head {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
+    align-items: center;
     flex-wrap: wrap;
     gap: var(--space-3);
-    margin-bottom: var(--space-3);
-    padding-bottom: var(--space-2);
-    border-bottom: 1px solid var(--line);
+    margin-bottom: var(--space-4);
+    padding-bottom: 0;
+    border-bottom: none;
 }
 
 .section-head h2,
 .section-head h3 {
-    font-size: 15px;
+    font-size: 15.5px;
     font-weight: 600;
+    letter-spacing: -0.01em;
     color: var(--text);
 }
 
