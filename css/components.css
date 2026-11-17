@@ -811,19 +811,19 @@ section .index-list {
 }
 
 /* ==========================================
-   BADGES / STATUS — ESTILO CLORIO (COM INDICADOR)
+   BADGES / STATUS — CÁPSULAS AGENT ENGINE PORTAL
    ========================================== */
 .badge,
 .status-badge {
     --tone: var(--text-2);
     --tint: var(--surface-2);
-    --bdr: var(--line);
+    --bdr: var(--line-strong);
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    height: 22px;
-    padding: 0 9px;
-    border-radius: var(--radius-xs);
+    height: 23px;
+    padding: 0 10px;
+    border-radius: var(--radius-pill);
     background: var(--tint);
     border: 1px solid var(--bdr);
     color: var(--tone);
@@ -841,6 +841,7 @@ section .index-list {
     height: 6px;
     border-radius: 50%;
     background: currentColor;
+    box-shadow: 0 0 6px currentColor;
     flex-shrink: 0;
 }
 
@@ -1489,7 +1490,7 @@ section .index-list {
 .tag-chips:empty { display: none; }
 
 /* ==========================================
-   PAINEL: INDICADORES ESTILO CLORIO (AZUL MODERNO)
+   PAINEL: INDICADORES ESTILO AGENT ENGINE PORTAL
    ========================================== */
 .figures {
     display: grid;
@@ -1502,32 +1503,37 @@ section .index-list {
     flex-direction: column-reverse;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 12px;
+    gap: 14px;
     margin: 0;
-    padding: 18px 20px;
-    background: var(--surface);
+    padding: 20px 22px;
+    background-color: var(--surface);
+    background-image: var(--card-glow);
     border: 1px solid var(--line);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-card);
     position: relative;
     overflow: hidden;
-    transition: border-color var(--t-fast), box-shadow var(--t-fast);
+    transition: border-color var(--t-fast), transform var(--t-fast), box-shadow var(--t-fast);
 }
 
 .figures .figure:hover {
-    border-color: var(--line-strong);
+    border-color: var(--accent-border);
+    transform: translateY(-1px);
 }
 
 .figures .figure.tone-danger {
-    border-top: 3px solid var(--danger);
+    background-image: radial-gradient(180px circle at 100% 0%, rgba(244, 63, 94, 0.16), transparent 70%);
+    border-color: var(--danger-border);
 }
 
 .figures .figure.tone-warning {
-    border-top: 3px solid var(--warning);
+    background-image: radial-gradient(180px circle at 100% 0%, rgba(245, 158, 11, 0.15), transparent 70%);
+    border-color: var(--warning-border);
 }
 
 .figures .figure .v {
-    font-size: 28px;
+    font-family: var(--font-mono);
+    font-size: 30px;
     font-weight: 600;
     letter-spacing: -0.03em;
     line-height: 1.1;
@@ -1545,26 +1551,29 @@ section .index-list {
 }
 
 .figures .figure .k svg {
-    width: 32px;
-    height: 32px;
-    padding: 7px;
-    border-radius: 8px;
+    width: 34px;
+    height: 34px;
+    padding: 8px;
+    border-radius: 10px;
     background: var(--accent-tint);
     border: 1px solid var(--accent-border);
-    color: var(--accent-solid);
+    color: var(--accent);
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.18);
     flex-shrink: 0;
 }
 
 .figures .figure.tone-danger .k svg {
     background: var(--danger-tint);
     border-color: var(--danger-border);
-    color: var(--danger);
+    color: var(--danger-ink);
+    box-shadow: 0 0 12px rgba(244, 63, 94, 0.2);
 }
 
 .figures .figure.tone-warning .k svg {
     background: var(--warning-tint);
     border-color: var(--warning-border);
-    color: var(--warning);
+    color: var(--warning-ink);
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.2);
 }
 
 .link-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }

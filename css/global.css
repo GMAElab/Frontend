@@ -1,8 +1,8 @@
 /* ==========================================
-   VARIÁVEIS E BASE DO SISTEMA — ESTILO CLORIO (AZUL MODERNO)
-   Arquitetura SaaS editorial limpa: bordas de 1px precisas,
-   superfícies em camadas (#F3F5F8 -> #FFFFFF), tipografia de alto
-   contraste e azul elétrico moderno (#2563EB) no lugar do verde.
+   VARIÁVEIS E BASE DO SISTEMA — ESTILO AGENT ENGINE PORTAL (AZUL MODERNO)
+   Arquitetura Bento Command Center: cartões com borda especular sutil,
+   iluminação radial azul elétrica (#3B82F6 / #2563EB) substituindo o verde,
+   cápsulas de status luminosas e superfícies em camadas de alto contraste.
    ========================================== */
 :root {
     --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
@@ -21,12 +21,12 @@
     --space-10: 40px;
     --space-12: 48px;
 
-    /* Raios de borda estilo Clorio (precisos e elegantes) */
+    /* Cantos Bento arredondados (Agent Engine Portal) */
     --radius-xs: 6px;
-    --radius-sm: 8px;
-    --radius: 10px;
-    --radius-lg: 14px;
-    --radius-xl: 18px;
+    --radius-sm: 10px;
+    --radius: 12px;
+    --radius-lg: 18px;
+    --radius-xl: 22px;
     --radius-pill: 999px;
 
     /* Tipografia */
@@ -45,16 +45,16 @@
     --ctrl-lg: 42px;
 
     /* Layout */
-    --sidebar-w: 244px;
-    --topbar-h: 58px;
-    --content-max: 1280px;
+    --sidebar-w: 252px;
+    --topbar-h: 62px;
+    --content-max: 1300px;
 
-    /* Transições rápidas e precisas */
-    --ease: cubic-bezier(0.2, 0, 0, 1);
-    --t-fast: 130ms;
-    --t-base: 180ms;
-    --transition-fast: 130ms cubic-bezier(0.2, 0, 0, 1);
-    --transition-smooth: 200ms cubic-bezier(0.2, 0, 0, 1);
+    /* Transições fluidas */
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --t-fast: 150ms;
+    --t-base: 220ms;
+    --transition-fast: 150ms cubic-bezier(0.22, 1, 0.36, 1);
+    --transition-smooth: 240ms cubic-bezier(0.22, 1, 0.36, 1);
 
     /* Camadas */
     --z-sidebar: 40;
@@ -65,110 +65,44 @@
 }
 
 /* ==========================================
-   MODO CLARO (PADRÃO) — CLORIO CLEAN BLUE
+   MODO ESCURO (PADRÃO AGENT ENGINE PORTAL) — CARBON & ELECTRIC BLUE
    ========================================== */
 :root,
-[data-theme="light"] {
-    color-scheme: light;
-
-    --bg: #F3F5F8;
-    --surface: #FFFFFF;
-    --surface-2: #F8FAFC;
-    --surface-3: #EDF1F7;
-    --surface-sunk: #EAEFF5;
-    --surface-hover: #F4F7FB;
-
-    --line: #E4E8F0;
-    --line-strong: #CBD2DF;
-    --line-focus: #2563EB;
-
-    --text: #111827;
-    --text-2: #374151;
-    --muted: #64748B;
-    --faint: #94A3B8;
-
-    /* Azul moderno substituindo o verde do Clorio */
-    --accent: #2563EB;
-    --accent-solid: #2563EB;
-    --accent-hover: #1D4ED8;
-    --accent-ink: #FFFFFF;
-    --accent-tint: #EFF6FF;
-    --accent-border: #BFDBFE;
-    --accent-gradient: linear-gradient(180deg, #3B82F6 0%, #2563EB 100%);
-    --accent-shadow: 0 1px 2px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-
-    --success: #0D9488;
-    --success-ink: #0F766E;
-    --success-tint: #F0FDFA;
-    --success-border: #99F6E4;
-
-    --warning: #D97706;
-    --warning-ink: #B45309;
-    --warning-tint: #FFFBEB;
-    --warning-border: #FDE68A;
-
-    --danger: #E11D48;
-    --danger-ink: #BE123C;
-    --danger-tint: #FFF1F2;
-    --danger-border: #FECDD3;
-
-    --info: #2563EB;
-    --info-ink: #1D4ED8;
-    --info-tint: #EFF6FF;
-    --info-border: #BFDBFE;
-
-    --overlay: rgba(15, 23, 42, 0.35);
-    --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.03), 0 1px 2px rgba(15, 23, 42, 0.02);
-    --shadow-pop: 0 12px 28px -4px rgba(15, 23, 42, 0.1), 0 4px 10px -2px rgba(15, 23, 42, 0.05);
-    --grid-line: transparent;
-    --ambient-glow: none;
-
-    --bg-primary: var(--bg);
-    --bg-secondary: var(--surface);
-    --bg-tertiary: var(--surface-2);
-    --text-primary: var(--text);
-    --text-secondary: var(--muted);
-    --accent-primary: var(--accent-solid);
-    --border-color: var(--line);
-    --border-focus: var(--line-focus);
-    --radius-md: var(--radius);
-}
-
-/* ==========================================
-   MODO ESCURO — AGENT ENGINE / CLORIO DARK
-   ========================================== */
 [data-theme="dark"] {
     color-scheme: dark;
 
-    --bg: #0A0D14;
-    --surface: #111622;
-    --surface-2: #161D2B;
-    --surface-3: #1F293D;
-    --surface-sunk: #070A10;
-    --surface-hover: #192132;
+    --bg: #070A10;
+    --surface: #0D121C;
+    --surface-2: #131A28;
+    --surface-3: #1B2436;
+    --surface-sunk: #05070B;
+    --surface-hover: #161F30;
 
-    --line: #1E2738;
-    --line-strong: #2E3A52;
+    --line: rgba(255, 255, 255, 0.07);
+    --line-strong: rgba(255, 255, 255, 0.14);
     --line-focus: #3B82F6;
 
     --text: #F8FAFC;
     --text-2: #CBD5E1;
-    --muted: #8B9BB4;
-    --faint: #5E6E87;
+    --muted: #8494AD;
+    --faint: #526077;
 
+    /* Azul elétrico moderno no lugar do verde neon do Agent Engine */
     --accent: #60A5FA;
     --accent-solid: #2563EB;
     --accent-hover: #1D4ED8;
     --accent-ink: #FFFFFF;
-    --accent-tint: rgba(37, 99, 235, 0.16);
-    --accent-border: rgba(59, 130, 246, 0.35);
+    --accent-tint: rgba(59, 130, 246, 0.14);
+    --accent-border: rgba(59, 130, 246, 0.38);
     --accent-gradient: linear-gradient(180deg, #3B82F6 0%, #2563EB 100%);
-    --accent-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    --accent-shadow: 0 4px 18px -2px rgba(37, 99, 235, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+    --card-glow: radial-gradient(180px circle at 100% 0%, rgba(59, 130, 246, 0.12), transparent 70%);
+    --card-specular: inset 0 1px 0 rgba(255, 255, 255, 0.07);
 
-    --success: #14B8A6;
-    --success-ink: #2DD4BF;
-    --success-tint: rgba(20, 184, 166, 0.14);
-    --success-border: rgba(20, 184, 166, 0.35);
+    --success: #10B981;
+    --success-ink: #34D399;
+    --success-tint: rgba(16, 185, 129, 0.14);
+    --success-border: rgba(16, 185, 129, 0.35);
 
     --warning: #F59E0B;
     --warning-ink: #FBBF24;
@@ -185,11 +119,81 @@
     --info-tint: rgba(56, 189, 248, 0.14);
     --info-border: rgba(56, 189, 248, 0.35);
 
-    --overlay: rgba(2, 6, 23, 0.72);
-    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3);
-    --shadow-pop: 0 14px 34px -4px rgba(0, 0, 0, 0.6);
-    --grid-line: transparent;
-    --ambient-glow: none;
+    --overlay: rgba(2, 6, 14, 0.76);
+    --shadow-card: 0 8px 24px -4px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    --shadow-pop: 0 20px 44px -8px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    --grid-line: rgba(255, 255, 255, 0.025);
+    --ambient-glow: radial-gradient(ellipse 65% 35% at 55% 0%, rgba(37, 99, 235, 0.14), transparent 75%);
+
+    --bg-primary: var(--bg);
+    --bg-secondary: var(--surface);
+    --bg-tertiary: var(--surface-2);
+    --text-primary: var(--text);
+    --text-secondary: var(--muted);
+    --accent-primary: var(--accent-solid);
+    --border-color: var(--line);
+    --border-focus: var(--line-focus);
+    --radius-md: var(--radius);
+}
+
+/* ==========================================
+   MODO CLARO — AGENT ENGINE LIGHT BENTO
+   ========================================== */
+[data-theme="light"] {
+    color-scheme: light;
+
+    --bg: #EEF2F8;
+    --surface: #FFFFFF;
+    --surface-2: #F4F7FC;
+    --surface-3: #E6ECF5;
+    --surface-sunk: #E5EBF4;
+    --surface-hover: #F0F5FC;
+
+    --line: rgba(15, 23, 42, 0.08);
+    --line-strong: rgba(15, 23, 42, 0.15);
+    --line-focus: #2563EB;
+
+    --text: #0B1120;
+    --text-2: #334155;
+    --muted: #64748B;
+    --faint: #94A3B8;
+
+    --accent: #2563EB;
+    --accent-solid: #2563EB;
+    --accent-hover: #1D4ED8;
+    --accent-ink: #FFFFFF;
+    --accent-tint: rgba(37, 99, 235, 0.09);
+    --accent-border: rgba(37, 99, 235, 0.28);
+    --accent-gradient: linear-gradient(180deg, #3B82F6 0%, #2563EB 100%);
+    --accent-shadow: 0 4px 14px -2px rgba(37, 99, 235, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    --card-glow: radial-gradient(180px circle at 100% 0%, rgba(37, 99, 235, 0.07), transparent 70%);
+    --card-specular: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+
+    --success: #059669;
+    --success-ink: #047857;
+    --success-tint: rgba(16, 185, 129, 0.1);
+    --success-border: rgba(16, 185, 129, 0.28);
+
+    --warning: #D97706;
+    --warning-ink: #B45309;
+    --warning-tint: rgba(245, 158, 11, 0.1);
+    --warning-border: rgba(245, 158, 11, 0.3);
+
+    --danger: #E11D48;
+    --danger-ink: #BE123C;
+    --danger-tint: rgba(225, 29, 72, 0.1);
+    --danger-border: rgba(225, 29, 72, 0.28);
+
+    --info: #0284C7;
+    --info-ink: #0369A1;
+    --info-tint: rgba(14, 165, 233, 0.1);
+    --info-border: rgba(14, 165, 233, 0.28);
+
+    --overlay: rgba(15, 23, 42, 0.4);
+    --shadow-card: 0 6px 20px -4px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.03);
+    --shadow-pop: 0 18px 38px -6px rgba(15, 23, 42, 0.12);
+    --grid-line: rgba(15, 23, 42, 0.025);
+    --ambient-glow: radial-gradient(ellipse 65% 35% at 55% 0%, rgba(37, 99, 235, 0.08), transparent 75%);
 }
 
 /* ==========================================

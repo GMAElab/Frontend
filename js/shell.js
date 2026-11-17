@@ -2,7 +2,7 @@
 // CASCA: TEMA, PALETA DE COMANDOS, ATALHOS E CONEXÃO
 // ==========================================
 (function () {
-    const CHAVE_TEMA = 'sgci-theme-v2';
+    const CHAVE_TEMA = 'sgci-theme-v3';
     const CHAVE_DENSIDADE = 'sgci-densidade';
     const JANELA_DO_G_MS = 1000;
     const ehMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
