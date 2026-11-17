@@ -205,9 +205,10 @@
     font-family: var(--font-sans);
     font-size: 13.5px;
     color: var(--text);
-    background: var(--surface-2);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
     transition: border-color var(--t-fast), box-shadow var(--t-fast), background-color var(--t-fast);
 }
 
@@ -239,7 +240,7 @@ select.form-control {
     outline: none;
     background: var(--surface);
     border-color: var(--line-focus);
-    box-shadow: 0 0 0 3px var(--accent-tint);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
 }
 
 .input-group input[readonly],
@@ -681,35 +682,41 @@ select.form-control {
 }
 
 /* ==========================================
-   LISTAS DE REGISTROS
+   LISTAS DE REGISTROS — CARTÕES ESTILO CLORIO
    ========================================== */
 .entries {
-    border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
-    background: var(--surface);
-    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border: none;
+    border-radius: 0;
+    background: transparent;
 }
 
-.section .entries,
-section .entries,
 .section .table-container,
 section .table-container,
 .section .index-list,
 section .index-list {
-    border: none;
+    border: 1px solid var(--line);
     box-shadow: none;
     border-radius: var(--radius);
 }
 
 .entry {
     padding: 14px 16px;
-    border-bottom: 1px solid var(--line);
-    transition: background-color var(--t-fast);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    transition: border-color var(--t-fast), box-shadow var(--t-fast), background-color var(--t-fast);
 }
-.entry:last-child { border-bottom: 0; }
+.entry:hover {
+    border-color: var(--line-strong);
+}
 .entry.clickable { cursor: pointer; }
 .entry.clickable:hover {
     background: var(--surface-hover);
+    border-color: var(--accent-border);
 }
 
 .entry-head {
@@ -804,19 +811,21 @@ section .index-list {
 }
 
 /* ==========================================
-   BADGES / STATUS — PÍLULAS MINIMALISTAS
+   BADGES / STATUS — ESTILO CLORIO (COM INDICADOR)
    ========================================== */
 .badge,
 .status-badge {
     --tone: var(--text-2);
     --tint: var(--surface-2);
+    --bdr: var(--line);
     display: inline-flex;
     align-items: center;
+    gap: 6px;
     height: 22px;
-    padding: 0 10px;
-    border-radius: var(--radius-pill);
+    padding: 0 9px;
+    border-radius: var(--radius-xs);
     background: var(--tint);
-    border: none;
+    border: 1px solid var(--bdr);
     color: var(--tone);
     font-family: var(--font-sans);
     font-size: 11.5px;
@@ -825,29 +834,44 @@ section .index-list {
     white-space: nowrap;
 }
 
+.badge::before,
+.status-badge::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+}
+
 .badge-success, .status-concluido, .status-aprovado, .status-ativo {
     --tone: var(--success-ink, var(--success));
     --tint: var(--success-tint);
+    --bdr: var(--success-border, var(--line));
 }
 
 .badge-warning, .status-rascunho, .status-pendente {
     --tone: var(--warning-ink, var(--warning));
     --tint: var(--warning-tint);
+    --bdr: var(--warning-border, var(--line));
 }
 
 .badge-danger, .status-cancelado, .status-bloqueado {
     --tone: var(--danger-ink, var(--danger));
     --tint: var(--danger-tint);
+    --bdr: var(--danger-border, var(--line));
 }
 
 .badge-info, .status-em_andamento {
     --tone: var(--info-ink, var(--info));
     --tint: var(--info-tint);
+    --bdr: var(--info-border, var(--line));
 }
 
 .badge-accent, .status-em_revisao {
-    --tone: var(--accent);
+    --tone: var(--accent-solid);
     --tint: var(--accent-tint);
+    --bdr: var(--accent-border, var(--line));
 }
 
 /* ==========================================
@@ -1465,7 +1489,7 @@ section .index-list {
 .tag-chips:empty { display: none; }
 
 /* ==========================================
-   PAINEL: INDICADORES ESTILO NEXUS
+   PAINEL: INDICADORES ESTILO CLORIO (AZUL MODERNO)
    ========================================== */
 .figures {
     display: grid;
@@ -1478,43 +1502,36 @@ section .index-list {
     flex-direction: column-reverse;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 14px;
+    gap: 12px;
     margin: 0;
-    padding: 20px 22px;
+    padding: 18px 20px;
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-card);
     position: relative;
     overflow: hidden;
+    transition: border-color var(--t-fast), box-shadow var(--t-fast);
 }
 
-/* Primeiro cartão de destaque em gradiente Índigo (estilo Nexus) */
-.figures .figure:first-child {
-    background: var(--accent-gradient);
-    border-color: transparent;
-    color: #FFFFFF;
-    box-shadow: var(--accent-shadow);
+.figures .figure:hover {
+    border-color: var(--line-strong);
 }
-.figures .figure:first-child .v,
-.figures .figure:first-child .v.text-danger,
-.figures .figure:first-child .v.text-warning,
-.figures .figure:first-child .v.text-primary {
-    color: #FFFFFF !important;
+
+.figures .figure.tone-danger {
+    border-top: 3px solid var(--danger);
 }
-.figures .figure:first-child .k {
-    color: rgba(255, 255, 255, 0.88);
-}
-.figures .figure:first-child .k svg {
-    background: rgba(255, 255, 255, 0.2);
-    color: #FFFFFF;
+
+.figures .figure.tone-warning {
+    border-top: 3px solid var(--warning);
 }
 
 .figures .figure .v {
     font-size: 28px;
     font-weight: 600;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.03em;
     line-height: 1.1;
+    color: var(--text);
 }
 
 .figures .figure .k {
@@ -1528,28 +1545,26 @@ section .index-list {
 }
 
 .figures .figure .k svg {
-    width: 34px;
-    height: 34px;
-    padding: 8px;
-    border-radius: 10px;
+    width: 32px;
+    height: 32px;
+    padding: 7px;
+    border-radius: 8px;
     background: var(--accent-tint);
-    color: var(--accent);
+    border: 1px solid var(--accent-border);
+    color: var(--accent-solid);
     flex-shrink: 0;
 }
 
-.figures .figure:nth-child(2) .k svg {
-    background: var(--success-tint);
-    color: var(--success);
+.figures .figure.tone-danger .k svg {
+    background: var(--danger-tint);
+    border-color: var(--danger-border);
+    color: var(--danger);
 }
 
-.figures .figure:nth-child(3) .k svg {
-    background: rgba(249, 115, 22, 0.12);
-    color: #F97316;
-}
-
-.figures .figure:nth-child(4) .k svg {
-    background: var(--info-tint);
-    color: var(--info);
+.figures .figure.tone-warning .k svg {
+    background: var(--warning-tint);
+    border-color: var(--warning-border);
+    color: var(--warning);
 }
 
 .link-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }

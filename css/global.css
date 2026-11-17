@@ -1,7 +1,8 @@
 /* ==========================================
-   VARIÁVEIS E BASE DO SISTEMA — UI MINIMALISTA E MODERNA
-   Inspirado em dashboards SaaS modernos (Nexus):
-   superfícies claras, cantos suaves, acentos em índigo/esmeralda/coral.
+   VARIÁVEIS E BASE DO SISTEMA — ESTILO CLORIO (AZUL MODERNO)
+   Arquitetura SaaS editorial limpa: bordas de 1px precisas,
+   superfícies em camadas (#F3F5F8 -> #FFFFFF), tipografia de alto
+   contraste e azul elétrico moderno (#2563EB) no lugar do verde.
    ========================================== */
 :root {
     --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
@@ -20,12 +21,12 @@
     --space-10: 40px;
     --space-12: 48px;
 
-    /* Cantos suaves e modernos */
+    /* Raios de borda estilo Clorio (precisos e elegantes) */
     --radius-xs: 6px;
     --radius-sm: 8px;
     --radius: 10px;
-    --radius-lg: 16px;
-    --radius-xl: 20px;
+    --radius-lg: 14px;
+    --radius-xl: 18px;
     --radius-pill: 999px;
 
     /* Tipografia */
@@ -44,16 +45,16 @@
     --ctrl-lg: 42px;
 
     /* Layout */
-    --sidebar-w: 240px;
-    --topbar-h: 60px;
-    --content-max: 1260px;
+    --sidebar-w: 244px;
+    --topbar-h: 58px;
+    --content-max: 1280px;
 
-    /* Transições suaves */
-    --ease: cubic-bezier(0.4, 0, 0.2, 1);
-    --t-fast: 150ms;
-    --t-base: 200ms;
-    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-smooth: 220ms cubic-bezier(0.4, 0, 0.2, 1);
+    /* Transições rápidas e precisas */
+    --ease: cubic-bezier(0.2, 0, 0, 1);
+    --t-fast: 130ms;
+    --t-base: 180ms;
+    --transition-fast: 130ms cubic-bezier(0.2, 0, 0, 1);
+    --transition-smooth: 200ms cubic-bezier(0.2, 0, 0, 1);
 
     /* Camadas */
     --z-sidebar: 40;
@@ -64,53 +65,61 @@
 }
 
 /* ==========================================
-   MODO CLARO (PADRÃO) — MINIMALISTA, AÉREO E MODERNO
+   MODO CLARO (PADRÃO) — CLORIO CLEAN BLUE
    ========================================== */
 :root,
 [data-theme="light"] {
     color-scheme: light;
 
-    --bg: #F5F7FB;
+    --bg: #F3F5F8;
     --surface: #FFFFFF;
-    --surface-2: #F1F5F9;
-    --surface-3: #E2E8F0;
-    --surface-sunk: #EEF2F6;
-    --surface-hover: #F8FAFC;
+    --surface-2: #F8FAFC;
+    --surface-3: #EDF1F7;
+    --surface-sunk: #EAEFF5;
+    --surface-hover: #F4F7FB;
 
-    --line: #EAEEF4;
-    --line-strong: #CBD5E1;
-    --line-focus: #4F46E5;
+    --line: #E4E8F0;
+    --line-strong: #CBD2DF;
+    --line-focus: #2563EB;
 
-    --text: #0F172A;
-    --text-2: #334155;
+    --text: #111827;
+    --text-2: #374151;
     --muted: #64748B;
     --faint: #94A3B8;
 
-    --accent: #4F46E5;
-    --accent-solid: #4F46E5;
-    --accent-hover: #4338CA;
+    /* Azul moderno substituindo o verde do Clorio */
+    --accent: #2563EB;
+    --accent-solid: #2563EB;
+    --accent-hover: #1D4ED8;
     --accent-ink: #FFFFFF;
-    --accent-tint: #EEF2FF;
-    --accent-border: rgba(79, 70, 229, 0.25);
-    --accent-gradient: linear-gradient(135deg, #4F46E5 0%, #6366F1 60%, #7C3AED 100%);
-    --accent-shadow: 0 6px 18px -3px rgba(79, 70, 229, 0.28);
+    --accent-tint: #EFF6FF;
+    --accent-border: #BFDBFE;
+    --accent-gradient: linear-gradient(180deg, #3B82F6 0%, #2563EB 100%);
+    --accent-shadow: 0 1px 2px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 
-    --success: #10B981;
-    --success-ink: #059669;
-    --success-tint: #ECFDF5;
-    --warning: #F59E0B;
-    --warning-ink: #D97706;
+    --success: #0D9488;
+    --success-ink: #0F766E;
+    --success-tint: #F0FDFA;
+    --success-border: #99F6E4;
+
+    --warning: #D97706;
+    --warning-ink: #B45309;
     --warning-tint: #FFFBEB;
-    --danger: #EF4444;
-    --danger-ink: #DC2626;
-    --danger-tint: #FEF2F2;
-    --info: #0EA5E9;
-    --info-ink: #0284C7;
-    --info-tint: #F0F9FF;
+    --warning-border: #FDE68A;
 
-    --overlay: rgba(15, 23, 42, 0.4);
-    --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.02);
-    --shadow-pop: 0 12px 32px -4px rgba(15, 23, 42, 0.12), 0 4px 12px rgba(15, 23, 42, 0.06);
+    --danger: #E11D48;
+    --danger-ink: #BE123C;
+    --danger-tint: #FFF1F2;
+    --danger-border: #FECDD3;
+
+    --info: #2563EB;
+    --info-ink: #1D4ED8;
+    --info-tint: #EFF6FF;
+    --info-border: #BFDBFE;
+
+    --overlay: rgba(15, 23, 42, 0.35);
+    --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.03), 0 1px 2px rgba(15, 23, 42, 0.02);
+    --shadow-pop: 0 12px 28px -4px rgba(15, 23, 42, 0.1), 0 4px 10px -2px rgba(15, 23, 42, 0.05);
     --grid-line: transparent;
     --ambient-glow: none;
 
@@ -126,52 +135,59 @@
 }
 
 /* ==========================================
-   MODO ESCURO — SLATE & INDIGO MODERNO
+   MODO ESCURO — AGENT ENGINE / CLORIO DARK
    ========================================== */
 [data-theme="dark"] {
     color-scheme: dark;
 
-    --bg: #0B0F19;
-    --surface: #111827;
-    --surface-2: #1E293B;
-    --surface-3: #334155;
-    --surface-sunk: #090D16;
-    --surface-hover: #1A2333;
+    --bg: #0A0D14;
+    --surface: #111622;
+    --surface-2: #161D2B;
+    --surface-3: #1F293D;
+    --surface-sunk: #070A10;
+    --surface-hover: #192132;
 
-    --line: #1E293B;
-    --line-strong: #334155;
-    --line-focus: #6366F1;
+    --line: #1E2738;
+    --line-strong: #2E3A52;
+    --line-focus: #3B82F6;
 
     --text: #F8FAFC;
     --text-2: #CBD5E1;
-    --muted: #94A3B8;
-    --faint: #64748B;
+    --muted: #8B9BB4;
+    --faint: #5E6E87;
 
-    --accent: #818CF8;
-    --accent-solid: #4F46E5;
-    --accent-hover: #4338CA;
+    --accent: #60A5FA;
+    --accent-solid: #2563EB;
+    --accent-hover: #1D4ED8;
     --accent-ink: #FFFFFF;
-    --accent-tint: rgba(99, 102, 241, 0.15);
-    --accent-border: rgba(99, 102, 241, 0.35);
-    --accent-gradient: linear-gradient(135deg, #4F46E5 0%, #6366F1 60%, #7C3AED 100%);
-    --accent-shadow: 0 6px 18px -3px rgba(79, 70, 229, 0.35);
+    --accent-tint: rgba(37, 99, 235, 0.16);
+    --accent-border: rgba(59, 130, 246, 0.35);
+    --accent-gradient: linear-gradient(180deg, #3B82F6 0%, #2563EB 100%);
+    --accent-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
 
-    --success: #10B981;
-    --success-ink: #34D399;
-    --success-tint: rgba(16, 185, 129, 0.14);
+    --success: #14B8A6;
+    --success-ink: #2DD4BF;
+    --success-tint: rgba(20, 184, 166, 0.14);
+    --success-border: rgba(20, 184, 166, 0.35);
+
     --warning: #F59E0B;
     --warning-ink: #FBBF24;
     --warning-tint: rgba(245, 158, 11, 0.14);
-    --danger: #EF4444;
-    --danger-ink: #F87171;
-    --danger-tint: rgba(239, 68, 68, 0.14);
+    --warning-border: rgba(245, 158, 11, 0.35);
+
+    --danger: #F43F5E;
+    --danger-ink: #FB7185;
+    --danger-tint: rgba(244, 63, 94, 0.14);
+    --danger-border: rgba(244, 63, 94, 0.35);
+
     --info: #38BDF8;
     --info-ink: #38BDF8;
     --info-tint: rgba(56, 189, 248, 0.14);
+    --info-border: rgba(56, 189, 248, 0.35);
 
-    --overlay: rgba(2, 6, 23, 0.7);
-    --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.25);
-    --shadow-pop: 0 12px 32px -4px rgba(0, 0, 0, 0.5);
+    --overlay: rgba(2, 6, 23, 0.72);
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-pop: 0 14px 34px -4px rgba(0, 0, 0, 0.6);
     --grid-line: transparent;
     --ambient-glow: none;
 }
