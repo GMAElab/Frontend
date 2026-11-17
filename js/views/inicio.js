@@ -103,17 +103,60 @@
     function renderAvisosDoGestor(resumo) {
         const avisos = [];
         const relatos = resumo.equipe.relatos;
+        const ptaAnual = resumo.equipe.pta_anual;
         if (resumo.cadastros_pendentes > 0) {
             avisos.push(['cadastro', `${resumo.cadastros_pendentes} pedido(s) de cadastro aguardando aprovação.`, 'admin', 'Abrir administração']);
         }
         if (relatos.aguardando_avaliacao > 0) {
             avisos.push(['relatos', `${relatos.aguardando_avaliacao} relato(s) do planejamento mensal aguardando sua avaliação.`, 'pta', 'Avaliar relatos']);
         }
+        if (resumo.papel === 'admin' && ptaAnual && ptaAnual.atrasados_qtd > 0) {
+            avisos.push(['pta anual', `${ptaAnual.atrasados_qtd} tópico(s) do planejamento anual com prazo vencido (< 100%).`, 'pta', 'Ver planejamento']);
+        }
         return avisos.map(([tag, texto, view, acao]) => `
             <div class="notice-row fade-in">
                 <p><span class="mono">${tag}</span>${texto}</p>
                 <button type="button" class="link-btn" onclick="UI.switchView('${view}')">${acao} ${window.Icon ? window.Icon('arrow-right', { size: 13 }) : ''}</button>
             </div>`).join('');
+    }
+
+    function renderPainelPrazosPTA(resumo) {
+        if (resumo.papel !== 'admin') return '';
+        const pta = resumo.equipe?.pta_anual;
+        if (!pta || (pta.atrasados_qtd === 0 && pta.vencem_neste_mes_qtd === 0)) return '';
+
+        const itens = [
+            ...(pta.atrasados || []).map(item => ({ ...item, tipo: 'atrasado' })),
+            ...(pta.vencem_neste_mes || []).map(item => ({ ...item, tipo: 'vence_mes' })),
+        ];
+
+        const cartoesHtml = itens.map(t => {
+            const anoCurto = String(t.ano || '').slice(-2);
+            const ini = String(t.mes_inicio || 1).padStart(2, '0');
+            const fim = String(t.mes_fim || 12).padStart(2, '0');
+            const prazoFmt = `${ini}/${anoCurto} → ${fim}/${anoCurto}`;
+            const badge = t.tipo === 'atrasado'
+                ? `<span class="badge badge-danger">atrasado · ${t.meses_atraso} ${t.meses_atraso === 1 ? 'mês' : 'meses'}</span>`
+                : `<span class="badge badge-warning">vence neste mês (${fim}/${anoCurto})</span>`;
+            const meterCls = t.tipo === 'atrasado' ? 'bad' : '';
+
+            return `
+                <article class="entry clickable" onclick="UI.switchView('pta')">
+                    <div class="entry-head" style="flex-wrap:wrap; gap:6px;">
+                        <h4 class="entry-title">${esc(t.titulo)}</h4>
+                        ${badge}
+                    </div>
+                    <p class="meta">previsão: <span class="mono">${prazoFmt}</span></p>
+                    <div class="meter">
+                        <div class="meter-track"><div class="meter-fill ${meterCls}" style="width:${t.avanco || 0}%"></div></div>
+                        <span class="meter-value">${t.avanco || 0}%</span>
+                    </div>
+                </article>
+            `;
+        }).join('');
+
+        const complemento = `${pta.atrasados_qtd} atrasado(s) · ${pta.concluidos} de ${pta.total} concluído(s)`;
+        return secao('Tópicos do PTA com prazo vencido ou no limite', complemento, `<div class="entries">${cartoesHtml}</div>`);
     }
 
     function pessoasRelevantes(pessoas) {
@@ -179,7 +222,8 @@
             <div class="columns">
                 ${secao('Precisa de atenção', restante > 0 ? `mais ${restante} em tarefas` : '', atencao)}
                 ${secao('Equipe', `relatos de ${esc(relatos.mes_nome)}: ${relatos.enviaram} de ${relatos.esperados}`, renderTabelaDePessoas(equipe))}
-            </div>`;
+            </div>
+            ${renderPainelPrazosPTA(resumo)}`;
     }
 
     // ==========================================

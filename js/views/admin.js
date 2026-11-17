@@ -494,9 +494,14 @@ async function loadAdminPtaTopics(container) {
             return;
         }
 
-        let html = '<div class="table-container"><table class="data-table"><thead><tr><th>Ano</th><th>Tópico</th><th class="end">Ações</th></tr></thead><tbody>';
+        let html = '<div class="table-container"><table class="data-table"><thead><tr><th>Ano</th><th>Previsão</th><th>Tópico</th><th class="end">Ações</th></tr></thead><tbody>';
         topicosUnicos.forEach(t => {
-            html += `<tr><td class="num">${t.ano}</td><td>${window.escapeHTML(t.titulo)}</td>
+            const anoCurto = String(t.ano || '').slice(-2);
+            const ini = String(t.mes_inicio || 1).padStart(2, '0');
+            const prazoStr = t.mes_fim
+                ? `<span class="mono">${ini}/${anoCurto} → ${String(t.mes_fim).padStart(2, '0')}/${anoCurto}</span>`
+                : '<span class="text-faint">Sem prazo</span>';
+            html += `<tr><td class="num">${t.ano}</td><td>${prazoStr}</td><td>${window.escapeHTML(t.titulo)}</td>
             <td><div class="row-actions">
                 <button class="link-btn" onclick="openDeepView('pta/topicos', ${t.id}, 'Tópico PTA')">Editar</button>
                 <button class="link-btn danger" onclick="adminDelete('pta/topicos', ${t.id}, 'pta')">Excluir</button>
@@ -648,9 +653,13 @@ window.openDeepView = async function(route, id, entityName) {
             "status": "Status",
             "titulo": "Título",
             "ano": "Ano",
+            "mes_inicio": "Mês de início",
+            "mes_fim": "Previsão de término (mês)",
             "is_active": "Conta ativa",
             "role": "Cargo"
         };
+
+        const nomesMeses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
         let html = '';
         for (const [key, value] of Object.entries(data)) {
@@ -658,6 +667,20 @@ window.openDeepView = async function(route, id, entityName) {
             if (typeof value === 'object' && value !== null) continue;
 
             const labelAmigavel = tradutorDeRotulos[key] || key;
+
+            if (key === 'mes_inicio' || key === 'mes_fim') {
+                const valNum = value ? parseInt(value, 10) : (key === 'mes_inicio' ? 1 : '');
+                html += `
+                    <div class="input-group">
+                        <label for="dv-input-${key}">${labelAmigavel}</label>
+                        <select id="dv-input-${key}" class="form-control">
+                            ${key === 'mes_fim' ? `<option value="" ${!valNum ? 'selected' : ''}>Sem prazo definido</option>` : ''}
+                            ${nomesMeses.map((m, idx) => `<option value="${idx + 1}" ${valNum === idx + 1 ? 'selected' : ''}>${String(idx + 1).padStart(2, '0')} · ${m}</option>`).join('')}
+                        </select>
+                    </div>
+                `;
+                continue;
+            }
 
             if (key === 'role') {
                 const papeis = ['pesquisador', 'tecnico', 'coordenador', 'admin'];
@@ -723,6 +746,8 @@ async function saveDeepView(route, id, originalData) {
             payload[key] = input.checked ? 1 : 0;
         } else if (key === 'ano') {
             payload[key] = parseInt(input.value, 10) || origVal;
+        } else if (key === 'mes_inicio' || key === 'mes_fim') {
+            payload[key] = input.value ? parseInt(input.value, 10) : null;
         } else {
             payload[key] = input.value;
         }

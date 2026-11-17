@@ -48,6 +48,151 @@ function resolverNomeTopicoPTA(rel) {
     return 'Tópico não identificado';
 }
 
+function obterDadosConclusaoTopico(topicoId) {
+    if (!topicoId || !Array.isArray(window.meusPtasCache)) return { concluido: false, meses: [] };
+    const idNum = parseInt(topicoId, 10);
+    const consolidados = window.meusPtasCache
+        .filter(r => r.topico_id == idNum && r.status === 'consolidado')
+        .sort((a, b) => (a.ano_referencia - b.ano_referencia) || (a.mes_referencia - b.mes_referencia));
+
+    const atingiu100 = consolidados.some(r => (r.percentual_avanco || 0) >= 100);
+    if (!atingiu100 || consolidados.length === 0) {
+        return { concluido: false, meses: consolidados };
+    }
+
+    const primeiro = consolidados[0];
+    const ultimo = consolidados.find(r => (r.percentual_avanco || 0) >= 100) || consolidados[consolidados.length - 1];
+    const spanMeses = Math.max(1, ((ultimo.ano_referencia - primeiro.ano_referencia) * 12) + (ultimo.mes_referencia - primeiro.mes_referencia) + 1);
+
+    return {
+        concluido: true,
+        meses: consolidados,
+        primeiro,
+        ultimo,
+        qtdRegistros: consolidados.length,
+        duracaoMeses: spanMeses
+    };
+}
+
+function formatarPrazoTopicoPTA(topico) {
+    if (!topico || !topico.mes_fim) return `${topico?.ano || ''}`;
+    const ini = String(topico.mes_inicio || 1).padStart(2, '0');
+    const fim = String(topico.mes_fim).padStart(2, '0');
+    const anoCurto = String(topico.ano || '').slice(-2);
+    return `${ini}/${anoCurto} → ${fim}/${anoCurto}`;
+}
+
+window.atualizarIndicacaoTopicosConcluidos = function() {
+    const select = document.getElementById('pta-topico');
+    if (!select || !Array.isArray(window.topicosPtaCache) || window.topicosPtaCache.length === 0) return;
+
+    const valorAtual = select.value || localStorage.getItem('pta_ultimo_topico') || '';
+    let html = '<option value="">Selecione um tópico...</option>';
+    window.topicosPtaCache.forEach(t => {
+        const info = obterDadosConclusaoTopico(t.id);
+        const prazoStr = formatarPrazoTopicoPTA(t);
+        const tituloBase = `${t.titulo} (${prazoStr})`;
+        const label = info.concluido ? `✓ [Concluído 100%] ${tituloBase}` : tituloBase;
+        html += `<option value="${t.id}" data-titulo="${window.escapeHTML(tituloBase)}">${window.escapeHTML(label)}</option>`;
+    });
+    select.innerHTML = html;
+    if (valorAtual && select.querySelector(`option[value="${valorAtual}"]`)) {
+        select.value = valorAtual;
+    }
+};
+
+window.abrirModalTopicoConcluido = function(topicoId) {
+    const id = topicoId || document.getElementById('pta-topico')?.value;
+    if (!id) return;
+    const info = obterDadosConclusaoTopico(id);
+    if (!info.concluido) return;
+
+    const topicoObj = (window.topicosPtaCache || []).find(t => t.id == id);
+    const nomeTopico = topicoObj ? `${topicoObj.titulo} (${topicoObj.ano})` : resolverNomeTopicoPTA(info.ultimo);
+
+    const fmtMesAno = (r) => `${String(r.mes_referencia).padStart(2, '0')}/${r.ano_referencia}`;
+    const fmtMesExtenso = (r) => {
+        const m = MESES_DO_ANO[(r.mes_referencia || 1) - 1] || String(r.mes_referencia).padStart(2, '0');
+        return `${m[0].toUpperCase() + m.slice(1)} de ${r.ano_referencia}`;
+    };
+
+    const periodoTexto = info.primeiro.mes_referencia === info.ultimo.mes_referencia && info.primeiro.ano_referencia === info.ultimo.ano_referencia
+        ? fmtMesAno(info.ultimo)
+        : `${fmtMesAno(info.primeiro)} a ${fmtMesAno(info.ultimo)}`;
+
+    const tempoTexto = info.duracaoMeses === 1 ? '1 mês' : `${info.duracaoMeses} meses`;
+    const relatosTexto = info.qtdRegistros === 1 ? '1 mês consolidado' : `${info.qtdRegistros} meses consolidados`;
+
+    const listaMesesHtml = info.meses.map(rel => `
+        <article class="entry">
+            <div class="entry-head">
+                <h4 class="entry-title">${window.escapeHTML(fmtMesExtenso(rel))} (${fmtMesAno(rel)})</h4>
+                <span class="mono">${rel.percentual_avanco || 0}%</span>
+            </div>
+            <div class="meter">
+                <div class="meter-track"><div class="meter-fill ok" style="width:${rel.percentual_avanco || 0}%"></div></div>
+                <span class="meter-value">${rel.percentual_avanco || 0}%</span>
+            </div>
+            <p class="entry-body pre-wrap">${window.escapeHTML(rel.descricao_atividades || 'Sem descrição.')}</p>
+        </article>
+    `).join('');
+
+    const modalId = 'modal-topico-concluido';
+    document.getElementById(modalId)?.remove();
+
+    const modal = document.createElement('div');
+    modal.id = modalId;
+    modal.className = 'modal-overlay';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <div>
+                    <p class="eyebrow">tópico concluído · 100% de avanço</p>
+                    <h3>${window.escapeHTML(nomeTopico)}</h3>
+                </div>
+                <button type="button" class="modal-close" onclick="document.getElementById('${modalId}')?.remove()" aria-label="Fechar">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>
+                </button>
+            </div>
+
+            <div class="note" style="margin-bottom:var(--space-4);">
+                <p style="margin:0;"><strong>Este tópico já foi finalizado (100%).</strong> Não é necessário preencher novos planejamentos mensais para ele. Confira abaixo o resumo do tempo gasto e o histórico de todos os meses realizados.</p>
+            </div>
+
+            <div class="figures" style="margin-bottom:var(--space-4);">
+                <div class="figure">
+                    <span class="v">100%</span>
+                    <span class="k">status concluído</span>
+                </div>
+                <div class="figure">
+                    <span class="v">${window.escapeHTML(tempoTexto)}</span>
+                    <span class="k">duração (${window.escapeHTML(periodoTexto)})</span>
+                </div>
+                <div class="figure">
+                    <span class="v">${info.qtdRegistros}</span>
+                    <span class="k">${window.escapeHTML(relatosTexto)}</span>
+                </div>
+            </div>
+
+            <div class="section-head">
+                <h3>Meses realizados neste tópico</h3>
+            </div>
+            <div class="entries scroll-pane" style="max-height:360px;">
+                ${listaMesesHtml}
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('${modalId}')?.remove()">Entendi</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.remove();
+    });
+};
+
 async function carregarDropdownTopicos(selectId) {
     const select = document.getElementById(selectId);
     if (!select) return;
@@ -64,11 +209,12 @@ async function carregarDropdownTopicos(selectId) {
 
         let html = '<option value="">Selecione um tópico...</option>';
         topicos.forEach(t => {
-            html += `<option value="${t.id}">${window.escapeHTML(t.titulo)} (${t.ano})</option>`;
+            html += `<option value="${t.id}" data-titulo="${window.escapeHTML(t.titulo)} (${t.ano})">${window.escapeHTML(t.titulo)} (${t.ano})</option>`;
         });
         select.innerHTML = html;
 
         if (selectId === 'pta-topico') {
+            window.atualizarIndicacaoTopicosConcluidos();
             const ultimoTopico = localStorage.getItem('pta_ultimo_topico');
             if (ultimoTopico && select.querySelector(`option[value="${ultimoTopico}"]`)) {
                 select.value = ultimoTopico;
@@ -76,7 +222,7 @@ async function carregarDropdownTopicos(selectId) {
             }
         }
 
-        setTimeout(atualizarAvisoUltimoPTA, 300);
+        setTimeout(() => window.atualizarAvisoUltimoPTA(false), 300);
 
     } catch (err) {
         select.innerHTML = '<option value="">Erro ao carregar tópicos</option>';
@@ -111,7 +257,14 @@ function renderPTAPesquisador() {
                 <form id="form-pta">
                     <div class="input-group">
                         <label for="pta-topico">Tópico de pesquisa</label>
-                        <select id="pta-topico" required onchange="localStorage.setItem('pta_ultimo_topico', this.value); window.atualizarAvisoUltimoPTA(); window.carregarPTAUnificadoEquipe(); window.renderizarListaMeusPTAs && window.renderizarListaMeusPTAs()"></select>
+                        <select id="pta-topico" required onchange="localStorage.setItem('pta_ultimo_topico', this.value); window.atualizarAvisoUltimoPTA(true); window.carregarPTAUnificadoEquipe(); window.renderizarListaMeusPTAs && window.renderizarListaMeusPTAs()"></select>
+                    </div>
+
+                    <div id="aviso-topico-concluido" class="note hidden" style="margin-bottom:var(--space-4);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+                            <p style="margin:0;"><strong>Tópico já concluído (100%).</strong> Este tópico foi finalizado e não recebe novos envios.</p>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="window.abrirModalTopicoConcluido()">Ver resumo e meses realizados</button>
+                        </div>
                     </div>
 
                     <div class="field-grid">
@@ -324,13 +477,49 @@ function obterUltimoRelatoDoTopico(topicoId) {
     return doTopico[0];
 }
 
-window.atualizarAvisoUltimoPTA = function() {
+window.atualizarAvisoUltimoPTA = function(abrirModalSeConcluido = false) {
     const topicoElement = document.getElementById('pta-topico');
     if (!topicoElement) return;
     atualizarResumoPTA();
 
     const topicoId = topicoElement.value;
     const inputAvanco = document.getElementById('pta-avanco');
+    const inputAvancoNum = document.getElementById('pta-avanco-num');
+    const textareaDesc = document.getElementById('pta-descricao');
+    const btnSubmit = document.querySelector('#form-pta button[type="submit"]');
+    const avisoConcluido = document.getElementById('aviso-topico-concluido');
+
+    const infoConclusao = obterDadosConclusaoTopico(topicoId);
+    if (infoConclusao.concluido && !window.ptaEditandoId) {
+        if (avisoConcluido) avisoConcluido.classList.remove('hidden');
+        definirMinimoAvanco(100, true);
+        if (inputAvanco) inputAvanco.disabled = true;
+        if (inputAvancoNum) inputAvancoNum.disabled = true;
+        if (textareaDesc) {
+            textareaDesc.disabled = true;
+            textareaDesc.placeholder = "Este tópico já atingiu 100% de avanço e foi concluído.";
+        }
+        if (btnSubmit) {
+            btnSubmit.disabled = true;
+            btnSubmit.innerText = "Tópico já concluído (100%)";
+        }
+        if (abrirModalSeConcluido) {
+            window.abrirModalTopicoConcluido(topicoId);
+        }
+        return;
+    } else {
+        if (avisoConcluido) avisoConcluido.classList.add('hidden');
+        if (inputAvanco) inputAvanco.disabled = false;
+        if (inputAvancoNum) inputAvancoNum.disabled = false;
+        if (textareaDesc) {
+            textareaDesc.disabled = false;
+            textareaDesc.placeholder = "Experimentos realizados, resultados obtidos, próximos passos";
+        }
+        if (btnSubmit) {
+            btnSubmit.disabled = false;
+            btnSubmit.innerText = window.ptaEditandoId ? "Atualizar Planejamento Mensal" : "Enviar planejamento";
+        }
+    }
 
     if (!topicoId || !window.meusPtasCache || window.meusPtasCache.length === 0) {
         if (inputAvanco) definirMinimoAvanco(0);
@@ -429,9 +618,10 @@ async function carregarMeusPTAs() {
         relatorios.sort((a, b) => b.ano_referencia - a.ano_referencia || b.mes_referencia - a.mes_referencia);
         window.meusPtasCache = relatorios;
 
+        window.atualizarIndicacaoTopicosConcluidos();
         window.renderizarListaMeusPTAs();
         window.carregarPTAUnificadoEquipe();
-        setTimeout(atualizarAvisoUltimoPTA, 100);
+        setTimeout(() => window.atualizarAvisoUltimoPTA(false), 100);
     } catch (err) {
         if (container) container.innerHTML = window.UI.errorState('Erro ao carregar histórico.');
     }
@@ -588,8 +778,23 @@ function renderPTACoordenador() {
                     </div>
                     <div class="input-group">
                         <label for="novo-topico-ano">Ano vigente</label>
-                        <input type="number" id="novo-topico-ano" class="mono" value="${anoAtual}" required>
+                        <input type="number" id="novo-topico-ano" class="mono" value="${anoAtual}" required oninput="window.atualizarPreviewPrazoNovoTopico()">
                     </div>
+                    <div class="field-grid">
+                        <div class="input-group">
+                            <label for="novo-topico-mes-inicio">Mês de início</label>
+                            <select id="novo-topico-mes-inicio" required onchange="window.atualizarPreviewPrazoNovoTopico()">
+                                ${MESES_DO_ANO.map((nome, i) => `<option value="${i + 1}" ${i === 0 ? 'selected' : ''}>${String(i + 1).padStart(2, '0')} · ${nome[0].toUpperCase() + nome.slice(1)}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label for="novo-topico-mes-fim">Previsão de término</label>
+                            <select id="novo-topico-mes-fim" required onchange="window.atualizarPreviewPrazoNovoTopico()">
+                                ${MESES_DO_ANO.map((nome, i) => `<option value="${i + 1}" ${i === 11 ? 'selected' : ''}>${String(i + 1).padStart(2, '0')} · ${nome[0].toUpperCase() + nome.slice(1)}</option>`).join('')}
+                            </select>
+                        </div>
+                    </div>
+                    <p class="help" id="preview-prazo-novo-topico" style="margin-top:-4px; margin-bottom:var(--space-3);">Previsão: 01/${String(anoAtual).slice(-2)} → 12/${String(anoAtual).slice(-2)}</p>
                     <button type="submit" class="btn btn-secondary">Cadastrar tópico</button>
                 </form>
             </section>
@@ -831,11 +1036,37 @@ window.gerarSinteseIA = async function() {
     }
 }
 
+window.atualizarPreviewPrazoNovoTopico = function() {
+    const anoEl = document.getElementById('novo-topico-ano');
+    const iniEl = document.getElementById('novo-topico-mes-inicio');
+    const fimEl = document.getElementById('novo-topico-mes-fim');
+    const prevEl = document.getElementById('preview-prazo-novo-topico');
+    if (!anoEl || !iniEl || !fimEl || !prevEl) return;
+
+    const ini = parseInt(iniEl.value, 10) || 1;
+    let fim = parseInt(fimEl.value, 10) || 12;
+    if (fim < ini) {
+        fim = ini;
+        fimEl.value = String(fim);
+    }
+    const anoCurto = String(anoEl.value || '').slice(-2);
+    const qtdMeses = fim - ini + 1;
+    prevEl.textContent = `Previsão no ano: ${String(ini).padStart(2, '0')}/${anoCurto} → ${String(fim).padStart(2, '0')}/${anoCurto} (${qtdMeses} ${qtdMeses === 1 ? 'mês' : 'meses'})`;
+};
+
 async function criarTopicoAction(e) {
     e.preventDefault();
+    const mesInicio = parseInt(document.getElementById('novo-topico-mes-inicio')?.value, 10) || 1;
+    const mesFim = parseInt(document.getElementById('novo-topico-mes-fim')?.value, 10) || 12;
+    if (mesFim < mesInicio) {
+        window.UI.showToast("O mês de término não pode ser anterior ao mês de início.", "error");
+        return;
+    }
     const payload = {
         titulo: document.getElementById('novo-topico-titulo').value,
-        ano: parseInt(document.getElementById('novo-topico-ano').value)
+        ano: parseInt(document.getElementById('novo-topico-ano').value, 10),
+        mes_inicio: mesInicio,
+        mes_fim: mesFim
     };
 
     const btn = e.target.querySelector('button');
