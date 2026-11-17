@@ -20,14 +20,42 @@ function routerPTA() {
 // ==========================================
 // CARREGAR TÓPICOS
 // ==========================================
+async function buscarTopicosPTA() {
+    const res = await window.api.fetchProtected('/pta/topicos');
+    const topicos = await res.json();
+    window.topicosPtaCache = Array.isArray(topicos) ? topicos : [];
+    return window.topicosPtaCache;
+}
+
+function resolverNomeTopicoPTA(rel) {
+    if (rel && rel.topico_titulo) {
+        return rel.topico_ano ? `${rel.topico_titulo} (${rel.topico_ano})` : rel.topico_titulo;
+    }
+    const topicoId = rel ? rel.topico_id : null;
+    if (topicoId !== null && topicoId !== undefined) {
+        const topicoCache = (window.topicosPtaCache || []).find(t => t.id == topicoId);
+        if (topicoCache && topicoCache.titulo) {
+            return topicoCache.ano ? `${topicoCache.titulo} (${topicoCache.ano})` : topicoCache.titulo;
+        }
+        const selectTopico = document.getElementById('pta-topico') || document.getElementById('ia-topico-id');
+        if (selectTopico) {
+            const opt = Array.from(selectTopico.options).find(o => o.value == topicoId);
+            if (opt && opt.value) {
+                return opt.text;
+            }
+        }
+    }
+    return 'Tópico não identificado';
+}
+
 async function carregarDropdownTopicos(selectId) {
     const select = document.getElementById(selectId);
     if (!select) return;
     select.innerHTML = '<option value="">Carregando tópicos...</option>';
 
     try {
-        const res = await window.api.fetchProtected('/pta/topicos');
-        const topicos = await res.json();
+        window.topicosPtaPromise = buscarTopicosPTA();
+        const topicos = await window.topicosPtaPromise;
 
         if (topicos.length === 0) {
             select.innerHTML = '<option value="">Nenhum tópico encontrado</option>';
@@ -305,7 +333,10 @@ window.atualizarAvisoUltimoPTA = function() {
 async function carregarMeusPTAs() {
     const container = document.getElementById('meus-ptas-lista');
     try {
-        const res = await window.api.fetchProtected('/pta/meus-relatorios');
+        const [res] = await Promise.all([
+            window.api.fetchProtected('/pta/meus-relatorios'),
+            window.topicosPtaPromise ? window.topicosPtaPromise.catch(() => null) : Promise.resolve()
+        ]);
         const relatorios = await res.json();
 
         if (relatorios.length === 0) {
@@ -334,14 +365,7 @@ async function carregarMeusPTAs() {
                 meterClass = 'bad';
             }
 
-            let nomeTopicoFormatado = `Tópico ID: ${rel.topico_id}`;
-            const selectTopico = document.getElementById('pta-topico');
-            if (selectTopico) {
-                const opt = Array.from(selectTopico.options).find(o => o.value == rel.topico_id);
-                if (opt) {
-                    nomeTopicoFormatado = opt.text;
-                }
-            }
+            const nomeTopicoFormatado = resolverNomeTopicoPTA(rel);
 
             let btnEditar = '';
             if (rel.status !== 'consolidado') {
@@ -611,7 +635,10 @@ window.carregarPendenciasChefia = async function(mes, ano) {
     container.innerHTML = window.UI.loading();
 
     try {
-        const res = await window.api.fetchProtected(`/pta/chefia/pendentes?mes=${mes}&ano=${ano}`);
+        const [res] = await Promise.all([
+            window.api.fetchProtected(`/pta/chefia/pendentes?mes=${mes}&ano=${ano}`),
+            window.topicosPtaPromise ? window.topicosPtaPromise.catch(() => null) : Promise.resolve()
+        ]);
         const relatorios = await res.json();
 
         if (relatorios.length === 0) {
@@ -630,12 +657,15 @@ window.carregarPendenciasChefia = async function(mes, ano) {
                 notasHtml += '</div>';
             }
 
+            const nomeTopico = resolverNomeTopicoPTA(rel);
+
             html += `
                 <article class="entry" id="card-relatorio-${rel.id}">
                     <div class="entry-head">
                         <h4 class="entry-title">${window.escapeHTML(rel.usuario_nome || `Usuário #${rel.usuario_id}`)}</h4>
                         <span class="mono">${rel.percentual_avanco || 0}%</span>
                     </div>
+                    <p class="meta">${window.escapeHTML(nomeTopico)}</p>
                     <p class="entry-body pre-wrap">${window.escapeHTML(rel.descricao_atividades || 'Sem descrição')}</p>
 
                     ${notasHtml}
