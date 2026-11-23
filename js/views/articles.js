@@ -25,6 +25,11 @@ document.addEventListener('viewChanged', (e) => {
                     <button onclick="pesquisarArtigos(1)" class="btn btn-primary">Pesquisar</button>
                 </div>
                 <div class="toolbar">
+                    <select id="filter-source" class="form-control" onchange="pesquisarArtigos(1)" aria-label="Base científica">
+                        <option value="all">Todas as bases (Scopus + OpenAlex)</option>
+                        <option value="scopus">Apenas Scopus (Elsevier)</option>
+                        <option value="openalex">Apenas OpenAlex</option>
+                    </select>
                     <select id="filter-ano" class="form-control" onchange="pesquisarArtigos(1)" aria-label="Período">
                         <option value="">Qualquer data</option>
                         <option value="2025">Desde 2025</option>
@@ -35,7 +40,12 @@ document.addEventListener('viewChanged', (e) => {
                     <select id="filter-sort" class="form-control" onchange="pesquisarArtigos(1)" aria-label="Ordenação">
                         <option value="">Por relevância</option>
                         <option value="recentes">Mais recentes</option>
+                        <option value="citacoes">Mais citados</option>
                     </select>
+                    <label class="meta" style="display:inline-flex; align-items:center; gap:6px; cursor:pointer; white-space:nowrap;">
+                        <input type="checkbox" id="filter-oa" onchange="pesquisarArtigos(1)">
+                        Acesso aberto
+                    </label>
                 </div>
             </div>
 
@@ -87,19 +97,39 @@ window.renderizarCards = function(artigos, modo) {
             botaoAcaoHTML = `<button onclick="removerArtigo(${art.id})" class="link-btn danger">Remover dos salvos</button>`;
         }
 
-        const linkUrl = art.url_pdf || art.url_artigo || '#';
-        const linkTexto = art.url_pdf ? 'Baixar PDF' : 'Abrir na editora';
-        const botaoLinkHTML = linkUrl !== '#' ? `<a href="${window.escapeHTML(linkUrl)}" target="_blank" rel="noopener" class="link-btn">${linkTexto}</a>` : '';
+        const fontes = Array.isArray(art.fontes) ? art.fontes : [];
+        const badgesHTML = [
+            ...fontes.map(f => `<span class="badge ${f === 'OpenAlex' ? 'badge-info' : ''}">${window.escapeHTML(f)}</span>`),
+            art.open_access ? '<span class="badge badge-success">Acesso aberto</span>' : '',
+        ].filter(Boolean).join(' ');
+
+        const metaPartes = [
+            window.escapeHTML(art.autores || 'Autoria desconhecida'),
+            window.escapeHTML(art.ano || 's.d.'),
+            art.revista ? window.escapeHTML(art.revista) : '',
+            typeof art.citacoes === 'number' && art.citacoes > 0 ? `${art.citacoes} citações` : '',
+        ].filter(Boolean).join(' · ');
+
+        const botoesLink = [];
+        if (art.url_pdf) {
+            botoesLink.push(`<a href="${window.escapeHTML(art.url_pdf)}" target="_blank" rel="noopener" class="link-btn">${window.Icon ? window.Icon('download', { size: 13 }) : ''} Baixar PDF</a>`);
+        }
+        if (art.url_artigo && art.url_artigo !== art.url_pdf) {
+            botoesLink.push(`<a href="${window.escapeHTML(art.url_artigo)}" target="_blank" rel="noopener" class="link-btn">${window.Icon ? window.Icon('external-link', { size: 13 }) : ''} Abrir na editora</a>`);
+        }
+
+        const resumoTexto = art.resumo
+            ? (art.resumo.length > 340 ? window.escapeHTML(art.resumo.substring(0, 340)) + '...' : window.escapeHTML(art.resumo))
+            : '<span class="text-faint">Sem resumo disponível.</span>';
 
         return `
         <article class="entry">
+            ${badgesHTML ? `<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px;">${badgesHTML}</div>` : ''}
             <h3 class="entry-title">${window.escapeHTML(art.titulo)}</h3>
-            <p class="meta">${window.escapeHTML(art.autores || 'Autoria desconhecida')} · ${window.escapeHTML(art.ano || 's.d.')}</p>
-            <p class="entry-body">
-                ${art.resumo ? window.escapeHTML(art.resumo).substring(0, 300) + '...' : '<span class="text-faint">Sem resumo disponível.</span>'}
-            </p>
+            <p class="meta">${metaPartes}</p>
+            <p class="entry-body">${resumoTexto}</p>
             <div class="entry-foot">
-                ${botaoLinkHTML}
+                ${botoesLink.join('')}
                 ${botaoAcaoHTML}
             </div>
         </article>`;
@@ -114,7 +144,7 @@ window.renderizarPaginacao = function(qtdResultadosRecebidos) {
     pagArea.classList.remove('hidden');
     document.getElementById('page-indicator').innerText = `página ${window.currentPage}`;
     btnPrev.style.visibility = window.currentPage > 1 ? 'visible' : 'hidden';
-    btnNext.style.visibility = qtdResultadosRecebidos === 20 ? 'visible' : 'hidden';
+    btnNext.style.visibility = qtdResultadosRecebidos >= 10 ? 'visible' : 'hidden';
 };
 
 window.mudarPagina = function(direcao) {
@@ -129,21 +159,24 @@ window.mudarPagina = function(direcao) {
 // 3. COMUNICAÇÃO COM A API E FILTROS LOCAIS
 // ==========================================
 window.pesquisarArtigos = async function(paginaSolicitada = 1) {
-    const query = document.getElementById('search-input').value;
+    const query = document.getElementById('search-input').value.trim();
     if (!query) return;
 
     window.currentPage = paginaSolicitada;
 
-    const ano = document.getElementById('filter-ano').value;
-    const sort = document.getElementById('filter-sort').value;
+    const source = document.getElementById('filter-source')?.value || 'all';
+    const ano = document.getElementById('filter-ano')?.value || '';
+    const sort = document.getElementById('filter-sort')?.value || '';
+    const onlyOa = !!document.getElementById('filter-oa')?.checked;
 
-    document.getElementById('articles-results').innerHTML = window.UI.loading('Consultando as bases');
+    document.getElementById('articles-results').innerHTML = window.UI.loading('Consultando Scopus e OpenAlex');
     document.getElementById('pagination-area').classList.add('hidden');
 
     try {
-        let url = `/articles/search?query=${encodeURIComponent(query)}&page=${window.currentPage}`;
-        if (ano) url += `&year=${ano}`;
-        if (sort) url += `&sort=${sort}`;
+        let url = `/articles/search?query=${encodeURIComponent(query)}&page=${window.currentPage}&source=${encodeURIComponent(source)}`;
+        if (ano) url += `&year=${encodeURIComponent(ano)}`;
+        if (sort) url += `&sort=${encodeURIComponent(sort)}`;
+        if (onlyOa) url += '&only_oa=true';
 
         const res = await window.api.fetchProtected(url);
         if (!res.ok) throw new Error("Erro na requisição");
@@ -199,11 +232,22 @@ window.salvarArtigo = async function(index) {
     const artigo = window.artigosBuscaCache[index];
     if (!artigo) return;
 
+    const anoNum = Number(artigo.ano);
+    const payload = {
+        doi: artigo.doi || null,
+        titulo: artigo.titulo,
+        autores: artigo.autores || null,
+        ano: Number.isFinite(anoNum) && anoNum > 0 ? anoNum : null,
+        resumo: artigo.resumo || null,
+        url_artigo: artigo.url_artigo || null,
+        url_pdf: artigo.url_pdf || null,
+    };
+
     try {
         const res = await window.api.fetchProtected('/articles/save', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(artigo)
+            body: JSON.stringify(payload)
         });
 
         if (!res.ok) throw new Error("Falha ao salvar");
