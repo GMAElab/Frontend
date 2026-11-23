@@ -1,5 +1,5 @@
 // ==========================================
-// SALVAGUARDAS: PROTEÇÃO CONTRA ERROS E ACESSIBILIDADE
+// PROTEÇÃO CONTRA ERROS E ACESSIBILIDADE
 // Comportamentos aplicados ao sistema inteiro, sem
 // depender de cada tela:
 //   · modais com foco gerenciado e anunciados como diálogo
@@ -23,7 +23,7 @@
     const focaveis = (raiz) => Array.from(raiz.querySelectorAll(FOCAVEIS)).filter(el => el.offsetParent !== null);
 
     // ==========================================
-    // MODAIS: PAPEL, FOCO E PILHA
+    // MODAIS
     // ==========================================
     let abertos = [];
 
@@ -45,7 +45,6 @@
 
         setTimeout(() => {
             if (!modal.isConnected || conteudo.contains(document.activeElement)) return;
-            // Com formulário: cursor no primeiro campo. Sem formulário: o leitor de tela começa pelo título.
             const form = conteudo.querySelector('form');
             const campo = form && Array.from(form.querySelectorAll('input, select, textarea'))
                 .find(el => el.offsetParent !== null && !el.readOnly && !el.disabled && el.type !== 'hidden' && el.type !== 'file');
@@ -83,7 +82,6 @@
         return null;
     }
 
-    // Tab não escapa para a página atrás do modal.
     document.addEventListener('keydown', (e) => {
         if (e.key !== 'Tab' || document.querySelector('.cmdk-overlay')) return;
         const topo = modalDoTopo();
@@ -141,7 +139,6 @@
 
     // ==========================================
     // RASCUNHOS
-    // Ficam no navegador, separados por pessoa, por 7 dias.
     // ==========================================
     function donoDosRascunhos() {
         try {
@@ -292,7 +289,6 @@
     function formDoSucesso(origem) {
         if (origem && origem.tagName === 'FORM') return origem;
         if (origem && origem.form) return origem.form;
-        // Envio confirmado num diálogo intermediário (ex.: "Enviar assim mesmo").
         if (ultimoEnvio && Date.now() - ultimoEnvio.em < JANELA_DO_ULTIMO_ENVIO_MS) return ultimoEnvio.form;
         return null;
     }
@@ -331,7 +327,6 @@
             const acao = (el.getAttribute('onclick') || '').trim();
             if (/^event\.stopPropagation\(\);?$/.test(acao)) return;
             el.tabIndex = 0;
-            // Linha de tabela continua linha para o leitor de tela.
             if (el.tagName !== 'TR' && !el.hasAttribute('role')) el.setAttribute('role', 'button');
             if (el.tagName === 'IMG' && !el.getAttribute('alt')) el.setAttribute('alt', el.title || 'Abrir imagem em tamanho real');
         });
@@ -390,8 +385,6 @@
 
     // ==========================================
     // OBSERVAÇÃO DO DOM
-    // Uma vez por lote de mudanças, logo em seguida (microtarefa):
-    // o modal precisa estar registrado antes de a pessoa digitar.
     // ==========================================
     let agendado = false;
     function agendar() {

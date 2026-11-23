@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="dark">
+<html lang="pt-BR" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,9 +10,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap">
-    <link rel="stylesheet" href="css/global.css?v=18">
-    <link rel="stylesheet" href="css/layout.css?v=18">
-    <link rel="stylesheet" href="css/components.css?v=18">
+    <link rel="stylesheet" href="css/global.css?v=19">
+    <link rel="stylesheet" href="css/layout.css?v=19">
+    <link rel="stylesheet" href="css/components.css?v=19">
 </head>
 <body class="dashboard-layout">
 
@@ -68,8 +68,22 @@
                 <button class="icon-btn bordered menu-toggle" id="menu-toggle" aria-label="Abrir menu">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="4" y1="8" x2="20" y2="8"/><line x1="4" y1="16" x2="20" y2="16"/></svg>
                 </button>
+                <nav class="breadcrumbs" aria-label="Navegação atual">
+                    <span>Laboratório</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <strong id="current-page-title">Início</strong>
+                </nav>
             </div>
             <div class="topbar-right">
+                <button id="btn-palette" type="button" class="topbar-search" aria-label="Pesquisar ou abrir a paleta de comandos">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16.65" y2="16.65"/></svg>
+                    <span>Buscar</span>
+                    <kbd>Ctrl K</kbd>
+                </button>
+                <div class="sys-status" id="sys-status" title="Conectado">
+                    <span class="dot"></span>
+                    <span class="label">online</span>
+                </div>
                 <button id="btn-setup-2fa" onclick="abrirSetup2FA()" class="link-btn" style="display: none;"><span class="long">Ativar verificação em duas etapas</span><span class="short">Ativar 2FA</span></button>
             </div>
         </header>
@@ -326,8 +340,8 @@
     <script src="js/views/pta.js?v=17"></script>
     <script src="js/views/tarefas.js?v=7"></script>
     <script src="js/views/pops.js?v=292"></script>
-    <script src="js/views/admin.js?v=555"></script>
+    <script src="js/views/admin.js?v=556"></script>
     <script src="js/views/articles.js?v=3"></script>
-    <script src="js/views/rspace.js?v=2"></script>
+    <script src="js/views/rspace.js?v=3"></script>
 </body>
 </html>

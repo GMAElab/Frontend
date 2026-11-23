@@ -288,6 +288,9 @@
                     <h1>${saudacao}, ${esc(primeiroNome)}.</h1>
                     <p class="lede">Painel operacional de pesquisa, procedimentos e entregas do laboratório GMAE / LEQM.</p>
                 </div>
+                <div class="page-actions">
+                    <span class="workspace-badge"><span class="dot"></span> operação ativa</span>
+                </div>
             </header>
             <div id="painel-inicio">${window.UI.loading('Carregando o painel')}</div>`;
 

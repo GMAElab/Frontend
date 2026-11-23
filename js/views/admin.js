@@ -302,25 +302,41 @@ window.configurarRSpaceUsuario = function (userId, nome, temChave) {
         btnDel.onclick = async () => {
             const ok = await window.UI.confirm(`Remover a chave pessoal de ${nome}? Ele(a) voltará para o modo híbrido (chave compartilhada com carimbo de autoria).`, { danger: true });
             if (!ok) return;
-            const res = await window.api.fetchProtected(`/rspace/admin/users/${userId}/config`, { method: 'DELETE' });
+            const stepUpToken = await window.api.confirmStepUp({
+                title: 'Confirme para remover a chave RSpace',
+                message: `Você está removendo a API Key pessoal do RSpace de ${nome}.`,
+            });
+            if (!stepUpToken) return;
+            const res = await window.api.fetchProtected(`/rspace/admin/users/${userId}/config`, {
+                method: 'DELETE',
+                headers: { 'X-Step-Up-Token': stepUpToken },
+            });
+            const data = await res.json().catch(() => ({}));
             if (res.ok) {
                 window.UI.showToast(`Chave pessoal de ${nome} removida.`, 'info');
                 modal.remove();
                 switchUserTab('active');
             } else {
-                window.UI.showToast('Erro ao remover chave.', 'error');
+                window.UI.showToast(data.detail || 'Erro ao remover chave.', 'error');
             }
         };
     }
 
     document.getElementById('form-admin-rspace-user').onsubmit = async (e) => {
         e.preventDefault();
+        const stepUpToken = await window.api.confirmStepUp({
+            title: 'Confirme para vincular chave RSpace',
+            message: `Você está configurando a API Key pessoal do RSpace de ${nome}.`,
+        });
+        if (!stepUpToken) return;
+
         const btn = document.getElementById('btn-adm-rspace-save');
         btn.disabled = true;
         btn.textContent = 'Validando no RSpace...';
         try {
             const res = await window.api.fetchProtected(`/rspace/admin/users/${userId}/config`, {
                 method: 'PUT',
+                headers: { 'X-Step-Up-Token': stepUpToken },
                 body: JSON.stringify({
                     api_key: document.getElementById('adm-rspace-key').value.trim(),
                     base_url: document.getElementById('adm-rspace-url').value.trim(),

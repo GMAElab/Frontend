@@ -3,6 +3,28 @@
 // ==========================================
 
 (function () {
+    const HTML_TAG_RE = /<\/?(p|br|div|span|strong|b|em|i|u|s|sub|sup|ul|ol|li|h[1-6]|table|thead|tbody|tr|th|td|blockquote|pre|code|hr|a)\b[^>]*>/i;
+
+    function converterTextoParaHtmlRSpace(texto) {
+        const bruto = String(texto || '');
+        if (HTML_TAG_RE.test(bruto)) return bruto;
+        return `<p>${window.escapeHTML(bruto).replace(/\n/g, '<br/>')}</p>`;
+    }
+
+    function vincularBotoesDownload(containerEl) {
+        if (!containerEl) return;
+        containerEl.querySelectorAll('[data-rspace-download-id]').forEach((btn) => {
+            btn.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                const fid = Number(btn.getAttribute('data-rspace-download-id'));
+                const fname = btn.getAttribute('data-rspace-download-name') || '';
+                if (Number.isFinite(fid) && fid > 0) {
+                    window.rspaceBaixarArquivo(fid, fname);
+                }
+            });
+        });
+    }
+
     const state = {
         tab: 'documents',
         config: null,
@@ -371,9 +393,9 @@
             const res = await window.api.fetchProtected(`/rspace/documents?${params.toString()}`);
             const data = await res.json().catch(() => ({}));
             if (!res.ok) {
-                if (res.status === 428) {
+                if (res.status === 428 || res.status === 424) {
                     listEl.innerHTML = window.UI.emptyState({
-                        title: 'Conecte sua API Key do RSpace',
+                        title: res.status === 424 ? 'API Key do RSpace recusada' : 'Conecte sua API Key do RSpace',
                         description: data.detail || 'Configure a variável RSPACE_API_KEY no .env ou informe sua chave pessoal.',
                         actionLabel: 'Configurar API Key',
                         actionOnclick: 'window.rspaceAbrirModalConfig()',
@@ -411,11 +433,12 @@
                         </thead>
                         <tbody>
                             ${docs.map((d) => {
+                                const docIdNum = Number(d.id) || 0;
                                 const tagsHtml = (d.tags || []).map((t) => `<span class="code-pill" style="font-size:10.5px;">${window.escapeHTML(t)}</span>`).join(' ');
                                 const dataMod = d.modificado_em ? new Date(d.modificado_em).toLocaleDateString('pt-BR') : '—';
                                 return `
-                                    <tr class="clickable" onclick="window.rspaceVerDocumento(${d.id})">
-                                        <td class="code"><span class="code-pill">${window.escapeHTML(d.global_id || `SD${d.id}`)}</span></td>
+                                    <tr class="clickable" onclick="window.rspaceVerDocumento(${docIdNum})">
+                                        <td class="code"><span class="code-pill">${window.escapeHTML(d.global_id || `SD${docIdNum}`)}</span></td>
                                         <td>
                                             <div class="cell-stack">
                                                 <strong>${window.escapeHTML(d.titulo)}</strong>
@@ -427,9 +450,9 @@
                                         <td class="num col-hide-sm">${dataMod}</td>
                                         <td class="end" onclick="event.stopPropagation()">
                                             <div class="row-actions">
-                                                <button type="button" class="link-btn" onclick="window.rspaceVerDocumento(${d.id})">Abrir</button>
-                                                <button type="button" class="link-btn muted" onclick="window.rspaceAbrirModalEditarDoc(${d.id})">Editar</button>
-                                                <button type="button" class="link-btn danger" onclick="window.rspaceExcluirDocumento(${d.id})">Excluir</button>
+                                                <button type="button" class="link-btn" onclick="window.rspaceVerDocumento(${docIdNum})">Abrir</button>
+                                                <button type="button" class="link-btn muted" onclick="window.rspaceAbrirModalEditarDoc(${docIdNum})">Editar</button>
+                                                <button type="button" class="link-btn danger" onclick="window.rspaceExcluirDocumento(${docIdNum})">Excluir</button>
                                             </div>
                                         </td>
                                     </tr>`;
@@ -482,10 +505,11 @@
             document.getElementById('rdoc-eyebrow').textContent = `${doc.global_id} · ${doc.formulario || 'Documento ELN'} · por ${doc.autor}`;
             document.getElementById('rdoc-title').textContent = doc.titulo;
 
+            const docIdNum = Number(doc.id) || 0;
             const tagsHtml = (doc.tags || []).map((t) => `<span class="code-pill">${window.escapeHTML(t)}</span>`).join(' ');
             const fieldsHtml = (doc.fields || []).map((f, idx) => {
                 const arquivosHtml = (f.arquivos || []).map((arq) => `
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="window.rspaceBaixarArquivo(${arq.id}, '${window.escapeHTML(arq.nome)}')">
+                    <button type="button" class="btn btn-secondary btn-sm" data-rspace-download-id="${Number(arq.id) || 0}" data-rspace-download-name="${window.escapeHTML(arq.nome || '')}">
                         ${window.Icon('download', { size: 13 })} ${window.escapeHTML(arq.global_id)}: ${window.escapeHTML(arq.nome)}
                     </button>
                 `).join(' ');
@@ -503,14 +527,15 @@
                     </section>`;
             }).join('');
 
-            document.getElementById('rdoc-body').innerHTML = `
+            const rdocBody = document.getElementById('rdoc-body');
+            rdocBody.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
                     <div style="display:flex; gap:6px; flex-wrap:wrap;">${tagsHtml || '<span class="text-faint">Sem tags</span>'}</div>
                     <div style="display:flex; gap:8px; flex-wrap:wrap;">
                         <button type="button" class="btn btn-secondary btn-sm" onclick="window.rspaceCopiarTextoPTA()">
                             ${window.Icon('clipboard', { size: 13 })} Copiar resumo para PTA
                         </button>
-                        <a href="${window.escapeHTML(doc.url_rspace)}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">
+                        <a href="${window.escapeHTML(doc.url_rspace)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">
                             ${window.Icon('external-link', { size: 13 })} Abrir no RSpace
                         </a>
                     </div>
@@ -526,11 +551,12 @@
                     <select id="rdoc-link-process-select" class="form-control">
                         <option value="">Carregando processos de P&amp;D do SGCI...</option>
                     </select>
-                    <button type="button" class="btn btn-primary" onclick="window.rspaceVincularAoProcesso(${doc.id})">
+                    <button type="button" class="btn btn-primary" onclick="window.rspaceVincularAoProcesso(${docIdNum})">
                         ${window.Icon('link', { size: 14 })} Registrar na linha do tempo do Processo
                     </button>
                 </div>
             `;
+            vincularBotoesDownload(rdocBody);
 
             window._ultimoDocRSpace = doc;
 
@@ -663,7 +689,7 @@
                 const folderVal = document.getElementById('rnew-folder').value;
                 const formVal = document.getElementById('rnew-form').value;
                 const texto = document.getElementById('rnew-content').value;
-                const htmlContent = texto.includes('<') ? texto : `<p>${window.escapeHTML(texto).replace(/\n/g, '<br/>')}</p>`;
+                const htmlContent = converterTextoParaHtmlRSpace(texto);
 
                 const payload = {
                     name: document.getElementById('rnew-name').value.trim(),
@@ -750,7 +776,7 @@
                         .map((t) => t.trim())
                         .filter(Boolean);
                     const rawContent = document.getElementById('redit-content').value;
-                    const htmlContent = rawContent.includes('<') ? rawContent : `<p>${window.escapeHTML(rawContent).replace(/\n/g, '<br/>')}</p>`;
+                    const htmlContent = converterTextoParaHtmlRSpace(rawContent);
 
                     const payload = {
                         name: document.getElementById('redit-name').value.trim(),
@@ -995,14 +1021,15 @@
                         </thead>
                         <tbody>
                             ${records.map((r) => {
+                                const recIdNum = Number(r.id) || 0;
                                 const ehDoc = r.tipo === 'DOCUMENT';
                                 const icone = ehDoc ? 'file-text' : (r.tipo === 'NOTEBOOK' ? 'book-open' : 'folder');
-                                const acaoClique = ehDoc
-                                    ? `window.rspaceVerDocumento(${r.id})`
-                                    : `window.rspaceEntrarPasta(${r.id}, '${window.escapeHTML(r.nome).replace(/'/g, "\\'")}')`;
+                                const dataAttrs = ehDoc
+                                    ? `data-rspace-open-doc="${recIdNum}"`
+                                    : `data-rspace-open-folder="${recIdNum}" data-rspace-folder-name="${window.escapeHTML(r.nome || '')}"`;
 
                                 return `
-                                    <tr class="clickable" onclick="${acaoClique}">
+                                    <tr class="clickable" ${dataAttrs}>
                                         <td class="code"><span class="code-pill">${window.escapeHTML(r.global_id)}</span></td>
                                         <td>
                                             <div class="cell-title-row">
@@ -1014,8 +1041,8 @@
                                         <td class="num col-hide-sm">${r.modificado_em ? new Date(r.modificado_em).toLocaleDateString('pt-BR') : '—'}</td>
                                         <td class="end" onclick="event.stopPropagation()">
                                             <div class="row-actions">
-                                                <button type="button" class="link-btn" onclick="${acaoClique}">${ehDoc ? 'Ver doc' : 'Abrir'}</button>
-                                                ${!ehDoc ? `<button type="button" class="link-btn danger" onclick="window.rspaceExcluirPasta(${r.id})">Excluir</button>` : ''}
+                                                <button type="button" class="link-btn" ${dataAttrs}>${ehDoc ? 'Ver doc' : 'Abrir'}</button>
+                                                ${!ehDoc ? `<button type="button" class="link-btn danger" onclick="window.rspaceExcluirPasta(${recIdNum})">Excluir</button>` : ''}
                                             </div>
                                         </td>
                                     </tr>`;
@@ -1023,6 +1050,22 @@
                         </tbody>
                     </table>
                 </div>`;
+
+            listEl.querySelectorAll('[data-rspace-open-doc]').forEach((el) => {
+                el.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    const did = Number(el.getAttribute('data-rspace-open-doc'));
+                    if (Number.isFinite(did) && did > 0) window.rspaceVerDocumento(did);
+                });
+            });
+            listEl.querySelectorAll('[data-rspace-open-folder]').forEach((el) => {
+                el.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    const fid = Number(el.getAttribute('data-rspace-open-folder'));
+                    const fname = el.getAttribute('data-rspace-folder-name') || 'Pasta';
+                    if (Number.isFinite(fid) && fid > 0) window.rspaceEntrarPasta(fid, fname);
+                });
+            });
         } catch (err) {
             listEl.innerHTML = window.UI.errorState(err.message);
         }
@@ -1166,6 +1209,7 @@
                         </thead>
                         <tbody>
                             ${files.map((f) => {
+                                const fileIdNum = Number(f.id) || 0;
                                 const kb = f.tamanho ? `${(f.tamanho / 1024).toFixed(1)} KB` : '—';
                                 return `
                                     <tr>
@@ -1180,7 +1224,7 @@
                                         <td class="num col-hide-xs">${kb}</td>
                                         <td class="num col-hide-sm">${f.criado_em ? new Date(f.criado_em).toLocaleDateString('pt-BR') : '—'}</td>
                                         <td class="end">
-                                            <button type="button" class="link-btn" onclick="window.rspaceBaixarArquivo(${f.id}, '${window.escapeHTML(f.nome).replace(/'/g, "\\'")}')">
+                                            <button type="button" class="link-btn" data-rspace-download-id="${fileIdNum}" data-rspace-download-name="${window.escapeHTML(f.nome || '')}">
                                                 ${window.Icon('download', { size: 13 })} Baixar
                                             </button>
                                         </td>
@@ -1189,6 +1233,7 @@
                         </tbody>
                     </table>
                 </div>`;
+            vincularBotoesDownload(listEl);
         } catch (err) {
             listEl.innerHTML = window.UI.errorState(err.message);
         }
@@ -1339,20 +1384,23 @@
                             </tr>
                         </thead>
                         <tbody>
-                            ${forms.map((f) => `
+                            ${forms.map((f) => {
+                                const formIdNum = Number(f.id) || 0;
+                                return `
                                 <tr>
                                     <td class="code"><span class="code-pill">${window.escapeHTML(f.global_id)}</span></td>
                                     <td><strong>${window.escapeHTML(f.nome)}</strong></td>
                                     <td><span class="mono" style="font-size:11.5px;">${window.escapeHTML(f.estado)}</span></td>
                                     <td class="end">
                                         <div class="row-actions">
-                                            <button type="button" class="link-btn" onclick="window.rspaceAbrirModalNovoDoc(${f.id})">Usar em doc</button>
-                                            <button type="button" class="link-btn muted" onclick="window.rspaceAcaoFormulario(${f.id}, 'publish')">Publicar</button>
-                                            <button type="button" class="link-btn muted" onclick="window.rspaceAcaoFormulario(${f.id}, 'share')">Compartilhar</button>
+                                            <button type="button" class="link-btn" onclick="window.rspaceAbrirModalNovoDoc(${formIdNum})">Usar em doc</button>
+                                            <button type="button" class="link-btn muted" onclick="window.rspaceAcaoFormulario(${formIdNum}, 'publish')">Publicar</button>
+                                            <button type="button" class="link-btn muted" onclick="window.rspaceAcaoFormulario(${formIdNum}, 'share')">Compartilhar</button>
                                         </div>
                                     </td>
                                 </tr>
-                            `).join('')}
+                            `;
+                            }).join('')}
                         </tbody>
                     </table>
                 </div>`;
@@ -1519,7 +1567,7 @@ Procedimento e Observações | Text</textarea>
                                     <td class="col-hide-xs">${window.UI.avatar(item.autor || 'Pesquisador')}</td>
                                     <td class="end">
                                         ${state.invResource === 'samples'
-                                            ? `<button type="button" class="link-btn danger" onclick="window.rspaceExcluirAmostra(${item.id})">Excluir</button>`
+                                            ? `<button type="button" class="link-btn danger" onclick="window.rspaceExcluirAmostra(${Number(item.id) || 0})">Excluir</button>`
                                             : `<span class="text-faint">—</span>`}
                                     </td>
                                 </tr>
@@ -1807,7 +1855,7 @@ Procedimento e Observações | Text</textarea>
                         <strong>${window.escapeHTML(s.itemName || s.name || `Item #${s.itemId || s.id}`)}</strong>
                         <span class="mono text-faint" style="font-size:11.5px; margin-left:6px;">${window.escapeHTML(s.permission || 'READ')}</span>
                     </div>
-                    ${s.id ? `<button type="button" class="link-btn danger" onclick="window.rspaceRevogarShare(${s.id})">Revogar</button>` : ''}
+                    ${s.id ? `<button type="button" class="link-btn danger" onclick="window.rspaceRevogarShare(${Number(s.id) || 0})">Revogar</button>` : ''}
                 </div>`).join('');
         } catch (e) {
             boxS.innerHTML = '<p class="text-faint">Não foi possível consultar compartilhamentos.</p>';
@@ -2023,7 +2071,7 @@ Procedimento e Observações | Text</textarea>
                                 ${window.UI.progressBar(pct)}
                             </div>
                             ${info.download_ready
-                                ? `<button type="button" class="btn btn-success btn-sm" onclick="window.rspaceBaixarJob(${info.job_id})">
+                                ? `<button type="button" class="btn btn-success btn-sm" onclick="window.rspaceBaixarJob(${Number(info.job_id) || 0})">
                                        ${window.Icon('download', { size: 13 })} Baixar Arquivo Exportado
                                    </button>`
                                 : `<span class="help">Aguardando conclusão no servidor RSpace...</span>`}
