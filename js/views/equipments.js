@@ -7,19 +7,32 @@ document.addEventListener('viewChanged', (e) => {
     }
 });
 
+function ehUsuarioConvidado() {
+    try {
+        const u = JSON.parse(localStorage.getItem('user_data') || '{}');
+        return u.role === 'guest' || !!u.is_guest;
+    } catch (e) {
+        return false;
+    }
+}
+
 function renderEquipments() {
     const main = document.getElementById('dynamic-content');
     if (!main) return;
+    const convidado = ehUsuarioConvidado();
 
     main.innerHTML = `
         <header class="page-head fade-in">
             <div>
                 <p class="eyebrow">laboratório</p>
                 <h1>Equipamentos</h1>
-                <p class="lede">Cada equipamento com seu vídeo de treinamento, seus POPs e os processos em que é usado.</p>
+                <p class="lede">${convidado
+                    ? 'Consulte os equipamentos disponíveis, seus POPs e agende horários de uso.'
+                    : 'Cada equipamento com seu vídeo de treinamento, seus POPs, os processos em que é usado e a agenda de reservas.'}</p>
             </div>
             <div class="page-actions">
-                <button id="btn-novo-equip" class="btn btn-primary">${window.Icon ? window.Icon('plus', { size: 14 }) : ''} Novo equipamento</button>
+                <button id="btn-minhas-reservas" class="btn btn-secondary" onclick="window.openMyReservations()">${window.Icon ? window.Icon('calendar', { size: 14 }) : ''} Minhas reservas</button>
+                ${convidado ? '' : `<button id="btn-novo-equip" class="btn btn-primary">${window.Icon ? window.Icon('plus', { size: 14 }) : ''} Novo equipamento</button>`}
             </div>
         </header>
         <div id="eq-container" class="fade-in"></div>
@@ -37,15 +50,18 @@ function renderEquipments() {
 // 2. LISTA COM BUSCA E PAGINAÇÃO
 // ==========================================
 function loadEquipmentsTable() {
+    const convidado = ehUsuarioConvidado();
+
     window.listagemAtual = window.Listagem.criar({
         alvo: 'eq-container',
         endpoint: '/equipments/',
         placeholder: 'Buscar por nome ou especificação do equipamento',
         cabecalho: '<th>Equipamento</th><th>Status</th><th class="end">Ações</th>',
-        vazio: { title: 'Nenhum equipamento registrado', description: 'Cadastre o primeiro equipamento do laboratório.' },
+        vazio: { title: 'Nenhum equipamento registrado', description: convidado ? 'Nenhum equipamento disponível no momento.' : 'Cadastre o primeiro equipamento do laboratório.' },
         erro: 'Não foi possível carregar os equipamentos.',
         renderLinha: (eq) => {
             const desc = eq.description ? window.escapeHTML(eq.description) : '';
+            const ativo = ['active', 'ativo'].includes(String(eq.status || 'ativo').toLowerCase());
 
             return `
             <tr class="clickable" onclick="window.viewDossier(${eq.id})">
@@ -58,11 +74,12 @@ function loadEquipmentsTable() {
                         </div>
                     </div>
                 </td>
-                <td><span class="badge badge-success">${window.escapeHTML(eq.status || 'ativo')}</span></td>
+                <td><span class="badge ${ativo ? 'badge-success' : 'badge-warning'}">${window.escapeHTML(eq.status || 'ativo')}</span></td>
                 <td class="end" onclick="event.stopPropagation()">
                     <div class="row-actions">
+                        <button class="btn btn-primary btn-sm" onclick="window.openEquipmentCalendar(${eq.id})">${window.Icon ? window.Icon('calendar', { size: 13 }) : ''} Agendar</button>
                         <button class="link-btn" onclick="window.viewDossier(${eq.id})">Ver</button>
-                        <button class="link-btn muted" onclick="openDeepView('equipments', ${eq.id}, 'Equipamento')">Editar</button>
+                        ${convidado ? '' : `<button class="link-btn muted" onclick="openDeepView('equipments', ${eq.id}, 'Equipamento')">Editar</button>`}
                     </div>
                 </td>
             </tr>`;
@@ -163,25 +180,33 @@ window.handleSaveEquipment = async function(e) {
 // ==========================================
 function renderVinculosEquipamento(vinculos, manualUrl) {
     const esc = window.escapeHTML;
+    const convidado = ehUsuarioConvidado();
 
-    const pops = vinculos.pops.map(p => `
+    const pops = (vinculos.pops || []).map(p => `
         <li><button type="button" class="link-btn" data-codigo="${esc(p.codigo)}" onclick="window.closeDossierModal(); window.abrirPopPorCodigo(this.dataset.codigo)">${esc(p.codigo)} · ${esc(p.titulo)}</button></li>`).join('');
 
     const linkExterno = manualUrl
         ? `<li><a href="${esc(manualUrl)}" target="_blank" rel="noopener">Abrir link externo do POP</a></li>`
         : '';
 
-    const processos = vinculos.processos.map(p => `
-        <li><button type="button" class="link-btn" onclick="window.closeDossierModal(); viewProcessDetails(${p.id})">${esc(p.nome_processo)}</button>
-        <span class="meta"> · ${esc((p.status || 'rascunho').replace('_', ' '))}</span></li>`).join('');
-
-    return `
+    const blocoPops = `
         <div>
             <dt>pops</dt>
             <dd class="plain">${pops || linkExterno
                 ? `<ul class="link-list">${pops}${linkExterno}</ul>`
-                : '<span class="text-faint">Nenhum POP vinculado. Vincule pelo formulário do POP.</span>'}</dd>
-        </div>
+                : '<span class="text-faint">Nenhum POP vinculado a este equipamento.</span>'}</dd>
+        </div>`;
+
+    if (convidado) {
+        return blocoPops;
+    }
+
+    const processos = (vinculos.processos || []).map(p => `
+        <li><button type="button" class="link-btn" onclick="window.closeDossierModal(); viewProcessDetails(${p.id})">${esc(p.nome_processo)}</button>
+        <span class="meta"> · ${esc((p.status || 'rascunho').replace('_', ' '))}</span></li>`).join('');
+
+    return `
+        ${blocoPops}
         <div>
             <dt>processos</dt>
             <dd class="plain">${processos
@@ -229,6 +254,12 @@ window.viewDossier = async function(id) {
                     </div>
                     ${renderVinculosEquipamento(vinculos, eq.manual_url)}
                 </dl>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="window.closeDossierModal()">Fechar</button>
+                    <button type="button" class="btn btn-primary" onclick="window.closeDossierModal(); window.openEquipmentCalendar(${eq.id})">
+                        ${window.Icon ? window.Icon('calendar', { size: 14 }) : ''} Agendar uso
+                    </button>
+                </div>
             `;
         }
 

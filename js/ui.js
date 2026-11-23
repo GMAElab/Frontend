@@ -357,6 +357,13 @@ const UI = {
 
         if (!mainContent) return Promise.resolve(false);
 
+        try {
+            const u = JSON.parse(localStorage.getItem('user_data') || '{}');
+            if ((u.role === 'guest' || u.is_guest) && viewName !== 'equipments') {
+                viewName = 'equipments';
+            }
+        } catch (e) {}
+
         if (!opcoes.forcar && window.Salvaguardas && window.Salvaguardas.formularioSujoNaTela()) {
             return UI.confirm(
                 'Você tem um texto não enviado nesta tela. Ele fica guardado como rascunho neste navegador, mas não será enviado.',
@@ -405,9 +412,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const pedida = location.hash.slice(1);
-    const existe = pedida && document.querySelector(`.nav-item[data-view="${CSS.escape(pedida)}"]`);
-    UI.switchView(existe ? pedida : 'inicio');
+    let ehConvidado = false;
+    try {
+        const u = JSON.parse(localStorage.getItem('user_data') || '{}');
+        ehConvidado = u.role === 'guest' || !!u.is_guest;
+    } catch (e) {}
+
+    if (ehConvidado) {
+        UI.switchView('equipments');
+    } else {
+        const pedida = location.hash.slice(1);
+        const existe = pedida && document.querySelector(`.nav-item[data-view="${CSS.escape(pedida)}"]`);
+        UI.switchView(existe ? pedida : 'inicio');
+    }
 });
 
 // Esc fecha só o modal de cima, e pergunta antes se houver texto não salvo.

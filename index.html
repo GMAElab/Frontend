@@ -27,7 +27,8 @@
 
             <section class="auth-panel login-card">
                 <nav class="auth-switcher" aria-label="Modo de acesso">
-                    <a href="index.html" class="auth-switch-btn active" aria-current="page">Entrar</a>
+                    <a href="index.html" id="tab-auth-login" class="auth-switch-btn active" aria-current="page" onclick="event.preventDefault(); voltarParaLogin()">Entrar</a>
+                    <a href="#convidado" id="tab-auth-guest" class="auth-switch-btn" onclick="mostrarAcessoConvidado(event)">Convidado</a>
                     <a href="registro.html" class="auth-switch-btn">Solicitar acesso</a>
                 </nav>
 
@@ -59,7 +60,59 @@
                         <span class="spinner hidden" aria-hidden="true"></span>
                     </button>
 
-                    <p class="auth-foot">Ainda sem acesso? <a href="registro.html" id="link-register">Criar conta</a></p>
+                    <p class="auth-foot">Ainda sem acesso? <a href="registro.html" id="link-register">Criar conta</a> · <a href="#convidado" onclick="mostrarAcessoConvidado(event)">Agendar como convidado</a></p>
+                </form>
+
+                <!-- 1B. ACESSO COMO CONVIDADO — ETAPA 1 (SOLICITAR CÓDIGO POR E-MAIL) -->
+                <form id="guest-request-form" class="hidden" aria-label="Acesso de Convidado">
+                    <p class="eyebrow">acesso externo</p>
+                    <h1>Entrar como convidado</h1>
+                    <p class="lede">Acesse os equipamentos, seus POPs e o calendário de agendamento usando um código enviado ao seu e-mail.</p>
+
+                    <div class="input-group">
+                        <label for="guest-nome">Nome completo</label>
+                        <input type="text" id="guest-nome" name="guest_nome" required minlength="2" maxlength="120" autocomplete="name" placeholder="Seu nome completo">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="guest-email">E-mail</label>
+                        <input type="email" id="guest-email" name="guest_email" required autocomplete="email" placeholder="seu.email@instituicao.br">
+                        <span class="help">Enviaremos um código de 6 dígitos para confirmar sua identidade e permitir remarcar ou desmarcar suas reservas.</span>
+                    </div>
+
+                    <div id="guest-req-feedback" class="feedback-msg" aria-live="polite"></div>
+
+                    <button type="submit" id="btn-guest-request" class="btn btn-primary btn-block">
+                        <span class="btn-text">Enviar código por e-mail</span>
+                        <span class="spinner hidden" aria-hidden="true"></span>
+                    </button>
+
+                    <p class="auth-foot">Já é membro do laboratório? <a href="#" onclick="event.preventDefault(); voltarParaLogin()">Entrar com senha</a></p>
+                </form>
+
+                <!-- 1C. ACESSO COMO CONVIDADO — ETAPA 2 (VALIDAR CÓDIGO OTP) -->
+                <form id="guest-verify-form" class="hidden" aria-label="Confirmar Código de Convidado">
+                    <p class="eyebrow">verificação por e-mail</p>
+                    <h1>Digite o código de acesso</h1>
+                    <p class="lede">Enviamos um código de 6 dígitos para <strong id="guest-email-display"></strong>. Confira também a pasta de spam.</p>
+
+                    <div class="input-group">
+                        <label for="guest-otp-code">Código de 6 dígitos</label>
+                        <input type="text" id="guest-otp-code" class="code-input" maxlength="6" required autocomplete="one-time-code" inputmode="numeric" placeholder="000000">
+                    </div>
+
+                    <div id="guest-verify-feedback" class="feedback-msg" aria-live="polite"></div>
+
+                    <button type="submit" id="btn-guest-verify" class="btn btn-primary btn-block">
+                        <span class="btn-text">Confirmar e acessar equipamentos</span>
+                        <span class="spinner hidden" aria-hidden="true"></span>
+                    </button>
+
+                    <p class="auth-foot">
+                        <a href="#" id="btn-guest-resend" onclick="reenviarCodigoConvidado(event)">Reenviar código</a>
+                        ·
+                        <a href="#" onclick="event.preventDefault(); voltarEtapaConvidado()">Trocar e-mail</a>
+                    </p>
                 </form>
 
                 <!-- 2. FORMULÁRIO DE 2FA -->
@@ -130,10 +183,10 @@
         </div>
     </main>
 
-    <script src="js/api.js?v=5"></script>
-    <script src="js/ui.js?v=3400"></script>
+    <script src="js/api.js?v=6"></script>
+    <script src="js/ui.js?v=3402"></script>
     <script src="js/salvaguardas.js?v=2"></script>
-    <script src="js/auth.js?v=2003"></script>
+    <script src="js/auth.js?v=2004"></script>
     <script>
         document.getElementById('auth-theme-btn')?.addEventListener('click', function () {
             var next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';

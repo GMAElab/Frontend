@@ -195,6 +195,12 @@ window.api = {
             if (!userDataStr) { resolve(false); return; }
             const user = JSON.parse(userDataStr);
 
+            if (user.role === 'guest' || user.is_guest) {
+                if (window.UI) window.UI.showToast('Sua sessão de convidado expirou. Solicite um novo código de acesso.', 'warning');
+                resolve(false);
+                return;
+            }
+
             const existente = document.getElementById('reauth-modal');
             if (existente) existente.remove();
 

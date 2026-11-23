@@ -11,6 +11,7 @@
         try { return JSON.parse(localStorage.getItem('user_data') || '{}'); } catch (e) { return {}; }
     };
     const ehGestor = () => ['admin', 'tecnico', 'coordenador'].includes(usuario().role);
+    const ehConvidado = () => usuario().role === 'guest' || !!usuario().is_guest;
 
     // ==========================================
     // TEMA
@@ -94,7 +95,7 @@
                 executar: () => irPara(btn.dataset.view),
             }));
 
-        const acoes = [
+        const acoes = ehConvidado() ? [] : [
             { rotulo: 'Novo equipamento', icone: 'plus', termos: 'cadastrar ativo', executar: abrirEm('equipments', () => window.openAddEquipmentModal?.()) },
             { rotulo: 'Novo processo de P&D', icone: 'plus', termos: 'mapear pesquisa', executar: abrirEm('processes', () => window.openProcessModal?.()) },
             { rotulo: 'Novo POP', icone: 'file-plus', termos: 'procedimento operacional', executar: abrirEm('pops', () => window.openPopModal?.()) },

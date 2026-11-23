@@ -194,17 +194,180 @@ document.addEventListener('DOMContentLoaded', () => {
 window.mostrarEsqueciSenha = function(event) {
     event.preventDefault();
     document.querySelector('.auth-switcher')?.classList.add('hidden');
-    document.getElementById('login-form').classList.add('hidden');
-    document.getElementById('2fa-form').classList.add('hidden');
-    document.getElementById('forgot-password-form').classList.remove('hidden');
+    document.getElementById('login-form')?.classList.add('hidden');
+    document.getElementById('2fa-form')?.classList.add('hidden');
+    document.getElementById('guest-request-form')?.classList.add('hidden');
+    document.getElementById('guest-verify-form')?.classList.add('hidden');
+    document.getElementById('forgot-password-form')?.classList.remove('hidden');
 };
 
 window.voltarParaLogin = function() {
     document.querySelector('.auth-switcher')?.classList.remove('hidden');
-    document.getElementById('forgot-password-form').classList.add('hidden');
-    document.getElementById('2fa-form').classList.add('hidden');
-    document.getElementById('login-form').classList.remove('hidden');
+    document.getElementById('tab-auth-login')?.classList.add('active');
+    document.getElementById('tab-auth-guest')?.classList.remove('active');
+    document.getElementById('forgot-password-form')?.classList.add('hidden');
+    document.getElementById('2fa-form')?.classList.add('hidden');
+    document.getElementById('guest-request-form')?.classList.add('hidden');
+    document.getElementById('guest-verify-form')?.classList.add('hidden');
+    document.getElementById('login-form')?.classList.remove('hidden');
 };
+
+// ==========================================
+// 4. ACESSO COMO CONVIDADO (OTP POR E-MAIL)
+// ==========================================
+let guestEmailAtual = '';
+let guestNomeAtual = '';
+let guestResendTimer = null;
+
+function iniciarCooldownReenvio(segundos = 60) {
+    const link = document.getElementById('btn-guest-resend');
+    if (!link) return;
+    if (guestResendTimer) clearInterval(guestResendTimer);
+    let restante = segundos;
+    link.style.pointerEvents = 'none';
+    link.style.opacity = '0.6';
+    link.textContent = `Reenviar em ${restante}s`;
+    guestResendTimer = setInterval(() => {
+        restante--;
+        if (restante <= 0) {
+            clearInterval(guestResendTimer);
+            guestResendTimer = null;
+            link.style.pointerEvents = '';
+            link.style.opacity = '';
+            link.textContent = 'Reenviar código';
+        } else {
+            link.textContent = `Reenviar em ${restante}s`;
+        }
+    }, 1000);
+}
+
+window.mostrarAcessoConvidado = function(event) {
+    if (event) event.preventDefault();
+    document.querySelector('.auth-switcher')?.classList.remove('hidden');
+    document.getElementById('tab-auth-login')?.classList.remove('active');
+    document.getElementById('tab-auth-guest')?.classList.add('active');
+    document.getElementById('login-form')?.classList.add('hidden');
+    document.getElementById('2fa-form')?.classList.add('hidden');
+    document.getElementById('forgot-password-form')?.classList.add('hidden');
+    document.getElementById('guest-verify-form')?.classList.add('hidden');
+    document.getElementById('guest-request-form')?.classList.remove('hidden');
+    document.getElementById('guest-nome')?.focus();
+};
+
+window.voltarEtapaConvidado = function() {
+    document.getElementById('guest-verify-form')?.classList.add('hidden');
+    document.getElementById('guest-request-form')?.classList.remove('hidden');
+    document.getElementById('guest-email')?.focus();
+};
+
+async function enviarOtpConvidado(nome, email, feedbackId, btnId) {
+    UI.showFormFeedback(feedbackId, '', false);
+    if (btnId) UI.setButtonLoading(btnId, true);
+    try {
+        const res = await fetch(`${window.API_URL}/auth/guest/request-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ nome, email })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+            guestEmailAtual = email;
+            guestNomeAtual = nome;
+            const display = document.getElementById('guest-email-display');
+            if (display) display.textContent = email;
+            document.getElementById('guest-request-form')?.classList.add('hidden');
+            document.getElementById('guest-verify-form')?.classList.remove('hidden');
+            const otpInput = document.getElementById('guest-otp-code');
+            if (otpInput) { otpInput.value = ''; otpInput.focus(); }
+            UI.showFormFeedback('guest-verify-feedback', data.mensagem || 'Código enviado ao seu e-mail.', false);
+            iniciarCooldownReenvio(60);
+        } else {
+            UI.showFormFeedback(feedbackId, UI.mensagemLegivel(data.detail || 'Não foi possível enviar o código.'), true);
+        }
+    } catch (e) {
+        UI.showFormFeedback(feedbackId, 'Erro de conexão com o servidor. Tente novamente.', true);
+    } finally {
+        if (btnId) UI.setButtonLoading(btnId, false);
+    }
+}
+
+window.reenviarCodigoConvidado = function(event) {
+    if (event) event.preventDefault();
+    if (!guestEmailAtual || !guestNomeAtual) {
+        window.voltarEtapaConvidado();
+        return;
+    }
+    enviarOtpConvidado(guestNomeAtual, guestEmailAtual, 'guest-verify-feedback', null);
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.location.hash === '#convidado') {
+        window.mostrarAcessoConvidado();
+    }
+
+    const guestReqForm = document.getElementById('guest-request-form');
+    if (guestReqForm) {
+        guestReqForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nome = (document.getElementById('guest-nome')?.value || '').trim();
+            const email = (document.getElementById('guest-email')?.value || '').trim();
+            if (nome.length < 2) {
+                UI.showFormFeedback('guest-req-feedback', 'Informe seu nome completo.', true);
+                return;
+            }
+            await enviarOtpConvidado(nome, email, 'guest-req-feedback', 'btn-guest-request');
+        });
+    }
+
+    const guestVerifyForm = document.getElementById('guest-verify-form');
+    if (guestVerifyForm) {
+        guestVerifyForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const codigo = (document.getElementById('guest-otp-code')?.value || '').replace(/\D/g, '');
+            if (codigo.length !== 6) {
+                UI.showFormFeedback('guest-verify-feedback', 'Digite os 6 dígitos do código recebido por e-mail.', true);
+                return;
+            }
+            UI.showFormFeedback('guest-verify-feedback', '', false);
+            UI.setButtonLoading('btn-guest-verify', true);
+            try {
+                const res = await fetch(`${window.API_URL}/auth/guest/verify-otp`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ email: guestEmailAtual, codigo })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok) {
+                    const check = await fetch(`${window.API_URL}/auth/session`, {
+                        method: 'GET',
+                        credentials: 'include'
+                    });
+                    if (check.status === 401) {
+                        if (window.api && window.api.exibirModalErroCookies) {
+                            window.api.exibirModalErroCookies();
+                        } else {
+                            UI.showFormFeedback('guest-verify-feedback', 'Acesso negado: seu navegador bloqueou os cookies de sessão.', true);
+                        }
+                        return;
+                    }
+                    localStorage.setItem('user_data', JSON.stringify(data.user));
+                    if (data.csrf_token) localStorage.setItem('csrf_token', data.csrf_token);
+                    window.location.href = 'dashboard.html#equipments';
+                } else {
+                    UI.showFormFeedback('guest-verify-feedback', UI.mensagemLegivel(data.detail || 'Código inválido ou expirado.'), true);
+                    const otpInput = document.getElementById('guest-otp-code');
+                    if (otpInput) { otpInput.value = ''; otpInput.focus(); }
+                }
+            } catch (err) {
+                UI.showFormFeedback('guest-verify-feedback', 'Erro de conexão com o servidor.', true);
+            } finally {
+                UI.setButtonLoading('btn-guest-verify', false);
+            }
+        });
+    }
+});
 
 const forgotForm = document.getElementById('forgot-password-form');
 if (forgotForm) {

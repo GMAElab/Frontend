@@ -7,13 +7,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (userString) {
         const user = JSON.parse(userString);
 
+        const ehConvidado = user.role === 'guest' || !!user.is_guest;
+
         const nomeEl = document.getElementById('user-greeting');
         const papelEl = document.getElementById('user-role');
         if (nomeEl) nomeEl.textContent = user.nome || 'Usuário';
-        if (papelEl) papelEl.textContent = user.role || '';
+        if (papelEl) papelEl.textContent = ehConvidado ? 'Convidado' : (user.role || '');
 
         const btnSetup2FA = document.getElementById('btn-setup-2fa');
-        if (btnSetup2FA && !user.is_2fa_enabled) {
+        if (btnSetup2FA && !user.is_2fa_enabled && !ehConvidado) {
             btnSetup2FA.style.display = 'inline-flex';
         }
 
@@ -26,7 +28,24 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        if (user.must_change_password) {
+        if (ehConvidado) {
+            document.body.dataset.guest = 'true';
+            document.querySelectorAll('.sidebar-nav .nav-item').forEach((btn) => {
+                if (btn.getAttribute('data-view') !== 'equipments') {
+                    btn.closest('li')?.remove();
+                }
+            });
+            document.querySelectorAll('.sidebar-nav .nav-group').forEach((grp) => {
+                const text = (grp.textContent || '').trim().toLowerCase();
+                if (text === 'conhecimento') {
+                    grp.textContent = 'Acesso convidado';
+                } else {
+                    grp.remove();
+                }
+            });
+        }
+
+        if (user.must_change_password && !ehConvidado) {
             exibirModalTrocaSenhaObrigatoria();
         }
     }

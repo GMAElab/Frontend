@@ -1,0 +1,1153 @@
+// ==========================================
+// MÓDULO DE AGENDAMENTO DE EQUIPAMENTOS
+// Calendário estilo Google Calendar + Minhas Reservas + Feriados/Bloqueios
+// ==========================================
+(function () {
+    const HORA_INICIO_GRADE = 8;  // 08:00 (sexta abre às 08:00)
+    const HORA_FIM_GRADE = 17;    // 17:00 (seg-qui fecha às 17:00)
+    const PX_POR_HORA = 56;
+    const PX_POR_SLOT = 28;       // 30 minutos
+
+    const EXPEDIENTE = {
+        1: { inicio: '09:00', fim: '17:00', nome: 'Segunda-feira' },
+        2: { inicio: '09:00', fim: '17:00', nome: 'Terça-feira' },
+        3: { inicio: '09:00', fim: '17:00', nome: 'Quarta-feira' },
+        4: { inicio: '09:00', fim: '17:00', nome: 'Quinta-feira' },
+        5: { inicio: '08:00', fim: '12:00', nome: 'Sexta-feira' },
+    };
+
+    const MESES_PT = [
+        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+    ];
+    const DIAS_CURTOS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+    const state = {
+        equipmentId: null,
+        equipments: [],
+        view: 'week',         // 'week' | 'month' | 'mine'
+        anchorDate: new Date(),
+        agendamentos: [],
+        bloqueios: [],
+        minhasReservas: [],
+        filtrarMinhasPorEquip: false,
+    };
+
+    function getUser() {
+        try { return JSON.parse(localStorage.getItem('user_data') || '{}'); } catch (e) { return {}; }
+    }
+
+    function ehGestor() {
+        const u = getUser();
+        return !u.is_guest && ['admin', 'tecnico', 'coordenador'].includes(u.role);
+    }
+
+    function pad2(n) { return String(n).padStart(2, '0'); }
+
+    function toISODate(d) {
+        return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+    }
+
+    function parseLocalDate(isoStr) {
+        const [y, m, d] = isoStr.split('-').map(Number);
+        return new Date(y, m - 1, d);
+    }
+
+    function parseDateTimeStr(str) {
+        if (!str) return null;
+        const limpo = String(str).replace(' ', 'T');
+        const m = limpo.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+        if (!m) return new Date(str);
+        return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), Number(m[4]), Number(m[5]));
+    }
+
+    function formatDateBR(d) {
+        return `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${d.getFullYear()}`;
+    }
+
+    function formatTimeBR(d) {
+        return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+    }
+
+    function getMonday(date) {
+        const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        const day = d.getDay();
+        const diff = day === 0 ? -6 : 1 - day;
+        d.setDate(d.getDate() + diff);
+        return d;
+    }
+
+    function addDays(date, days) {
+        const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        d.setDate(d.getDate() + days);
+        return d;
+    }
+
+    function timeToMinutes(hhmm) {
+        const [h, m] = hhmm.split(':').map(Number);
+        return h * 60 + m;
+    }
+
+    function minutesToTime(totalMin) {
+        return `${pad2(Math.floor(totalMin / 60))}:${pad2(totalMin % 60)}`;
+    }
+
+    function getExpedienteDia(dateObj) {
+        return EXPEDIENTE[dateObj.getDay()] || null;
+    }
+
+    function getBloqueioDia(isoDate, eqId) {
+        return state.bloqueios.find(b =>
+            b.data === isoDate && (b.equipamento_id === null || b.equipamento_id === eqId)
+        ) || null;
+    }
+
+    function getEquipamentoAtual() {
+        return state.equipments.find(e => e.id === state.equipmentId) || null;
+    }
+
+    function equipamentoAtivo(eq) {
+        if (!eq) return false;
+        const st = String(eq.status || 'active').toLowerCase();
+        return st === 'active' || st === 'ativo';
+    }
+
+    // ==========================================
+    // CARREGAMENTO DE DADOS
+    // ==========================================
+    async function carregarEquipamentos() {
+        const res = await window.api.fetchProtected('/equipments/?limit=500');
+        if (!res.ok) throw new Error('Não foi possível carregar os equipamentos.');
+        state.equipments = await res.json();
+    }
+
+    function calcularJanelaConsulta() {
+        if (state.view === 'month') {
+            const primeiro = new Date(state.anchorDate.getFullYear(), state.anchorDate.getMonth(), 1);
+            const ultimo = new Date(state.anchorDate.getFullYear(), state.anchorDate.getMonth() + 1, 0);
+            return { inicio: toISODate(addDays(primeiro, -7)), fim: toISODate(addDays(ultimo, 7)) };
+        }
+        const seg = getMonday(state.anchorDate);
+        return { inicio: toISODate(seg), fim: toISODate(addDays(seg, 6)) };
+    }
+
+    async function recarregarDadosAgenda() {
+        const { inicio, fim } = calcularJanelaConsulta();
+        const promises = [];
+
+        if (state.equipmentId) {
+            promises.push(
+                window.api.fetchProtected(`/agendamentos/?equipamento_id=${state.equipmentId}&inicio=${inicio}&fim=${fim}`)
+                    .then(r => (r.ok ? r.json() : []))
+                    .then(data => { state.agendamentos = Array.isArray(data) ? data : []; }),
+                window.api.fetchProtected(`/agendamentos/bloqueios?equipamento_id=${state.equipmentId}&inicio=${inicio}&fim=${fim}`)
+                    .then(r => (r.ok ? r.json() : []))
+                    .then(data => { state.bloqueios = Array.isArray(data) ? data : []; })
+            );
+        }
+
+        const qsMinhas = state.filtrarMinhasPorEquip && state.equipmentId
+            ? `?equipamento_id=${state.equipmentId}`
+            : '';
+        promises.push(
+            window.api.fetchProtected(`/agendamentos/minhas${qsMinhas}`)
+                .then(r => (r.ok ? r.json() : []))
+                .then(data => { state.minhasReservas = Array.isArray(data) ? data : []; })
+        );
+
+        await Promise.all(promises);
+    }
+
+    // ==========================================
+    // PONTOS DE ENTRADA PÚBLICOS
+    // ==========================================
+    window.openEquipmentCalendar = async function (equipmentId, initialTab = 'week') {
+        const main = document.getElementById('dynamic-content');
+        if (!main) return;
+        main.innerHTML = window.UI.loading('Carregando agenda do equipamento');
+
+        try {
+            await carregarEquipamentos();
+            if (!state.equipments.length) {
+                main.innerHTML = window.UI.emptyState({
+                    title: 'Nenhum equipamento cadastrado',
+                    description: 'Cadastre equipamentos antes de abrir o calendário.',
+                    actionLabel: 'Voltar para equipamentos',
+                    actionOnclick: "window.UI.switchView('equipments')",
+                });
+                return;
+            }
+
+            state.equipmentId = Number(equipmentId) || state.equipments[0].id;
+            state.view = initialTab || 'week';
+            state.filtrarMinhasPorEquip = false;
+
+            // Se hoje for fim de semana, já abre na próxima segunda-feira
+            const hoje = new Date();
+            if (hoje.getDay() === 6) state.anchorDate = addDays(hoje, 2);
+            else if (hoje.getDay() === 0) state.anchorDate = addDays(hoje, 1);
+            else state.anchorDate = hoje;
+
+            await recarregarDadosAgenda();
+            renderizarTelaCalendario();
+        } catch (err) {
+            main.innerHTML = window.UI.errorState(err.message || 'Erro ao carregar agenda.');
+        }
+    };
+
+    window.openMyReservations = async function () {
+        const main = document.getElementById('dynamic-content');
+        if (!main) return;
+        main.innerHTML = window.UI.loading('Carregando suas reservas');
+
+        try {
+            await carregarEquipamentos();
+            if (!state.equipmentId && state.equipments.length) {
+                state.equipmentId = state.equipments[0].id;
+            }
+            state.view = 'mine';
+            state.filtrarMinhasPorEquip = false;
+            await recarregarDadosAgenda();
+            renderizarTelaCalendario();
+        } catch (err) {
+            main.innerHTML = window.UI.errorState(err.message || 'Erro ao carregar suas reservas.');
+        }
+    };
+
+    // ==========================================
+    // RENDERIZAÇÃO PRINCIPAL
+    // ==========================================
+    function tituloPeriodo() {
+        if (state.view === 'month') {
+            return `${MESES_PT[state.anchorDate.getMonth()]} de ${state.anchorDate.getFullYear()}`;
+        }
+        const seg = getMonday(state.anchorDate);
+        const sex = addDays(seg, 4);
+        if (seg.getMonth() === sex.getMonth()) {
+            return `${pad2(seg.getDate())} – ${pad2(sex.getDate())} de ${MESES_PT[seg.getMonth()]} ${seg.getFullYear()}`;
+        }
+        return `${pad2(seg.getDate())}/${pad2(seg.getMonth() + 1)} – ${pad2(sex.getDate())}/${pad2(sex.getMonth() + 1)}/${sex.getFullYear()}`;
+    }
+
+    function renderizarTelaCalendario() {
+        const main = document.getElementById('dynamic-content');
+        if (!main) return;
+
+        const eq = getEquipamentoAtual();
+        const esc = window.escapeHTML;
+        const eqAtivo = equipamentoAtivo(eq);
+        const reservasAtivasCount = state.minhasReservas.filter(r => r.status === 'confirmado' && parseDateTimeStr(r.fim) > new Date()).length;
+
+        const opcoesEq = state.equipments.map(e =>
+            `<option value="${e.id}" ${e.id === state.equipmentId ? 'selected' : ''}>${esc(e.nome)}${equipamentoAtivo(e) ? '' : ' (indisponível)'}</option>`
+        ).join('');
+
+        main.innerHTML = `
+            <header class="page-head fade-in">
+                <div>
+                    <p class="eyebrow">agenda do laboratório</p>
+                    <h1>${state.view === 'mine' ? 'Minhas reservas' : esc(eq ? eq.nome : 'Agendamento')}</h1>
+                    <p class="lede">
+                        Expediente: <strong>Seg a Qui 09:00–17:00</strong> · <strong>Sex 08:00–12:00</strong> (exceto feriados e dias especiais).
+                    </p>
+                </div>
+                <div class="page-actions">
+                    <button type="button" class="btn btn-secondary" onclick="window.UI.switchView('equipments')">
+                        ${window.Icon('arrow-left', { size: 14 })} Equipamentos
+                    </button>
+                    ${ehGestor() ? `
+                    <button type="button" class="btn btn-secondary" id="btn-cal-bloqueios">
+                        ${window.Icon('ban', { size: 14 })} Feriados / Bloqueios
+                    </button>` : ''}
+                    ${eq && eqAtivo ? `
+                    <button type="button" class="btn btn-primary" id="btn-cal-novo">
+                        ${window.Icon('plus', { size: 14 })} Novo agendamento
+                    </button>` : ''}
+                </div>
+            </header>
+
+            ${eq && !eqAtivo && state.view !== 'mine' ? `
+            <div class="note warn mb-md">
+                <strong>Equipamento indisponível.</strong> Este equipamento está com status "${esc(eq.status)}" e não aceita novos agendamentos no momento.
+            </div>` : ''}
+
+            <div class="cal-shell fade-in">
+                <div class="cal-toolbar">
+                    <div class="cal-toolbar-group">
+                        ${state.equipments.length ? `
+                        <select id="cal-eq-select" class="cal-eq-select" aria-label="Selecionar equipamento">
+                            ${opcoesEq}
+                        </select>` : ''}
+                        ${eq ? `
+                        <button type="button" class="link-btn" onclick="window.viewDossier(${eq.id})" title="Ver manual, vídeo e POPs vinculados">
+                            ${window.Icon('file-text', { size: 14 })} Ver POPs e manual
+                        </button>` : ''}
+                    </div>
+
+                    ${state.view !== 'mine' ? `
+                    <div class="cal-toolbar-group">
+                        <button type="button" class="btn btn-secondary btn-sm" id="btn-cal-prev" aria-label="Período anterior">${window.Icon('chevron-left', { size: 14 })}</button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="btn-cal-today">Hoje</button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="btn-cal-next" aria-label="Próximo período">${window.Icon('chevron-right', { size: 14 })}</button>
+                        <span class="cal-nav-range">${esc(tituloPeriodo())}</span>
+                    </div>` : ''}
+
+                    <div class="cal-view-switch" role="tablist" aria-label="Modo de visualização">
+                        <button type="button" class="cal-view-btn ${state.view === 'week' ? 'active' : ''}" data-cal-view="week">Semana</button>
+                        <button type="button" class="cal-view-btn ${state.view === 'month' ? 'active' : ''}" data-cal-view="month">Mês</button>
+                        <button type="button" class="cal-view-btn ${state.view === 'mine' ? 'active' : ''}" data-cal-view="mine">
+                            Minhas reservas${reservasAtivasCount ? ` (${reservasAtivasCount})` : ''}
+                        </button>
+                    </div>
+                </div>
+
+                <div id="cal-body"></div>
+            </div>
+        `;
+
+        vincularEventosToolbar();
+        renderizarCorpoCalendario();
+    }
+
+    function vincularEventosToolbar() {
+        document.getElementById('cal-eq-select')?.addEventListener('change', async (e) => {
+            state.equipmentId = Number(e.target.value);
+            if (state.view === 'mine') state.view = 'week';
+            await atualizarView();
+        });
+
+        document.getElementById('btn-cal-prev')?.addEventListener('click', async () => {
+            if (state.view === 'month') {
+                state.anchorDate = new Date(state.anchorDate.getFullYear(), state.anchorDate.getMonth() - 1, 1);
+            } else {
+                state.anchorDate = addDays(state.anchorDate, -7);
+            }
+            await atualizarView();
+        });
+
+        document.getElementById('btn-cal-next')?.addEventListener('click', async () => {
+            if (state.view === 'month') {
+                state.anchorDate = new Date(state.anchorDate.getFullYear(), state.anchorDate.getMonth() + 1, 1);
+            } else {
+                state.anchorDate = addDays(state.anchorDate, 7);
+            }
+            await atualizarView();
+        });
+
+        document.getElementById('btn-cal-today')?.addEventListener('click', async () => {
+            const hoje = new Date();
+            if (hoje.getDay() === 6) state.anchorDate = addDays(hoje, 2);
+            else if (hoje.getDay() === 0) state.anchorDate = addDays(hoje, 1);
+            else state.anchorDate = hoje;
+            await atualizarView();
+        });
+
+        document.querySelectorAll('[data-cal-view]').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                state.view = btn.getAttribute('data-cal-view');
+                await atualizarView();
+            });
+        });
+
+        document.getElementById('btn-cal-novo')?.addEventListener('click', () => {
+            abrirModalAgendamento();
+        });
+
+        document.getElementById('btn-cal-bloqueios')?.addEventListener('click', () => {
+            abrirModalBloqueios();
+        });
+    }
+
+    async function atualizarView() {
+        const body = document.getElementById('cal-body');
+        if (body) body.innerHTML = window.UI.loading('Atualizando agenda');
+        try {
+            await recarregarDadosAgenda();
+            renderizarTelaCalendario();
+        } catch (err) {
+            window.UI.showToast(err.message || 'Erro ao atualizar calendário.', 'error');
+        }
+    }
+
+    function renderizarCorpoCalendario() {
+        const body = document.getElementById('cal-body');
+        if (!body) return;
+        if (state.view === 'week') renderizarSemana(body);
+        else if (state.view === 'month') renderizarMes(body);
+        else renderizarMinhasReservas(body);
+    }
+
+    // ==========================================
+    // VISÃO SEMANAL (GOOGLE CALENDAR)
+    // ==========================================
+    function renderizarSemana(container) {
+        const esc = window.escapeHTML;
+        const seg = getMonday(state.anchorDate);
+        const dias = [0, 1, 2, 3, 4].map(i => addDays(seg, i));
+        const hojeISO = toISODate(new Date());
+        const agora = new Date();
+        const eq = getEquipamentoAtual();
+        const eqAtivo = equipamentoAtivo(eq);
+
+        const cabecalhos = dias.map(d => {
+            const iso = toISODate(d);
+            const exp = getExpedienteDia(d);
+            const bloqueio = getBloqueioDia(iso, state.equipmentId);
+            const ehHoje = iso === hojeISO;
+            return `
+                <div class="cal-day-head ${ehHoje ? 'is-today' : ''}">
+                    <span class="cal-day-name">${DIAS_CURTOS[d.getDay()]}</span>
+                    <span class="cal-day-num">${pad2(d.getDate())}</span>
+                    <span class="cal-day-hours-hint">${exp ? `${exp.inicio}–${exp.fim}` : 'Fechado'}</span>
+                    ${bloqueio ? `<span class="cal-day-holiday-tag" title="${esc(bloqueio.motivo)}">${esc(bloqueio.motivo)}</span>` : ''}
+                </div>`;
+        }).join('');
+
+        // Eixo de horários (08:00 a 17:00)
+        const labelsHora = [];
+        for (let h = HORA_INICIO_GRADE; h <= HORA_FIM_GRADE; h++) {
+            const topPx = (h - HORA_INICIO_GRADE) * PX_POR_HORA;
+            labelsHora.push(`<span class="cal-time-label" style="top:${topPx}px;">${pad2(h)}:00</span>`);
+        }
+
+        const colunasDias = dias.map(d => {
+            const iso = toISODate(d);
+            const exp = getExpedienteDia(d);
+            const bloqueio = getBloqueioDia(iso, state.equipmentId);
+            const ehHoje = iso === hojeISO;
+            const minAbertura = exp ? timeToMinutes(exp.inicio) : 9999;
+            const minFechamento = exp ? timeToMinutes(exp.fim) : -1;
+
+            const slots = [];
+            for (let idx = 0; idx < (HORA_FIM_GRADE - HORA_INICIO_GRADE) * 2; idx++) {
+                const startMin = HORA_INICIO_GRADE * 60 + idx * 30;
+                const endMin = startMin + 30;
+                const slotDt = new Date(d.getFullYear(), d.getMonth(), d.getDate(), Math.floor(startMin / 60), startMin % 60);
+                const dentroExp = exp && startMin >= minAbertura && endMin <= minFechamento;
+                const passado = slotDt < agora;
+                const aberto = eqAtivo && !bloqueio && dentroExp && !passado;
+                const isHourEnd = (idx % 2 === 1);
+
+                const cls = [
+                    'cal-slot',
+                    isHourEnd ? 'is-hour-end' : '',
+                    aberto ? 'is-open' : (!dentroExp || bloqueio ? 'is-closed' : 'is-past'),
+                ].filter(Boolean).join(' ');
+
+                const attrs = aberto
+                    ? `data-slot-date="${iso}" data-slot-start="${minutesToTime(startMin)}" title="Agendar em ${formatDateBR(d)} às ${minutesToTime(startMin)}"`
+                    : '';
+
+                slots.push(`<div class="${cls}" style="top:${idx * PX_POR_SLOT}px;" ${attrs}></div>`);
+            }
+
+            // Linha do horário atual
+            let linhaAgora = '';
+            if (ehHoje) {
+                const minAgora = agora.getHours() * 60 + agora.getMinutes();
+                if (minAgora >= HORA_INICIO_GRADE * 60 && minAgora <= HORA_FIM_GRADE * 60) {
+                    const topAgora = ((minAgora - HORA_INICIO_GRADE * 60) / 60) * PX_POR_HORA;
+                    linhaAgora = `<div class="cal-now-line" style="top:${topAgora}px;"></div>`;
+                }
+            }
+
+            // Eventos confirmados neste dia
+            const eventosDia = state.agendamentos
+                .filter(ag => toISODate(parseDateTimeStr(ag.inicio)) === iso)
+                .map(ag => {
+                    const dtIni = parseDateTimeStr(ag.inicio);
+                    const dtFim = parseDateTimeStr(ag.fim);
+                    const minIni = dtIni.getHours() * 60 + dtIni.getMinutes();
+                    const minFim = dtFim.getHours() * 60 + dtFim.getMinutes();
+                    const top = ((minIni - HORA_INICIO_GRADE * 60) / 60) * PX_POR_HORA + 2;
+                    const height = Math.max(24, ((minFim - minIni) / 60) * PX_POR_HORA - 4);
+
+                    const classe = ag.eh_meu ? 'is-mine' : 'is-other';
+                    const sub = ag.eh_meu ? 'Minha reserva' : (ag.tipo_solicitante === 'convidado' ? 'Convidado' : 'Membro');
+
+                    return `
+                        <button type="button" class="cal-event ${classe}" style="top:${top}px; height:${height}px;" data-ag-id="${ag.id}">
+                            <span class="cal-event-time">${formatTimeBR(dtIni)}–${formatTimeBR(dtFim)}</span>
+                            <span class="cal-event-title">${esc(ag.solicitante_nome)}</span>
+                            ${height >= 46 ? `<span class="cal-event-meta">${esc(sub)}</span>` : ''}
+                        </button>`;
+                }).join('');
+
+            const overlayFeriado = bloqueio
+                ? `<div class="cal-holiday-overlay">Indisponível · ${esc(bloqueio.motivo)}</div>`
+                : '';
+
+            return `
+                <div class="cal-day-col ${ehHoje ? 'is-today' : ''} ${bloqueio ? 'is-holiday' : ''}">
+                    ${slots.join('')}
+                    ${linhaAgora}
+                    ${overlayFeriado}
+                    ${eventosDia}
+                </div>`;
+        }).join('');
+
+        container.innerHTML = `
+            <div class="cal-legend">
+                <div class="cal-legend-items">
+                    <span class="cal-legend-item"><span class="cal-dot mine"></span> Minhas reservas</span>
+                    <span class="cal-legend-item"><span class="cal-dot other"></span> Reservado por outro usuário</span>
+                    <span class="cal-legend-item"><span class="cal-dot closed"></span> Fora do expediente</span>
+                    <span class="cal-legend-item"><span class="cal-dot holiday"></span> Feriado / Bloqueio</span>
+                </div>
+                <span>Clique em qualquer horário livre para agendar</span>
+            </div>
+            <div class="cal-week-wrap">
+                <div class="cal-week-grid">
+                    <div class="cal-week-head-corner">BRT</div>
+                    ${cabecalhos}
+                    <div class="cal-time-col">${labelsHora.join('')}</div>
+                    ${colunasDias}
+                </div>
+            </div>
+        `;
+
+        container.querySelectorAll('.cal-slot.is-open').forEach(slot => {
+            slot.addEventListener('click', () => {
+                const data = slot.getAttribute('data-slot-date');
+                const start = slot.getAttribute('data-slot-start');
+                abrirModalAgendamento({ data, inicio: start });
+            });
+        });
+
+        container.querySelectorAll('.cal-event[data-ag-id]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = Number(btn.getAttribute('data-ag-id'));
+                const ag = state.agendamentos.find(a => a.id === id);
+                if (ag) abrirModalDetalheReserva(ag);
+            });
+        });
+    }
+
+    // ==========================================
+    // VISÃO MENSAL
+    // ==========================================
+    function renderizarMes(container) {
+        const esc = window.escapeHTML;
+        const ano = state.anchorDate.getFullYear();
+        const mes = state.anchorDate.getMonth();
+        const primeiroDia = new Date(ano, mes, 1);
+        const inicioGrade = getMonday(primeiroDia);
+        const hojeISO = toISODate(new Date());
+
+        const porDia = {};
+        state.agendamentos.forEach(ag => {
+            const iso = toISODate(parseDateTimeStr(ag.inicio));
+            (porDia[iso] = porDia[iso] || []).push(ag);
+        });
+
+        const celulas = [];
+        for (let i = 0; i < 42; i++) {
+            const d = addDays(inicioGrade, i);
+            const iso = toISODate(d);
+            const foraDoMes = d.getMonth() !== mes;
+            const fimDeSemana = d.getDay() === 0 || d.getDay() === 6;
+            const ehHoje = iso === hojeISO;
+            const bloqueio = getBloqueioDia(iso, state.equipmentId);
+            const eventos = porDia[iso] || [];
+
+            const pills = [];
+            if (bloqueio) {
+                pills.push(`<div class="cal-month-pill holiday" title="${esc(bloqueio.motivo)}">${esc(bloqueio.motivo)}</div>`);
+            }
+            eventos.slice(0, 3).forEach(ag => {
+                const ini = formatTimeBR(parseDateTimeStr(ag.inicio));
+                pills.push(`<div class="cal-month-pill ${ag.eh_meu ? 'mine' : 'other'}" title="${esc(ini + ' ' + ag.solicitante_nome)}">${ini} · ${esc(ag.solicitante_nome)}</div>`);
+            });
+            if (eventos.length > 3) {
+                pills.push(`<span class="cal-month-more">+${eventos.length - 3} reserva(s)</span>`);
+            }
+
+            celulas.push(`
+                <div class="cal-month-cell ${foraDoMes ? 'is-outside' : ''} ${fimDeSemana ? 'is-weekend' : ''} ${ehHoje ? 'is-today' : ''} ${bloqueio ? 'is-holiday' : ''}" data-month-day="${iso}">
+                    <div class="cal-month-day-row">
+                        <span class="cal-month-day-num">${pad2(d.getDate())}</span>
+                        ${fimDeSemana ? '<span class="cal-day-hours-hint">Fechado</span>' : ''}
+                    </div>
+                    ${pills.join('')}
+                </div>`);
+        }
+
+        container.innerHTML = `
+            <div class="cal-legend">
+                <div class="cal-legend-items">
+                    <span class="cal-legend-item"><span class="cal-dot mine"></span> Minhas reservas</span>
+                    <span class="cal-legend-item"><span class="cal-dot other"></span> Outros agendamentos</span>
+                    <span class="cal-legend-item"><span class="cal-dot holiday"></span> Feriado / Bloqueio</span>
+                </div>
+                <span>Clique em um dia para abrir a grade semanal</span>
+            </div>
+            <div class="cal-month-wrap">
+                <div class="cal-month-grid">
+                    ${['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map(d => `<div class="cal-month-dow">${d}</div>`).join('')}
+                    ${celulas.join('')}
+                </div>
+            </div>
+        `;
+
+        container.querySelectorAll('.cal-month-cell[data-month-day]').forEach(cell => {
+            cell.addEventListener('click', async () => {
+                const d = parseLocalDate(cell.getAttribute('data-month-day'));
+                state.anchorDate = d;
+                state.view = 'week';
+                await atualizarView();
+            });
+        });
+    }
+
+    // ==========================================
+    // VISÃO MINHAS RESERVAS
+    // ==========================================
+    function renderizarMinhasReservas(container) {
+        const esc = window.escapeHTML;
+        const agora = new Date();
+        const futuras = state.minhasReservas
+            .filter(r => r.status === 'confirmado' && parseDateTimeStr(r.fim) > agora)
+            .sort((a, b) => parseDateTimeStr(a.inicio) - parseDateTimeStr(b.inicio));
+        const historico = state.minhasReservas
+            .filter(r => r.status !== 'confirmado' || parseDateTimeStr(r.fim) <= agora);
+
+        const renderCard = (ag) => {
+            const dtIni = parseDateTimeStr(ag.inicio);
+            const dtFim = parseDateTimeStr(ag.fim);
+            const cancelado = ag.status === 'cancelado';
+            const badge = cancelado
+                ? '<span class="badge badge-danger">Cancelado</span>'
+                : (dtFim <= agora ? '<span class="badge">Encerrado</span>' : '<span class="badge badge-success">Confirmado</span>');
+
+            return `
+                <article class="res-card ${cancelado ? 'is-cancelled' : ''}">
+                    <div class="res-card-head">
+                        <div>
+                            <div class="res-card-eq">${esc(ag.equipamento_nome || `Equipamento #${ag.equipamento_id}`)}</div>
+                            <div class="res-card-time">${formatDateBR(dtIni)} · ${formatTimeBR(dtIni)} às ${formatTimeBR(dtFim)}</div>
+                        </div>
+                        ${badge}
+                    </div>
+                    <div class="meta">Responsável: <strong>${esc(ag.solicitante_nome)}</strong></div>
+                    ${ag.insumos ? `<div class="res-card-insumos"><strong>Insumos:</strong> ${esc(ag.insumos)}</div>` : ''}
+                    ${cancelado && ag.motivo_cancelamento ? `<div class="meta">Motivo: ${esc(ag.motivo_cancelamento)}</div>` : ''}
+                    <div class="res-card-actions">
+                        <button type="button" class="link-btn" data-open-eq="${ag.equipamento_id}" data-open-date="${toISODate(dtIni)}">Ver no calendário</button>
+                        ${ag.pode_gerenciar ? `
+                            <button type="button" class="btn btn-secondary btn-sm" data-remarcar="${ag.id}">Remarcar</button>
+                            <button type="button" class="btn btn-danger btn-sm" data-desmarcar="${ag.id}">Desmarcar</button>
+                        ` : ''}
+                    </div>
+                </article>`;
+        };
+
+        if (!state.minhasReservas.length) {
+            container.innerHTML = window.UI.emptyState({
+                title: 'Você ainda não tem agendamentos',
+                description: 'Escolha um equipamento na tabela e clique em "Agendar" para reservar um horário livre.',
+                actionLabel: 'Ir para Equipamentos',
+                actionOnclick: "window.UI.switchView('equipments')",
+            });
+            return;
+        }
+
+        container.innerHTML = `
+            <h3 class="res-section-title">Próximas reservas (${futuras.length})</h3>
+            ${futuras.length
+                ? `<div class="res-list">${futuras.map(renderCard).join('')}</div>`
+                : '<p class="text-faint mb-md">Nenhuma reserva futura ativa.</p>'}
+
+            ${historico.length ? `
+                <h3 class="res-section-title">Histórico e cancelamentos (${historico.length})</h3>
+                <div class="res-list">${historico.map(renderCard).join('')}</div>
+            ` : ''}
+        `;
+
+        container.querySelectorAll('[data-open-eq]').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                state.equipmentId = Number(btn.getAttribute('data-open-eq'));
+                state.anchorDate = parseLocalDate(btn.getAttribute('data-open-date'));
+                state.view = 'week';
+                await atualizarView();
+            });
+        });
+
+        container.querySelectorAll('[data-remarcar]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const ag = state.minhasReservas.find(r => r.id === Number(btn.getAttribute('data-remarcar')));
+                if (ag) abrirModalAgendamento({ edicao: ag });
+            });
+        });
+
+        container.querySelectorAll('[data-desmarcar]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const ag = state.minhasReservas.find(r => r.id === Number(btn.getAttribute('data-desmarcar')));
+                if (ag) confirmarDesmarcar(ag);
+            });
+        });
+    }
+
+    // ==========================================
+    // MODAL DE AGENDAR / REMARCAR
+    // ==========================================
+    function gerarOpcoesHorario(exp) {
+        if (!exp) return [];
+        const minIni = timeToMinutes(exp.inicio);
+        const minFim = timeToMinutes(exp.fim);
+        const out = [];
+        for (let m = minIni; m <= minFim; m += 30) {
+            out.push(minutesToTime(m));
+        }
+        return out;
+    }
+
+    function abrirModalAgendamento(opts = {}) {
+        const antigo = document.getElementById('modal-agendamento-form');
+        if (antigo) antigo.remove();
+
+        const edicao = opts.edicao || null;
+        const eqId = edicao ? edicao.equipamento_id : state.equipmentId;
+        const eq = state.equipments.find(e => e.id === eqId) || getEquipamentoAtual();
+        const user = getUser();
+        const esc = window.escapeHTML;
+
+        let dataPadrao = opts.data;
+        let inicioPadrao = opts.inicio;
+        let fimPadrao = opts.fim;
+
+        if (edicao) {
+            const dtIni = parseDateTimeStr(edicao.inicio);
+            const dtFim = parseDateTimeStr(edicao.fim);
+            dataPadrao = toISODate(dtIni);
+            inicioPadrao = formatTimeBR(dtIni);
+            fimPadrao = formatTimeBR(dtFim);
+        } else if (!dataPadrao) {
+            let d = new Date();
+            if (d.getDay() === 6) d = addDays(d, 2);
+            else if (d.getDay() === 0) d = addDays(d, 1);
+            dataPadrao = toISODate(d);
+        }
+
+        const modalHtml = `
+        <div id="modal-agendamento-form" class="modal-overlay is-open">
+            <div class="modal-content modal-md">
+                <div class="modal-header">
+                    <div>
+                        <p class="eyebrow">${edicao ? 'remarcar agendamento' : 'novo agendamento'}</p>
+                        <h3>${esc(eq ? eq.nome : 'Agendar equipamento')}</h3>
+                    </div>
+                    ${window.UI.closeButton("document.getElementById('modal-agendamento-form')?.remove()")}
+                </div>
+
+                <form id="form-agendamento-eq">
+                    <div class="input-group">
+                        <label for="ag-nome">Nome do solicitante</label>
+                        <input type="text" id="ag-nome" required minlength="2" maxlength="120" value="${esc(edicao ? edicao.solicitante_nome : (user.nome || ''))}" placeholder="Seu nome completo">
+                    </div>
+
+                    <div class="field-grid">
+                        <div class="input-group">
+                            <label for="ag-data">Data</label>
+                            <input type="date" id="ag-data" required value="${esc(dataPadrao)}" min="${toISODate(new Date())}">
+                        </div>
+                        <div class="input-group">
+                            <label for="ag-inicio">Hora de início</label>
+                            <select id="ag-inicio" required></select>
+                        </div>
+                        <div class="input-group">
+                            <label for="ag-fim">Hora de término</label>
+                            <select id="ag-fim" required></select>
+                        </div>
+                    </div>
+
+                    <p id="ag-horario-hint" class="help" aria-live="polite"></p>
+
+                    <div class="input-group">
+                        <label for="ag-insumos">Insumos que precisará usar</label>
+                        <textarea id="ag-insumos" rows="3" required minlength="2" maxlength="1500" placeholder="Liste reagentes, consumíveis, vidrarias ou materiais que serão utilizados neste uso.">${esc(edicao ? (edicao.insumos || '') : '')}</textarea>
+                    </div>
+
+                    <div id="ag-feedback" class="feedback-msg" aria-live="polite"></div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('modal-agendamento-form')?.remove()">Cancelar</button>
+                        <button type="submit" id="btn-salvar-agendamento" class="btn btn-primary">
+                            <span class="btn-text">${edicao ? 'Salvar remarcação' : 'Confirmar agendamento'}</span>
+                            <span class="spinner hidden" aria-hidden="true"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>`;
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        const dataInput = document.getElementById('ag-data');
+        const selInicio = document.getElementById('ag-inicio');
+        const selFim = document.getElementById('ag-fim');
+        const hint = document.getElementById('ag-horario-hint');
+        const btnSalvar = document.getElementById('btn-salvar-agendamento');
+
+        function atualizarSelectsHorario(prefInicio, prefFim) {
+            const iso = dataInput.value;
+            if (!iso) return;
+            const d = parseLocalDate(iso);
+            const exp = getExpedienteDia(d);
+            const bloqueio = getBloqueioDia(iso, eqId);
+
+            if (!exp) {
+                selInicio.innerHTML = '<option value="">Fechado</option>';
+                selFim.innerHTML = '<option value="">Fechado</option>';
+                selInicio.disabled = true;
+                selFim.disabled = true;
+                btnSalvar.disabled = true;
+                hint.textContent = 'O laboratório não funciona aos sábados e domingos. Escolha um dia entre segunda e sexta.';
+                hint.classList.add('text-warning');
+                return;
+            }
+
+            if (bloqueio) {
+                selInicio.innerHTML = '<option value="">Indisponível</option>';
+                selFim.innerHTML = '<option value="">Indisponível</option>';
+                selInicio.disabled = true;
+                selFim.disabled = true;
+                btnSalvar.disabled = true;
+                hint.textContent = `Data bloqueada: ${bloqueio.motivo}. Escolha outra data.`;
+                hint.classList.add('text-warning');
+                return;
+            }
+
+            hint.classList.remove('text-warning');
+            hint.textContent = `Funcionamento em ${exp.nome}: ${exp.inicio} às ${exp.fim} (Horário de Brasília). Os gestores serão notificados por e-mail.`;
+            selInicio.disabled = false;
+            selFim.disabled = false;
+            btnSalvar.disabled = false;
+
+            const todos = gerarOpcoesHorario(exp);
+            const opcoesInicio = todos.slice(0, -1); // último horário não pode ser início
+            selInicio.innerHTML = opcoesInicio.map(h => `<option value="${h}">${h}</option>`).join('');
+
+            if (prefInicio && opcoesInicio.includes(prefInicio)) {
+                selInicio.value = prefInicio;
+            } else {
+                selInicio.value = opcoesInicio[0];
+            }
+
+            atualizarSelectFim(prefFim);
+        }
+
+        function atualizarSelectFim(prefFim) {
+            const iso = dataInput.value;
+            const exp = getExpedienteDia(parseLocalDate(iso));
+            if (!exp) return;
+            const todos = gerarOpcoesHorario(exp);
+            const minIni = timeToMinutes(selInicio.value);
+            const opcoesFim = todos.filter(h => timeToMinutes(h) > minIni);
+            selFim.innerHTML = opcoesFim.map(h => `<option value="${h}">${h}</option>`).join('');
+
+            if (prefFim && opcoesFim.includes(prefFim)) {
+                selFim.value = prefFim;
+            } else {
+                const padrao1h = minutesToTime(minIni + 60);
+                selFim.value = opcoesFim.includes(padrao1h) ? padrao1h : opcoesFim[0];
+            }
+        }
+
+        dataInput.addEventListener('change', () => atualizarSelectsHorario());
+        selInicio.addEventListener('change', () => atualizarSelectFim());
+
+        atualizarSelectsHorario(inicioPadrao, fimPadrao);
+
+        document.getElementById('form-agendamento-eq').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nome = document.getElementById('ag-nome').value.trim();
+            const insumos = document.getElementById('ag-insumos').value.trim();
+            const data = dataInput.value;
+            const horaIni = selInicio.value;
+            const horaFim = selFim.value;
+
+            if (!data || !horaIni || !horaFim) {
+                window.UI.showFormFeedback('ag-feedback', 'Selecione uma data e horário dentro do expediente.', true);
+                return;
+            }
+
+            window.UI.showFormFeedback('ag-feedback', '', false);
+            window.UI.setButtonLoading('btn-salvar-agendamento', true);
+
+            const body = {
+                solicitante_nome: nome,
+                insumos: insumos,
+                inicio: `${data}T${horaIni}:00`,
+                fim: `${data}T${horaFim}:00`,
+            };
+            if (!edicao) body.equipamento_id = eqId;
+
+            try {
+                const endpoint = edicao ? `/agendamentos/${edicao.id}` : '/agendamentos/';
+                const method = edicao ? 'PUT' : 'POST';
+                const res = await window.api.fetchProtected(endpoint, {
+                    method,
+                    body: JSON.stringify(body),
+                });
+                const respData = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    window.UI.showFormFeedback('ag-feedback', window.UI.mensagemLegivel(respData.detail || 'Não foi possível salvar o agendamento.'), true);
+                    return;
+                }
+
+                document.getElementById('modal-agendamento-form')?.remove();
+                window.UI.showToast(
+                    edicao
+                        ? 'Agendamento remarcado! Os gestores do laboratório foram notificados por e-mail.'
+                        : 'Horário agendado com sucesso! Os gestores do laboratório foram notificados por e-mail.',
+                    'success'
+                );
+                await atualizarView();
+            } catch (err) {
+                window.UI.showFormFeedback('ag-feedback', 'Erro de conexão com o servidor.', true);
+            } finally {
+                window.UI.setButtonLoading('btn-salvar-agendamento', false);
+            }
+        });
+    }
+
+    // ==========================================
+    // MODAL DE DETALHE & CANCELAMENTO
+    // ==========================================
+    function abrirModalDetalheReserva(ag) {
+        const antigo = document.getElementById('modal-agendamento-detalhe');
+        if (antigo) antigo.remove();
+
+        const esc = window.escapeHTML;
+        const dtIni = parseDateTimeStr(ag.inicio);
+        const dtFim = parseDateTimeStr(ag.fim);
+        const tipo = ag.tipo_solicitante === 'convidado' ? 'Convidado externo' : 'Membro do laboratório';
+
+        const modalHtml = `
+        <div id="modal-agendamento-detalhe" class="modal-overlay is-open">
+            <div class="modal-content modal-sm">
+                <div class="modal-header">
+                    <div>
+                        <p class="eyebrow">${ag.eh_meu ? 'sua reserva' : 'horário reservado'}</p>
+                        <h3>${esc(ag.equipamento_nome || 'Agendamento')}</h3>
+                    </div>
+                    ${window.UI.closeButton("document.getElementById('modal-agendamento-detalhe')?.remove()")}
+                </div>
+
+                <dl class="dl">
+                    <div>
+                        <dt>data e horário</dt>
+                        <dd class="mono">${formatDateBR(dtIni)} · ${formatTimeBR(dtIni)} às ${formatTimeBR(dtFim)}</dd>
+                    </div>
+                    <div>
+                        <dt>solicitante</dt>
+                        <dd>${esc(ag.solicitante_nome)} <span class="meta">(${tipo})</span>${ag.solicitante_email ? `<br><span class="meta">${esc(ag.solicitante_email)}</span>` : ''}</dd>
+                    </div>
+                    ${ag.insumos ? `
+                    <div>
+                        <dt>insumos</dt>
+                        <dd>${esc(ag.insumos)}</dd>
+                    </div>` : ''}
+                </dl>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('modal-agendamento-detalhe')?.remove()">Fechar</button>
+                    ${ag.pode_gerenciar ? `
+                        <button type="button" class="btn btn-secondary" id="btn-detalhe-remarcar">Remarcar</button>
+                        <button type="button" class="btn btn-danger" id="btn-detalhe-desmarcar">Desmarcar</button>
+                    ` : ''}
+                </div>
+            </div>
+        </div>`;
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        document.getElementById('btn-detalhe-remarcar')?.addEventListener('click', () => {
+            document.getElementById('modal-agendamento-detalhe')?.remove();
+            abrirModalAgendamento({ edicao: ag });
+        });
+
+        document.getElementById('btn-detalhe-desmarcar')?.addEventListener('click', () => {
+            document.getElementById('modal-agendamento-detalhe')?.remove();
+            confirmarDesmarcar(ag);
+        });
+    }
+
+    function confirmarDesmarcar(ag) {
+        const antigo = document.getElementById('modal-desmarcar-ag');
+        if (antigo) antigo.remove();
+
+        const esc = window.escapeHTML;
+        const dtIni = parseDateTimeStr(ag.inicio);
+        const dtFim = parseDateTimeStr(ag.fim);
+
+        const modalHtml = `
+        <div id="modal-desmarcar-ag" class="modal-overlay is-open">
+            <div class="modal-content modal-sm">
+                <div class="modal-header">
+                    <h3>Desmarcar agendamento</h3>
+                    ${window.UI.closeButton("document.getElementById('modal-desmarcar-ag')?.remove()")}
+                </div>
+                <p class="dialog-text mb-md">
+                    Deseja cancelar a reserva de <strong>${esc(ag.equipamento_nome || 'equipamento')}</strong> em
+                    <strong>${formatDateBR(dtIni)} (${formatTimeBR(dtIni)}–${formatTimeBR(dtFim)})</strong>?
+                    O horário voltará a ficar livre e os gestores serão avisados por e-mail.
+                </p>
+                <div class="input-group">
+                    <label for="cancel-motivo">Motivo do cancelamento (opcional)</label>
+                    <input type="text" id="cancel-motivo" maxlength="500" placeholder="Ex.: Ensaio adiado para a próxima semana">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('modal-desmarcar-ag')?.remove()">Manter reserva</button>
+                    <button type="button" class="btn btn-danger" id="btn-confirmar-cancelamento">Desmarcar</button>
+                </div>
+            </div>
+        </div>`;
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        document.getElementById('btn-confirmar-cancelamento').addEventListener('click', async (e) => {
+            const btn = e.currentTarget;
+            btn.disabled = true;
+            btn.textContent = 'Desmarcando...';
+            const motivo = (document.getElementById('cancel-motivo')?.value || '').trim() || null;
+
+            try {
+                const res = await window.api.fetchProtected(`/agendamentos/${ag.id}`, {
+                    method: 'DELETE',
+                    body: JSON.stringify({ motivo }),
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    window.UI.showToast(window.UI.mensagemLegivel(data.detail || 'Não foi possível desmarcar.'), 'error');
+                    btn.disabled = false;
+                    btn.textContent = 'Desmarcar';
+                    return;
+                }
+                document.getElementById('modal-desmarcar-ag')?.remove();
+                window.UI.showToast('Agendamento desmarcado e gestores notificados por e-mail.', 'success');
+                await atualizarView();
+            } catch (err) {
+                window.UI.showToast('Erro de conexão ao desmarcar.', 'error');
+                btn.disabled = false;
+                btn.textContent = 'Desmarcar';
+            }
+        });
+    }
+
+    // ==========================================
+    // MODAL DE FERIADOS / BLOQUEIOS (GESTORES)
+    // ==========================================
+    async function abrirModalBloqueios() {
+        const antigo = document.getElementById('modal-bloqueios-cal');
+        if (antigo) antigo.remove();
+
+        const esc = window.escapeHTML;
+        const eqOptions = `<option value="">Laboratório inteiro (feriado / recesso)</option>` +
+            state.equipments.map(e => `<option value="${e.id}">Apenas: ${esc(e.nome)}</option>`).join('');
+
+        const modalHtml = `
+        <div id="modal-bloqueios-cal" class="modal-overlay is-open">
+            <div class="modal-content modal-md">
+                <div class="modal-header">
+                    <div>
+                        <p class="eyebrow">gestão do calendário</p>
+                        <h3>Feriados e dias especiais</h3>
+                    </div>
+                    ${window.UI.closeButton("document.getElementById('modal-bloqueios-cal')?.remove()")}
+                </div>
+
+                <form id="form-novo-bloqueio">
+                    <div class="field-grid">
+                        <div class="input-group">
+                            <label for="bloq-data">Data</label>
+                            <input type="date" id="bloq-data" required min="${toISODate(new Date())}">
+                        </div>
+                        <div class="input-group">
+                            <label for="bloq-escopo">Abrangência</label>
+                            <select id="bloq-escopo">${eqOptions}</select>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="bloq-motivo">Motivo</label>
+                        <input type="text" id="bloq-motivo" required minlength="2" maxlength="200" placeholder="Ex.: Feriado Nacional, Manutenção preventiva, Recesso">
+                    </div>
+                    <div id="bloq-feedback" class="feedback-msg"></div>
+                    <button type="submit" class="btn btn-primary btn-sm">Adicionar bloqueio</button>
+                </form>
+
+                <h4 class="res-section-title">Bloqueios cadastrados</h4>
+                <div id="lista-bloqueios-modal" class="bloqueios-list">${window.UI.loading('Carregando')}</div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('modal-bloqueios-cal')?.remove()">Fechar</button>
+                </div>
+            </div>
+        </div>`;
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        async function carregarListaBloqueios() {
+            const box = document.getElementById('lista-bloqueios-modal');
+            if (!box) return;
+            const res = await window.api.fetchProtected(`/agendamentos/bloqueios?inicio=${toISODate(new Date())}`);
+            const itens = res.ok ? await res.json() : [];
+            if (!itens.length) {
+                box.innerHTML = '<p class="text-faint">Nenhum feriado ou bloqueio futuro cadastrado.</p>';
+                return;
+            }
+            box.innerHTML = itens.map(b => `
+                <div class="bloqueio-row">
+                    <div>
+                        <strong class="mono">${formatDateBR(parseLocalDate(b.data))}</strong>
+                        · ${esc(b.motivo)}
+                        <span class="meta">(${b.equipamento_nome ? esc(b.equipamento_nome) : 'Laboratório inteiro'})</span>
+                    </div>
+                    <button type="button" class="link-btn danger" data-del-bloq="${b.id}">Remover</button>
+                </div>`).join('');
+
+            box.querySelectorAll('[data-del-bloq]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const id = Number(btn.getAttribute('data-del-bloq'));
+                    const r = await window.api.fetchProtected(`/agendamentos/bloqueios/${id}`, { method: 'DELETE' });
+                    if (r.ok) {
+                        window.UI.showToast('Bloqueio removido.', 'success');
+                        await carregarListaBloqueios();
+                        await atualizarView();
+                    } else {
+                        window.UI.showToast('Erro ao remover bloqueio.', 'error');
+                    }
+                });
+            });
+        }
+
+        document.getElementById('form-novo-bloqueio').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = document.getElementById('bloq-data').value;
+            const eqVal = document.getElementById('bloq-escopo').value;
+            const motivo = document.getElementById('bloq-motivo').value.trim();
+
+            const res = await window.api.fetchProtected('/agendamentos/bloqueios', {
+                method: 'POST',
+                body: JSON.stringify({
+                    data,
+                    equipamento_id: eqVal ? Number(eqVal) : null,
+                    motivo,
+                }),
+            });
+            const payload = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                window.UI.showFormFeedback('bloq-feedback', window.UI.mensagemLegivel(payload.detail || 'Não foi possível salvar.'), true);
+                return;
+            }
+            window.UI.showFormFeedback('bloq-feedback', '', false);
+            e.target.reset();
+            window.UI.showToast('Feriado/bloqueio cadastrado.', 'success');
+            await carregarListaBloqueios();
+            await atualizarView();
+        });
+
+        await carregarListaBloqueios();
+    }
+})();
