@@ -1,0 +1,37 @@
+/* ==========================================
+   TOKENS DO DESIGN SYSTEM (design-system-enforcer)
+   Fonte única de cor, borda e raio. Não declare estes valores em outro lugar.
+   ========================================== */
+:root {
+    /* Superfícies */
+    --bg-canvas: #F6F7F9;
+    --bg-surface: #FFFFFF;
+    --bg-subtle: #ECEEF2;
+
+    /* Bordas */
+    --border-subtle: #E1E4EA;
+    --border-strong: #C2C8D2;
+
+    /* Texto */
+    --text-primary: #111318;
+    --text-secondary: #47505E;
+    --text-muted: #6E7787;
+
+    /* Ação e marca */
+    --accent-primary: #111318;
+    --accent-hover: #272C36;
+    --accent-brand: #0F52BA;
+    --accent-brand-bg: #EEF4FC;
+
+    /* Estados */
+    --success-text: #146C43;
+    --success-bg: #EBF7F0;
+    --warning-text: #9A5B00;
+    --warning-bg: #FEF5E7;
+    --danger-text: #B42318;
+    --danger-bg: #FEF0EF;
+
+    /* Raios */
+    --radius-sm: 4px;
+    --radius-md: 6px;
+}

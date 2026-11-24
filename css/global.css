@@ -1,8 +1,7 @@
 /* ==========================================
-   VARIÁVEIS E BASE DO SISTEMA — ESTILO AGENT ENGINE PORTAL (AZUL MODERNO)
-   Arquitetura Bento Command Center: cartões com borda especular sutil,
-   iluminação radial azul elétrica (#3B82F6 / #2563EB) substituindo o verde,
-   cápsulas de status luminosas e superfícies em camadas de alto contraste.
+   VARIÁVEIS E BASE DO SISTEMA
+   Cores, bordas e raios vêm de tokens.css (design-system-enforcer).
+   Este arquivo só define aliases semânticos, espaçamento e tipografia.
    ========================================== */
 :root {
     --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
@@ -21,13 +20,10 @@
     --space-10: 40px;
     --space-12: 48px;
 
-    /* Cantos Bento arredondados (Agent Engine Portal) */
-    --radius-xs: 6px;
-    --radius-sm: 10px;
-    --radius: 12px;
-    --radius-lg: 18px;
-    --radius-xl: 22px;
-    --radius-pill: 999px;
+    /* Raios: aliases legados apontando para tokens.css (--radius-sm / --radius-md) */
+    --radius-xs: var(--radius-sm);
+    --radius: var(--radius-md);
+    --radius-lg: var(--radius-md);
 
     /* Tipografia */
     --fs-2xs: 11px;
@@ -65,135 +61,86 @@
 }
 
 /* ==========================================
-   MODO ESCURO (PADRÃO AGENT ENGINE PORTAL) — CARBON & ELECTRIC BLUE
+   CAMADA SEMÂNTICA — mapeia os nomes usados nos componentes para tokens.css.
+   Padrão (sem data-theme) e [data-theme="light"]: paleta do design system.
+   Sem gradientes, sem brilhos, sem sombras difusas.
    ========================================== */
 :root,
-[data-theme="dark"] {
-    color-scheme: dark;
-
-    --bg: #070A10;
-    --surface: #0D121C;
-    --surface-2: #131A28;
-    --surface-3: #1B2436;
-    --surface-sunk: #05070B;
-    --surface-hover: #161F30;
-
-    --line: rgba(255, 255, 255, 0.07);
-    --line-strong: rgba(255, 255, 255, 0.14);
-    --line-focus: #3B82F6;
-
-    --text: #F8FAFC;
-    --text-2: #CBD5E1;
-    --muted: #8494AD;
-    --faint: #526077;
-
-    /* Azul elétrico moderno no lugar do verde neon do Agent Engine */
-    --accent: #60A5FA;
-    --accent-solid: #2563EB;
-    --accent-hover: #1D4ED8;
-    --accent-ink: #FFFFFF;
-    --accent-tint: rgba(59, 130, 246, 0.14);
-    --accent-border: rgba(59, 130, 246, 0.38);
-    --accent-gradient: linear-gradient(180deg, #3B82F6 0%, #2563EB 100%);
-    --accent-shadow: 0 4px 18px -2px rgba(37, 99, 235, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.28);
-    --card-glow: radial-gradient(180px circle at 100% 0%, rgba(59, 130, 246, 0.12), transparent 70%);
-    --card-specular: inset 0 1px 0 rgba(255, 255, 255, 0.07);
-
-    --success: #10B981;
-    --success-ink: #34D399;
-    --success-tint: rgba(16, 185, 129, 0.14);
-    --success-border: rgba(16, 185, 129, 0.35);
-
-    --warning: #F59E0B;
-    --warning-ink: #FBBF24;
-    --warning-tint: rgba(245, 158, 11, 0.14);
-    --warning-border: rgba(245, 158, 11, 0.35);
-
-    --danger: #F43F5E;
-    --danger-ink: #FB7185;
-    --danger-tint: rgba(244, 63, 94, 0.14);
-    --danger-border: rgba(244, 63, 94, 0.35);
-
-    --info: #38BDF8;
-    --info-ink: #38BDF8;
-    --info-tint: rgba(56, 189, 248, 0.14);
-    --info-border: rgba(56, 189, 248, 0.35);
-
-    --overlay: rgba(2, 6, 14, 0.76);
-    --shadow-card: 0 8px 24px -4px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-    --shadow-pop: 0 20px 44px -8px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    --grid-line: rgba(255, 255, 255, 0.025);
-    --ambient-glow: radial-gradient(ellipse 65% 35% at 55% 0%, rgba(37, 99, 235, 0.14), transparent 75%);
-
-    --bg-primary: var(--bg);
-    --bg-secondary: var(--surface);
-    --bg-tertiary: var(--surface-2);
-    --text-primary: var(--text);
-    --text-secondary: var(--muted);
-    --accent-primary: var(--accent-solid);
-    --border-color: var(--line);
-    --border-focus: var(--line-focus);
-    --radius-md: var(--radius);
-}
-
-/* ==========================================
-   MODO CLARO — AGENT ENGINE LIGHT BENTO
-   ========================================== */
 [data-theme="light"] {
     color-scheme: light;
 
-    --bg: #EEF2F8;
-    --surface: #FFFFFF;
-    --surface-2: #F4F7FC;
-    --surface-3: #E6ECF5;
-    --surface-sunk: #E5EBF4;
-    --surface-hover: #F0F5FC;
+    --bg: var(--bg-canvas);
+    --surface: var(--bg-surface);
+    --surface-2: var(--bg-subtle);
+    --surface-3: var(--bg-subtle);
+    --surface-sunk: var(--bg-subtle);
+    --surface-hover: var(--bg-subtle);
 
-    --line: rgba(15, 23, 42, 0.08);
-    --line-strong: rgba(15, 23, 42, 0.15);
-    --line-focus: #2563EB;
+    --line: var(--border-subtle);
+    --line-strong: var(--border-strong);
+    --line-focus: var(--accent-brand);
 
-    --text: #0B1120;
-    --text-2: #334155;
-    --muted: #64748B;
-    --faint: #94A3B8;
+    --text: var(--text-primary);
+    --text-2: var(--text-secondary);
+    --muted: var(--text-muted);
+    --faint: var(--text-muted);
 
-    --accent: #2563EB;
-    --accent-solid: #2563EB;
-    --accent-hover: #1D4ED8;
-    --accent-ink: #FFFFFF;
-    --accent-tint: rgba(37, 99, 235, 0.09);
-    --accent-border: rgba(37, 99, 235, 0.28);
-    --accent-gradient: linear-gradient(180deg, #3B82F6 0%, #2563EB 100%);
-    --accent-shadow: 0 4px 14px -2px rgba(37, 99, 235, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.35);
-    --card-glow: radial-gradient(180px circle at 100% 0%, rgba(37, 99, 235, 0.07), transparent 70%);
-    --card-specular: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    --accent: var(--accent-brand);
+    --accent-solid: var(--accent-brand);
+    --accent-ink: var(--bg-surface);
+    --accent-tint: var(--accent-brand-bg);
+    --accent-border: color-mix(in srgb, var(--accent-brand) 28%, var(--accent-brand-bg));
 
-    --success: #059669;
-    --success-ink: #047857;
-    --success-tint: rgba(16, 185, 129, 0.1);
-    --success-border: rgba(16, 185, 129, 0.28);
+    --success: var(--success-text);
+    --success-ink: var(--success-text);
+    --success-tint: var(--success-bg);
+    --success-border: color-mix(in srgb, var(--success-text) 28%, var(--success-bg));
 
-    --warning: #D97706;
-    --warning-ink: #B45309;
-    --warning-tint: rgba(245, 158, 11, 0.1);
-    --warning-border: rgba(245, 158, 11, 0.3);
+    --warning: var(--warning-text);
+    --warning-ink: var(--warning-text);
+    --warning-tint: var(--warning-bg);
+    --warning-border: color-mix(in srgb, var(--warning-text) 28%, var(--warning-bg));
 
-    --danger: #E11D48;
-    --danger-ink: #BE123C;
-    --danger-tint: rgba(225, 29, 72, 0.1);
-    --danger-border: rgba(225, 29, 72, 0.28);
+    --danger: var(--danger-text);
+    --danger-ink: var(--danger-text);
+    --danger-tint: var(--danger-bg);
+    --danger-border: color-mix(in srgb, var(--danger-text) 28%, var(--danger-bg));
 
-    --info: #0284C7;
-    --info-ink: #0369A1;
-    --info-tint: rgba(14, 165, 233, 0.1);
-    --info-border: rgba(14, 165, 233, 0.28);
+    --info: var(--accent-brand);
+    --info-ink: var(--accent-brand);
+    --info-tint: var(--accent-brand-bg);
+    --info-border: color-mix(in srgb, var(--accent-brand) 28%, var(--accent-brand-bg));
 
-    --overlay: rgba(15, 23, 42, 0.4);
-    --shadow-card: 0 6px 20px -4px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.03);
-    --shadow-pop: 0 18px 38px -6px rgba(15, 23, 42, 0.12);
-    --grid-line: rgba(15, 23, 42, 0.025);
-    --ambient-glow: radial-gradient(ellipse 65% 35% at 55% 0%, rgba(37, 99, 235, 0.08), transparent 75%);
+    --overlay: rgb(17 19 24 / 0.45);
+}
+
+/* ==========================================
+   MODO ESCURO (opcional, via botão de tema) — mesmos nomes de token,
+   valores escuros e planos. Sem gradientes nem brilhos.
+   ========================================== */
+[data-theme="dark"] {
+    color-scheme: dark;
+
+    --bg-canvas: #0E1014;
+    --bg-surface: #16191F;
+    --bg-subtle: #1E222A;
+    --border-subtle: #2A2F38;
+    --border-strong: #3D4450;
+    --text-primary: #F2F4F7;
+    --text-secondary: #B4BBC6;
+    --text-muted: #8B93A1;
+    --accent-primary: #F2F4F7;
+    --accent-hover: #D5D9E0;
+    --accent-brand: #6EA2F0;
+    --accent-brand-bg: #17243A;
+    --success-text: #5CC98E;
+    --success-bg: #13261C;
+    --warning-text: #E3A84A;
+    --warning-bg: #2A2112;
+    --danger-text: #F0857A;
+    --danger-bg: #2D1715;
+
+    --overlay: rgb(0 0 0 / 0.6);
 }
 
 /* ==========================================
@@ -226,6 +173,11 @@
     box-sizing: border-box;
 }
 
+html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+}
+
 html, body {
     min-height: 100%;
     background-color: var(--bg);
@@ -243,6 +195,7 @@ h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-sans);
     font-weight: 600;
     line-height: 1.25;
+    text-wrap: balance;
 }
 
 h1 { font-size: var(--fs-xl); }
@@ -258,7 +211,21 @@ a {
 }
 a:hover {
     text-decoration: underline;
+    text-underline-offset: 2px;
 }
+
+/* Foco de teclado único para todo o sistema */
+:focus { outline: none; }
+:focus-visible {
+    outline: 2px solid var(--accent-brand);
+    outline-offset: 2px;
+}
+
+button, [role="button"], select, label[for], summary { touch-action: manipulation; }
+
+input[type="checkbox"], input[type="radio"], input[type="range"] { accent-color: var(--accent-primary); }
+
+::selection { background: var(--accent-brand-bg); color: var(--text-primary); }
 
 button, input, select, textarea {
     font: inherit;
@@ -328,23 +295,46 @@ hr {
 .font-bold   { font-weight: 600; }
 .font-medium { font-weight: 500; }
 .tabular     { font-variant-numeric: tabular-nums; }
+table, time, .mono, code, kbd { font-variant-numeric: tabular-nums; }
 .truncate    { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pre-wrap    { white-space: pre-wrap; word-break: break-word; }
 .break-words { word-break: break-word; }
 
+/* Rótulo de contexto acima de um título: frase curta, sem caixa-alta */
 .eyebrow {
     display: block;
-    font-family: var(--font-mono);
-    font-size: var(--fs-2xs);
-    font-weight: 600;
-    text-transform: uppercase;
-    color: var(--muted);
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    color: var(--text-secondary);
 }
+.eyebrow::first-letter { text-transform: uppercase; }
 
 .meta {
-    font-family: var(--font-mono);
     font-size: var(--fs-xs);
     color: var(--muted);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Link para pular a navegação (visível só com teclado) */
+.skip-link {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: var(--z-toast);
+    padding: 8px 12px;
+    background: var(--accent-primary);
+    color: var(--bg-surface);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    transform: translateY(-200%);
+}
+.skip-link:focus-visible { transform: none; text-decoration: none; }
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }
 
 .stack-xs > * + * { margin-top: var(--space-1); }

@@ -61,7 +61,9 @@ function loadEquipmentsTable() {
         erro: 'Não foi possível carregar os equipamentos.',
         renderLinha: (eq) => {
             const desc = eq.description ? window.escapeHTML(eq.description) : '';
-            const ativo = ['active', 'ativo'].includes(String(eq.status || 'ativo').toLowerCase());
+            const ativo = window.sgciEquipamentoAtivo
+                ? window.sgciEquipamentoAtivo(eq)
+                : !['inativ', 'manutenc', 'indispon', 'quebrad', 'desativ', 'bloquead', 'offline'].some(t => String(eq.status || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().includes(t));
 
             return `
             <tr class="clickable" onclick="window.viewDossier(${eq.id})">

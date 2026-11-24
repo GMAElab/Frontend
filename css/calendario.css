@@ -19,7 +19,6 @@
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: var(--radius);
-    box-shadow: var(--card-specular);
 }
 
 .cal-toolbar-group {
@@ -34,7 +33,7 @@
     max-width: 320px;
     height: var(--ctrl-sm);
     padding: 0 10px;
-    background: var(--surface-2);
+    background: var(--surface);
     color: var(--text);
     border: 1px solid var(--line-strong);
     border-radius: var(--radius-xs);
@@ -69,7 +68,7 @@
     padding: 6px 12px;
     border-radius: calc(var(--radius-xs) - 2px);
     cursor: pointer;
-    transition: all var(--t-fast) var(--ease);
+    transition: background-color var(--t-fast), color var(--t-fast);
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -77,12 +76,12 @@
 
 .cal-view-btn:hover {
     color: var(--text);
+    background: var(--bg-surface);
 }
 
 .cal-view-btn.active {
     background: var(--accent-solid);
     color: var(--accent-ink);
-    box-shadow: 0 1px 4px rgba(37, 99, 235, 0.35);
 }
 
 .cal-legend {
@@ -112,20 +111,14 @@
 .cal-dot {
     width: 10px;
     height: 10px;
-    border-radius: 3px;
+    border-radius: var(--radius-sm);
     display: inline-block;
 }
 
 .cal-dot.mine { background: var(--accent-solid); }
 .cal-dot.other { background: var(--surface-3); border: 1px solid var(--line-strong); }
 .cal-dot.closed {
-    background: repeating-linear-gradient(
-        -45deg,
-        var(--surface-2),
-        var(--surface-2) 3px,
-        var(--line) 3px,
-        var(--line) 6px
-    );
+    background: var(--bg-subtle);
     border: 1px solid var(--line-strong);
 }
 .cal-dot.holiday { background: var(--warning-tint); border: 1px solid var(--warning-border); }
@@ -138,7 +131,6 @@
     border: 1px solid var(--line);
     border-radius: var(--radius);
     overflow-x: auto;
-    box-shadow: var(--shadow-card);
 }
 
 .cal-week-grid {
@@ -154,9 +146,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: var(--font-mono);
     font-size: var(--fs-2xs);
-    color: var(--faint);
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
     padding: var(--space-2);
 }
 
@@ -206,7 +198,7 @@
 }
 
 .cal-day-hours-hint {
-    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
     font-size: 10px;
     color: var(--faint);
 }
@@ -214,7 +206,7 @@
 .cal-day-holiday-tag {
     margin-top: 2px;
     padding: 2px 7px;
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-sm);
     background: var(--warning-tint);
     border: 1px solid var(--warning-border);
     color: var(--warning-ink);
@@ -239,7 +231,7 @@
     left: 0;
     right: 8px;
     text-align: right;
-    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
     font-size: var(--fs-2xs);
     color: var(--muted);
     transform: translateY(-50%);
@@ -302,13 +294,7 @@
 }
 
 .cal-slot.is-closed {
-    background: repeating-linear-gradient(
-        -45deg,
-        transparent,
-        transparent 5px,
-        var(--line) 5px,
-        var(--line) 9px
-    );
+    background: var(--bg-subtle);
     cursor: not-allowed;
     opacity: 0.72;
 }
@@ -345,7 +331,7 @@
     position: absolute;
     left: 4px;
     right: 4px;
-    border-radius: 7px;
+    border-radius: var(--radius-sm);
     padding: 5px 8px;
     font-size: 11.5px;
     line-height: 1.25;
@@ -356,21 +342,19 @@
     flex-direction: column;
     gap: 2px;
     border: 1px solid transparent;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    transition: transform 120ms ease, box-shadow 120ms ease;
+    transition: border-color 120ms ease;
     text-align: left;
 }
 
 .cal-event:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.28);
+    border-color: var(--text-primary);
     z-index: 8;
 }
 
 .cal-event.is-mine {
-    background: linear-gradient(180deg, rgba(59, 130, 246, 0.92), rgba(37, 99, 235, 0.95));
-    border-color: rgba(147, 197, 253, 0.55);
-    color: #ffffff;
+    background: var(--accent-brand);
+    border-color: var(--accent-brand);
+    color: var(--bg-surface);
 }
 
 .cal-event.is-other {
@@ -381,7 +365,7 @@
 }
 
 .cal-event-time {
-    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
     font-size: 10px;
     font-weight: 600;
     opacity: 0.9;
@@ -425,7 +409,6 @@
     border: 1px solid var(--line);
     border-radius: var(--radius);
     overflow: hidden;
-    box-shadow: var(--shadow-card);
 }
 
 .cal-month-grid {
@@ -501,15 +484,15 @@
 
 .cal-month-cell.is-today .cal-month-day-num {
     background: var(--accent-solid);
-    color: #fff;
+    color: var(--accent-ink);
     padding: 2px 7px;
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-sm);
 }
 
 .cal-month-pill {
     font-size: 11px;
     padding: 2px 6px;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -518,7 +501,7 @@
 
 .cal-month-pill.mine {
     background: var(--accent-solid);
-    color: #fff;
+    color: var(--accent-ink);
 }
 
 .cal-month-pill.other {
@@ -542,10 +525,8 @@
    MINHAS RESERVAS & LISTAS
    ========================================== */
 .res-section-title {
-    font-size: var(--fs-xs);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--muted);
+    font-size: var(--fs-sm);
+    color: var(--text-secondary);
     font-weight: 600;
     margin: var(--space-3) 0 var(--space-2);
 }
@@ -564,7 +545,6 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
-    box-shadow: var(--card-specular);
 }
 
 .res-card.is-cancelled {
@@ -585,7 +565,7 @@
 }
 
 .res-card-time {
-    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
     font-size: var(--fs-xs);
     color: var(--accent);
     font-weight: 600;
@@ -600,6 +580,33 @@
     padding: 8px 10px;
     white-space: pre-wrap;
     word-break: break-word;
+}
+
+.res-feedback-box {
+    margin-top: var(--space-2);
+    padding: 10px 12px;
+    background: color-mix(in srgb, var(--success-tint) 35%, var(--surface-2));
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-xs);
+    font-size: var(--fs-sm);
+    color: var(--text-2);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.res-feedback-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+}
+
+.cal-event.is-multiday {
+    border-left-width: 4px;
 }
 
 .res-card-actions {
@@ -644,3 +651,15 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* ==========================================
+   ESTADOS INTERATIVOS DO CALENDÁRIO
+   ========================================== */
+.cal-eq-select:hover { border-color: var(--text-muted); }
+.cal-eq-select:focus-visible { border-color: var(--accent-brand); outline-offset: 1px; }
+.cal-view-btn:focus-visible { outline-offset: 0; }
+.cal-event:focus-visible { outline-offset: 1px; z-index: 8; }
+.cal-slot.is-open { cursor: pointer; }
+.cal-slot.is-open:hover { background: var(--accent-brand-bg); }
+.cal-month-cell[data-month-day] { cursor: pointer; }
+.cal-month-cell[data-month-day]:hover { background: var(--bg-canvas); }

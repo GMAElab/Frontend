@@ -241,7 +241,7 @@ const UI = {
 
     /** Linha de carregamento, usada enquanto uma lista ou painel busca dados. */
     loading: (label = 'Carregando') =>
-        `<div class="loading"><span class="spinner"></span>${label}</div>`,
+        `<div class="loading" role="status"><span class="spinner" aria-hidden="true"></span>${label}</div>`,
 
     /**
      * Substitui window.confirm() nativo por um modal com a identidade visual do sistema.
@@ -294,7 +294,7 @@ const UI = {
     /** Markup padrão para falhas de carregamento. */
     errorState: (message = 'Não foi possível carregar os dados.') => {
         return `
-            <div class="empty-state error">
+            <div class="empty-state error" role="alert">
                 <h4>${message}</h4>
                 <p>Verifique a conexão e tente novamente.</p>
             </div>`;

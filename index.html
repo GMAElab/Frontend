@@ -1,25 +1,27 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="dark">
+<html lang="pt-BR" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Entrar · SGCI / GMAE</title>
 
-    <meta name="color-scheme" content="dark light">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#F6F7F9">
     <script>try { var t = localStorage.getItem('sgci-theme-v3'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; if (localStorage.getItem('sgci-densidade') === 'bancada') document.documentElement.dataset.densidade = 'bancada'; } catch (e) {}</script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap">
-    <link rel="stylesheet" href="css/global.css?v=18">
-    <link rel="stylesheet" href="css/layout.css?v=18">
-    <link rel="stylesheet" href="css/components.css?v=18">
+    <link rel="stylesheet" href="tokens.css?v=2">
+    <link rel="stylesheet" href="css/global.css?v=20">
+    <link rel="stylesheet" href="css/layout.css?v=20">
+    <link rel="stylesheet" href="css/components.css?v=20">
 </head>
 <body>
     <main class="auth-shell">
         <div class="auth-topbar">
             <button type="button" class="theme-toggle" id="auth-theme-btn" aria-label="Alternar tema claro/escuro" title="Alternar tema claro/escuro">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+                <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
             </button>
         </div>
 
@@ -39,7 +41,7 @@
 
                     <div class="input-group">
                         <label for="email">E-mail</label>
-                        <input type="email" id="email" name="email" required autocomplete="username" placeholder="seu.email@instituicao.br">
+                        <input type="email" id="email" name="email" required autocomplete="username" placeholder="seu.email@instituicao.br" spellcheck="false">
                     </div>
 
                     <div class="input-group">
@@ -49,7 +51,7 @@
                         </div>
                         <div class="password-field">
                             <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="••••••••">
-                            <button type="button" class="password-toggle" data-target="password" aria-label="Mostrar senha"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                            <button type="button" class="password-toggle" data-target="password" aria-label="Mostrar senha"><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg></button>
                         </div>
                     </div>
 
@@ -71,12 +73,12 @@
 
                     <div class="input-group">
                         <label for="guest-nome">Nome completo</label>
-                        <input type="text" id="guest-nome" name="guest_nome" required minlength="2" maxlength="120" autocomplete="name" placeholder="Seu nome completo">
+                        <input type="text" id="guest-nome" name="guest_nome" required minlength="2" maxlength="120" autocomplete="name" placeholder="Ex.: Maria Souza Lima…">
                     </div>
 
                     <div class="input-group">
                         <label for="guest-email">E-mail</label>
-                        <input type="email" id="guest-email" name="guest_email" required autocomplete="email" placeholder="seu.email@instituicao.br">
+                        <input type="email" id="guest-email" name="guest_email" required autocomplete="email" placeholder="seu.email@instituicao.br" spellcheck="false">
                         <span class="help">Enviaremos um código de 6 dígitos para confirmar sua identidade e permitir remarcar ou desmarcar suas reservas.</span>
                     </div>
 
@@ -98,7 +100,7 @@
 
                     <div class="input-group">
                         <label for="guest-otp-code">Código de 6 dígitos</label>
-                        <input type="text" id="guest-otp-code" class="code-input" maxlength="6" required autocomplete="one-time-code" inputmode="numeric" placeholder="000000">
+                        <input type="text" id="guest-otp-code" class="code-input" maxlength="6" required autocomplete="one-time-code" inputmode="numeric" placeholder="000000" spellcheck="false">
                     </div>
 
                     <div id="guest-verify-feedback" class="feedback-msg" aria-live="polite"></div>
@@ -123,7 +125,7 @@
 
                     <div class="input-group">
                         <label for="codigo-2fa">Código de 6 dígitos</label>
-                        <input type="text" id="codigo-2fa" class="code-input" maxlength="8" required autocomplete="one-time-code" inputmode="numeric" placeholder="000000">
+                        <input type="text" id="codigo-2fa" class="code-input" maxlength="8" required autocomplete="one-time-code" inputmode="numeric" placeholder="000000" spellcheck="false">
                     </div>
 
                     <div id="2fa-feedback" class="feedback-msg" aria-live="polite"></div>
@@ -148,25 +150,25 @@
 
                     <div class="input-group">
                         <label for="reset-email">E-mail da conta</label>
-                        <input type="email" id="reset-email" required autocomplete="username" placeholder="seu.email@instituicao.br">
+                        <input type="email" id="reset-email" required autocomplete="username" placeholder="seu.email@instituicao.br" spellcheck="false">
                     </div>
 
                     <div class="input-group">
                         <label for="reset-new-password">Nova senha</label>
                         <div class="password-field">
-                            <input type="password" id="reset-new-password" required autocomplete="new-password" placeholder="Mínimo de 8 caracteres">
-                            <button type="button" class="password-toggle" data-target="reset-new-password" aria-label="Mostrar senha"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                            <input type="password" id="reset-new-password" required autocomplete="new-password" placeholder="Mínimo de 8 caracteres…">
+                            <button type="button" class="password-toggle" data-target="reset-new-password" aria-label="Mostrar senha"><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg></button>
                         </div>
                     </div>
 
                     <div class="field-grid">
                         <div class="input-group">
                             <label for="reset-2fa">Autenticador (6 díg.)</label>
-                            <input type="text" id="reset-2fa" class="mono" maxlength="6" inputmode="numeric" placeholder="000000">
+                            <input type="text" id="reset-2fa" class="mono" maxlength="6" inputmode="numeric" placeholder="000000" spellcheck="false">
                         </div>
                         <div class="input-group">
                             <label for="reset-backup">ou Código de backup</label>
-                            <input type="text" id="reset-backup" class="mono" placeholder="LEQM-...">
+                            <input type="text" id="reset-backup" class="mono" placeholder="LEQM-…" spellcheck="false">
                         </div>
                     </div>
 
@@ -184,7 +186,7 @@
     </main>
 
     <script src="js/api.js?v=6"></script>
-    <script src="js/ui.js?v=3402"></script>
+    <script src="js/ui.js?v=3403"></script>
     <script src="js/salvaguardas.js?v=2"></script>
     <script src="js/auth.js?v=2004"></script>
     <script>

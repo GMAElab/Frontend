@@ -1,6 +1,7 @@
 // ==========================================
 // MÓDULO DE AGENDAMENTO DE EQUIPAMENTOS
-// Calendário estilo Google Calendar + Minhas Reservas + Feriados/Bloqueios
+// Calendário estilo Google Calendar (1 dia ou intervalo de dias) +
+// Minhas Reservas + Feedback Pós-Uso + Feriados/Bloqueios
 // ==========================================
 (function () {
     const HORA_INICIO_GRADE = 8;  // 08:00 (sexta abre às 08:00)
@@ -14,6 +15,17 @@
         3: { inicio: '09:00', fim: '17:00', nome: 'Quarta-feira' },
         4: { inicio: '09:00', fim: '17:00', nome: 'Quinta-feira' },
         5: { inicio: '08:00', fim: '12:00', nome: 'Sexta-feira' },
+    };
+
+    const TERMOS_INDISPONIVEL = [
+        'inativ', 'manutenc', 'indispon', 'quebrad',
+        'desativ', 'bloquead', 'offline', 'parado', 'fora de uso',
+    ];
+
+    const CONDICAO_LABEL = {
+        normal: { texto: 'Uso normal · sem ocorrências', badge: 'badge-success' },
+        atencao: { texto: 'Ponto de atenção relatado', badge: 'badge-warning' },
+        problema: { texto: 'Problema / ocorrência relatada', badge: 'badge-danger' },
     };
 
     const MESES_PT = [
@@ -30,7 +42,6 @@
         agendamentos: [],
         bloqueios: [],
         minhasReservas: [],
-        filtrarMinhasPorEquip: false,
     };
 
     function getUser() {
@@ -41,6 +52,19 @@
         const u = getUser();
         return !u.is_guest && ['admin', 'tecnico', 'coordenador'].includes(u.role);
     }
+
+    function normalizarTexto(txt) {
+        return String(txt || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+    }
+
+    function equipamentoAtivo(eq) {
+        if (!eq) return false;
+        const st = normalizarTexto(eq.status);
+        if (!st) return true;
+        return !TERMOS_INDISPONIVEL.some(t => st.includes(t));
+    }
+
+    window.sgciEquipamentoAtivo = equipamentoAtivo;
 
     function pad2(n) { return String(n).padStart(2, '0'); }
 
@@ -67,6 +91,16 @@
 
     function formatTimeBR(d) {
         return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+    }
+
+    function formatPeriodoBR(dtIni, dtFim) {
+        const isoIni = toISODate(dtIni);
+        const isoFim = toISODate(dtFim);
+        if (isoIni === isoFim) {
+            return `${formatDateBR(dtIni)} · ${formatTimeBR(dtIni)} às ${formatTimeBR(dtFim)}`;
+        }
+        const diffDias = Math.round((parseLocalDate(isoFim) - parseLocalDate(isoIni)) / 86400000) + 1;
+        return `${formatDateBR(dtIni)} ${formatTimeBR(dtIni)} → ${formatDateBR(dtFim)} ${formatTimeBR(dtFim)} (${diffDias} dias)`;
     }
 
     function getMonday(date) {
@@ -102,14 +136,15 @@
         ) || null;
     }
 
-    function getEquipamentoAtual() {
-        return state.equipments.find(e => e.id === state.equipmentId) || null;
+    function getBloqueioNoIntervalo(isoIni, isoFim, eqId) {
+        if (!isoIni || !isoFim) return null;
+        return state.bloqueios.find(b =>
+            b.data >= isoIni && b.data <= isoFim && (b.equipamento_id === null || b.equipamento_id === eqId)
+        ) || null;
     }
 
-    function equipamentoAtivo(eq) {
-        if (!eq) return false;
-        const st = String(eq.status || 'active').toLowerCase();
-        return st === 'active' || st === 'ativo';
+    function getEquipamentoAtual() {
+        return state.equipments.find(e => e.id === state.equipmentId) || null;
     }
 
     // ==========================================
@@ -146,11 +181,8 @@
             );
         }
 
-        const qsMinhas = state.filtrarMinhasPorEquip && state.equipmentId
-            ? `?equipamento_id=${state.equipmentId}`
-            : '';
         promises.push(
-            window.api.fetchProtected(`/agendamentos/minhas${qsMinhas}`)
+            window.api.fetchProtected('/agendamentos/minhas')
                 .then(r => (r.ok ? r.json() : []))
                 .then(data => { state.minhasReservas = Array.isArray(data) ? data : []; })
         );
@@ -180,9 +212,7 @@
 
             state.equipmentId = Number(equipmentId) || state.equipments[0].id;
             state.view = initialTab || 'week';
-            state.filtrarMinhasPorEquip = false;
 
-            // Se hoje for fim de semana, já abre na próxima segunda-feira
             const hoje = new Date();
             if (hoje.getDay() === 6) state.anchorDate = addDays(hoje, 2);
             else if (hoje.getDay() === 0) state.anchorDate = addDays(hoje, 1);
@@ -206,7 +236,6 @@
                 state.equipmentId = state.equipments[0].id;
             }
             state.view = 'mine';
-            state.filtrarMinhasPorEquip = false;
             await recarregarDadosAgenda();
             renderizarTelaCalendario();
         } catch (err) {
@@ -237,6 +266,7 @@
         const esc = window.escapeHTML;
         const eqAtivo = equipamentoAtivo(eq);
         const reservasAtivasCount = state.minhasReservas.filter(r => r.status === 'confirmado' && parseDateTimeStr(r.fim) > new Date()).length;
+        const feedbacksPendentes = state.minhasReservas.filter(r => r.feedback_pendente);
 
         const opcoesEq = state.equipments.map(e =>
             `<option value="${e.id}" ${e.id === state.equipmentId ? 'selected' : ''}>${esc(e.nome)}${equipamentoAtivo(e) ? '' : ' (indisponível)'}</option>`
@@ -248,7 +278,7 @@
                     <p class="eyebrow">agenda do laboratório</p>
                     <h1>${state.view === 'mine' ? 'Minhas reservas' : esc(eq ? eq.nome : 'Agendamento')}</h1>
                     <p class="lede">
-                        Expediente: <strong>Seg a Qui 09:00–17:00</strong> · <strong>Sex 08:00–12:00</strong> (exceto feriados e dias especiais).
+                        Expediente: <strong>Seg a Qui 09:00–17:00</strong> · <strong>Sex 08:00–12:00</strong>. Você pode reservar por horas ou por intervalo de vários dias.
                     </p>
                 </div>
                 <div class="page-actions">
@@ -269,6 +299,14 @@
             ${eq && !eqAtivo && state.view !== 'mine' ? `
             <div class="note warn mb-md">
                 <strong>Equipamento indisponível.</strong> Este equipamento está com status "${esc(eq.status)}" e não aceita novos agendamentos no momento.
+            </div>` : ''}
+
+            ${feedbacksPendentes.length ? `
+            <div class="note accent mb-md" style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px;">
+                <span>
+                    <strong>Feedback pós-uso pendente:</strong> você tem ${feedbacksPendentes.length} uso(s) encerrado(s) aguardando relato do que foi feito e do resultado.
+                </span>
+                ${state.view !== 'mine' ? `<button type="button" class="btn btn-secondary btn-sm" id="btn-ir-feedbacks">Registrar feedback</button>` : ''}
             </div>` : ''}
 
             <div class="cal-shell fade-in">
@@ -296,7 +334,7 @@
                         <button type="button" class="cal-view-btn ${state.view === 'week' ? 'active' : ''}" data-cal-view="week">Semana</button>
                         <button type="button" class="cal-view-btn ${state.view === 'month' ? 'active' : ''}" data-cal-view="month">Mês</button>
                         <button type="button" class="cal-view-btn ${state.view === 'mine' ? 'active' : ''}" data-cal-view="mine">
-                            Minhas reservas${reservasAtivasCount ? ` (${reservasAtivasCount})` : ''}
+                            Minhas reservas${reservasAtivasCount ? ` (${reservasAtivasCount})` : ''}${feedbacksPendentes.length ? ' · !' : ''}
                         </button>
                     </div>
                 </div>
@@ -349,6 +387,11 @@
             });
         });
 
+        document.getElementById('btn-ir-feedbacks')?.addEventListener('click', async () => {
+            state.view = 'mine';
+            await atualizarView();
+        });
+
         document.getElementById('btn-cal-novo')?.addEventListener('click', () => {
             abrirModalAgendamento();
         });
@@ -378,7 +421,7 @@
     }
 
     // ==========================================
-    // VISÃO SEMANAL (GOOGLE CALENDAR)
+    // VISÃO SEMANAL (GOOGLE CALENDAR — SUPORTA MULTI-DIA)
     // ==========================================
     function renderizarSemana(container) {
         const esc = window.escapeHTML;
@@ -403,7 +446,6 @@
                 </div>`;
         }).join('');
 
-        // Eixo de horários (08:00 a 17:00)
         const labelsHora = [];
         for (let h = HORA_INICIO_GRADE; h <= HORA_FIM_GRADE; h++) {
             const topPx = (h - HORA_INICIO_GRADE) * PX_POR_HORA;
@@ -422,26 +464,32 @@
             for (let idx = 0; idx < (HORA_FIM_GRADE - HORA_INICIO_GRADE) * 2; idx++) {
                 const startMin = HORA_INICIO_GRADE * 60 + idx * 30;
                 const endMin = startMin + 30;
-                const slotDt = new Date(d.getFullYear(), d.getMonth(), d.getDate(), Math.floor(startMin / 60), startMin % 60);
+                const slotEndDt = new Date(d.getFullYear(), d.getMonth(), d.getDate(), Math.floor(endMin / 60), endMin % 60);
                 const dentroExp = exp && startMin >= minAbertura && endMin <= minFechamento;
-                const passado = slotDt < agora;
+                // Só considera passado quando o bloco de 30 min já encerrou
+                const passado = slotEndDt <= agora;
                 const aberto = eqAtivo && !bloqueio && dentroExp && !passado;
                 const isHourEnd = (idx % 2 === 1);
+
+                let motivoBloqueio = '';
+                if (!eqAtivo) motivoBloqueio = `Equipamento indisponível (${eq ? eq.status : ''}).`;
+                else if (bloqueio) motivoBloqueio = `Dia bloqueado: ${bloqueio.motivo}.`;
+                else if (!dentroExp) motivoBloqueio = `Fora do expediente (${exp ? exp.nome + ': ' + exp.inicio + '–' + exp.fim : 'Fechado'}).`;
+                else if (passado) motivoBloqueio = 'Este horário já passou. Escolha um horário futuro ou clique em "Novo agendamento".';
 
                 const cls = [
                     'cal-slot',
                     isHourEnd ? 'is-hour-end' : '',
-                    aberto ? 'is-open' : (!dentroExp || bloqueio ? 'is-closed' : 'is-past'),
+                    aberto ? 'is-open' : (!dentroExp || bloqueio || !eqAtivo ? 'is-closed' : 'is-past'),
                 ].filter(Boolean).join(' ');
 
                 const attrs = aberto
                     ? `data-slot-date="${iso}" data-slot-start="${minutesToTime(startMin)}" title="Agendar em ${formatDateBR(d)} às ${minutesToTime(startMin)}"`
-                    : '';
+                    : `data-slot-reason="${esc(motivoBloqueio)}" title="${esc(motivoBloqueio)}"`;
 
                 slots.push(`<div class="${cls}" style="top:${idx * PX_POR_SLOT}px;" ${attrs}></div>`);
             }
 
-            // Linha do horário atual
             let linhaAgora = '';
             if (ehHoje) {
                 const minAgora = agora.getHours() * 60 + agora.getMinutes();
@@ -451,23 +499,55 @@
                 }
             }
 
-            // Eventos confirmados neste dia
+            // Renderiza tanto reservas do dia quanto reservas MULTI-DIA que cobrem este dia
             const eventosDia = state.agendamentos
-                .filter(ag => toISODate(parseDateTimeStr(ag.inicio)) === iso)
+                .filter(ag => {
+                    const isoIni = toISODate(parseDateTimeStr(ag.inicio));
+                    const isoFim = toISODate(parseDateTimeStr(ag.fim));
+                    return iso >= isoIni && iso <= isoFim;
+                })
                 .map(ag => {
                     const dtIni = parseDateTimeStr(ag.inicio);
                     const dtFim = parseDateTimeStr(ag.fim);
-                    const minIni = dtIni.getHours() * 60 + dtIni.getMinutes();
-                    const minFim = dtFim.getHours() * 60 + dtFim.getMinutes();
-                    const top = ((minIni - HORA_INICIO_GRADE * 60) / 60) * PX_POR_HORA + 2;
-                    const height = Math.max(24, ((minFim - minIni) / 60) * PX_POR_HORA - 4);
+                    const isoIni = toISODate(dtIni);
+                    const isoFim = toISODate(dtFim);
+                    const ehMultiDia = isoIni !== isoFim;
+
+                    let minIniDia = dtIni.getHours() * 60 + dtIni.getMinutes();
+                    let minFimDia = dtFim.getHours() * 60 + dtFim.getMinutes();
+                    let etiquetaTempo = `${formatTimeBR(dtIni)}–${formatTimeBR(dtFim)}`;
+
+                    if (ehMultiDia) {
+                        const inicioExp = exp ? minAbertura : HORA_INICIO_GRADE * 60;
+                        const fimExp = exp ? minFechamento : HORA_FIM_GRADE * 60;
+
+                        if (iso === isoIni) {
+                            minFimDia = fimExp;
+                            etiquetaTempo = `${formatTimeBR(dtIni)} → continua`;
+                        } else if (iso === isoFim) {
+                            minIniDia = inicioExp;
+                            etiquetaTempo = `← até ${formatTimeBR(dtFim)}`;
+                        } else {
+                            minIniDia = inicioExp;
+                            minFimDia = fimExp;
+                            etiquetaTempo = `Dia inteiro (${formatDateBR(dtIni).slice(0, 5)}–${formatDateBR(dtFim).slice(0, 5)})`;
+                        }
+                    }
+
+                    minIniDia = Math.max(HORA_INICIO_GRADE * 60, minIniDia);
+                    minFimDia = Math.min(HORA_FIM_GRADE * 60, Math.max(minIniDia + 30, minFimDia));
+
+                    const top = ((minIniDia - HORA_INICIO_GRADE * 60) / 60) * PX_POR_HORA + 2;
+                    const height = Math.max(24, ((minFimDia - minIniDia) / 60) * PX_POR_HORA - 4);
 
                     const classe = ag.eh_meu ? 'is-mine' : 'is-other';
-                    const sub = ag.eh_meu ? 'Minha reserva' : (ag.tipo_solicitante === 'convidado' ? 'Convidado' : 'Membro');
+                    const sub = ag.eh_meu
+                        ? (ag.feedback_pendente ? 'Minha reserva · Feedback pendente' : 'Minha reserva')
+                        : (ag.tipo_solicitante === 'convidado' ? 'Convidado' : 'Membro');
 
                     return `
-                        <button type="button" class="cal-event ${classe}" style="top:${top}px; height:${height}px;" data-ag-id="${ag.id}">
-                            <span class="cal-event-time">${formatTimeBR(dtIni)}–${formatTimeBR(dtFim)}</span>
+                        <button type="button" class="cal-event ${classe}${ehMultiDia ? ' is-multiday' : ''}" style="top:${top}px; height:${height}px;" data-ag-id="${ag.id}">
+                            <span class="cal-event-time">${esc(etiquetaTempo)}</span>
                             <span class="cal-event-title">${esc(ag.solicitante_nome)}</span>
                             ${height >= 46 ? `<span class="cal-event-meta">${esc(sub)}</span>` : ''}
                         </button>`;
@@ -494,7 +574,7 @@
                     <span class="cal-legend-item"><span class="cal-dot closed"></span> Fora do expediente</span>
                     <span class="cal-legend-item"><span class="cal-dot holiday"></span> Feriado / Bloqueio</span>
                 </div>
-                <span>Clique em qualquer horário livre para agendar</span>
+                <span>Clique em um horário livre ou em "Novo agendamento" (suporta vários dias)</span>
             </div>
             <div class="cal-week-wrap">
                 <div class="cal-week-grid">
@@ -510,7 +590,14 @@
             slot.addEventListener('click', () => {
                 const data = slot.getAttribute('data-slot-date');
                 const start = slot.getAttribute('data-slot-start');
-                abrirModalAgendamento({ data, inicio: start });
+                abrirModalAgendamento({ dataInicio: data, dataFim: data, inicio: start });
+            });
+        });
+
+        container.querySelectorAll('.cal-slot[data-slot-reason]').forEach(slot => {
+            slot.addEventListener('click', () => {
+                const reason = slot.getAttribute('data-slot-reason');
+                if (reason) window.UI.showToast(reason, 'info');
             });
         });
 
@@ -525,7 +612,7 @@
     }
 
     // ==========================================
-    // VISÃO MENSAL
+    // VISÃO MENSAL (SUPORTA MULTI-DIA)
     // ==========================================
     function renderizarMes(container) {
         const esc = window.escapeHTML;
@@ -537,8 +624,12 @@
 
         const porDia = {};
         state.agendamentos.forEach(ag => {
-            const iso = toISODate(parseDateTimeStr(ag.inicio));
-            (porDia[iso] = porDia[iso] || []).push(ag);
+            const dIni = parseLocalDate(toISODate(parseDateTimeStr(ag.inicio)));
+            const dFim = parseLocalDate(toISODate(parseDateTimeStr(ag.fim)));
+            for (let cur = dIni; cur <= dFim; cur = addDays(cur, 1)) {
+                const iso = toISODate(cur);
+                (porDia[iso] = porDia[iso] || []).push(ag);
+            }
         });
 
         const celulas = [];
@@ -556,8 +647,13 @@
                 pills.push(`<div class="cal-month-pill holiday" title="${esc(bloqueio.motivo)}">${esc(bloqueio.motivo)}</div>`);
             }
             eventos.slice(0, 3).forEach(ag => {
-                const ini = formatTimeBR(parseDateTimeStr(ag.inicio));
-                pills.push(`<div class="cal-month-pill ${ag.eh_meu ? 'mine' : 'other'}" title="${esc(ini + ' ' + ag.solicitante_nome)}">${ini} · ${esc(ag.solicitante_nome)}</div>`);
+                const dtIni = parseDateTimeStr(ag.inicio);
+                const dtFim = parseDateTimeStr(ag.fim);
+                const multi = toISODate(dtIni) !== toISODate(dtFim);
+                const label = multi
+                    ? `${formatDateBR(dtIni).slice(0, 5)}–${formatDateBR(dtFim).slice(0, 5)} · ${ag.solicitante_nome}`
+                    : `${formatTimeBR(dtIni)} · ${ag.solicitante_nome}`;
+                pills.push(`<div class="cal-month-pill ${ag.eh_meu ? 'mine' : 'other'}" title="${esc(label)}">${esc(label)}</div>`);
             });
             if (eventos.length > 3) {
                 pills.push(`<span class="cal-month-more">+${eventos.length - 3} reserva(s)</span>`);
@@ -601,8 +697,24 @@
     }
 
     // ==========================================
-    // VISÃO MINHAS RESERVAS
+    // VISÃO MINHAS RESERVAS (COM FEEDBACK PÓS-USO)
     // ==========================================
+    function renderizarBlocoFeedback(ag) {
+        if (!ag.feedback_enviado_em) return '';
+        const esc = window.escapeHTML;
+        const cond = CONDICAO_LABEL[ag.feedback_condicao || 'normal'] || CONDICAO_LABEL.normal;
+        return `
+            <div class="res-feedback-box">
+                <div class="res-feedback-head">
+                    <strong>Feedback pós-uso</strong>
+                    <span class="badge ${cond.badge}">${esc(cond.texto)}</span>
+                </div>
+                <div><strong>O que foi feito:</strong> ${esc(ag.feedback_atividades || '')}</div>
+                <div><strong>Resultado:</strong> ${esc(ag.feedback_resultado || '')}</div>
+                ${ag.feedback_observacoes ? `<div><strong>Observações / Atenção:</strong> ${esc(ag.feedback_observacoes)}</div>` : ''}
+            </div>`;
+    }
+
     function renderizarMinhasReservas(container) {
         const esc = window.escapeHTML;
         const agora = new Date();
@@ -618,25 +730,35 @@
             const cancelado = ag.status === 'cancelado';
             const badge = cancelado
                 ? '<span class="badge badge-danger">Cancelado</span>'
-                : (dtFim <= agora ? '<span class="badge">Encerrado</span>' : '<span class="badge badge-success">Confirmado</span>');
+                : ag.feedback_pendente
+                    ? '<span class="badge badge-warning">Aguardando feedback</span>'
+                    : (dtFim <= agora ? '<span class="badge">Encerrado</span>' : '<span class="badge badge-success">Confirmado</span>');
+
+            const temFeedback = !!ag.feedback_enviado_em;
 
             return `
                 <article class="res-card ${cancelado ? 'is-cancelled' : ''}">
                     <div class="res-card-head">
                         <div>
                             <div class="res-card-eq">${esc(ag.equipamento_nome || `Equipamento #${ag.equipamento_id}`)}</div>
-                            <div class="res-card-time">${formatDateBR(dtIni)} · ${formatTimeBR(dtIni)} às ${formatTimeBR(dtFim)}</div>
+                            <div class="res-card-time">${esc(formatPeriodoBR(dtIni, dtFim))}</div>
                         </div>
                         ${badge}
                     </div>
                     <div class="meta">Responsável: <strong>${esc(ag.solicitante_nome)}</strong></div>
                     ${ag.insumos ? `<div class="res-card-insumos"><strong>Insumos:</strong> ${esc(ag.insumos)}</div>` : ''}
+                    ${renderizarBlocoFeedback(ag)}
                     ${cancelado && ag.motivo_cancelamento ? `<div class="meta">Motivo: ${esc(ag.motivo_cancelamento)}</div>` : ''}
                     <div class="res-card-actions">
                         <button type="button" class="link-btn" data-open-eq="${ag.equipamento_id}" data-open-date="${toISODate(dtIni)}">Ver no calendário</button>
                         ${ag.pode_gerenciar ? `
                             <button type="button" class="btn btn-secondary btn-sm" data-remarcar="${ag.id}">Remarcar</button>
                             <button type="button" class="btn btn-danger btn-sm" data-desmarcar="${ag.id}">Desmarcar</button>
+                        ` : ''}
+                        ${ag.pode_dar_feedback ? `
+                            <button type="button" class="btn ${temFeedback ? 'btn-secondary' : 'btn-primary'} btn-sm" data-feedback="${ag.id}">
+                                ${temFeedback ? 'Editar feedback' : 'Registrar feedback'}
+                            </button>
                         ` : ''}
                     </div>
                 </article>`;
@@ -645,7 +767,7 @@
         if (!state.minhasReservas.length) {
             container.innerHTML = window.UI.emptyState({
                 title: 'Você ainda não tem agendamentos',
-                description: 'Escolha um equipamento na tabela e clique em "Agendar" para reservar um horário livre.',
+                description: 'Escolha um equipamento na tabela e clique em "Agendar" para reservar um horário ou intervalo de dias.',
                 actionLabel: 'Ir para Equipamentos',
                 actionOnclick: "window.UI.switchView('equipments')",
             });
@@ -659,7 +781,7 @@
                 : '<p class="text-faint mb-md">Nenhuma reserva futura ativa.</p>'}
 
             ${historico.length ? `
-                <h3 class="res-section-title">Histórico e cancelamentos (${historico.length})</h3>
+                <h3 class="res-section-title">Histórico, feedbacks e cancelamentos (${historico.length})</h3>
                 <div class="res-list">${historico.map(renderCard).join('')}</div>
             ` : ''}
         `;
@@ -686,10 +808,17 @@
                 if (ag) confirmarDesmarcar(ag);
             });
         });
+
+        container.querySelectorAll('[data-feedback]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const ag = state.minhasReservas.find(r => r.id === Number(btn.getAttribute('data-feedback')));
+                if (ag) abrirModalFeedback(ag);
+            });
+        });
     }
 
     // ==========================================
-    // MODAL DE AGENDAR / REMARCAR
+    // MODAL DE AGENDAR / REMARCAR (1 DIA OU MULTI-DIA)
     // ==========================================
     function gerarOpcoesHorario(exp) {
         if (!exp) return [];
@@ -712,22 +841,28 @@
         const user = getUser();
         const esc = window.escapeHTML;
 
-        let dataPadrao = opts.data;
+        let dataIniPadrao = opts.dataInicio || opts.data;
+        let dataFimPadrao = opts.dataFim || opts.data;
         let inicioPadrao = opts.inicio;
         let fimPadrao = opts.fim;
 
         if (edicao) {
             const dtIni = parseDateTimeStr(edicao.inicio);
             const dtFim = parseDateTimeStr(edicao.fim);
-            dataPadrao = toISODate(dtIni);
+            dataIniPadrao = toISODate(dtIni);
+            dataFimPadrao = toISODate(dtFim);
             inicioPadrao = formatTimeBR(dtIni);
             fimPadrao = formatTimeBR(dtFim);
-        } else if (!dataPadrao) {
+        } else if (!dataIniPadrao) {
             let d = new Date();
             if (d.getDay() === 6) d = addDays(d, 2);
             else if (d.getDay() === 0) d = addDays(d, 1);
-            dataPadrao = toISODate(d);
+            dataIniPadrao = toISODate(d);
+            dataFimPadrao = dataIniPadrao;
         }
+        if (!dataFimPadrao) dataFimPadrao = dataIniPadrao;
+
+        const hojeISO = toISODate(new Date());
 
         const modalHtml = `
         <div id="modal-agendamento-form" class="modal-overlay is-open">
@@ -748,12 +883,19 @@
 
                     <div class="field-grid">
                         <div class="input-group">
-                            <label for="ag-data">Data</label>
-                            <input type="date" id="ag-data" required value="${esc(dataPadrao)}" min="${toISODate(new Date())}">
+                            <label for="ag-data-inicio">Data de início</label>
+                            <input type="date" id="ag-data-inicio" required value="${esc(dataIniPadrao)}" min="${hojeISO}">
                         </div>
                         <div class="input-group">
                             <label for="ag-inicio">Hora de início</label>
                             <select id="ag-inicio" required></select>
+                        </div>
+                    </div>
+
+                    <div class="field-grid">
+                        <div class="input-group">
+                            <label for="ag-data-fim">Data de término</label>
+                            <input type="date" id="ag-data-fim" required value="${esc(dataFimPadrao)}" min="${esc(dataIniPadrao)}">
                         </div>
                         <div class="input-group">
                             <label for="ag-fim">Hora de término</label>
@@ -783,26 +925,37 @@
 
         document.body.insertAdjacentHTML('beforeend', modalHtml);
 
-        const dataInput = document.getElementById('ag-data');
+        const dataIniInput = document.getElementById('ag-data-inicio');
+        const dataFimInput = document.getElementById('ag-data-fim');
         const selInicio = document.getElementById('ag-inicio');
         const selFim = document.getElementById('ag-fim');
         const hint = document.getElementById('ag-horario-hint');
         const btnSalvar = document.getElementById('btn-salvar-agendamento');
+        let usuarioEditouDataFim = dataFimPadrao !== dataIniPadrao;
 
         function atualizarSelectsHorario(prefInicio, prefFim) {
-            const iso = dataInput.value;
-            if (!iso) return;
-            const d = parseLocalDate(iso);
-            const exp = getExpedienteDia(d);
-            const bloqueio = getBloqueioDia(iso, eqId);
+            const isoIni = dataIniInput.value;
+            if (!isoIni) return;
 
-            if (!exp) {
+            dataFimInput.min = isoIni;
+            if (!usuarioEditouDataFim || !dataFimInput.value || dataFimInput.value < isoIni) {
+                dataFimInput.value = isoIni;
+            }
+            const isoFim = dataFimInput.value;
+
+            const dIni = parseLocalDate(isoIni);
+            const dFim = parseLocalDate(isoFim);
+            const expIni = getExpedienteDia(dIni);
+            const expFim = getExpedienteDia(dFim);
+            const bloqueio = getBloqueioNoIntervalo(isoIni, isoFim, eqId);
+
+            if (!expIni || !expFim) {
                 selInicio.innerHTML = '<option value="">Fechado</option>';
                 selFim.innerHTML = '<option value="">Fechado</option>';
                 selInicio.disabled = true;
                 selFim.disabled = true;
                 btnSalvar.disabled = true;
-                hint.textContent = 'O laboratório não funciona aos sábados e domingos. Escolha um dia entre segunda e sexta.';
+                hint.textContent = 'O laboratório não funciona aos sábados e domingos. Escolha datas de início e término entre segunda e sexta.';
                 hint.classList.add('text-warning');
                 return;
             }
@@ -813,49 +966,79 @@
                 selInicio.disabled = true;
                 selFim.disabled = true;
                 btnSalvar.disabled = true;
-                hint.textContent = `Data bloqueada: ${bloqueio.motivo}. Escolha outra data.`;
+                hint.textContent = `Há um bloqueio no intervalo (${formatDateBR(parseLocalDate(bloqueio.data))}): ${bloqueio.motivo}.`;
                 hint.classList.add('text-warning');
                 return;
             }
 
             hint.classList.remove('text-warning');
-            hint.textContent = `Funcionamento em ${exp.nome}: ${exp.inicio} às ${exp.fim} (Horário de Brasília). Os gestores serão notificados por e-mail.`;
             selInicio.disabled = false;
             selFim.disabled = false;
             btnSalvar.disabled = false;
 
-            const todos = gerarOpcoesHorario(exp);
-            const opcoesInicio = todos.slice(0, -1); // último horário não pode ser início
-            selInicio.innerHTML = opcoesInicio.map(h => `<option value="${h}">${h}</option>`).join('');
-
-            if (prefInicio && opcoesInicio.includes(prefInicio)) {
-                selInicio.value = prefInicio;
-            } else {
-                selInicio.value = opcoesInicio[0];
-            }
+            const opcoesIni = gerarOpcoesHorario(expIni).slice(0, -1);
+            const atualIni = prefInicio || selInicio.value;
+            selInicio.innerHTML = opcoesIni.map(h => `<option value="${h}">${h}</option>`).join('');
+            selInicio.value = opcoesIni.includes(atualIni) ? atualIni : opcoesIni[0];
 
             atualizarSelectFim(prefFim);
         }
 
         function atualizarSelectFim(prefFim) {
-            const iso = dataInput.value;
-            const exp = getExpedienteDia(parseLocalDate(iso));
-            if (!exp) return;
-            const todos = gerarOpcoesHorario(exp);
-            const minIni = timeToMinutes(selInicio.value);
-            const opcoesFim = todos.filter(h => timeToMinutes(h) > minIni);
+            const isoIni = dataIniInput.value;
+            const isoFim = dataFimInput.value;
+            if (!isoIni || !isoFim) return;
+
+            const dIni = parseLocalDate(isoIni);
+            const dFim = parseLocalDate(isoFim);
+            const expIni = getExpedienteDia(dIni);
+            const expFim = getExpedienteDia(dFim);
+            if (!expIni || !expFim) return;
+
+            const todosFim = gerarOpcoesHorario(expFim);
+            let opcoesFim;
+            if (isoIni === isoFim) {
+                const minIni = timeToMinutes(selInicio.value);
+                opcoesFim = todosFim.filter(h => timeToMinutes(h) > minIni);
+            } else {
+                opcoesFim = todosFim.slice(1); // qualquer horário após a abertura do último dia
+            }
+
+            const atualFim = prefFim || selFim.value;
             selFim.innerHTML = opcoesFim.map(h => `<option value="${h}">${h}</option>`).join('');
 
-            if (prefFim && opcoesFim.includes(prefFim)) {
-                selFim.value = prefFim;
+            if (opcoesFim.includes(atualFim)) {
+                selFim.value = atualFim;
+            } else if (isoIni !== isoFim) {
+                // Em reserva multi-dia, padrão é até o final do expediente do último dia
+                selFim.value = opcoesFim[opcoesFim.length - 1];
             } else {
-                const padrao1h = minutesToTime(minIni + 60);
+                const padrao1h = minutesToTime(timeToMinutes(selInicio.value) + 60);
                 selFim.value = opcoesFim.includes(padrao1h) ? padrao1h : opcoesFim[0];
+            }
+
+            if (isoIni === isoFim) {
+                hint.textContent = `Expediente em ${expIni.nome}: ${expIni.inicio} às ${expIni.fim}. Para vários dias, basta alterar a Data de término.`;
+            } else {
+                const qtdDias = Math.round((dFim - dIni) / 86400000) + 1;
+                hint.textContent = `Reserva contínua de ${qtdDias} dias (${formatDateBR(dIni)} ${selInicio.value} → ${formatDateBR(dFim)} ${selFim.value}). Os gestores serão notificados por e-mail.`;
             }
         }
 
-        dataInput.addEventListener('change', () => atualizarSelectsHorario());
+        dataIniInput.addEventListener('change', () => atualizarSelectsHorario());
+        dataFimInput.addEventListener('change', () => {
+            usuarioEditouDataFim = dataFimInput.value !== dataIniInput.value;
+            atualizarSelectsHorario();
+        });
         selInicio.addEventListener('change', () => atualizarSelectFim());
+        selFim.addEventListener('change', () => {
+            const dIni = parseLocalDate(dataIniInput.value);
+            const dFim = parseLocalDate(dataFimInput.value);
+            if (dataIniInput.value !== dataFimInput.value) {
+                const qtdDias = Math.round((dFim - dIni) / 86400000) + 1;
+                hint.textContent = `Reserva contínua de ${qtdDias} dias (${formatDateBR(dIni)} ${selInicio.value} → ${formatDateBR(dFim)} ${selFim.value}). Os gestores serão notificados por e-mail.`;
+            }
+        });
 
         atualizarSelectsHorario(inicioPadrao, fimPadrao);
 
@@ -863,12 +1046,13 @@
             e.preventDefault();
             const nome = document.getElementById('ag-nome').value.trim();
             const insumos = document.getElementById('ag-insumos').value.trim();
-            const data = dataInput.value;
+            const dataIni = dataIniInput.value;
+            const dataFim = dataFimInput.value;
             const horaIni = selInicio.value;
             const horaFim = selFim.value;
 
-            if (!data || !horaIni || !horaFim) {
-                window.UI.showFormFeedback('ag-feedback', 'Selecione uma data e horário dentro do expediente.', true);
+            if (!dataIni || !dataFim || !horaIni || !horaFim) {
+                window.UI.showFormFeedback('ag-feedback', 'Selecione datas e horários dentro do expediente.', true);
                 return;
             }
 
@@ -878,8 +1062,8 @@
             const body = {
                 solicitante_nome: nome,
                 insumos: insumos,
-                inicio: `${data}T${horaIni}:00`,
-                fim: `${data}T${horaFim}:00`,
+                inicio: `${dataIni}T${horaIni}:00`,
+                fim: `${dataFim}T${horaFim}:00`,
             };
             if (!edicao) body.equipamento_id = eqId;
 
@@ -900,7 +1084,7 @@
                 window.UI.showToast(
                     edicao
                         ? 'Agendamento remarcado! Os gestores do laboratório foram notificados por e-mail.'
-                        : 'Horário agendado com sucesso! Os gestores do laboratório foram notificados por e-mail.',
+                        : 'Agendamento confirmado! Os gestores do laboratório foram notificados por e-mail.',
                     'success'
                 );
                 await atualizarView();
@@ -908,6 +1092,110 @@
                 window.UI.showFormFeedback('ag-feedback', 'Erro de conexão com o servidor.', true);
             } finally {
                 window.UI.setButtonLoading('btn-salvar-agendamento', false);
+            }
+        });
+    }
+
+    // ==========================================
+    // MODAL DE FEEDBACK PÓS-USO
+    // ==========================================
+    function abrirModalFeedback(ag) {
+        const antigo = document.getElementById('modal-feedback-ag');
+        if (antigo) antigo.remove();
+
+        const esc = window.escapeHTML;
+        const dtIni = parseDateTimeStr(ag.inicio);
+        const dtFim = parseDateTimeStr(ag.fim);
+        const condAtual = ag.feedback_condicao || 'normal';
+
+        const modalHtml = `
+        <div id="modal-feedback-ag" class="modal-overlay is-open">
+            <div class="modal-content modal-md">
+                <div class="modal-header">
+                    <div>
+                        <p class="eyebrow">feedback pós-uso</p>
+                        <h3>${esc(ag.equipamento_nome || 'Equipamento')}</h3>
+                    </div>
+                    ${window.UI.closeButton("document.getElementById('modal-feedback-ag')?.remove()")}
+                </div>
+
+                <p class="dialog-text mb-md">
+                    Período: <strong class="mono">${esc(formatPeriodoBR(dtIni, dtFim))}</strong>.
+                    Conte o que foi realizado, o resultado obtido e qualquer ponto de atenção para a gestão do laboratório.
+                </p>
+
+                <form id="form-feedback-ag">
+                    <div class="input-group">
+                        <label for="fb-atividades">O que foi feito no equipamento?</label>
+                        <textarea id="fb-atividades" rows="3" required minlength="3" maxlength="2000" placeholder="Descreva brevemente o ensaio, análise ou preparo realizado.">${esc(ag.feedback_atividades || '')}</textarea>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="fb-resultado">Qual foi o resultado?</label>
+                        <textarea id="fb-resultado" rows="3" required minlength="2" maxlength="2000" placeholder="Ex.: Curva de adsorção obtida com sucesso, amostra caracterizada sem desvios...">${esc(ag.feedback_resultado || '')}</textarea>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="fb-condicao">Condição do equipamento após o uso</label>
+                        <select id="fb-condicao" required>
+                            <option value="normal" ${condAtual === 'normal' ? 'selected' : ''}>Normal — funcionando normalmente, sem ocorrências</option>
+                            <option value="atencao" ${condAtual === 'atencao' ? 'selected' : ''}>Ponto de atenção — observação importante (calibração, insumo acabando etc.)</option>
+                            <option value="problema" ${condAtual === 'problema' ? 'selected' : ''}>Problema / ocorrência — equipamento apresentou falha ou precisa de revisão</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="fb-observacoes">Observações ou pontos de atenção (opcional)</label>
+                        <textarea id="fb-observacoes" rows="2" maxlength="2000" placeholder="Alguma anomalia, desgaste, necessidade de reposição de insumo ou recado para o próximo usuário?">${esc(ag.feedback_observacoes || '')}</textarea>
+                    </div>
+
+                    <div id="fb-feedback-msg" class="feedback-msg" aria-live="polite"></div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('modal-feedback-ag')?.remove()">Cancelar</button>
+                        <button type="submit" id="btn-enviar-feedback" class="btn btn-primary">
+                            <span class="btn-text">${ag.feedback_enviado_em ? 'Atualizar feedback' : 'Enviar feedback'}</span>
+                            <span class="spinner hidden" aria-hidden="true"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>`;
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        document.getElementById('form-feedback-ag').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const atividades = document.getElementById('fb-atividades').value.trim();
+            const resultado = document.getElementById('fb-resultado').value.trim();
+            const condicao = document.getElementById('fb-condicao').value;
+            const observacoes = document.getElementById('fb-observacoes').value.trim() || null;
+
+            window.UI.showFormFeedback('fb-feedback-msg', '', false);
+            window.UI.setButtonLoading('btn-enviar-feedback', true);
+
+            try {
+                const res = await window.api.fetchProtected(`/agendamentos/${ag.id}/feedback`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        atividades,
+                        resultado,
+                        observacoes,
+                        condicao_equipamento: condicao,
+                    }),
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    window.UI.showFormFeedback('fb-feedback-msg', window.UI.mensagemLegivel(data.detail || 'Não foi possível salvar o feedback.'), true);
+                    return;
+                }
+                document.getElementById('modal-feedback-ag')?.remove();
+                window.UI.showToast('Feedback registrado e enviado aos gestores do laboratório!', 'success');
+                await atualizarView();
+            } catch (err) {
+                window.UI.showFormFeedback('fb-feedback-msg', 'Erro de conexão com o servidor.', true);
+            } finally {
+                window.UI.setButtonLoading('btn-enviar-feedback', false);
             }
         });
     }
@@ -926,7 +1214,7 @@
 
         const modalHtml = `
         <div id="modal-agendamento-detalhe" class="modal-overlay is-open">
-            <div class="modal-content modal-sm">
+            <div class="modal-content modal-md">
                 <div class="modal-header">
                     <div>
                         <p class="eyebrow">${ag.eh_meu ? 'sua reserva' : 'horário reservado'}</p>
@@ -937,8 +1225,8 @@
 
                 <dl class="dl">
                     <div>
-                        <dt>data e horário</dt>
-                        <dd class="mono">${formatDateBR(dtIni)} · ${formatTimeBR(dtIni)} às ${formatTimeBR(dtFim)}</dd>
+                        <dt>período</dt>
+                        <dd class="mono">${esc(formatPeriodoBR(dtIni, dtFim))}</dd>
                     </div>
                     <div>
                         <dt>solicitante</dt>
@@ -951,8 +1239,15 @@
                     </div>` : ''}
                 </dl>
 
+                ${renderizarBlocoFeedback(ag)}
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" onclick="document.getElementById('modal-agendamento-detalhe')?.remove()">Fechar</button>
+                    ${ag.pode_dar_feedback ? `
+                        <button type="button" class="btn ${ag.feedback_enviado_em ? 'btn-secondary' : 'btn-primary'}" id="btn-detalhe-feedback">
+                            ${ag.feedback_enviado_em ? 'Editar feedback' : 'Registrar feedback'}
+                        </button>
+                    ` : ''}
                     ${ag.pode_gerenciar ? `
                         <button type="button" class="btn btn-secondary" id="btn-detalhe-remarcar">Remarcar</button>
                         <button type="button" class="btn btn-danger" id="btn-detalhe-desmarcar">Desmarcar</button>
@@ -962,6 +1257,11 @@
         </div>`;
 
         document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        document.getElementById('btn-detalhe-feedback')?.addEventListener('click', () => {
+            document.getElementById('modal-agendamento-detalhe')?.remove();
+            abrirModalFeedback(ag);
+        });
 
         document.getElementById('btn-detalhe-remarcar')?.addEventListener('click', () => {
             document.getElementById('modal-agendamento-detalhe')?.remove();
@@ -991,8 +1291,8 @@
                 </div>
                 <p class="dialog-text mb-md">
                     Deseja cancelar a reserva de <strong>${esc(ag.equipamento_nome || 'equipamento')}</strong> em
-                    <strong>${formatDateBR(dtIni)} (${formatTimeBR(dtIni)}–${formatTimeBR(dtFim)})</strong>?
-                    O horário voltará a ficar livre e os gestores serão avisados por e-mail.
+                    <strong>${esc(formatPeriodoBR(dtIni, dtFim))}</strong>?
+                    O período voltará a ficar livre e os gestores serão avisados por e-mail.
                 </p>
                 <div class="input-group">
                     <label for="cancel-motivo">Motivo do cancelamento (opcional)</label>

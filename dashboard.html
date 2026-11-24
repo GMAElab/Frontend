@@ -1,25 +1,28 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="dark">
+<html lang="pt-BR" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="color-scheme" content="dark light">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#F6F7F9">
     <title>SGCI · GMAE</title>
     <script>try { var t = localStorage.getItem('sgci-theme-v3'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; if (localStorage.getItem('sgci-densidade') === 'bancada') document.documentElement.dataset.densidade = 'bancada'; } catch (e) {}</script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap">
-    <link rel="stylesheet" href="css/global.css?v=18">
-    <link rel="stylesheet" href="css/layout.css?v=18">
-    <link rel="stylesheet" href="css/components.css?v=18">
-    <link rel="stylesheet" href="css/calendario.css?v=1">
+    <link rel="stylesheet" href="tokens.css?v=2">
+    <link rel="stylesheet" href="css/global.css?v=20">
+    <link rel="stylesheet" href="css/layout.css?v=20">
+    <link rel="stylesheet" href="css/components.css?v=20">
+    <link rel="stylesheet" href="css/calendario.css?v=4">
 </head>
 <body class="dashboard-layout">
+    <a class="skip-link" href="#dynamic-content">Pular para o conteúdo</a>
 
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
-            <span class="brand-glyph" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6.34L4.24 17.5A2 2 0 0 0 6 20.5h12a2 2 0 0 0 1.76-3L15 8.34V2"/><path d="M8.5 2h7"/><path d="M6.5 14.5h11"/></svg></span>
+            <span class="brand-glyph" aria-hidden="true"><svg aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6.34L4.24 17.5A2 2 0 0 0 6 20.5h12a2 2 0 0 0 1.76-3L15 8.34V2"/><path d="M8.5 2h7"/><path d="M6.5 14.5h11"/></svg></span>
             <span class="brand-text">
                 <span class="brand-mark">SGCI / GMAE</span>
                 <span class="brand-sub">Conhecimento e inovação</span>
@@ -28,22 +31,22 @@
 
         <nav class="sidebar-nav" aria-label="Seções">
             <ul>
-                <li><button class="nav-item active" data-view="inicio" data-label="Início" data-key="i"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg><span class="nav-label">Início</span></button></li>
+                <li><button type="button" class="nav-item active" data-view="inicio" data-label="Início" data-key="i"><svg aria-hidden="true" focusable="false" class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg><span class="nav-label">Início</span></button></li>
 
                 <li class="nav-group" role="presentation">Conhecimento</li>
-                <li><button class="nav-item" data-view="equipments" data-label="Equipamentos" data-key="e"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18h8"/><path d="M3 22h18"/><path d="M14 22a7 7 0 1 0 0-14h-1"/><path d="M9 14h2"/><path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z"/><path d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3"/></svg><span class="nav-label">Equipamentos</span></button></li>
-                <li><button class="nav-item" data-view="processes" data-label="Processos de P&amp;D" data-key="p"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6.34L4.24 17.5A2 2 0 0 0 6 20.5h12a2 2 0 0 0 1.76-3L15 8.34V2"/><path d="M8.5 2h7"/><path d="M6.5 14.5h11"/></svg><span class="nav-label">Processos de P&amp;D</span></button></li>
-                <li><button class="nav-item" data-view="pops" data-label="POPs" data-key="o"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span class="nav-label">POPs</span></button></li>
-                <li><button class="nav-item" data-view="rspace" data-label="RSpace ELN" data-key="r"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg><span class="nav-label">RSpace (EM DESENVOLVIMENTO)</span></button></li>
+                <li><button type="button" class="nav-item" data-view="equipments" data-label="Equipamentos" data-key="e"><svg aria-hidden="true" focusable="false" class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18h8"/><path d="M3 22h18"/><path d="M14 22a7 7 0 1 0 0-14h-1"/><path d="M9 14h2"/><path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z"/><path d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3"/></svg><span class="nav-label">Equipamentos</span></button></li>
+                <li><button type="button" class="nav-item" data-view="processes" data-label="Processos de P&amp;D" data-key="p"><svg aria-hidden="true" focusable="false" class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6.34L4.24 17.5A2 2 0 0 0 6 20.5h12a2 2 0 0 0 1.76-3L15 8.34V2"/><path d="M8.5 2h7"/><path d="M6.5 14.5h11"/></svg><span class="nav-label">Processos de P&amp;D</span></button></li>
+                <li><button type="button" class="nav-item" data-view="pops" data-label="POPs" data-key="o"><svg aria-hidden="true" focusable="false" class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span class="nav-label">POPs</span></button></li>
+                <li><button type="button" class="nav-item" data-view="rspace" data-label="RSpace ELN" data-key="r"><svg aria-hidden="true" focusable="false" class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg><span class="nav-label">RSpace (EM DESENVOLVIMENTO)</span></button></li>
 
                 <li class="nav-group" role="presentation">Rotina</li>
-                <li><button class="nav-item" data-view="pta" data-label="Planejamento mensal" data-key="m"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="nav-label">Planejamento mensal</span></button></li>
-                <li><button class="nav-item" data-view="tarefas" data-label="Tarefas" data-key="t"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="nav-label">Tarefas</span></button></li>
-                <li><button class="nav-item" data-view="articles" data-label="Artigos" data-key="a"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span class="nav-label">Artigos</span></button></li>
+                <li><button type="button" class="nav-item" data-view="pta" data-label="Planejamento mensal" data-key="m"><svg aria-hidden="true" focusable="false" class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="nav-label">Planejamento mensal</span></button></li>
+                <li><button type="button" class="nav-item" data-view="tarefas" data-label="Tarefas" data-key="t"><svg aria-hidden="true" focusable="false" class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="nav-label">Tarefas</span></button></li>
+                <li><button type="button" class="nav-item" data-view="articles" data-label="Artigos" data-key="a"><svg aria-hidden="true" focusable="false" class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span class="nav-label">Artigos</span></button></li>
 
                 <li id="menu-admin" style="display: none;">
                     <div class="nav-group" role="presentation">Sistema</div>
-                    <button class="nav-item" data-view="admin" data-label="Administração" data-key="d"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 6v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6l-8-4Z"/></svg><span class="nav-label">Administração</span></button>
+                    <button type="button" class="nav-item" data-view="admin" data-label="Administração" data-key="d"><svg aria-hidden="true" focusable="false" class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 6v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6l-8-4Z"/></svg><span class="nav-label">Administração</span></button>
                 </li>
             </ul>
         </nav>
@@ -55,9 +58,9 @@
                 <div class="sidebar-role" id="user-role"></div>
             </div>
             <div class="sidebar-tools">
-                <button type="button" class="icon-btn" id="btn-densidade" aria-pressed="false" aria-label="Modo bancada: letras e botões maiores" title="Modo bancada: letras e botões maiores"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg></button>
+                <button type="button" class="icon-btn" id="btn-densidade" aria-pressed="false" aria-label="Modo bancada: letras e botões maiores" title="Modo bancada: letras e botões maiores"><svg aria-hidden="true" focusable="false" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg></button>
                 <button type="button" class="icon-btn" id="btn-theme" aria-label="Alternar tema" title="Alternar tema"></button>
-                <button type="button" class="icon-btn" id="btn-logout" aria-label="Sair" title="Sair"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+                <button type="button" class="icon-btn" id="btn-logout" aria-label="Sair" title="Sair"><svg aria-hidden="true" focusable="false" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
             </div>
         </div>
     </aside>
@@ -66,16 +69,16 @@
     <div class="main-wrapper">
         <header class="topbar">
             <div class="topbar-left">
-                <button class="icon-btn bordered menu-toggle" id="menu-toggle" aria-label="Abrir menu">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="4" y1="8" x2="20" y2="8"/><line x1="4" y1="16" x2="20" y2="16"/></svg>
+                <button type="button" class="icon-btn bordered menu-toggle" id="menu-toggle" aria-label="Abrir menu">
+                    <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="4" y1="8" x2="20" y2="8"/><line x1="4" y1="16" x2="20" y2="16"/></svg>
                 </button>
             </div>
             <div class="topbar-right">
-                <button id="btn-setup-2fa" onclick="abrirSetup2FA()" class="link-btn" style="display: none;"><span class="long">Ativar verificação em duas etapas</span><span class="short">Ativar 2FA</span></button>
+                <button type="button" id="btn-setup-2fa" onclick="abrirSetup2FA()" class="link-btn" style="display: none;"><span class="long">Ativar verificação em duas etapas</span><span class="short">Ativar 2FA</span></button>
             </div>
         </header>
 
-        <main id="dynamic-content" class="content-area"></main>
+        <main id="dynamic-content" class="content-area" tabindex="-1"></main>
     </div>
 
     <!-- Novo equipamento -->
@@ -83,27 +86,27 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Novo equipamento</h3>
-                <button type="button" class="modal-close" onclick="window.closeEquipModal()" aria-label="Fechar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
+                <button type="button" class="modal-close" onclick="window.closeEquipModal()" aria-label="Fechar"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
             </div>
 
             <form id="form-new-eq" onsubmit="window.handleSaveEquipment(event)">
                 <div class="input-group">
                     <label for="eq-name">Nome do equipamento</label>
-                    <input type="text" id="eq-name" required>
+                    <input type="text" id="eq-name" autocomplete="off" required>
                 </div>
                 <div class="input-group">
                     <label for="eq-desc">Descrição</label>
-                    <textarea id="eq-desc" rows="3" placeholder="Especificações, localização, observações de uso"></textarea>
+                    <textarea id="eq-desc" rows="3" placeholder="Especificações, localização, observações de uso…"></textarea>
                 </div>
                 <div class="field-grid">
                     <div class="input-group">
                         <label for="eq-video">Vídeo de treinamento (YouTube)</label>
-                        <input type="url" id="eq-video" placeholder="https://" aria-describedby="eq-video-ajuda">
+                        <input type="url" id="eq-video" placeholder="https://…" aria-describedby="eq-video-ajuda">
                         <span class="help" id="eq-video-ajuda" aria-live="polite"></span>
                     </div>
                     <div class="input-group">
                         <label for="eq-manual">POP do equipamento (URL)</label>
-                        <input type="url" id="eq-manual" placeholder="https://">
+                        <input type="url" id="eq-manual" placeholder="https://…">
                     </div>
                 </div>
 
@@ -126,7 +129,7 @@
                     <p class="eyebrow">equipamento</p>
                     <h3 id="dossier-title">Carregando</h3>
                 </div>
-                <button type="button" class="modal-close" onclick="window.closeDossierModal()" aria-label="Fechar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
+                <button type="button" class="modal-close" onclick="window.closeDossierModal()" aria-label="Fechar"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
             </div>
             <div id="dossier-body"></div>
         </div>
@@ -136,12 +139,12 @@
         <div class="modal-content modal-md">
             <div class="modal-header">
                 <h3 id="dv-title">Editar registro</h3>
-                <button type="button" class="modal-close" onclick="window.closeDeepView()" aria-label="Fechar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
+                <button type="button" class="modal-close" onclick="window.closeDeepView()" aria-label="Fechar"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
             </div>
             <div id="dv-body"></div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="window.closeDeepView()">Cancelar</button>
-                <button class="btn btn-primary" id="dv-save-btn">Salvar alterações</button>
+                <button type="button" class="btn btn-secondary" onclick="window.closeDeepView()">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="dv-save-btn">Salvar alterações</button>
             </div>
         </div>
     </div>
@@ -151,7 +154,7 @@
         <div class="modal-content modal-lg">
             <div class="modal-header">
                 <h3 id="processModalTitle">Novo processo de P&amp;D</h3>
-                <button type="button" class="modal-close" onclick="window.closeProcessModal()" aria-label="Fechar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
+                <button type="button" class="modal-close" onclick="window.closeProcessModal()" aria-label="Fechar"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
             </div>
 
             <div class="tabs-nav">
@@ -165,7 +168,7 @@
                     <div class="field-grid">
                         <div class="input-group">
                             <label for="proc-nome">Nome do processo</label>
-                            <input type="text" id="proc-nome" required>
+                            <input type="text" id="proc-nome" autocomplete="off" required>
                         </div>
                         <div class="input-group">
                             <label for="proc-resp">Responsável</label>
@@ -175,7 +178,7 @@
                         </div>
                         <div class="input-group span-2">
                             <label for="proc-objetivo">Objetivo da fase</label>
-                            <input type="text" id="proc-objetivo">
+                            <input type="text" id="proc-objetivo" autocomplete="off">
                         </div>
                         <div class="input-group span-2">
                             <label for="proc-visao">Visão geral</label>
@@ -196,7 +199,7 @@
                     </div>
                     <div class="input-group">
                         <label for="proc-etapas">Detalhamento das etapas</label>
-                        <textarea id="proc-etapas" rows="6" placeholder="Uma etapa por linha"></textarea>
+                        <textarea id="proc-etapas" rows="6" placeholder="Uma etapa por linha…"></textarea>
                     </div>
                 </div>
 
@@ -214,7 +217,7 @@
                     <div class="field-grid">
                         <div class="input-group">
                             <label for="proc-anexos">Link de anexos</label>
-                            <input type="url" id="proc-anexos" placeholder="https://">
+                            <input type="url" id="proc-anexos" placeholder="https://…">
                         </div>
                         <div class="input-group">
                             <label for="proc-status">Status</label>
@@ -243,7 +246,7 @@
                     <p class="eyebrow" id="modal-detalhes-mes"></p>
                     <h3 id="modal-detalhes-topico"></h3>
                 </div>
-                <button type="button" class="modal-close" onclick="fecharModalDetalhesPTA()" aria-label="Fechar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
+                <button type="button" class="modal-close" onclick="fecharModalDetalhesPTA()" aria-label="Fechar"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
             </div>
 
             <div class="figure">
@@ -279,7 +282,7 @@
         <div class="modal-content modal-sm">
             <div class="modal-header">
                 <h3>Verificação em duas etapas</h3>
-                <button type="button" class="modal-close" onclick="fecharSetup2FA()" aria-label="Fechar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
+                <button type="button" class="modal-close" onclick="fecharSetup2FA()" aria-label="Fechar"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
             </div>
 
             <div id="2fa-step-1">
@@ -292,7 +295,7 @@
                 <p id="secret-text" class="secret-key"></p>
 
                 <div class="modal-footer">
-                    <button class="btn btn-primary" onclick="avancarPasso2FA()">Continuar</button>
+                    <button type="button" class="btn btn-primary" onclick="avancarPasso2FA()">Continuar</button>
                 </div>
             </div>
 
@@ -300,29 +303,29 @@
                 <p class="eyebrow">etapa 2 de 2</p>
                 <p class="dialog-text mb-md">Digite o código de 6 dígitos que o aplicativo está mostrando. Em seguida, seus códigos de backup serão baixados.</p>
 
-                <input type="text" id="codigo-confirmacao-2fa" class="code-input" maxlength="6" inputmode="numeric" placeholder="000000">
+                <input type="text" id="codigo-confirmacao-2fa" class="code-input" aria-label="Código de 6 dígitos" autocomplete="one-time-code" maxlength="6" inputmode="numeric" placeholder="000000" spellcheck="false">
 
                 <div class="modal-footer split">
-                    <button class="btn btn-secondary" onclick="voltarPasso2FA()">Voltar</button>
-                    <button class="btn btn-primary" onclick="confirmarAtivacao2FA()" id="btn-confirmar-2fa">Ativar</button>
+                    <button type="button" class="btn btn-secondary" onclick="voltarPasso2FA()">Voltar</button>
+                    <button type="button" class="btn btn-primary" onclick="confirmarAtivacao2FA()" id="btn-confirmar-2fa">Ativar</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="toast-container"></div>
+    <div id="toast-container" aria-live="polite"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
     <script src="js/api.js?v=6"></script>
-    <script src="js/ui.js?v=3402"></script>
+    <script src="js/ui.js?v=3403"></script>
     <script src="js/salvaguardas.js?v=3"></script>
     <script src="js/shell.js?v=6"></script>
     <script src="js/auth.js?v=2004"></script>
     <script src="js/listagem.js?v=2"></script>
     <script src="js/vinculos.js?v=2"></script>
     <script src="js/views/inicio.js?v=7"></script>
-    <script src="js/views/equipments.js?v=6"></script>
-    <script src="js/views/agendamentos.js?v=1"></script>
+    <script src="js/views/equipments.js?v=7"></script>
+    <script src="js/views/agendamentos.js?v=2"></script>
     <script src="js/views/processes.js?v=5"></script>
     <script src="js/dashboard.js?v=1302"></script>
     <script src="js/views/pta.js?v=17"></script>
