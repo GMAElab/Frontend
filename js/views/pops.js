@@ -367,7 +367,7 @@ function loadPopsTable() {
                 ? `<span class="resource-chip">${window.Icon ? window.Icon('microscope', { size: 12 }) : ''} ${window.escapeHTML(pop.equipamento_nome)}</span>`
                 : '<span class="text-faint">—</span>';
             return `
-                <tr class="clickable" data-id="${codigo}" onclick="viewPopDetails(this.getAttribute('data-id'))">
+                <tr class="clickable" tabindex="0" data-id="${codigo}" onclick="viewPopDetails(this.getAttribute('data-id'))">
                     <td class="code"><span class="code-pill">${codigo}</span></td>
                     <td>
                         <div class="cell-stack">

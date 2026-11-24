@@ -58,7 +58,7 @@ function loadProcessesTable() {
                 : '<span class="text-faint">—</span>';
 
             return `
-                <tr class="clickable" onclick="viewProcessDetails(${proc.id})">
+                <tr class="clickable" tabindex="0" onclick="viewProcessDetails(${proc.id})">
                     <td>
                         <div class="cell-title-row">
                             <span class="cell-icon">${window.Icon ? window.Icon('flask', { size: 14 }) : ''}</span>
@@ -321,7 +321,7 @@ window.renderProcessDetailsModal = function(proc, atividades) {
         const dataLocal = new Date(stringDataUTC);
 
         return `
-        <li class="tl-item clickable" onclick="window.handleActivityClick(${index})">
+        <li class="tl-item clickable" tabindex="0" onclick="window.handleActivityClick(${index})">
             <div class="meta">${dataLocal.toLocaleDateString('pt-BR')} · ${dataLocal.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}${a.imagem_url ? ' · com imagem' : ''}</div>
             <span class="tl-title">${esc(a.title)}</span>
             <p class="pre-wrap">${esc(a.note)}</p>

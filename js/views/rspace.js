@@ -339,10 +339,10 @@
             <div class="toolbar">
                 <div class="search-box grow">
                     ${window.Icon('search', { size: 15 })}
-                    <input type="search" id="rspace-doc-q" class="form-control" data-busca placeholder="Buscar por termo, título, conteúdo ou Global ID (ex.: SD123)" onkeypress="if(event.key==='Enter') window.rspaceCarregarDocumentos(1)">
+                    <input type="search" id="rspace-doc-q" aria-label="Buscar documentos" class="form-control" data-busca placeholder="Buscar por termo, título, conteúdo ou Global ID (ex.: SD123)" onkeypress="if(event.key==='Enter') window.rspaceCarregarDocumentos(1)">
                 </div>
-                <input type="text" id="rspace-doc-tag" class="form-control" style="max-width:170px;" placeholder="Filtrar por tag" onkeypress="if(event.key==='Enter') window.rspaceCarregarDocumentos(1)">
-                <select id="rspace-doc-order" class="form-control" onchange="window.rspaceCarregarDocumentos(1)">
+                <input type="text" id="rspace-doc-tag" aria-label="Filtrar por tag" class="form-control" style="max-width:170px;" placeholder="Filtrar por tag" onkeypress="if(event.key==='Enter') window.rspaceCarregarDocumentos(1)">
+                <select id="rspace-doc-order" aria-label="Ordenar documentos" class="form-control" onchange="window.rspaceCarregarDocumentos(1)">
                     <option value="lastModified desc">Modificados recentemente</option>
                     <option value="created desc">Criados recentemente</option>
                     <option value="name asc">Nome (A → Z)</option>
@@ -437,7 +437,7 @@
                                 const tagsHtml = (d.tags || []).map((t) => `<span class="code-pill" style="font-size:10.5px;">${window.escapeHTML(t)}</span>`).join(' ');
                                 const dataMod = d.modificado_em ? new Date(d.modificado_em).toLocaleDateString('pt-BR') : '—';
                                 return `
-                                    <tr class="clickable" onclick="window.rspaceVerDocumento(${docIdNum})">
+                                    <tr class="clickable" tabindex="0" onclick="window.rspaceVerDocumento(${docIdNum})">
                                         <td class="code"><span class="code-pill">${window.escapeHTML(d.global_id || `SD${docIdNum}`)}</span></td>
                                         <td>
                                             <div class="cell-stack">
@@ -548,7 +548,7 @@
                 <hr style="border:0; border-top:1px solid var(--line); margin:16px 0;">
 
                 <div class="inline-form">
-                    <select id="rdoc-link-process-select" class="form-control">
+                    <select id="rdoc-link-process-select" aria-label="Processo de P&amp;D a vincular" class="form-control">
                         <option value="">Carregando processos de P&amp;D do SGCI...</option>
                     </select>
                     <button type="button" class="btn btn-primary" onclick="window.rspaceVincularAoProcesso(${docIdNum})">
@@ -933,7 +933,7 @@
             <div class="toolbar" style="justify-content:space-between;">
                 <div id="rspace-folder-breadcrumbs" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;"></div>
                 <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                    <select id="rspace-folder-filter" class="form-control" onchange="window.rspaceCarregarPastas(state.currentFolderId)">
+                    <select id="rspace-folder-filter" aria-label="Tipo de item" class="form-control" onchange="window.rspaceCarregarPastas(state.currentFolderId)">
                         <option value="">Todos (Pastas, Cadernos e Docs)</option>
                         <option value="FOLDER,NOTEBOOK">Apenas Pastas e Cadernos</option>
                         <option value="NOTEBOOK">Apenas Cadernos (Notebooks)</option>
@@ -1145,13 +1145,13 @@
         body.innerHTML = `
             <div class="toolbar" style="justify-content:space-between;">
                 <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                    <select id="rspace-files-type" class="form-control" onchange="window.rspaceCarregarArquivos(1)">
+                    <select id="rspace-files-type" aria-label="Tipo de arquivo" class="form-control" onchange="window.rspaceCarregarArquivos(1)">
                         <option value="image">Imagens (PNG, JPG, GIF, TIFF)</option>
                         <option value="document">Documentos (PDF, DOCX, XLSX, CSV)</option>
                         <option value="av">Áudio &amp; Vídeo</option>
                         <option value="other">Outros Arquivos Cientificos</option>
                     </select>
-                    <select id="rspace-files-order" class="form-control" onchange="window.rspaceCarregarArquivos(1)">
+                    <select id="rspace-files-order" aria-label="Ordenar arquivos" class="form-control" onchange="window.rspaceCarregarArquivos(1)">
                         <option value="created desc">Mais recentes primeiro</option>
                         <option value="created asc">Mais antigos primeiro</option>
                         <option value="name asc">Nome (A → Z)</option>
@@ -1332,7 +1332,7 @@
 
         body.innerHTML = `
             <div class="toolbar" style="justify-content:space-between;">
-                <select id="rspace-forms-state" class="form-control" onchange="window.rspaceCarregarFormularios(1)">
+                <select id="rspace-forms-state" aria-label="Status do formulário" class="form-control" onchange="window.rspaceCarregarFormularios(1)">
                     <option value="ALL">Todos os status</option>
                     <option value="PUBLISHED">Publicados (PUBLISHED)</option>
                     <option value="NEW">Novos / Rascunho (NEW)</option>
@@ -1493,7 +1493,7 @@ Procedimento e Observações | Text</textarea>
         body.innerHTML = `
             <div class="toolbar" style="justify-content:space-between;">
                 <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                    <select id="rspace-inv-resource" class="form-control" onchange="window.rspaceCarregarInventario(1)">
+                    <select id="rspace-inv-resource" aria-label="Tipo de recurso do inventário" class="form-control" onchange="window.rspaceCarregarInventario(1)">
                         <option value="samples" ${state.invResource === 'samples' ? 'selected' : ''}>Amostras (Samples)</option>
                         <option value="subsamples" ${state.invResource === 'subsamples' ? 'selected' : ''}>Alíquotas / Subamostras (Subsamples)</option>
                         <option value="containers" ${state.invResource === 'containers' ? 'selected' : ''}>Containers &amp; Caixas (Containers)</option>
@@ -1907,7 +1907,7 @@ Procedimento e Observações | Text</textarea>
                         <div class="input-group" id="rexp-ids-group" style="margin-top:12px;">
                             <label for="rexp-ids">IDs dos Documentos ou Cadernos (separados por vírgula)</label>
                             <input type="text" id="rexp-ids" placeholder="Ex.: SD10452, 10459">
-                            <select id="rexp-quick-doc" style="margin-top:6px;" onchange="if(this.value){ const inp=document.getElementById('rexp-ids'); inp.value = inp.value.trim() ? inp.value.trim()+', '+this.value : this.value; this.value=''; }">
+                            <select id="rexp-quick-doc" aria-label="Adicionar documento recente" style="margin-top:6px;" onchange="if(this.value){ const inp=document.getElementById('rexp-ids'); inp.value = inp.value.trim() ? inp.value.trim()+', '+this.value : this.value; this.value=''; }">
                                 <option value="">+ Adicionar documento recente à seleção...</option>
                             </select>
                             <span class="help">Aceita tanto o ID numérico (ex.: 10452) quanto o Global ID (ex.: SD10452).</span>
@@ -1943,14 +1943,14 @@ Procedimento e Observações | Text</textarea>
                     <h3>Trilha de Auditoria RSpace (/api/v1/activity)</h3>
                 </div>
                 <div class="toolbar">
-                    <input type="text" id="ract-global-id" class="form-control" placeholder="Filtrar por Global ID (ex.: SD123)" onkeypress="if(event.key==='Enter') window.rspaceCarregarAtividades()">
-                    <select id="ract-domain" class="form-control" onchange="window.rspaceCarregarAtividades()">
+                    <input type="text" id="ract-global-id" aria-label="Filtrar por Global ID" class="form-control" placeholder="Filtrar por Global ID (ex.: SD123)" onkeypress="if(event.key==='Enter') window.rspaceCarregarAtividades()">
+                    <select id="ract-domain" aria-label="Domínio" class="form-control" onchange="window.rspaceCarregarAtividades()">
                         <option value="">Todos os domínios</option>
                         <option value="RECORD">Documentos (RECORD)</option>
                         <option value="FILE">Arquivos (FILE)</option>
                         <option value="FOLDER">Pastas / Cadernos (FOLDER)</option>
                     </select>
-                    <select id="ract-action" class="form-control" onchange="window.rspaceCarregarAtividades()">
+                    <select id="ract-action" aria-label="Ação" class="form-control" onchange="window.rspaceCarregarAtividades()">
                         <option value="">Todas as ações</option>
                         <option value="CREATE">Criação (CREATE)</option>
                         <option value="WRITE">Edição (WRITE)</option>

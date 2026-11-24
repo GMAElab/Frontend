@@ -104,7 +104,7 @@ function badgeDesfecho(t) {
 
 function chipsTags(tags, clicavel) {
     if (!tags || tags.length === 0) return '';
-    return tags.map(tag => `<span class="badge"${clicavel ? ` title="Filtrar por esta tag" onclick="event.stopPropagation(); window.filtrarAcervoPorTag('${escT(tag).replace(/'/g, '&#39;')}')"` : ''}>${escT(tag)}</span>`).join(' ');
+    return tags.map(tag => `<span class="badge"${clicavel ? ` role="button" tabindex="0" title="Filtrar por esta tag" onclick="event.stopPropagation(); window.filtrarAcervoPorTag('${escT(tag).replace(/'/g, '&#39;')}')"` : ''}>${escT(tag)}</span>`).join(' ');
 }
 
 function buscarTarefaEmCache(id) {
@@ -235,7 +235,7 @@ function renderLinhaTarefaGestor(t) {
         : `${t.percentual_conclusao}%`;
 
     return `
-        <tr class="clickable${t.status === 'em_revisao' ? ' is-flagged' : ''}" onclick="window.abrirDetalhesTarefa(${t.id})">
+        <tr class="clickable${t.status === 'em_revisao' ? ' is-flagged' : ''}" tabindex="0" onclick="window.abrirDetalhesTarefa(${t.id})">
             <td><div class="cell-stack"><strong>${escT(t.titulo)}</strong>${vinculo}</div></td>
             <td class="col-hide-xs">${atribuidosHtml}</td>
             <td class="col-hide-sm">${badgePrioridade(t)}</td>
@@ -309,7 +309,7 @@ function renderAcervo() {
     document.getElementById('tarefas-conteudo').innerHTML = `
         <p class="lede mb-md">O que já foi feito no laboratório: resultados, lições aprendidas e o que não funcionou. Consulte antes de começar algo novo.</p>
         <div class="toolbar">
-            <input type="search" id="acervo-busca" class="form-control grow" placeholder="Buscar por título, resultado, lições, tag, pessoa ou processo" oninput="window.filtrarAcervo()">
+            <input type="search" id="acervo-busca" aria-label="Buscar no acervo" class="form-control grow" placeholder="Buscar por título, resultado, lições, tag, pessoa ou processo" oninput="window.filtrarAcervo()">
             <select id="acervo-desfecho" class="form-control" onchange="window.filtrarAcervo()" aria-label="Desfecho">
                 <option value="">Todos os desfechos</option>
                 ${Object.entries(DESFECHO_LABEL).map(([valor, rotulo]) => `<option value="${valor}">${rotulo}</option>`).join('')}
@@ -629,7 +629,7 @@ function htmlFormComentario() {
     return `
         <form id="formComentarioTarefa">
             <div class="inline-form">
-                <input type="text" id="detalhe-comentario-texto" class="form-control" placeholder="Escreva um comentário" required>
+                <input type="text" id="detalhe-comentario-texto" aria-label="Comentário" class="form-control" placeholder="Escreva um comentário" required>
                 <button type="submit" class="btn btn-secondary">Enviar</button>
             </div>
             <div class="cluster mt-sm">
@@ -878,7 +878,7 @@ function criarInputDeTags(idContainer, iniciais) {
 
     container.innerHTML = `
         <div class="tag-chips cluster mb-sm"></div>
-        <input type="text" class="form-control" list="${idContainer}-sugestoes" maxlength="40" placeholder="Digite e pressione Enter (ex.: pla, extrusão)">
+        <input type="text" class="form-control" list="${idContainer}-sugestoes" maxlength="40" aria-label="Adicionar tag" placeholder="Digite e pressione Enter (ex.: pla, extrusão)">
         <datalist id="${idContainer}-sugestoes"></datalist>`;
     const chips = container.querySelector('.tag-chips');
     const input = container.querySelector('input');

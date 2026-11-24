@@ -21,7 +21,7 @@ document.addEventListener('viewChanged', (e) => {
 
             <div id="search-area" class="fade-in">
                 <div class="inline-form mb-sm">
-                    <input type="search" id="search-input" class="form-control" placeholder="Tema, autores ou DOI" onkeypress="if(event.key === 'Enter') pesquisarArtigos(1)">
+                    <input type="search" id="search-input" aria-label="Buscar artigos por tema, autores ou DOI" class="form-control" placeholder="Tema, autores ou DOI" onkeypress="if(event.key === 'Enter') pesquisarArtigos(1)">
                     <button onclick="pesquisarArtigos(1)" class="btn btn-primary">Pesquisar</button>
                 </div>
                 <div class="toolbar">
@@ -50,7 +50,7 @@ document.addEventListener('viewChanged', (e) => {
             </div>
 
             <div id="saved-filters-area" class="toolbar hidden">
-                <input type="search" id="filter-saved-input" class="form-control grow" placeholder="Filtrar por título ou autor" oninput="filtrarSalvosLocalmente()">
+                <input type="search" id="filter-saved-input" aria-label="Filtrar artigos salvos" class="form-control grow" placeholder="Filtrar por título ou autor" oninput="filtrarSalvosLocalmente()">
             </div>
 
             <div id="articles-results" class="entries fade-in">${ARTIGOS_VAZIO_BUSCA}</div>

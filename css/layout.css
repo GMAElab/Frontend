@@ -94,7 +94,7 @@
     border: 1px solid var(--line-strong);
     border-radius: var(--radius-sm);
     background: var(--surface-2);
-    color: var(--muted);
+    color: var(--text-secondary);
     font-size: 12.5px;
     cursor: pointer;
     transition: border-color var(--t-fast), color var(--t-fast), background-color var(--t-fast);
@@ -125,7 +125,7 @@
     background: var(--surface-2);
     border: 1px solid var(--line);
     font-size: 11px;
-    color: var(--muted);
+    color: var(--text-secondary);
     font-variant-numeric: tabular-nums;
 }
 
@@ -443,7 +443,9 @@
     color: var(--text-secondary);
 }
 
+.page-head > * { min-width: 0; }
 .page-head h1 {
+    overflow-wrap: anywhere;
     font-size: var(--fs-2xl);
     font-weight: 600;
     letter-spacing: -0.02em;
@@ -725,8 +727,8 @@
 .toast-region,
 #toast-container {
     position: fixed;
-    right: var(--space-4);
-    bottom: var(--space-4);
+    right: max(var(--space-4), env(safe-area-inset-right));
+    bottom: max(var(--space-4), env(safe-area-inset-bottom));
     z-index: var(--z-toast);
     display: flex;
     flex-direction: column;
@@ -803,7 +805,10 @@
         flex: 1 1 auto;
     }
     .auth-panel {
-        padding: 18px;
+        padding: 20px;
     }
+    /* o botão de tema é fixo no canto: abre espaço para não cobrir o painel */
+    .auth-shell { padding-top: 64px; }
+    .search-trigger .keys { display: none; }
 }
 

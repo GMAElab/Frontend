@@ -70,7 +70,7 @@ window.Icon = function (name, opts = {}) {
     const cls = opts.class ? ` ${opts.class}` : '';
     const path = ICON_PATHS[name];
     if (!path) return '';
-    return `<svg class="icon${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
+    return `<svg class="icon${cls}" aria-hidden="true" focusable="false" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
 };
 
 // ==========================================
@@ -425,6 +425,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const existe = pedida && document.querySelector(`.nav-item[data-view="${CSS.escape(pedida)}"]`);
         UI.switchView(existe ? pedida : 'inicio');
     }
+});
+
+// Teclado: Enter/Espaço ativam linhas e cartões clicáveis que não são <button>.
+document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const alvo = e.target;
+    if (!(alvo instanceof HTMLElement) || alvo.matches('button, a, input, select, textarea, [contenteditable]')) return;
+    if (!alvo.matches('tr.clickable[tabindex], .tl-item.clickable[tabindex], .entry.clickable[tabindex], [role="button"][tabindex]')) return;
+    e.preventDefault();
+    alvo.click();
 });
 
 // Esc fecha só o modal de cima, e pergunta antes se houver texto não salvo.

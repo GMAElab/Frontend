@@ -66,7 +66,7 @@ function loadEquipmentsTable() {
                 : !['inativ', 'manutenc', 'indispon', 'quebrad', 'desativ', 'bloquead', 'offline'].some(t => String(eq.status || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().includes(t));
 
             return `
-            <tr class="clickable" onclick="window.viewDossier(${eq.id})">
+            <tr class="clickable" tabindex="0" onclick="window.viewDossier(${eq.id})">
                 <td>
                     <div class="cell-title-row">
                         <span class="cell-icon">${window.Icon ? window.Icon('microscope', { size: 14 }) : ''}</span>

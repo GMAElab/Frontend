@@ -842,7 +842,7 @@ function renderizarMeses() {
     nomesMeses.forEach((nome, index) => {
         const numMes = index + 1;
         const isActive = window.estadoCalendario.mesSelecionado === numMes ? 'active' : '';
-        html += `<div class="mes-card ${isActive}" id="card-mes-${numMes}" onclick="selecionarMes(${numMes}, '${nome}')">${nome}</div>`;
+        html += `<div class="mes-card ${isActive}" id="card-mes-${numMes}" role="button" tabindex="0" onclick="selecionarMes(${numMes}, '${nome}')">${nome}</div>`;
     });
     grid.innerHTML = html;
 }

@@ -35,3 +35,30 @@
     --radius-sm: 4px;
     --radius-md: 6px;
 }
+
+/* ==========================================
+   MODO ESCURO (botão de tema) — mesmos tokens, valores escuros.
+   Só em tela: na impressão valem sempre os tokens claros acima.
+   ========================================== */
+@media screen {
+    [data-theme="dark"] {
+        --bg-canvas: #0E1014;
+        --bg-surface: #16191F;
+        --bg-subtle: #1E222A;
+        --border-subtle: #2A2F38;
+        --border-strong: #3D4450;
+        --text-primary: #F2F4F7;
+        --text-secondary: #B4BBC6;
+        --text-muted: #8B93A1;
+        --accent-primary: #F2F4F7;
+        --accent-hover: #D5D9E0;
+        --accent-brand: #6EA2F0;
+        --accent-brand-bg: #17243A;
+        --success-text: #5CC98E;
+        --success-bg: #13261C;
+        --warning-text: #E3A84A;
+        --warning-bg: #2A2112;
+        --danger-text: #F0857A;
+        --danger-bg: #2D1715;
+    }
+}

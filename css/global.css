@@ -111,36 +111,15 @@
     --info-tint: var(--accent-brand-bg);
     --info-border: color-mix(in srgb, var(--accent-brand) 28%, var(--accent-brand-bg));
 
-    --overlay: rgb(17 19 24 / 0.45);
+    --overlay: color-mix(in srgb, var(--text-primary) 45%, transparent);
 }
 
-/* ==========================================
-   MODO ESCURO (opcional, via botão de tema) — mesmos nomes de token,
-   valores escuros e planos. Sem gradientes nem brilhos.
-   ========================================== */
-[data-theme="dark"] {
-    color-scheme: dark;
-
-    --bg-canvas: #0E1014;
-    --bg-surface: #16191F;
-    --bg-subtle: #1E222A;
-    --border-subtle: #2A2F38;
-    --border-strong: #3D4450;
-    --text-primary: #F2F4F7;
-    --text-secondary: #B4BBC6;
-    --text-muted: #8B93A1;
-    --accent-primary: #F2F4F7;
-    --accent-hover: #D5D9E0;
-    --accent-brand: #6EA2F0;
-    --accent-brand-bg: #17243A;
-    --success-text: #5CC98E;
-    --success-bg: #13261C;
-    --warning-text: #E3A84A;
-    --warning-bg: #2A2112;
-    --danger-text: #F0857A;
-    --danger-bg: #2D1715;
-
-    --overlay: rgb(0 0 0 / 0.6);
+/* Overlay do modo escuro (os tokens escuros ficam em tokens.css) */
+@media screen {
+    [data-theme="dark"] {
+        color-scheme: dark;
+        --overlay: color-mix(in srgb, var(--bg-canvas) 72%, transparent);
+    }
 }
 
 /* ==========================================
@@ -174,6 +153,7 @@
 }
 
 html {
+    scroll-padding-top: calc(var(--topbar-h) + 8px);
     -webkit-tap-highlight-color: transparent;
     -webkit-text-size-adjust: 100%;
 }
@@ -244,7 +224,7 @@ kbd {
     height: 18px;
     padding: 0 4px;
     font-size: 11px;
-    color: var(--muted);
+    color: var(--text-secondary);
     background: var(--surface-2);
     border: 1px solid var(--line-strong);
     border-radius: var(--radius-xs);
@@ -375,10 +355,10 @@ table, time, .mono, code, kbd { font-variant-numeric: tabular-nums; }
     html, body, .app-layout, .dashboard-layout, .main-content, .main-wrapper, .content-area {
         height: auto !important;
         overflow: visible !important;
-        background: #fff !important;
-        color: #000 !important;
+        background: var(--bg-surface) !important;
+        color: var(--text-primary) !important;
         padding: 0 !important;
     }
-    .doc-viewer { position: static !important; padding: 0 !important; background: #fff !important; }
+    .doc-viewer { position: static !important; padding: 0 !important; background: var(--bg-surface) !important; }
     .doc-page { box-shadow: none !important; padding: 0 !important; max-width: none !important; }
 }

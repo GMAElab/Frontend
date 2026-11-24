@@ -552,7 +552,7 @@ select.form-control[multiple] { padding-right: 12px; height: auto; }
     border-radius: var(--radius-xs);
     background: var(--surface-2);
     border: 1px solid var(--line);
-    color: var(--muted);
+    color: var(--text-secondary);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1505,7 +1505,7 @@ section .index-list {
     border: 1px solid var(--line);
     border-radius: var(--radius);
     margin-bottom: var(--space-4);
-    background: #000;
+    background: var(--bg-subtle);
 }
 
 .pagination {
@@ -1684,7 +1684,7 @@ section .index-list {
     border-top: 1px solid var(--line);
     background: var(--surface-2);
     font-size: 11px;
-    color: var(--muted);
+    color: var(--text-secondary);
 }
 .cmdk-foot span { display: inline-flex; align-items: center; gap: 4px; }
 
@@ -2013,3 +2013,61 @@ input[type="file"]::file-selector-button {
 .input-group select:focus-visible:hover,
 .input-group textarea:focus-visible:hover,
 .form-control:focus-visible:hover { border-color: var(--accent-brand); }
+
+/* ==========================================
+   AUDITORIA: CONTRASTE, FOCO, ALINHAMENTO E TELAS PEQUENAS
+   ========================================== */
+/* Texto auxiliar em linha com hover (fundo --bg-canvas): sobe para --text-secondary e passa de 4.5:1 */
+.data-table tbody tr:hover .cell-sub,
+.data-table tbody tr:hover td .sub,
+.data-table tbody tr:hover .text-muted,
+.data-table tbody tr:hover .text-faint { color: var(--text-secondary); }
+.nav-item:hover .nav-index,
+.nav-item:hover kbd { color: var(--text-secondary); }
+
+/* Foco visível em elementos clicáveis que não são <button> */
+.tl-item.clickable:focus-visible,
+.badge[role="button"]:focus-visible,
+.mes-card:focus-visible {
+    outline: 2px solid var(--accent-brand);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+}
+.badge[role="button"] { cursor: pointer; }
+.badge[role="button"]:hover { border-color: var(--text-muted); color: var(--text-primary); }
+.tl-item.clickable:focus-visible .tl-title { color: var(--accent-brand); }
+
+/* A paleta de comandos tira o contorno do input: a linha inteira mostra o foco */
+.cmdk-input-row:focus-within { box-shadow: inset 0 -2px 0 var(--accent-brand); }
+
+/* Alinhamento de formulários */
+.check-inline input,
+.chip-option input { margin: 0; flex-shrink: 0; }
+.inline-form .btn,
+.toolbar .btn { flex-shrink: 0; }
+.field-grid { align-items: start; }
+.label-row label { margin: 0; }
+
+/* Alinhamento de tabelas */
+.data-table thead th.end { text-align: right; }
+.data-table td .row-actions { width: 100%; }
+.data-table td,
+.data-table th { overflow-wrap: anywhere; }
+.data-table td.end,
+.data-table th.end,
+.data-table td.num,
+.data-table td.code { overflow-wrap: normal; }
+
+/* Textos longos não estouram cabeçalhos de modal */
+.modal-header > div,
+.modal-header h2,
+.modal-header h3 { min-width: 0; overflow-wrap: anywhere; }
+
+@media (max-width: 640px) {
+    .search-box kbd { display: none; }
+    .search-box .form-control { padding-right: 12px; }
+    .inline-form .btn { flex: 1 1 auto; }
+    .modal-footer.split { flex-direction: row; }
+    .modal-footer.split .btn { width: auto; flex: 1; }
+    .pagination { justify-content: center; }
+}

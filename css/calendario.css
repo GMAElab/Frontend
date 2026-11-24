@@ -62,7 +62,7 @@
 .cal-view-btn {
     border: none;
     background: transparent;
-    color: var(--muted);
+    color: var(--text-secondary);
     font-size: var(--fs-xs);
     font-weight: 500;
     padding: 6px 12px;
@@ -147,7 +147,7 @@
     align-items: center;
     justify-content: center;
     font-size: var(--fs-2xs);
-    color: var(--muted);
+    color: var(--text-secondary);
     font-variant-numeric: tabular-nums;
     padding: var(--space-2);
 }
@@ -172,7 +172,7 @@
     font-size: var(--fs-2xs);
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: var(--muted);
+    color: var(--text-secondary);
     font-weight: 600;
 }
 
@@ -200,7 +200,7 @@
 .cal-day-hours-hint {
     font-variant-numeric: tabular-nums;
     font-size: 10px;
-    color: var(--faint);
+    color: var(--text-secondary);
 }
 
 .cal-day-holiday-tag {
@@ -426,7 +426,7 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: var(--muted);
+    color: var(--text-secondary);
 }
 
 .cal-month-dow:last-child {
@@ -663,3 +663,13 @@
 .cal-slot.is-open:hover { background: var(--accent-brand-bg); }
 .cal-month-cell[data-month-day] { cursor: pointer; }
 .cal-month-cell[data-month-day]:hover { background: var(--bg-canvas); }
+
+/* Telas pequenas: a barra do calendário quebra em linhas sem estourar a largura */
+@media (max-width: 640px) {
+    .cal-toolbar { justify-content: flex-start; }
+    .cal-toolbar-group { width: 100%; }
+    .cal-eq-select { min-width: 0; max-width: none; width: 100%; flex: 1 1 100%; }
+    .cal-nav-range { min-width: 0; flex: 1; font-size: var(--fs-base); }
+    .cal-view-switch { width: 100%; }
+    .cal-view-btn { flex: 1; justify-content: center; }
+}
