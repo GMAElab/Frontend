@@ -12,7 +12,6 @@
     /* Raios — aliases legados */
     --radius-xs: var(--radius-sm);
     --radius: var(--radius-md);
-    --radius-lg: var(--radius-card);
 
     /* Escala tipográfica */
     --fs-micro: 11px;
@@ -33,8 +32,8 @@
 
     /* Layout */
     --sidebar-w: 248px;
-    --topbar-h: 60px;
-    --content-max: 1280px;
+    --topbar-h: 64px;
+    --content-max: none;
 
     /* Movimento */
     --ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -45,7 +44,7 @@
 
     /* Camadas */
     --z-sidebar: 40;
-    --z-topbar: 30;
+    --z-topbar: 45;
     --z-modal: 1000;
     --z-modal-top: 10050;
     --z-palette: 11000;

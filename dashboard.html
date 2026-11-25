@@ -4,53 +4,96 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="light dark">
-    <meta name="theme-color" content="#F4F7FA">
+    <meta name="theme-color" content="#F5F7FA">
     <title>SGCI · GMAE</title>
-    <script>try { var t = localStorage.getItem('sgci-theme-v3'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; if (localStorage.getItem('sgci-densidade') === 'bancada') document.documentElement.dataset.densidade = 'bancada'; } catch (e) {}</script>
+    <script>try { var t = localStorage.getItem('sgci-theme-v3'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; if (localStorage.getItem('sgci-densidade') === 'bancada') document.documentElement.dataset.densidade = 'bancada'; if (localStorage.getItem('sgci-sidebar') === 'recolhida') document.documentElement.dataset.sidebar = 'recolhida'; } catch (e) {}</script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-    <link rel="stylesheet" href="tokens.css?v=4">
-    <link rel="stylesheet" href="css/global.css?v=22">
-    <link rel="stylesheet" href="css/layout.css?v=22">
-    <link rel="stylesheet" href="css/components.css?v=22">
-    <link rel="stylesheet" href="css/calendario.css?v=6">
+    <link rel="stylesheet" href="tokens.css?v=5">
+    <link rel="stylesheet" href="css/global.css?v=23">
+    <link rel="stylesheet" href="css/layout.css?v=23">
+    <link rel="stylesheet" href="css/components.css?v=23">
+    <link rel="stylesheet" href="css/calendario.css?v=7">
 </head>
 <body class="dashboard-layout">
     <a class="skip-link" href="#dynamic-content">Pular para o conteúdo</a>
 
+    <header class="topbar">
+        <div class="topbar-left">
+            <button type="button" class="menu-toggle" id="menu-toggle" aria-label="Recolher menu lateral" aria-controls="sidebar" aria-expanded="true">
+                <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+            </button>
+            <span class="brand" translate="no">
+                <span class="brand-glyph" aria-hidden="true"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6.34L4.24 17.5A2 2 0 0 0 6 20.5h12a2 2 0 0 0 1.76-3L15 8.34V2"/><path d="M8.5 2h7"/><path d="M6.5 14.5h11"/></svg></span>
+                <span class="brand-line"><span class="brand-mark">SGCI</span><span class="brand-chip">GMAE</span></span>
+            </span>
+        </div>
+
+        <nav class="topnav" aria-label="Seções do portal">
+            <ul class="topnav-list">
+                <li><button type="button" class="topnav-link" data-nav-view="inicio">Início</button></li>
+                <li class="topnav-item">
+                    <button type="button" class="topnav-trigger" aria-expanded="false" aria-controls="topnav-conhecimento">Conhecimento<svg aria-hidden="true" focusable="false" class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+                    <ul class="topnav-menu" id="topnav-conhecimento" hidden>
+                        <li><button type="button" class="topnav-link" data-nav-view="equipments">Equipamentos</button></li>
+                        <li><button type="button" class="topnav-link" data-nav-view="processes">Processos de P&amp;D</button></li>
+                        <li><button type="button" class="topnav-link" data-nav-view="pops">POPs</button></li>
+                        <li><button type="button" class="topnav-link" data-nav-view="rspace">RSpace ELN</button></li>
+                    </ul>
+                </li>
+                <li class="topnav-item">
+                    <button type="button" class="topnav-trigger" aria-expanded="false" aria-controls="topnav-rotina">Rotina<svg aria-hidden="true" focusable="false" class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+                    <ul class="topnav-menu" id="topnav-rotina" hidden>
+                        <li><button type="button" class="topnav-link" data-nav-view="pta">Planejamento mensal</button></li>
+                        <li><button type="button" class="topnav-link" data-nav-view="tarefas">Tarefas</button></li>
+                        <li><button type="button" class="topnav-link" data-nav-view="articles">Artigos</button></li>
+                    </ul>
+                </li>
+                <li data-topnav-admin hidden><button type="button" class="topnav-link" data-nav-view="admin">Administração</button></li>
+            </ul>
+        </nav>
+
+        <div class="topbar-right">
+            <span class="sys-status" id="sys-status" role="status" title="Conectado"><span class="dot" aria-hidden="true"></span><span class="label">online</span></span>
+            <button type="button" class="icon-btn" id="btn-palette" aria-label="Buscar seção ou ação (Ctrl+K)" title="Buscar (Ctrl+K)" aria-keyshortcuts="Control+K Meta+K"><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
+            <button type="button" class="icon-btn" id="btn-theme" aria-label="Alternar tema" title="Alternar tema"></button>
+            <button type="button" class="icon-btn" id="btn-densidade" aria-pressed="false" aria-label="Modo bancada: letras e botões maiores" title="Modo bancada: letras e botões maiores"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg></button>
+        </div>
+    </header>
+
     <aside class="sidebar" id="sidebar" aria-label="Navegação principal">
         <div class="sidebar-brand">
-            <span class="brand-glyph" aria-hidden="true"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6.34L4.24 17.5A2 2 0 0 0 6 20.5h12a2 2 0 0 0 1.76-3L15 8.34V2"/><path d="M8.5 2h7"/><path d="M6.5 14.5h11"/></svg></span>
-            <span class="brand-text">
-                <span class="brand-line" translate="no"><span class="brand-mark">SGCI</span><span class="brand-chip">GMAE</span></span>
-                <span class="brand-sub">Conhecimento e inovação</span>
+            <span class="brand" translate="no">
+                <span class="brand-glyph" aria-hidden="true"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6.34L4.24 17.5A2 2 0 0 0 6 20.5h12a2 2 0 0 0 1.76-3L15 8.34V2"/><path d="M8.5 2h7"/><path d="M6.5 14.5h11"/></svg></span>
+                <span class="brand-line"><span class="brand-mark">SGCI</span><span class="brand-chip">GMAE</span></span>
             </span>
+            <button type="button" class="icon-btn" data-fechar-gaveta aria-label="Fechar menu"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
         </div>
 
         <nav class="sidebar-nav" aria-label="Seções">
             <ul>
-                <li class="nav-group" role="presentation">Principal</li>
                 <li><button type="button" class="nav-item active" data-view="inicio" data-label="Início" data-key="i"><svg aria-hidden="true" focusable="false" class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg><span class="nav-label">Início</span></button></li>
 
-                <li class="nav-group" role="presentation">Conhecimento</li>
-                <li class="nav-parent">
-                    <button type="button" class="nav-item" data-view="equipments" data-label="Equipamentos" data-key="e"><svg aria-hidden="true" focusable="false" class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18h8"/><path d="M3 22h18"/><path d="M14 22a7 7 0 1 0 0-14h-1"/><path d="M9 14h2"/><path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z"/><path d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3"/></svg><span class="nav-label">Equipamentos</span></button>
-                    <button type="button" class="nav-expand" aria-expanded="false" aria-controls="nav-sub-equipments" aria-label="Mostrar atalhos de equipamentos"><svg aria-hidden="true" focusable="false" class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
-                    <ul class="nav-sub" id="nav-sub-equipments" hidden>
-                        <li><button type="button" class="nav-subitem" data-sub-view="equipments">Catálogo</button></li>
-                        <li><button type="button" class="nav-subitem" data-sub-view="equipments" data-sub-acao="reservas">Minhas reservas</button></li>
+                <li class="nav-acc">
+                    <button type="button" class="nav-group nav-acc-toggle" aria-expanded="false" aria-controls="acc-conhecimento">Conhecimento</button>
+                    <ul class="nav-acc-panel" id="acc-conhecimento" hidden>
+                        <li><button type="button" class="nav-item" data-view="equipments" data-label="Equipamentos" data-key="e"><svg aria-hidden="true" focusable="false" class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18h8"/><path d="M3 22h18"/><path d="M14 22a7 7 0 1 0 0-14h-1"/><path d="M9 14h2"/><path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z"/><path d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3"/></svg><span class="nav-label">Equipamentos</span></button></li>
+                        <li><button type="button" class="nav-item" data-view="processes" data-label="Processos de P&amp;D" data-key="p"><svg aria-hidden="true" focusable="false" class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6.34L4.24 17.5A2 2 0 0 0 6 20.5h12a2 2 0 0 0 1.76-3L15 8.34V2"/><path d="M8.5 2h7"/><path d="M6.5 14.5h11"/></svg><span class="nav-label">Processos de P&amp;D</span></button></li>
+                        <li><button type="button" class="nav-item" data-view="pops" data-label="POPs" data-key="o"><svg aria-hidden="true" focusable="false" class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span class="nav-label">POPs</span></button></li>
+                        <li><button type="button" class="nav-item" data-view="rspace" data-label="RSpace ELN" data-key="r"><svg aria-hidden="true" focusable="false" class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg><span class="nav-label">RSpace ELN</span><span class="nav-tag" title="Em desenvolvimento">Beta</span></button></li>
                     </ul>
                 </li>
-                <li><button type="button" class="nav-item" data-view="processes" data-label="Processos de P&amp;D" data-key="p"><svg aria-hidden="true" focusable="false" class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6.34L4.24 17.5A2 2 0 0 0 6 20.5h12a2 2 0 0 0 1.76-3L15 8.34V2"/><path d="M8.5 2h7"/><path d="M6.5 14.5h11"/></svg><span class="nav-label">Processos de P&amp;D</span></button></li>
-                <li><button type="button" class="nav-item" data-view="pops" data-label="POPs" data-key="o"><svg aria-hidden="true" focusable="false" class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span class="nav-label">POPs</span></button></li>
-                <li><button type="button" class="nav-item" data-view="rspace" data-label="RSpace ELN" data-key="r"><svg aria-hidden="true" focusable="false" class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg><span class="nav-label">RSpace ELN</span><span class="nav-tag" title="Em desenvolvimento">Beta</span></button></li>
 
-                <li class="nav-group" role="presentation">Rotina</li>
-                <li><button type="button" class="nav-item" data-view="pta" data-label="Planejamento mensal" data-key="m"><svg aria-hidden="true" focusable="false" class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="nav-label">Planejamento mensal</span></button></li>
-                <li><button type="button" class="nav-item" data-view="tarefas" data-label="Tarefas" data-key="t"><svg aria-hidden="true" focusable="false" class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="nav-label">Tarefas</span></button></li>
-                <li><button type="button" class="nav-item" data-view="articles" data-label="Artigos" data-key="a"><svg aria-hidden="true" focusable="false" class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span class="nav-label">Artigos</span></button></li>
+                <li class="nav-acc">
+                    <button type="button" class="nav-group nav-acc-toggle" aria-expanded="false" aria-controls="acc-rotina">Rotina</button>
+                    <ul class="nav-acc-panel" id="acc-rotina" hidden>
+                        <li><button type="button" class="nav-item" data-view="pta" data-label="Planejamento mensal" data-key="m"><svg aria-hidden="true" focusable="false" class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="nav-label">Planejamento mensal</span></button></li>
+                        <li><button type="button" class="nav-item" data-view="tarefas" data-label="Tarefas" data-key="t"><svg aria-hidden="true" focusable="false" class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="nav-label">Tarefas</span></button></li>
+                        <li><button type="button" class="nav-item" data-view="articles" data-label="Artigos" data-key="a"><svg aria-hidden="true" focusable="false" class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span class="nav-label">Artigos</span></button></li>
+                    </ul>
+                </li>
 
                 <li id="menu-admin" style="display: none;">
                     <div class="nav-group" role="presentation">Sistema</div>
@@ -65,39 +108,22 @@
                 <div class="sidebar-user" id="user-greeting">&nbsp;</div>
                 <div class="sidebar-role" id="user-role"></div>
             </div>
-            <div class="sidebar-tools">
-                <button type="button" class="icon-btn danger" id="btn-logout" aria-label="Sair" title="Sair"><svg aria-hidden="true" focusable="false" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
-            </div>
         </div>
     </aside>
     <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
 
     <div class="main-wrapper">
-        <header class="topbar">
-            <div class="topbar-left">
-                <button type="button" class="menu-toggle" id="menu-toggle" aria-label="Abrir menu" aria-controls="sidebar">
-                    <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
-                </button>
-                <nav class="crumbs" aria-label="Você está em">
-                    <span class="crumb-root">SGCI</span>
-                    <span class="sep" aria-hidden="true">/</span>
-                    <strong id="current-page-title" class="current" aria-current="page">Início</strong>
-                </nav>
+        <div class="greeting-bar">
+            <div>
+                <p class="greeting" id="shell-greeting">Olá</p>
+                <p class="greeting-date" id="shell-date"></p>
             </div>
-            <div class="topbar-right">
-                <button type="button" class="search-trigger" id="btn-palette" aria-label="Buscar seção ou ação" aria-keyshortcuts="Control+K Meta+K">
-                    <svg aria-hidden="true" focusable="false" class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    <span class="label">Buscar seção ou ação</span>
-                    <span class="keys" aria-hidden="true"><kbd data-mod>Ctrl</kbd><kbd>K</kbd></span>
-                </button>
-                <span class="sys-status" id="sys-status" role="status" title="Conectado"><span class="dot" aria-hidden="true"></span><span class="label">online</span></span>
-                <button type="button" id="btn-setup-2fa" onclick="abrirSetup2FA()" class="btn btn-secondary btn-sm" style="display: none;" aria-label="Ativar verificação em duas etapas" title="Ativar verificação em duas etapas"><svg aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span class="long">Ativar verificação em duas etapas</span><span class="short">Ativar 2FA</span></button>
-                <button type="button" class="icon-btn bordered" id="btn-theme" aria-label="Alternar tema" title="Alternar tema"></button>
-                <button type="button" class="icon-btn bordered" id="btn-densidade" aria-pressed="false" aria-label="Modo bancada: letras e botões maiores" title="Modo bancada: letras e botões maiores"><svg aria-hidden="true" focusable="false" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg></button>
-                <span class="topbar-divider guest-hide" aria-hidden="true"></span>
-                <button type="button" class="btn btn-primary btn-sm guest-hide" id="btn-novo-global" aria-haspopup="dialog" aria-label="Novo registro" title="Novo registro"><svg aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span class="btn-label">Novo</span></button>
+            <div class="greeting-actions">
+                <button type="button" id="btn-setup-2fa" onclick="abrirSetup2FA()" class="btn btn-secondary" style="display: none;" aria-label="Ativar verificação em duas etapas" title="Ativar verificação em duas etapas"><svg aria-hidden="true" focusable="false" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span class="long">Ativar verificação em duas etapas</span><span class="short">Ativar 2FA</span></button>
+                <button type="button" class="btn btn-primary guest-hide" id="btn-novo-global" aria-haspopup="dialog" aria-label="Novo registro" title="Novo registro"><svg aria-hidden="true" focusable="false" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span class="btn-label">Novo registro</span></button>
+                <button type="button" class="btn btn-danger" id="btn-logout" aria-label="Sair" title="Sair"><span class="btn-label">Sair</span><svg aria-hidden="true" focusable="false" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
             </div>
-        </header>
+        </div>
 
         <main id="dynamic-content" class="content-area" tabindex="-1"></main>
     </div>
@@ -340,11 +366,11 @@
     <script src="js/api.js?v=6"></script>
     <script src="js/ui.js?v=3404"></script>
     <script src="js/salvaguardas.js?v=3"></script>
-    <script src="js/shell.js?v=7"></script>
+    <script src="js/shell.js?v=8"></script>
     <script src="js/auth.js?v=2004"></script>
     <script src="js/listagem.js?v=3"></script>
     <script src="js/vinculos.js?v=2"></script>
-    <script src="js/views/inicio.js?v=8"></script>
+    <script src="js/views/inicio.js?v=9"></script>
     <script src="js/views/equipments.js?v=9"></script>
     <script src="js/views/agendamentos.js?v=2"></script>
     <script src="js/views/processes.js?v=7"></script>

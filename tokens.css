@@ -1,73 +1,75 @@
 /* ==========================================
    TOKENS DO DESIGN SYSTEM (design-system-enforcer)
-   Fonte única de cor, borda, raio, sombra, tipografia e espaçamento.
-   Referência visual: painel de projeto claro — canvas cinza-azulado,
-   cards brancos com bordas secas, azul royal de marca, ação primária grafite.
-   Pares de texto conferidos para WCAG AA (≥ 4.5:1).
+   Fonte única de cor, borda, raio, sombra e tipografia.
+   Estrutura da referência (topbar flutuante, sidebar recolhível, área de
+   trabalho arredondada) com paleta técnica própria: azul + grafite.
+   Pares de texto conferidos para WCAG AA (≥ 4.5:1) — ver SKILL.md §2.
    ========================================== */
 :root {
-    /* Superfícies e camadas */
-    --bg-canvas: #F4F7FA;        /* área de trabalho atrás dos cards */
-    --bg-surface: #FFFFFF;       /* sidebar, topbar, cards, painéis, modais, tabelas */
-    --bg-subtle: #F1F5F9;        /* caixas de destaque, cabeçalho de tabela, botão neutro preenchido */
-    --bg-input: #EBF0F5;         /* campo de busca e controles da barra de filtros */
-    --bg-inset: #F4F7FA;         /* bloco interno de informações-chave dos cards */
-    --bg-hover: #F8FAFC;         /* hover de linhas, itens e cards clicáveis */
+    /* ---------- Paleta principal ---------- */
+    --bg-canvas: #F5F7FA;          /* fundo da página */
+    --bg-workspace: #ECEFF4;       /* moldura arredondada da área de trabalho */
+    --bg-surface: #FFFFFF;         /* sidebar, topbar, cards, dropdowns */
+    --bg-subtle: #F1F5F9;          /* pílulas de data/hora, inputs, hover sutil */
+    --border-subtle: #E2E8F0;      /* bordas de cards e divisórias */
 
-    /* Bordas */
-    --border-subtle: #E2E8F0;    /* sidebar, topbar, cards, divisórias */
-    --border-soft: #E5E9F0;      /* divisórias dentro de caixas internas */
-    --border-strong: #CBD5E1;    /* botões secundários e controles */
-    --border-control: #94A3B8;   /* contorno de checkbox/radio e hover de inputs (≥ 3:1) */
+    --brand-primary: #1D63DC;      /* ação principal, item ativo, dia ativo */
+    --brand-hover: #164EB3;
+    --brand-soft: #EEF4FF;
 
-    /* Texto */
-    --text-primary: #0F172A;     /* títulos e valores principais */
-    --text-secondary: #475569;   /* textos secundários e abas inativas */
-    --text-muted: #64748B;       /* micro-labels em caixa alta e metadados */
-    --text-on-dark: #FFFFFF;     /* texto sobre a ação primária grafite */
+    --action-dark: #0F172A;        /* cabeçalho técnico do destaque, marca */
+    --action-dark-hover: #1E293B;
 
-    /* Marca e ação */
-    --accent-brand: #1D63DC;     /* aba ativa, links, contadores, foco, item ativo */
-    --accent-brand-hover: #174EB0;
-    --accent-brand-bg: #EEF4FF;  /* fundo suave do azul (item ativo, botão suave) */
-    --accent-brand-border: #C7D9FB;
-    --accent-primary: #111827;   /* botão de criação "+ Novo" */
-    --accent-hover: #1F2937;
-    --accent-violet: #6D4AE0;    /* avatar de iniciais (variação) */
-    --rating: #F59E0B;           /* estrela de avaliação — só ícone, sempre com número ao lado */
+    --danger-primary: #DC2626;     /* fundo sólido de sair/excluir (texto branco) */
+    --danger-soft: #FEF2F2;
 
-    /* Status suaves: texto sobre fundo do próprio estado */
+    --text-primary: #0F172A;
+    --text-secondary: #475569;
+    --text-muted: #64748B;         /* só sobre branco/--bg-hover */
+
+    /* ---------- Auxiliares ---------- */
+    --bg-hover: #F8FAFC;           /* hover de linhas e container de grupo aberto */
+    --bg-input: #F1F5F9;
+    --bg-inset: #F8FAFC;           /* bloco interno de fatos dos cards */
+    --border-soft: #E5E9F0;
+    --border-strong: #CBD5E1;      /* botões secundários e controles */
+    --border-control: #94A3B8;     /* hover de inputs, checkbox (≥ 3:1) */
+    --brand-border: #C7D9FB;
+    --text-on-dark: #FFFFFF;
+    --accent-violet: #6D4AE0;      /* variação de avatar de iniciais */
+    --rating: #F59E0B;
+
     --success-text: #15803D;
     --success-bg: #DCFCE7;
     --success-border: #BBF7D0;
-    --success-solid: #16A34A;    /* ponto de status (não-texto) */
+    --success-solid: #16A34A;
     --warning-text: #B45309;
     --warning-bg: #FEF3C7;
     --warning-border: #FDE68A;
     --warning-solid: #F59E0B;
-    --danger-text: #B91C1C;
-    --danger-bg: #FEE2E2;
+    --danger-text: #B91C1C;        /* texto vermelho sobre --danger-soft (5,6:1) */
     --danger-border: #FECACA;
-    --danger-solid: #DC2626;     /* badge de notificação com texto branco */
+    --danger-solid: #DC2626;
 
-    /* Sobreposição de modais */
     --overlay: rgb(15 23 42 / 0.40);
 
-    /* Raios */
-    --radius-sm: 6px;            /* botões, chips de categoria, itens de menu */
-    --radius-md: 8px;            /* inputs, caixas internas de card */
-    --radius-card: 12px;         /* cards, painéis, modais */
-    --radius-pill: 999px;        /* SÓ badges de status, contadores, toggles e avatares */
+    /* ---------- Raios ---------- */
+    --radius-lg: 14px;             /* moldura da área de trabalho e cards principais */
+    --radius-panel: 12px;          /* topbar flutuante e card lateral de agenda */
+    --radius-md: 10px;             /* cards internos e dropdowns */
+    --radius-sm: 8px;              /* botões, inputs, itens de menu */
+    --radius-pill: 999px;          /* badges, contadores, pills de status, pontos */
 
-    /* Sombras (as únicas permitidas) */
+    /* ---------- Sombras (as únicas permitidas) ---------- */
     --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04);
-    --shadow-pop: 0 10px 28px -12px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(15, 23, 42, 0.05);
+    --shadow-float: 0 1px 2px rgba(15, 23, 42, 0.04), 0 6px 18px -8px rgba(15, 23, 42, 0.10);
+    --shadow-pop: 0 12px 32px -12px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(15, 23, 42, 0.05);
 
-    /* Tipografia */
+    /* ---------- Tipografia ---------- */
     --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
     --font-code: ui-monospace, SFMono-Regular, 'Cascadia Mono', Menlo, Consolas, monospace;
 
-    /* Espaçamento (grade de 4px) */
+    /* ---------- Espaçamento (grade de 4px) ---------- */
     --space-1: 4px;
     --space-2: 8px;
     --space-3: 12px;
@@ -78,36 +80,55 @@
     --space-8: 32px;
     --space-10: 40px;
     --space-12: 48px;
+
+    /* ---------- Aliases (nomes usados pelos componentes e pelo calendário) ---------- */
+    --accent-brand: var(--brand-primary);
+    --accent-brand-hover: var(--brand-hover);
+    --accent-brand-bg: var(--brand-soft);
+    --accent-brand-border: var(--brand-border);
+    --accent-primary: var(--action-dark);
+    --accent-hover: var(--action-dark-hover);
+    --danger-bg: var(--danger-soft);
+    --radius-card: var(--radius-lg);
 }
 
 /* ==========================================
-   MODO ESCURO (botão de tema) — mesmos tokens, valores escuros.
-   Só em tela: na impressão valem sempre os tokens claros acima.
+   MODO ESCURO (botão de tema) — mesmos nomes, valores escuros.
+   Só em tela: na impressão valem sempre os tokens claros.
    ========================================== */
 @media screen {
     [data-theme="dark"] {
         --bg-canvas: #0B1120;
-        --bg-surface: #111827;
-        --bg-subtle: #1A2333;
-        --bg-input: #1A2333;
-        --bg-inset: #0F1726;
-        --bg-hover: #162032;
+        --bg-workspace: #111A2B;
+        --bg-surface: #0F172A;
+        --bg-subtle: #1A2436;
         --border-subtle: #243044;
-        --border-soft: #2A364B;
-        --border-strong: #364257;
-        --border-control: #64748B;
+
+        --brand-primary: #2F6AD4;      /* fundo de botão: branco por cima ≥ 5:1 */
+        --brand-hover: #2559BF;
+        --brand-soft: #16243F;
+
+        --action-dark: #1E293B;
+        --action-dark-hover: #273449;
+
+        --danger-primary: #DC2626;
+        --danger-soft: #2D1215;
+
         --text-primary: #F1F5F9;
         --text-secondary: #CBD5E1;
         --text-muted: #94A3B8;
-        --text-on-dark: #0F172A;
-        --accent-brand: #7AA7F7;
-        --accent-brand-hover: #A3C2FA;
-        --accent-brand-bg: #16243F;
-        --accent-brand-border: #2A4677;
-        --accent-primary: #F1F5F9;
-        --accent-hover: #CBD5E1;
+
+        --bg-hover: #162032;
+        --bg-input: #1A2436;
+        --bg-inset: #131D2F;
+        --border-soft: #2A364B;
+        --border-strong: #364257;
+        --border-control: #64748B;
+        --brand-border: #2A4677;
+        --text-on-dark: #FFFFFF;
         --accent-violet: #9A85F2;
         --rating: #FBBF24;
+
         --success-text: #4ADE80;
         --success-bg: #0F2A1B;
         --success-border: #1B4D30;
@@ -117,11 +138,16 @@
         --warning-border: #5B4410;
         --warning-solid: #F59E0B;
         --danger-text: #F87171;
-        --danger-bg: #2D1215;
         --danger-border: #5C2226;
         --danger-solid: #EF4444;
+
         --overlay: rgb(2 6 23 / 0.66);
         --shadow-card: none;
+        --shadow-float: 0 0 0 1px var(--border-subtle);
         --shadow-pop: 0 0 0 1px var(--border-strong);
+
+        /* links e texto azul sobre fundo escuro precisam de um azul mais claro */
+        --accent-brand: #7AA7F7;
+        --accent-brand-hover: #A3C2FA;
     }
 }

@@ -234,50 +234,156 @@
     }
 
     // ==========================================
-    // SUBMENU DA SIDEBAR (ex.: Equipamentos → Catálogo / Minhas reservas)
+    // NAVEGAÇÃO: ACORDEÃO DA SIDEBAR, MENU DA TOPBAR E SIDEBAR RECOLHÍVEL
+    // A topbar usa .topnav-link[data-nav-view] (nunca .nav-item: ui.js, a paleta
+    // e o modo convidado varrem .nav-item).
     // ==========================================
-    function definirSubmenu(botao, aberto) {
-        const sub = document.getElementById(botao.getAttribute('aria-controls'));
+    const CHAVE_SIDEBAR = 'sgci-sidebar';
+    const CONSULTA_GAVETA = window.matchMedia('(max-width: 1199px)');
+    const modoGaveta = () => CONSULTA_GAVETA.matches;
+
+    function definirPainel(botao, aberto) {
+        const painel = document.getElementById(botao.getAttribute('aria-controls'));
         botao.setAttribute('aria-expanded', String(aberto));
-        if (sub) sub.hidden = !aberto;
+        if (painel) painel.hidden = !aberto;
     }
 
-    function marcarSubitem(item) {
-        item.closest('.nav-sub')?.querySelectorAll('.nav-subitem').forEach(el => {
-            if (el === item) el.setAttribute('aria-current', 'page');
-            else el.removeAttribute('aria-current');
+    // Grupos da sidebar: cada um abre e fecha; o grupo da tela atual abre sozinho.
+    function iniciarAcordeao() {
+        document.querySelectorAll('.nav-acc-toggle').forEach(botao => {
+            botao.addEventListener('click', () => definirPainel(botao, botao.getAttribute('aria-expanded') !== 'true'));
         });
     }
 
-    function iniciarSubmenus() {
-        document.querySelectorAll('.nav-expand').forEach(botao => {
-            botao.addEventListener('click', () => definirSubmenu(botao, botao.getAttribute('aria-expanded') !== 'true'));
+    function fecharMenusSuperiores(exceto) {
+        document.querySelectorAll('.topnav-trigger[aria-expanded="true"]').forEach(b => {
+            if (b !== exceto) definirPainel(b, false);
         });
+    }
 
-        document.querySelectorAll('.nav-subitem').forEach(item => {
-            item.addEventListener('click', async () => {
-                const trocou = await irPara(item.dataset.subView);
-                if (!trocou) return;
-                marcarSubitem(item);
-                if (item.dataset.subAcao === 'reservas') window.openMyReservations?.();
+    function iniciarMenuSuperior() {
+        const nav = document.querySelector('.topnav');
+        if (!nav) return;
+
+        const itemAdmin = nav.querySelector('[data-topnav-admin]');
+        if (usuario().role === 'admin') itemAdmin?.removeAttribute('hidden');
+        else itemAdmin?.remove();
+
+        nav.querySelectorAll('.topnav-trigger').forEach(botao => {
+            botao.addEventListener('click', () => {
+                const abrir = botao.getAttribute('aria-expanded') !== 'true';
+                fecharMenusSuperiores(botao);
+                definirPainel(botao, abrir);
             });
         });
 
-        // Ao trocar de tela: abre o submenu da seção ativa e marca o primeiro atalho.
-        const sincronizar = (view) => {
-            document.querySelectorAll('.nav-parent').forEach(pai => {
-                const ativo = pai.querySelector('.nav-item')?.dataset.view === view;
-                const botao = pai.querySelector('.nav-expand');
-                if (ativo && botao) definirSubmenu(botao, true);
-                pai.querySelectorAll('.nav-subitem').forEach((el, i) => {
-                    if (ativo && i === 0) el.setAttribute('aria-current', 'page');
-                    else el.removeAttribute('aria-current');
-                });
+        nav.querySelectorAll('.topnav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                fecharMenusSuperiores();
+                irPara(link.dataset.navView);
             });
-        };
-        document.addEventListener('viewChanged', (e) => sincronizar(e.detail.view));
-        // ui.js já abriu a primeira tela antes deste script registrar o ouvinte
-        sincronizar(document.querySelector('.nav-item.active')?.dataset.view);
+        });
+
+        // Teclado: ↓ abre o menu e entra nele; ↑/↓ percorrem; Esc fecha e devolve o foco.
+        nav.addEventListener('keydown', (e) => {
+            const gatilho = e.target.closest('.topnav-item')?.querySelector('.topnav-trigger');
+            if (e.key === 'Escape' && gatilho && gatilho.getAttribute('aria-expanded') === 'true') {
+                e.stopPropagation();
+                definirPainel(gatilho, false);
+                gatilho.focus();
+                return;
+            }
+            if (!gatilho || (e.key !== 'ArrowDown' && e.key !== 'ArrowUp')) return;
+            e.preventDefault();
+            definirPainel(gatilho, true);
+            const itens = Array.from(document.getElementById(gatilho.getAttribute('aria-controls'))?.querySelectorAll('.topnav-link') || []);
+            if (!itens.length) return;
+            const atual = itens.indexOf(e.target);
+            const proximo = e.key === 'ArrowDown' ? atual + 1 : (atual <= 0 ? itens.length - 1 : atual - 1);
+            itens[(proximo + itens.length) % itens.length].focus();
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.topnav-item')) fecharMenusSuperiores();
+        });
+        nav.addEventListener('focusout', (e) => {
+            if (!e.relatedTarget || !e.relatedTarget.closest('.topnav-item')) fecharMenusSuperiores();
+        });
+    }
+
+    // Marca a seção atual na topbar e abre o grupo dela na sidebar.
+    function sincronizarNavegacao(view) {
+        if (!view) return;
+        const alvo = `[data-nav-view="${CSS.escape(view)}"]`;
+        document.querySelectorAll('.topnav-link').forEach(link => {
+            if (link.dataset.navView === view) link.setAttribute('aria-current', 'page');
+            else link.removeAttribute('aria-current');
+        });
+        document.querySelectorAll('.topnav-trigger').forEach(gatilho => {
+            const menu = document.getElementById(gatilho.getAttribute('aria-controls'));
+            gatilho.classList.toggle('is-active', !!menu?.querySelector(alvo));
+        });
+        document.querySelectorAll('.nav-acc').forEach(grupo => {
+            const botao = grupo.querySelector('.nav-acc-toggle');
+            if (botao && grupo.querySelector(`.nav-item[data-view="${CSS.escape(view)}"]`)) definirPainel(botao, true);
+        });
+    }
+
+    // ≡ no desktop recolhe/expande a sidebar (e lembra a escolha); ≤ 1199px abre a gaveta.
+    function atualizarBotaoMenu() {
+        const botao = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+        if (!botao || !sidebar) return;
+        const visivel = modoGaveta()
+            ? sidebar.classList.contains('open')
+            : document.documentElement.dataset.sidebar !== 'recolhida';
+        botao.setAttribute('aria-expanded', String(visivel));
+        botao.setAttribute('aria-label', modoGaveta()
+            ? (visivel ? 'Fechar menu' : 'Abrir menu')
+            : (visivel ? 'Recolher menu lateral' : 'Mostrar menu lateral'));
+    }
+
+    function iniciarSidebarRecolhivel() {
+        const botao = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+        if (!botao || !sidebar) return;
+
+        // ui.js já alternou .open neste mesmo clique (o ouvinte dele foi registrado antes).
+        botao.addEventListener('click', () => {
+            if (modoGaveta()) return;
+            sidebar.classList.remove('open');
+            const recolher = document.documentElement.dataset.sidebar !== 'recolhida';
+            if (recolher) document.documentElement.dataset.sidebar = 'recolhida';
+            else delete document.documentElement.dataset.sidebar;
+            try { localStorage.setItem(CHAVE_SIDEBAR, recolher ? 'recolhida' : 'aberta'); } catch (e) { /* bloqueado */ }
+            atualizarBotaoMenu();
+        });
+
+        document.querySelector('[data-fechar-gaveta]')?.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            botao.focus();
+        });
+        // ui.js só fecha a gaveta em ≤ 991px; aqui a gaveta vale até 1199px.
+        document.querySelectorAll('.sidebar .nav-item').forEach(item => {
+            item.addEventListener('click', () => { if (modoGaveta()) sidebar.classList.remove('open'); });
+        });
+        CONSULTA_GAVETA.addEventListener('change', () => { sidebar.classList.remove('open'); atualizarBotaoMenu(); });
+        // Fundo escuro, Esc e cliques fecham a gaveta mudando a classe: o botão acompanha.
+        new MutationObserver(atualizarBotaoMenu).observe(sidebar, { attributes: true, attributeFilter: ['class'] });
+        atualizarBotaoMenu();
+    }
+
+    // Saudação da barra abaixo da topbar
+    function atualizarSaudacao() {
+        const el = document.getElementById('shell-greeting');
+        if (!el) return;
+        const agora = new Date();
+        const hora = agora.getHours();
+        const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
+        const nome = String(usuario().nome || '').trim().split(/\s+/)[0];
+        el.textContent = nome ? `${saudacao}, ${nome}` : saudacao;
+        const data = document.getElementById('shell-date');
+        if (data) data.textContent = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }).format(agora);
     }
 
     // ==========================================
@@ -351,7 +457,13 @@
         document.getElementById('btn-densidade')?.addEventListener('click', alternarDensidade);
         document.getElementById('btn-palette')?.addEventListener('click', () => abrirPaleta());
         document.getElementById('btn-novo-global')?.addEventListener('click', () => abrirPaleta('Criar'));
-        iniciarSubmenus();
+        iniciarAcordeao();
+        iniciarMenuSuperior();
+        iniciarSidebarRecolhivel();
+        atualizarSaudacao();
+        document.addEventListener('viewChanged', (e) => sincronizarNavegacao(e.detail.view));
+        // ui.js já abriu a primeira tela antes deste script registrar o ouvinte
+        sincronizarNavegacao(document.querySelector('.sidebar .nav-item.active')?.dataset.view);
         document.querySelectorAll('kbd[data-mod]').forEach(k => { k.textContent = ehMac ? '⌘' : 'Ctrl'; });
 
         const sidebar = document.getElementById('sidebar');
