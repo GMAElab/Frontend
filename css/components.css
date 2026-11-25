@@ -16,7 +16,7 @@
     height: var(--ctrl-md);
     padding: 0 14px;
     font-family: var(--font-sans);
-    font-size: 13.5px;
+    font-size: 13px;
     font-weight: 500;
     line-height: 1;
     white-space: nowrap;
@@ -38,17 +38,17 @@
     text-decoration: none;
 }
 
-/* Ação principal: azul de marca com texto branco (5,4:1) */
+/* Ação principal: grafite com texto branco (17:1); no escuro, claro com texto grafite */
 .btn-primary {
-    background: var(--brand-primary);
-    border-color: var(--brand-primary);
-    color: var(--text-on-dark);
-    font-weight: 600;
+    background: var(--action-primary);
+    border-color: var(--action-primary);
+    color: var(--action-primary-text);
+    font-weight: 500;
 }
 .btn-primary:hover:not(:disabled) {
-    background: var(--brand-hover);
-    border-color: var(--brand-hover);
-    color: var(--text-on-dark);
+    background: var(--action-primary-hover);
+    border-color: var(--action-primary-hover);
+    color: var(--action-primary-text);
 }
 
 /* Ação escura (grafite) — usada sobre fundos claros quando o azul já está em uso */
@@ -71,17 +71,17 @@
     color: var(--text-primary);
 }
 
-/* Ação de destaque suave (azul) — par do neutro no rodapé dos cards */
+/* Ação secundária neutra (o azul fica para ativo, links e foco) */
 .btn-soft {
-    background: var(--accent-brand-bg);
-    border-color: transparent;
-    color: var(--accent-brand);
-    font-weight: 600;
+    background: var(--bg-subtle);
+    border-color: var(--border-subtle);
+    color: var(--text-primary);
+    font-weight: 500;
 }
 .btn-soft:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--accent-brand) 12%, var(--accent-brand-bg));
-    border-color: transparent;
-    color: var(--accent-brand-hover);
+    background: var(--bg-surface);
+    border-color: var(--border-strong);
+    color: var(--text-primary);
 }
 
 .btn-ghost {
@@ -726,7 +726,7 @@ input[type="file"]::file-selector-button {
 .cell-icon {
     width: 32px;
     height: 32px;
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-sm);
     background: var(--accent-brand-bg);
     color: var(--accent-brand);
     display: inline-flex;
@@ -1160,7 +1160,7 @@ input[type="file"]::file-selector-button {
 .index-row .ic {
     width: 36px;
     height: 36px;
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-sm);
     background: var(--accent-brand-bg);
     color: var(--accent-brand);
     display: inline-flex;
@@ -1190,9 +1190,9 @@ input[type="file"]::file-selector-button {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    height: 22px;
-    padding: 0 9px;
-    border-radius: var(--radius-pill);
+    height: 20px;
+    padding: 0 7px;
+    border-radius: var(--radius-sm);
     background: var(--tint);
     border: 1px solid var(--bdr);
     color: var(--tone);
@@ -1253,7 +1253,7 @@ input[type="file"]::file-selector-button {
     min-width: 20px;
     height: 18px;
     padding: 0 6px;
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-sm);
     background: var(--bg-subtle);
     color: var(--text-secondary);
     font-size: 11px;
@@ -1476,7 +1476,7 @@ input[type="file"]::file-selector-button {
     min-width: 20px;
     height: 18px;
     padding: 0 6px;
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-sm);
     background: var(--bg-subtle);
     color: var(--text-secondary);
     font-size: 11px;
@@ -1756,7 +1756,7 @@ input[type="file"]::file-selector-button {
     height: 22px;
     padding: 0 9px;
     margin-right: 10px;
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-sm);
     background: var(--warning-bg);
     font-size: 11px;
     font-weight: 600;
@@ -1891,7 +1891,7 @@ input[type="file"]::file-selector-button {
     align-items: center;
     height: 20px;
     padding: 0 8px;
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-sm);
     background: var(--tint);
     color: var(--tone);
     font-size: 10.5px;
@@ -2298,10 +2298,10 @@ input[type="file"]::file-selector-button {
    No fim do arquivo para vencer as variações acima.
    ========================================== */
 .btn:active:not(:disabled) { background: var(--bg-subtle); }
-.btn-primary:active:not(:disabled) { background: var(--brand-hover); }
+.btn-primary:active:not(:disabled) { background: var(--action-primary-hover); }
 .btn-dark:active:not(:disabled) { background: var(--action-dark); }
 .btn-danger:active:not(:disabled) { background: var(--danger-primary); }
-.btn-soft:active:not(:disabled) { background: var(--accent-brand-bg); }
+.btn-soft:active:not(:disabled) { background: var(--bg-subtle); }
 
 .btn-danger:hover:not(:disabled) {
     background: color-mix(in srgb, var(--danger-primary) 84%, var(--action-dark));
@@ -2425,7 +2425,7 @@ input[type="file"]::file-selector-button {
 .home-aside {
     min-width: 0;
     position: sticky;
-    top: calc(var(--topbar-top) + var(--topbar-h) + var(--space-4));
+    top: var(--space-4);
 }
 
 @media (max-width: 1100px) {
@@ -2472,7 +2472,7 @@ input[type="file"]::file-selector-button {
     gap: 6px;
     height: 22px;
     padding: 0 9px;
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-sm);
     background: var(--action-dark-hover);
     color: var(--text-on-dark);
 }
@@ -2624,7 +2624,7 @@ input[type="file"]::file-selector-button {
     justify-content: center;
     padding: 0;
     border: 0;
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-sm);
     background: transparent;
     color: var(--text-primary);
     font-size: 13px;
@@ -2743,7 +2743,7 @@ input[type="file"]::file-selector-button {
     gap: 5px;
     height: 22px;
     padding: 0 8px;
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-sm);
     background: var(--bg-subtle);
     color: var(--text-secondary);
     font-size: 11.5px;
@@ -2760,4 +2760,153 @@ input[type="file"]::file-selector-button {
     .hero-card { padding: var(--space-5) var(--space-4); }
     .agenda-card { padding: var(--space-4); }
     .mcal-day { width: 34px; height: 34px; }
+}
+
+/* ==========================================
+   ESTÉTICA TÉCNICA — TOOLBAR, TABELAS E DESTAQUE
+   Bordas de 1px no lugar de sombras, cantos secos, linhas densas.
+   ========================================== */
+
+/* ---------- Barra de controle: contador à esquerda, busca à direita ---------- */
+.toolbar { margin-bottom: var(--space-3); }
+.toolbar .form-control,
+.toolbar .btn { height: 32px; }
+.result-count {
+    font-size: var(--fs-micro);
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+}
+.search-box .form-control {
+    background: var(--bg-surface);
+    border-color: var(--border-subtle);
+}
+.search-box .form-control:hover { border-color: var(--border-strong); }
+.search-box .form-control::placeholder { color: var(--text-muted); }
+
+/* ---------- Tabela técnica ---------- */
+.table-container {
+    border-radius: var(--radius-lg);
+    box-shadow: none;
+}
+.data-table { font-size: 13px; }
+.data-table thead th {
+    height: 34px;
+    padding: 0 14px;
+    background: var(--bg-subtle);
+    color: var(--text-secondary);
+    letter-spacing: 0.06em;
+}
+.data-table tbody td {
+    padding: 10px 14px;
+    border-bottom-color: var(--border-soft);
+}
+[data-densidade="bancada"] .data-table tbody td { padding: 14px 16px; }
+.data-table .is-skeleton td { height: 48px; padding: 0 14px; }
+.data-table tr.clickable:focus-visible td { background: var(--bg-subtle); }
+
+.cell-icon {
+    width: 28px;
+    height: 28px;
+    background: var(--bg-subtle);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
+}
+
+.pagination { padding-top: var(--space-2); }
+
+/* ---------- Destaque da tela inicial: painel branco com borda, sem bloco grafite ---------- */
+.hero-stage {
+    min-height: 0;
+    padding: 44px var(--space-5) var(--space-5);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    justify-content: flex-start;
+}
+.hero-meta {
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 32px;
+    padding: 0 var(--space-4);
+    background: var(--bg-subtle);
+    border-bottom: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+}
+.hero-tag {
+    height: 18px;
+    padding: 0;
+    background: transparent;
+    color: var(--text-secondary);
+}
+.hero-slide { justify-content: flex-start; }
+.hero-card {
+    max-width: none;
+    padding: var(--space-2) 0 0;
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+    text-align: left;
+}
+.hero-card h2 { font-size: 16px; font-weight: 600; text-wrap: pretty; }
+.hero-card p { margin-left: 0; margin-right: 0; }
+.hero-card .btn { margin-top: var(--space-4); }
+.hero-dots { justify-content: flex-start; }
+.hero-dot[aria-current="true"]::before { width: 16px; border-radius: 2px; background: var(--text-primary); }
+
+/* ---------- Listagem densa de equipamentos ---------- */
+.eq-table .eq-name {
+    display: inline;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-align: left;
+    cursor: pointer;
+}
+.eq-table .eq-name:hover { color: var(--accent-brand); text-decoration: underline; text-underline-offset: 3px; }
+.eq-table .eq-name:focus-visible { outline: 2px solid var(--accent-brand); outline-offset: 2px; border-radius: 2px; }
+.eq-table .eq-desc {
+    display: block;
+    max-width: 64ch;
+    margin-top: 2px;
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.eq-table td.eq-main { min-width: 240px; max-width: 0; width: 46%; }
+.eq-table .eq-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--accent-brand);
+    white-space: nowrap;
+    text-decoration: none;
+}
+.eq-table .eq-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.eq-table .eq-none {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+.eq-table .row-actions .link-btn { height: 28px; padding: 0 8px; font-size: 12.5px; }
+.eq-table .row-actions .link-btn:not(.muted) { color: var(--text-primary); }
+.eq-table .row-actions .link-btn:not(.muted):hover { background: var(--bg-subtle); color: var(--text-primary); }
+.eq-table .row-actions .link-btn + .link-btn { border-left: 1px solid var(--border-subtle); border-radius: 0; }
+.eq-table .row-actions .link-btn + .link-btn:hover { border-radius: 0; }
+.data-table tbody tr:hover .eq-none { color: var(--text-secondary); }
+/* Telas estreitas: a linha inteira já abre os detalhes; sobra só Agendar/Editar */
+@media (max-width: 640px) {
+    .eq-table .row-actions .link-btn:first-child { display: none; }
+    .eq-table .row-actions .link-btn:nth-child(2) { border-left: 0; }
+    .eq-table td.eq-main { min-width: 180px; }
+}
+@media (max-width: 640px) {
+    .list-toolbar .search-box { max-width: none; }
 }

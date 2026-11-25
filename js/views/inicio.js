@@ -599,7 +599,6 @@
 
     // ==========================================
     // CONSTRUÇÃO DA TELA INICIAL
-    // (a saudação com o nome fica na barra acima da área de trabalho)
     // ==========================================
     document.addEventListener('viewChanged', (e) => {
         if (e.detail.view !== 'inicio') return;

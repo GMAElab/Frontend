@@ -1,37 +1,43 @@
 /* ==========================================
    TOKENS DO DESIGN SYSTEM (design-system-enforcer)
    Fonte única de cor, borda, raio, sombra e tipografia.
-   Estrutura da referência (topbar flutuante, sidebar recolhível, área de
-   trabalho arredondada) com paleta técnica própria: azul + grafite.
+   Estética industrial/técnica: superfícies brancas delimitadas por bordas
+   nítidas de 1px, cantos secos, sem sombras difusas, grafite como ação
+   primária e azul técnico só no item ativo do menu, links e foco.
    Pares de texto conferidos para WCAG AA (≥ 4.5:1) — ver SKILL.md §2.
    ========================================== */
 :root {
     /* ---------- Paleta principal ---------- */
-    --bg-canvas: #F5F7FA;          /* fundo da página */
-    --bg-workspace: #ECEFF4;       /* moldura arredondada da área de trabalho */
-    --bg-surface: #FFFFFF;         /* sidebar, topbar, cards, dropdowns */
-    --bg-subtle: #F1F5F9;          /* pílulas de data/hora, inputs, hover sutil */
-    --border-subtle: #E2E8F0;      /* bordas de cards e divisórias */
+    --bg-canvas: #F8FAFC;          /* fundo geral da página */
+    --bg-workspace: #F8FAFC;       /* área útil: mesma cor do fundo (sem moldura) */
+    --bg-surface: #FFFFFF;         /* sidebar, tabelas, painéis, dropdowns, modais */
+    --bg-subtle: #F1F5F9;          /* hover sutil, cabeçalho de tabela, inputs */
+    --border-subtle: #E2E8F0;      /* a borda padrão de toda superfície */
 
-    --brand-primary: #1D63DC;      /* ação principal, item ativo, dia ativo */
+    --brand-primary: #1D63DC;      /* azul técnico: item ativo, links, foco */
     --brand-hover: #164EB3;
     --brand-soft: #EEF4FF;
 
-    --action-dark: #0F172A;        /* cabeçalho técnico do destaque, marca */
+    --action-dark: #0F172A;        /* grafite: ação primária, marca */
     --action-dark-hover: #1E293B;
 
-    --danger-primary: #DC2626;     /* fundo sólido de sair/excluir (texto branco) */
+    /* Botão primário (grafite no claro; claro sobre grafite no escuro) */
+    --action-primary: #0F172A;
+    --action-primary-hover: #1E293B;
+    --action-primary-text: #FFFFFF;
+
+    --danger-primary: #DC2626;     /* fundo sólido de excluir (texto branco) */
     --danger-soft: #FEF2F2;
 
     --text-primary: #0F172A;
     --text-secondary: #475569;
-    --text-muted: #64748B;         /* só sobre branco/--bg-hover */
+    --text-muted: #64748B;         /* só sobre branco/--bg-hover/--bg-canvas */
 
     /* ---------- Auxiliares ---------- */
-    --bg-hover: #F8FAFC;           /* hover de linhas e container de grupo aberto */
-    --bg-input: #F1F5F9;
-    --bg-inset: #F8FAFC;           /* bloco interno de fatos dos cards */
-    --border-soft: #E5E9F0;
+    --bg-hover: #F8FAFC;           /* hover de linhas */
+    --bg-input: #FFFFFF;
+    --bg-inset: #F8FAFC;
+    --border-soft: #EEF2F6;        /* divisórias internas de tabela */
     --border-strong: #CBD5E1;      /* botões secundários e controles */
     --border-control: #94A3B8;     /* hover de inputs, checkbox (≥ 3:1) */
     --brand-border: #C7D9FB;
@@ -40,11 +46,11 @@
     --rating: #F59E0B;
 
     --success-text: #15803D;
-    --success-bg: #DCFCE7;
+    --success-bg: #F0FDF4;
     --success-border: #BBF7D0;
     --success-solid: #16A34A;
     --warning-text: #B45309;
-    --warning-bg: #FEF3C7;
+    --warning-bg: #FFFBEB;
     --warning-border: #FDE68A;
     --warning-solid: #F59E0B;
     --danger-text: #B91C1C;        /* texto vermelho sobre --danger-soft (5,6:1) */
@@ -53,17 +59,17 @@
 
     --overlay: rgb(15 23 42 / 0.40);
 
-    /* ---------- Raios ---------- */
-    --radius-lg: 14px;             /* moldura da área de trabalho e cards principais */
-    --radius-panel: 12px;          /* topbar flutuante e card lateral de agenda */
-    --radius-md: 10px;             /* cards internos e dropdowns */
-    --radius-sm: 8px;              /* botões, inputs, itens de menu */
-    --radius-pill: 999px;          /* badges, contadores, pills de status, pontos */
+    /* ---------- Raios (cantos técnicos) ---------- */
+    --radius-lg: 6px;              /* containers: tabelas, painéis, modais */
+    --radius-panel: 6px;           /* painéis laterais (agenda) */
+    --radius-md: 6px;              /* cards internos e dropdowns */
+    --radius-sm: 4px;              /* botões, inputs, badges, itens de menu */
+    --radius-pill: 999px;          /* só pontos de status e avatares */
 
-    /* ---------- Sombras (as únicas permitidas) ---------- */
-    --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04);
-    --shadow-float: 0 1px 2px rgba(15, 23, 42, 0.04), 0 6px 18px -8px rgba(15, 23, 42, 0.10);
-    --shadow-pop: 0 12px 32px -12px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(15, 23, 42, 0.05);
+    /* ---------- Sombras: sem sombra difusa; só modais se destacam ---------- */
+    --shadow-card: none;
+    --shadow-float: none;
+    --shadow-pop: 0 0 0 1px rgba(15, 23, 42, 0.08), 0 16px 40px -16px rgba(15, 23, 42, 0.28);
 
     /* ---------- Tipografia ---------- */
     --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
@@ -99,17 +105,21 @@
 @media screen {
     [data-theme="dark"] {
         --bg-canvas: #0B1120;
-        --bg-workspace: #111A2B;
+        --bg-workspace: #0B1120;
         --bg-surface: #0F172A;
-        --bg-subtle: #1A2436;
+        --bg-subtle: #16203A;
         --border-subtle: #243044;
 
-        --brand-primary: #2F6AD4;      /* fundo de botão: branco por cima ≥ 5:1 */
+        --brand-primary: #2F6AD4;
         --brand-hover: #2559BF;
         --brand-soft: #16243F;
 
         --action-dark: #1E293B;
         --action-dark-hover: #273449;
+
+        --action-primary: #E2E8F0;
+        --action-primary-hover: #FFFFFF;
+        --action-primary-text: #0F172A;
 
         --danger-primary: #DC2626;
         --danger-soft: #2D1215;
@@ -118,10 +128,10 @@
         --text-secondary: #CBD5E1;
         --text-muted: #94A3B8;
 
-        --bg-hover: #162032;
-        --bg-input: #1A2436;
+        --bg-hover: #131D31;
+        --bg-input: #0F172A;
         --bg-inset: #131D2F;
-        --border-soft: #2A364B;
+        --border-soft: #1C2739;
         --border-strong: #364257;
         --border-control: #64748B;
         --brand-border: #2A4677;
@@ -143,7 +153,7 @@
 
         --overlay: rgb(2 6 23 / 0.66);
         --shadow-card: none;
-        --shadow-float: 0 0 0 1px var(--border-subtle);
+        --shadow-float: none;
         --shadow-pop: 0 0 0 1px var(--border-strong);
 
         /* links e texto azul sobre fundo escuro precisam de um azul mais claro */

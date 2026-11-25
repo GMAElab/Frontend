@@ -176,7 +176,7 @@
         comando.executar();
     }
 
-    // termoInicial (opcional) já filtra a lista — ex.: "Criar" no botão "Novo" da topbar.
+    // termoInicial (opcional) já filtra a lista — ex.: abrirPaleta('Criar').
     // Quando chamada por addEventListener o argumento é o evento, então só vale texto.
     function abrirPaleta(termoInicial) {
         if (paleta) return fecharPaleta();
@@ -234,12 +234,11 @@
     }
 
     // ==========================================
-    // NAVEGAÇÃO: ACORDEÃO DA SIDEBAR, MENU DA TOPBAR E SIDEBAR RECOLHÍVEL
-    // A topbar usa .topnav-link[data-nav-view] (nunca .nav-item: ui.js, a paleta
-    // e o modo convidado varrem .nav-item).
+    // NAVEGAÇÃO: SIDEBAR FIXA COM ACORDEÃO
+    // No desktop a sidebar é fixa (sem recolher). Até 1023px ela vira gaveta,
+    // aberta pelo #menu-toggle da barra mínima (ui.js alterna .open no clique).
     // ==========================================
-    const CHAVE_SIDEBAR = 'sgci-sidebar';
-    const CONSULTA_GAVETA = window.matchMedia('(max-width: 1199px)');
+    const CONSULTA_GAVETA = window.matchMedia('(max-width: 1023px)');
     const modoGaveta = () => CONSULTA_GAVETA.matches;
 
     function definirPainel(botao, aberto) {
@@ -255,135 +254,45 @@
         });
     }
 
-    function fecharMenusSuperiores(exceto) {
-        document.querySelectorAll('.topnav-trigger[aria-expanded="true"]').forEach(b => {
-            if (b !== exceto) definirPainel(b, false);
-        });
-    }
-
-    function iniciarMenuSuperior() {
-        const nav = document.querySelector('.topnav');
-        if (!nav) return;
-
-        const itemAdmin = nav.querySelector('[data-topnav-admin]');
-        if (usuario().role === 'admin') itemAdmin?.removeAttribute('hidden');
-        else itemAdmin?.remove();
-
-        nav.querySelectorAll('.topnav-trigger').forEach(botao => {
-            botao.addEventListener('click', () => {
-                const abrir = botao.getAttribute('aria-expanded') !== 'true';
-                fecharMenusSuperiores(botao);
-                definirPainel(botao, abrir);
-            });
-        });
-
-        nav.querySelectorAll('.topnav-link').forEach(link => {
-            link.addEventListener('click', () => {
-                fecharMenusSuperiores();
-                irPara(link.dataset.navView);
-            });
-        });
-
-        // Teclado: ↓ abre o menu e entra nele; ↑/↓ percorrem; Esc fecha e devolve o foco.
-        nav.addEventListener('keydown', (e) => {
-            const gatilho = e.target.closest('.topnav-item')?.querySelector('.topnav-trigger');
-            if (e.key === 'Escape' && gatilho && gatilho.getAttribute('aria-expanded') === 'true') {
-                e.stopPropagation();
-                definirPainel(gatilho, false);
-                gatilho.focus();
-                return;
-            }
-            if (!gatilho || (e.key !== 'ArrowDown' && e.key !== 'ArrowUp')) return;
-            e.preventDefault();
-            definirPainel(gatilho, true);
-            const itens = Array.from(document.getElementById(gatilho.getAttribute('aria-controls'))?.querySelectorAll('.topnav-link') || []);
-            if (!itens.length) return;
-            const atual = itens.indexOf(e.target);
-            const proximo = e.key === 'ArrowDown' ? atual + 1 : (atual <= 0 ? itens.length - 1 : atual - 1);
-            itens[(proximo + itens.length) % itens.length].focus();
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.topnav-item')) fecharMenusSuperiores();
-        });
-        nav.addEventListener('focusout', (e) => {
-            if (!e.relatedTarget || !e.relatedTarget.closest('.topnav-item')) fecharMenusSuperiores();
-        });
-    }
-
-    // Marca a seção atual na topbar e abre o grupo dela na sidebar.
+    // Abre o grupo da tela atual na sidebar.
     function sincronizarNavegacao(view) {
         if (!view) return;
-        const alvo = `[data-nav-view="${CSS.escape(view)}"]`;
-        document.querySelectorAll('.topnav-link').forEach(link => {
-            if (link.dataset.navView === view) link.setAttribute('aria-current', 'page');
-            else link.removeAttribute('aria-current');
-        });
-        document.querySelectorAll('.topnav-trigger').forEach(gatilho => {
-            const menu = document.getElementById(gatilho.getAttribute('aria-controls'));
-            gatilho.classList.toggle('is-active', !!menu?.querySelector(alvo));
-        });
         document.querySelectorAll('.nav-acc').forEach(grupo => {
             const botao = grupo.querySelector('.nav-acc-toggle');
             if (botao && grupo.querySelector(`.nav-item[data-view="${CSS.escape(view)}"]`)) definirPainel(botao, true);
         });
     }
 
-    // ≡ no desktop recolhe/expande a sidebar (e lembra a escolha); ≤ 1199px abre a gaveta.
     function atualizarBotaoMenu() {
         const botao = document.getElementById('menu-toggle');
         const sidebar = document.getElementById('sidebar');
         if (!botao || !sidebar) return;
-        const visivel = modoGaveta()
-            ? sidebar.classList.contains('open')
-            : document.documentElement.dataset.sidebar !== 'recolhida';
-        botao.setAttribute('aria-expanded', String(visivel));
-        botao.setAttribute('aria-label', modoGaveta()
-            ? (visivel ? 'Fechar menu' : 'Abrir menu')
-            : (visivel ? 'Recolher menu lateral' : 'Mostrar menu lateral'));
+        const aberta = sidebar.classList.contains('open');
+        botao.setAttribute('aria-expanded', String(aberta));
+        botao.setAttribute('aria-label', aberta ? 'Fechar menu' : 'Abrir menu');
     }
 
-    function iniciarSidebarRecolhivel() {
+    function iniciarGaveta() {
         const botao = document.getElementById('menu-toggle');
         const sidebar = document.getElementById('sidebar');
-        if (!botao || !sidebar) return;
+        if (!sidebar) return;
 
-        // ui.js já alternou .open neste mesmo clique (o ouvinte dele foi registrado antes).
-        botao.addEventListener('click', () => {
-            if (modoGaveta()) return;
-            sidebar.classList.remove('open');
-            const recolher = document.documentElement.dataset.sidebar !== 'recolhida';
-            if (recolher) document.documentElement.dataset.sidebar = 'recolhida';
-            else delete document.documentElement.dataset.sidebar;
-            try { localStorage.setItem(CHAVE_SIDEBAR, recolher ? 'recolhida' : 'aberta'); } catch (e) { /* bloqueado */ }
-            atualizarBotaoMenu();
-        });
+        // Restos da sidebar recolhível antiga: não valem mais.
+        delete document.documentElement.dataset.sidebar;
+        try { localStorage.removeItem('sgci-sidebar'); } catch (e) { /* bloqueado */ }
 
         document.querySelector('[data-fechar-gaveta]')?.addEventListener('click', () => {
             sidebar.classList.remove('open');
-            botao.focus();
+            botao?.focus();
         });
-        // ui.js só fecha a gaveta em ≤ 991px; aqui a gaveta vale até 1199px.
+        // ui.js só fecha a gaveta em ≤ 991px; aqui a gaveta vale até 1023px.
         document.querySelectorAll('.sidebar .nav-item').forEach(item => {
             item.addEventListener('click', () => { if (modoGaveta()) sidebar.classList.remove('open'); });
         });
-        CONSULTA_GAVETA.addEventListener('change', () => { sidebar.classList.remove('open'); atualizarBotaoMenu(); });
+        CONSULTA_GAVETA.addEventListener('change', () => sidebar.classList.remove('open'));
         // Fundo escuro, Esc e cliques fecham a gaveta mudando a classe: o botão acompanha.
         new MutationObserver(atualizarBotaoMenu).observe(sidebar, { attributes: true, attributeFilter: ['class'] });
         atualizarBotaoMenu();
-    }
-
-    // Saudação da barra abaixo da topbar
-    function atualizarSaudacao() {
-        const el = document.getElementById('shell-greeting');
-        if (!el) return;
-        const agora = new Date();
-        const hora = agora.getHours();
-        const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
-        const nome = String(usuario().nome || '').trim().split(/\s+/)[0];
-        el.textContent = nome ? `${saudacao}, ${nome}` : saudacao;
-        const data = document.getElementById('shell-date');
-        if (data) data.textContent = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }).format(agora);
     }
 
     // ==========================================
@@ -456,11 +365,8 @@
         document.getElementById('btn-theme')?.addEventListener('click', alternarTema);
         document.getElementById('btn-densidade')?.addEventListener('click', alternarDensidade);
         document.getElementById('btn-palette')?.addEventListener('click', () => abrirPaleta());
-        document.getElementById('btn-novo-global')?.addEventListener('click', () => abrirPaleta('Criar'));
         iniciarAcordeao();
-        iniciarMenuSuperior();
-        iniciarSidebarRecolhivel();
-        atualizarSaudacao();
+        iniciarGaveta();
         document.addEventListener('viewChanged', (e) => sincronizarNavegacao(e.detail.view));
         // ui.js já abriu a primeira tela antes deste script registrar o ouvinte
         sincronizarNavegacao(document.querySelector('.sidebar .nav-item.active')?.dataset.view);

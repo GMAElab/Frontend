@@ -31,7 +31,7 @@
     --ctrl-lg: 42px;
 
     /* Layout */
-    --sidebar-w: 248px;
+    --sidebar-w: 240px;
     --topbar-h: 64px;
     --content-max: none;
 
@@ -122,7 +122,7 @@
     --ctrl-md: 42px;
     --ctrl-lg: 46px;
 
-    --sidebar-w: 264px;
+    --sidebar-w: 240px;
 }
 
 /* ==========================================
@@ -135,7 +135,7 @@
 }
 
 html {
-    scroll-padding-top: calc(var(--topbar-h) + 8px);
+    scroll-padding-top: 16px;
     -webkit-tap-highlight-color: transparent;
     -webkit-text-size-adjust: 100%;
 }
