@@ -170,8 +170,7 @@
 
 .cal-day-name {
     font-size: var(--fs-2xs);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
+    text-transform: capitalize;
     color: var(--text-secondary);
     font-weight: 600;
 }
@@ -424,8 +423,7 @@
     text-align: center;
     font-size: var(--fs-2xs);
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
+    text-transform: capitalize;
     color: var(--text-secondary);
 }
 

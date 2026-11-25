@@ -1,75 +1,79 @@
 /* ==========================================
    TOKENS DO DESIGN SYSTEM (design-system-enforcer)
    Fonte única de cor, borda, raio, sombra e tipografia.
-   Estética industrial/técnica: superfícies brancas delimitadas por bordas
-   nítidas de 1px, cantos secos, sem sombras difusas, grafite como ação
-   primária e azul técnico só no item ativo do menu, links e foco.
+   Direção: minimalismo técnico moderno. Fundo cinza muito suave,
+   superfícies brancas com borda fina, cantos levemente arredondados,
+   tipografia escura e UMA cor de destaque (índigo) usada só onde orienta:
+   item ativo, links, foco, seleção e o dia ativo do calendário.
+   A ação primária é neutra (grafite), para o destaque não competir.
    Pares de texto conferidos para WCAG AA (≥ 4.5:1) — ver SKILL.md §2.
    ========================================== */
 :root {
-    /* ---------- Paleta principal ---------- */
-    --bg-canvas: #F8FAFC;          /* fundo geral da página */
-    --bg-workspace: #F8FAFC;       /* área útil: mesma cor do fundo (sem moldura) */
+    /* ---------- Neutros ---------- */
+    --bg-canvas: #F7F8FA;          /* fundo geral da página */
+    --bg-workspace: #F7F8FA;       /* área útil: mesma cor do fundo (sem moldura) */
     --bg-surface: #FFFFFF;         /* sidebar, tabelas, painéis, dropdowns, modais */
-    --bg-subtle: #F1F5F9;          /* hover sutil, cabeçalho de tabela, inputs */
-    --border-subtle: #E2E8F0;      /* a borda padrão de toda superfície */
+    --bg-subtle: #F2F4F7;          /* hover sutil, trilhos, chips neutros */
+    --border-subtle: #E4E7EC;      /* a borda padrão de toda superfície */
 
-    --brand-primary: #1D63DC;      /* azul técnico: item ativo, links, foco */
-    --brand-hover: #164EB3;
-    --brand-soft: #EEF4FF;
+    /* ---------- Cor de destaque (única) ---------- */
+    --brand-primary: #3E63DD;      /* índigo: ativo, links, foco (branco sobre ele 5,2:1) */
+    --brand-hover: #3451B2;
+    --brand-soft: #EEF2FE;
 
-    --action-dark: #0F172A;        /* grafite: ação primária, marca */
-    --action-dark-hover: #1E293B;
+    --action-dark: #101828;        /* grafite: ação primária, marca */
+    --action-dark-hover: #1D2939;
 
     /* Botão primário (grafite no claro; claro sobre grafite no escuro) */
-    --action-primary: #0F172A;
-    --action-primary-hover: #1E293B;
+    --action-primary: #101828;
+    --action-primary-hover: #1D2939;
     --action-primary-text: #FFFFFF;
 
-    --danger-primary: #DC2626;     /* fundo sólido de excluir (texto branco) */
-    --danger-soft: #FEF2F2;
+    --danger-primary: #D92D20;     /* fundo sólido de excluir (texto branco 4,8:1) */
+    --danger-soft: #FEF3F2;
 
-    --text-primary: #0F172A;
-    --text-secondary: #475569;
-    --text-muted: #64748B;         /* só sobre branco/--bg-hover/--bg-canvas */
+    --text-primary: #101828;
+    --text-secondary: #475467;
+    --text-muted: #667085;         /* só sobre branco/--bg-hover/--bg-canvas */
 
     /* ---------- Auxiliares ---------- */
-    --bg-hover: #F8FAFC;           /* hover de linhas */
+    --bg-hover: #F9FAFB;           /* hover de linhas */
     --bg-input: #FFFFFF;
-    --bg-inset: #F8FAFC;
-    --border-soft: #EEF2F6;        /* divisórias internas de tabela */
-    --border-strong: #CBD5E1;      /* botões secundários e controles */
-    --border-control: #94A3B8;     /* hover de inputs, checkbox (≥ 3:1) */
-    --brand-border: #C7D9FB;
+    --bg-inset: #F9FAFB;
+    --border-soft: #EEF0F3;        /* divisórias internas de tabela */
+    --border-strong: #D0D5DD;      /* botões secundários e controles */
+    --border-control: #98A2B3;     /* hover de inputs, checkbox (≥ 3:1) */
+    --brand-border: #C6D4F9;
     --text-on-dark: #FFFFFF;
-    --accent-violet: #6D4AE0;      /* variação de avatar de iniciais */
-    --rating: #F59E0B;
+    --accent-violet: #6E56CF;      /* variação de avatar de iniciais */
+    --rating: #F79009;
 
-    --success-text: #15803D;
-    --success-bg: #F0FDF4;
-    --success-border: #BBF7D0;
-    --success-solid: #16A34A;
-    --warning-text: #B45309;
-    --warning-bg: #FFFBEB;
-    --warning-border: #FDE68A;
-    --warning-solid: #F59E0B;
-    --danger-text: #B91C1C;        /* texto vermelho sobre --danger-soft (5,6:1) */
-    --danger-border: #FECACA;
-    --danger-solid: #DC2626;
+    --success-text: #067647;
+    --success-bg: #ECFDF3;
+    --success-border: #ABEFC6;
+    --success-solid: #17B26A;
+    --warning-text: #B54708;
+    --warning-bg: #FFFAEB;
+    --warning-border: #FEDF89;
+    --warning-solid: #F79009;
+    --danger-text: #B42318;        /* texto vermelho sobre --danger-soft (5,9:1) */
+    --danger-border: #FECDCA;
+    --danger-solid: #D92D20;
 
-    --overlay: rgb(15 23 42 / 0.40);
+    --overlay: rgb(16 24 40 / 0.36);
 
-    /* ---------- Raios (cantos técnicos) ---------- */
-    --radius-lg: 6px;              /* containers: tabelas, painéis, modais */
-    --radius-panel: 6px;           /* painéis laterais (agenda) */
-    --radius-md: 6px;              /* cards internos e dropdowns */
-    --radius-sm: 4px;              /* botões, inputs, badges, itens de menu */
+    /* ---------- Raios (levemente arredondados) ---------- */
+    --radius-lg: 8px;              /* containers: tabelas, painéis, modais */
+    --radius-panel: 8px;           /* painéis laterais (agenda) */
+    --radius-md: 8px;              /* cards internos e dropdowns */
+    --radius-sm: 6px;              /* botões, inputs, badges, itens de menu */
     --radius-pill: 999px;          /* só pontos de status e avatares */
 
-    /* ---------- Sombras: sem sombra difusa; só modais se destacam ---------- */
-    --shadow-card: none;
-    --shadow-float: none;
-    --shadow-pop: 0 0 0 1px rgba(15, 23, 42, 0.08), 0 16px 40px -16px rgba(15, 23, 42, 0.28);
+    /* ---------- Sombras: quase imperceptíveis; a borda separa ---------- */
+    --shadow-xs: 0 1px 2px rgb(16 24 40 / 0.05);     /* botões secundários e campos */
+    --shadow-card: 0 1px 2px rgb(16 24 40 / 0.04);   /* tabelas e painéis */
+    --shadow-float: 0 1px 2px rgb(16 24 40 / 0.04);
+    --shadow-pop: 0 0 0 1px rgb(16 24 40 / 0.06), 0 16px 32px -12px rgb(16 24 40 / 0.20);
 
     /* ---------- Tipografia ---------- */
     --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
@@ -99,65 +103,66 @@
 }
 
 /* ==========================================
-   MODO ESCURO (botão de tema) — mesmos nomes, valores escuros.
+   MODO ESCURO (botão de tema) — mesmos nomes, valores escuros neutros.
    Só em tela: na impressão valem sempre os tokens claros.
    ========================================== */
 @media screen {
     [data-theme="dark"] {
-        --bg-canvas: #0B1120;
-        --bg-workspace: #0B1120;
-        --bg-surface: #0F172A;
-        --bg-subtle: #16203A;
-        --border-subtle: #243044;
+        --bg-canvas: #0C0D10;
+        --bg-workspace: #0C0D10;
+        --bg-surface: #121417;
+        --bg-subtle: #1A1D22;
+        --border-subtle: #262A31;
 
-        --brand-primary: #2F6AD4;
-        --brand-hover: #2559BF;
-        --brand-soft: #16243F;
+        --brand-primary: #3E63DD;
+        --brand-hover: #3451B2;
+        --brand-soft: #182039;
 
-        --action-dark: #1E293B;
-        --action-dark-hover: #273449;
+        --action-dark: #1D2026;
+        --action-dark-hover: #262A31;
 
-        --action-primary: #E2E8F0;
+        --action-primary: #EDEEF0;
         --action-primary-hover: #FFFFFF;
-        --action-primary-text: #0F172A;
+        --action-primary-text: #101828;
 
-        --danger-primary: #DC2626;
-        --danger-soft: #2D1215;
+        --danger-primary: #D92D20;
+        --danger-soft: #2A1414;
 
-        --text-primary: #F1F5F9;
-        --text-secondary: #CBD5E1;
-        --text-muted: #94A3B8;
+        --text-primary: #EDEEF0;
+        --text-secondary: #C1C6CF;
+        --text-muted: #8E96A3;
 
-        --bg-hover: #131D31;
-        --bg-input: #0F172A;
-        --bg-inset: #131D2F;
-        --border-soft: #1C2739;
-        --border-strong: #364257;
-        --border-control: #64748B;
-        --brand-border: #2A4677;
+        --bg-hover: #16181C;
+        --bg-input: #121417;
+        --bg-inset: #15171B;
+        --border-soft: #1E2126;
+        --border-strong: #343A44;
+        --border-control: #5F6773;
+        --brand-border: #2B3A6B;
         --text-on-dark: #FFFFFF;
-        --accent-violet: #9A85F2;
-        --rating: #FBBF24;
+        --accent-violet: #A99BF0;
+        --rating: #FDB022;
 
-        --success-text: #4ADE80;
-        --success-bg: #0F2A1B;
-        --success-border: #1B4D30;
-        --success-solid: #22C55E;
-        --warning-text: #FBBF24;
-        --warning-bg: #2B200B;
-        --warning-border: #5B4410;
-        --warning-solid: #F59E0B;
-        --danger-text: #F87171;
-        --danger-border: #5C2226;
-        --danger-solid: #EF4444;
+        --success-text: #47CD89;
+        --success-bg: #0E2A1C;
+        --success-border: #1A4D33;
+        --success-solid: #17B26A;
+        --warning-text: #FDB022;
+        --warning-bg: #2B1F0A;
+        --warning-border: #5A4210;
+        --warning-solid: #F79009;
+        --danger-text: #F97066;
+        --danger-border: #5C2222;
+        --danger-solid: #F04438;
 
-        --overlay: rgb(2 6 23 / 0.66);
+        --overlay: rgb(0 0 0 / 0.60);
+        --shadow-xs: none;
         --shadow-card: none;
         --shadow-float: none;
-        --shadow-pop: 0 0 0 1px var(--border-strong);
+        --shadow-pop: 0 0 0 1px var(--border-strong), 0 16px 40px -12px rgb(0 0 0 / 0.6);
 
-        /* links e texto azul sobre fundo escuro precisam de um azul mais claro */
-        --accent-brand: #7AA7F7;
-        --accent-brand-hover: #A3C2FA;
+        /* links e texto índigo sobre fundo escuro precisam de um tom mais claro */
+        --accent-brand: #93A8F4;
+        --accent-brand-hover: #B4C3F8;
     }
 }

@@ -1,5 +1,5 @@
 /* ==========================================
-   COMPONENTES — DESIGN SYSTEM SGCI
+   COMPONENTES — DESIGN SYSTEM SGCI (minimalismo técnico moderno)
    Cores, bordas, raios e sombras vêm de tokens.css.
    Ordem: botões · formulários · toolbar · tabelas · cards de listagem ·
    badges · KPIs · abas · modais · feedback · utilitários · estados.
@@ -558,8 +558,6 @@ input[type="file"]::file-selector-button {
     margin-right: auto;
     font-size: 12px;
     font-weight: 600;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
     color: var(--text-primary);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
@@ -637,8 +635,6 @@ input[type="file"]::file-selector-button {
     padding: 0 16px;
     font-size: var(--fs-micro);
     font-weight: 600;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
     color: var(--text-muted);
     background: var(--bg-surface);
     border-bottom: 1px solid var(--border-subtle);
@@ -1054,8 +1050,6 @@ input[type="file"]::file-selector-button {
 .fact-k {
     font-size: 10.5px;
     font-weight: 600;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
     color: var(--text-secondary);
     white-space: nowrap;
     overflow: hidden;
@@ -1284,8 +1278,6 @@ input[type="file"]::file-selector-button {
     padding-top: 2px;
     font-size: var(--fs-micro);
     font-weight: 600;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
     color: var(--text-muted);
 }
 
@@ -1362,8 +1354,6 @@ input[type="file"]::file-selector-button {
     width: 100%;
     font-size: var(--fs-micro);
     font-weight: 600;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
     color: var(--text-muted);
 }
 /* Ícones decorativos nos indicadores ficam fora (regra anti-genérico) */
@@ -1383,8 +1373,6 @@ input[type="file"]::file-selector-button {
 .kpi-meta dt {
     font-size: var(--fs-micro);
     font-weight: 600;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
     color: var(--text-muted);
     margin-bottom: 4px;
 }
@@ -1428,7 +1416,7 @@ input[type="file"]::file-selector-button {
 .link-list .link-btn { text-align: left; margin-left: -8px; white-space: normal; }
 
 /* ==========================================
-   ABAS (caixa alta, sublinhado azul, contador pill)
+   ABAS (caixa normal, sublinhado neutro, contador pill)
    ========================================== */
 .tabs, .tabs-nav {
     display: flex;
@@ -1452,8 +1440,6 @@ input[type="file"]::file-selector-button {
     background: none;
     font-size: 12px;
     font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
     color: var(--text-secondary);
     white-space: nowrap;
     cursor: pointer;
@@ -1515,8 +1501,7 @@ input[type="file"]::file-selector-button {
     justify-content: center;
     font-size: 12px;
     font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    text-transform: capitalize;
     color: var(--text-secondary);
     border-radius: var(--radius-sm);
     cursor: pointer;
@@ -1760,8 +1745,7 @@ input[type="file"]::file-selector-button {
     background: var(--warning-bg);
     font-size: 11px;
     font-weight: 600;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
+    text-transform: capitalize;
     color: var(--warning-text);
 }
 .notice-row:last-of-type { margin-bottom: var(--space-5); }
@@ -1822,8 +1806,6 @@ input[type="file"]::file-selector-button {
 .thread-label {
     font-size: var(--fs-micro);
     font-weight: 600;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
     color: var(--text-secondary);
     margin-bottom: 6px;
 }
@@ -1896,8 +1878,7 @@ input[type="file"]::file-selector-button {
     color: var(--tone);
     font-size: 10.5px;
     font-weight: 700;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
+    text-transform: capitalize;
 }
 
 .toast-msg { flex: 1; min-width: 0; padding-top: 1px; }
@@ -2201,8 +2182,6 @@ input[type="file"]::file-selector-button {
     padding: 10px 10px 4px;
     font-size: var(--fs-micro);
     font-weight: 600;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
     color: var(--text-muted);
 }
 
@@ -2460,8 +2439,6 @@ input[type="file"]::file-selector-button {
     gap: var(--space-3);
     font-size: var(--fs-micro);
     font-weight: 600;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
     color: var(--text-on-dark);
 }
 .hero-meta .hero-count { font-variant-numeric: tabular-nums; }
@@ -2607,8 +2584,7 @@ input[type="file"]::file-selector-button {
     margin-bottom: 4px;
     font-size: 10.5px;
     font-weight: 600;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
+    text-transform: capitalize;
     color: var(--text-muted);
 }
 .mcal-week abbr { text-decoration: none; }
@@ -2714,8 +2690,7 @@ input[type="file"]::file-selector-button {
     margin-top: 5px;
     font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    text-transform: capitalize;
     color: var(--text-secondary);
 }
 .event-card.is-late .event-day { color: var(--danger-text); }
@@ -2763,73 +2738,170 @@ input[type="file"]::file-selector-button {
 }
 
 /* ==========================================
-   ESTÉTICA TÉCNICA — TOOLBAR, TABELAS E DESTAQUE
-   Bordas de 1px no lugar de sombras, cantos secos, linhas densas.
+   MINIMALISMO TÉCNICO MODERNO — camada final
+   Bordas finas, cantos levemente arredondados, rótulos em caixa normal,
+   uma cor de destaque só onde orienta. Cada regra aqui tem função:
+   nada decorativo. No fim do arquivo para vencer as variações acima.
    ========================================== */
+
+/* ---------- Controles: sombra de 1px dá corpo sem peso ---------- */
+.btn { padding: 0 12px; box-shadow: var(--shadow-xs); }
+.btn-ghost,
+.btn-ghost:hover:not(:disabled),
+.btn:disabled { box-shadow: none; }
+.btn-sm { padding: 0 10px; }
+
+.input-group input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+.input-group select,
+.input-group textarea,
+.form-control,
+.num-suffix,
+.code-input,
+.agenda-controls select { box-shadow: var(--shadow-xs); }
+.input-group label,
+.input-group > .label,
+.field-label,
+.file-field label { font-weight: 500; }
 
 /* ---------- Barra de controle: contador à esquerda, busca à direita ---------- */
 .toolbar { margin-bottom: var(--space-3); }
 .toolbar .form-control,
 .toolbar .btn { height: 32px; }
 .result-count {
-    font-size: var(--fs-micro);
-    letter-spacing: 0.06em;
+    font-size: 13px;
+    font-weight: 500;
     color: var(--text-secondary);
 }
 .search-box .form-control {
     background: var(--bg-surface);
-    border-color: var(--border-subtle);
+    border-color: var(--border-strong);
 }
-.search-box .form-control:hover { border-color: var(--border-strong); }
+.search-box .form-control:hover { border-color: var(--border-control); }
 .search-box .form-control::placeholder { color: var(--text-muted); }
 
-/* ---------- Tabela técnica ---------- */
+/* ---------- Tabela: cabeçalho branco e quieto, linhas com respiro ---------- */
 .table-container {
     border-radius: var(--radius-lg);
-    box-shadow: none;
+    box-shadow: var(--shadow-card);
 }
-.data-table { font-size: 13px; }
+.section .table-container,
+.columns .table-container { box-shadow: none; }
+.data-table { font-size: 13.5px; }
 .data-table thead th {
-    height: 34px;
-    padding: 0 14px;
-    background: var(--bg-subtle);
-    color: var(--text-secondary);
-    letter-spacing: 0.06em;
+    height: 40px;
+    padding: 0 16px;
+    background: var(--bg-surface);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 500;
+    border-bottom-color: var(--border-subtle);
 }
 .data-table tbody td {
-    padding: 10px 14px;
+    padding: 12px 16px;
     border-bottom-color: var(--border-soft);
 }
-[data-densidade="bancada"] .data-table tbody td { padding: 14px 16px; }
-.data-table .is-skeleton td { height: 48px; padding: 0 14px; }
-.data-table tr.clickable:focus-visible td { background: var(--bg-subtle); }
+[data-densidade="bancada"] .data-table tbody td { padding: 16px 18px; }
+.data-table .is-skeleton td { height: 52px; padding: 0 16px; }
+.data-table tr.clickable:focus-visible td { background: var(--bg-hover); }
 
 .cell-icon {
     width: 28px;
     height: 28px;
     background: var(--bg-subtle);
     color: var(--text-secondary);
-    border: 1px solid var(--border-subtle);
 }
 
-.pagination { padding-top: var(--space-2); }
+.pagination { padding-top: var(--space-3); }
 
-/* ---------- Destaque da tela inicial: painel branco com borda, sem bloco grafite ---------- */
+/* ---------- Rótulos: caixa normal, peso médio, só a inicial maiúscula ---------- */
+.dl dt,
+.kpi-meta dt,
+.figures .figure .k,
+.fact-k,
+.thread-label,
+.cmdk-group {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+.thread-label,
+.fact-k { color: var(--text-secondary); }
+.dl dt::first-letter,
+.kpi-meta dt::first-letter,
+.figures .figure .k::first-letter,
+.fact-k::first-letter,
+.thread-label::first-letter,
+.cmdk-group::first-letter { text-transform: uppercase; }
+
+.dl dt { font-size: 13px; padding-top: 0; }
+.figures .figure { padding: 18px 20px; gap: 6px; }
+.figures .figure .v { font-size: var(--fs-kpi); font-weight: 600; letter-spacing: -0.025em; }
+.kpi-panel,
+.figures { box-shadow: var(--shadow-card); }
+
+/* ---------- Badges: pastilha discreta com ponto ---------- */
+.badge,
+.status-badge {
+    height: 22px;
+    padding: 0 8px;
+    border-radius: var(--radius-pill);
+    font-weight: 500;
+}
+.count-pill,
+.tab-count { border-radius: var(--radius-pill); }
+
+/* ---------- Abas: neutras; o destaque fica com o menu ---------- */
+.tabs, .tabs-nav { gap: var(--space-5); }
+.tab-btn {
+    height: 40px;
+    font-size: 13.5px;
+    font-weight: 500;
+}
+.tab-btn.active {
+    color: var(--text-primary);
+    border-bottom-color: var(--text-primary);
+}
+.tab-btn .mono,
+.tab-btn .tab-count { border-radius: var(--radius-pill); }
+.tab-btn.active .mono,
+.tab-btn.active .tab-count {
+    background: var(--action-primary);
+    color: var(--action-primary-text);
+}
+
+/* ---------- Modais: cabeçalho sem filete, rodapé separado ---------- */
+.modal-header {
+    padding-bottom: 0;
+    margin-bottom: var(--space-5);
+    border-bottom: 0;
+}
+.modal-header h2,
+.modal-header h3 { font-size: 16px; font-weight: 600; }
+
+/* ---------- Régua de meses e calendário ---------- */
+.mes-card { font-weight: 500; }
+.mcal-week { font-size: 11.5px; font-weight: 500; }
+.event-mon { font-weight: 500; color: var(--text-muted); }
+.event-day { font-weight: 600; }
+
+/* ---------- Destaque da tela inicial: painel branco, faixa de contexto ---------- */
 .hero-stage {
     min-height: 0;
-    padding: 44px var(--space-5) var(--space-5);
+    padding: 52px var(--space-6) var(--space-5);
     background: var(--bg-surface);
     border: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-card);
     justify-content: flex-start;
 }
 .hero-meta {
     top: 0;
     left: 0;
     right: 0;
-    height: 32px;
-    padding: 0 var(--space-4);
-    background: var(--bg-subtle);
-    border-bottom: 1px solid var(--border-subtle);
+    height: 36px;
+    padding: 0 var(--space-5);
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 12.5px;
+    font-weight: 500;
     color: var(--text-secondary);
 }
 .hero-tag {
@@ -2847,11 +2919,14 @@ input[type="file"]::file-selector-button {
     box-shadow: none;
     text-align: left;
 }
-.hero-card h2 { font-size: 16px; font-weight: 600; text-wrap: pretty; }
+.hero-card h2 { font-size: 17px; font-weight: 600; text-wrap: pretty; }
 .hero-card p { margin-left: 0; margin-right: 0; }
 .hero-card .btn { margin-top: var(--space-4); }
 .hero-dots { justify-content: flex-start; }
-.hero-dot[aria-current="true"]::before { width: 16px; border-radius: 2px; background: var(--text-primary); }
+.hero-dot[aria-current="true"]::before { width: 16px; background: var(--text-primary); }
+
+.agenda-card { box-shadow: var(--shadow-card); }
+.agenda-head h2 { font-size: 16px; font-weight: 600; }
 
 /* ---------- Listagem densa de equipamentos ---------- */
 .eq-table .eq-name {
