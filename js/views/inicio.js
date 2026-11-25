@@ -39,6 +39,21 @@
         </div>`;
     }
 
+    /**
+     * Card único de resumo: linha de indicadores (.figures) e, abaixo de uma
+     * divisória, metadados com micro-label em cima e valor em negrito.
+     * metas: lista de [rótulo, valor]; itens falsos são ignorados.
+     */
+    function painelResumo(rotulo, figuras, metas) {
+        const meta = (metas || []).filter(Boolean)
+            .map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+        return `
+            <section class="kpi-panel fade-in" aria-label="${rotulo}">
+                <div class="figures">${figuras}</div>
+                ${meta ? `<dl class="kpi-meta">${meta}</dl>` : ''}
+            </section>`;
+    }
+
     function etiquetaDaTarefa(tarefa) {
         if (tarefa.status === 'em_revisao') return '<span class="badge badge-accent">em revisão</span>';
         if (tarefa.atrasada) return '<span class="badge badge-danger">atrasada</span>';
@@ -81,16 +96,21 @@
             ? listaDeTarefas(eu.proximas, false)
             : window.UI.emptyState({ title: 'Nenhuma tarefa em aberto', description: 'Quando uma tarefa for atribuída a você, ela aparece aqui.' });
 
+        const statusRelato = !eu.relata_no_mes ? 'Não se aplica'
+            : eu.relato_do_mes_enviado ? 'Enviado' : 'Pendente';
+        const proxima = eu.proximas && eu.proximas.length ? formatarPrazo(eu.proximas[0].prazo) : 'Nenhuma';
+
         return `
             ${avisoRelato}
-            ${secao('Minhas tarefas', '', `
-                <div class="figures">
-                    ${cartao(eu.abertas, 'em aberto', '', 'clipboard', '')}
-                    ${cartao(eu.atrasadas, 'atrasadas', 'text-danger', 'alert-triangle', 'tone-danger')}
-                    ${cartao(eu.vencem_em_breve, 'vencem em 7 dias', 'text-warning', 'clock', 'tone-warning')}
-                    ${cartao(eu.em_revisao, 'em revisão', 'text-primary', 'check-circle', '')}
-                </div>
-                ${tarefas}`)}`;
+            ${painelResumo('Resumo das minhas tarefas', `
+                ${cartao(eu.abertas, 'em aberto', '', 'clipboard', '')}
+                ${cartao(eu.atrasadas, 'atrasadas', 'text-danger', 'alert-triangle', 'tone-danger')}
+                ${cartao(eu.vencem_em_breve, 'vencem em 7 dias', 'text-warning', 'clock', 'tone-warning')}
+                ${cartao(eu.em_revisao, 'em revisão', 'text-primary', 'check-circle', '')}`, [
+                eu.mes_nome && [`Relato de ${esc(eu.mes_nome)}`, statusRelato],
+                ['Próxima entrega', proxima],
+            ])}
+            ${secao('Minhas tarefas', '', tarefas)}`;
     }
 
     function renderMinhasTarefasDoGestor(eu) {
@@ -213,12 +233,16 @@
 
         return `
             ${renderAvisosDoGestor(resumo)}
-            <div class="figures fade-in">
+            ${painelResumo('Resumo da equipe', `
                 ${cartao(t.atrasadas, 'atrasadas', 'text-danger', 'alert-triangle', 'tone-danger')}
                 ${cartao(t.em_revisao, 'aguardando revisão', 'text-primary', 'check-circle', '')}
                 ${cartao(t.vencem_em_breve, 'vencem em 7 dias', 'text-warning', 'clock', 'tone-warning')}
-                ${cartao(t.abertas, 'em aberto', '', 'clipboard', '')}
-            </div>
+                ${cartao(t.abertas, 'em aberto', '', 'clipboard', '')}`, [
+                [`Relatos de ${esc(relatos.mes_nome)}`, `${relatos.enviaram} de ${relatos.esperados}`],
+                ['Pessoas acompanhadas', String(pessoasRelevantes(equipe.pessoas).length)],
+                typeof resumo.cadastros_pendentes === 'number' && ['Cadastros pendentes', String(resumo.cadastros_pendentes)],
+                equipe.janela_dias && ['Janela de pontualidade', `${equipe.janela_dias} dias`],
+            ])}
             <div class="columns">
                 ${secao('Precisa de atenção', restante > 0 ? `mais ${restante} em tarefas` : '', atencao)}
                 ${secao('Equipe', `relatos de ${esc(relatos.mes_nome)}: ${relatos.enviaram} de ${relatos.esperados}`, renderTabelaDePessoas(equipe))}

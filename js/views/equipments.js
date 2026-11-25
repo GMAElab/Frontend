@@ -52,39 +52,49 @@ function renderEquipments() {
 function loadEquipmentsTable() {
     const convidado = ehUsuarioConvidado();
 
+    const icone = (nome, tamanho) => (window.Icon ? window.Icon(nome, { size: tamanho }) : '');
+
     window.listagemAtual = window.Listagem.criar({
         alvo: 'eq-container',
         endpoint: '/equipments/',
-        placeholder: 'Buscar por nome ou especificação do equipamento',
-        cabecalho: '<th>Equipamento</th><th>Status</th><th class="end">Ações</th>',
+        modo: 'cartoes',
+        rotulos: ['equipamento', 'equipamentos'],
+        placeholder: 'Buscar equipamento',
         vazio: { title: 'Nenhum equipamento registrado', description: convidado ? 'Nenhum equipamento disponível no momento.' : 'Cadastre o primeiro equipamento do laboratório.' },
         erro: 'Não foi possível carregar os equipamentos.',
         renderLinha: (eq) => {
+            const nome = window.escapeHTML(eq.nome);
             const desc = eq.description ? window.escapeHTML(eq.description) : '';
+            // Se a listagem não trouxer o campo, não afirma ausência: remete aos detalhes.
+            const fato = (campo, sim, nao) => !(campo in eq)
+                ? ['Nos detalhes', true]
+                : eq[campo] ? [sim, false] : [nao, true];
+            const [video, semVideo] = fato('video_url', 'Vídeo disponível', 'Sem vídeo');
+            const [pop, semPop] = fato('manual_url', 'Link externo', 'Nos vínculos');
             const ativo = window.sgciEquipamentoAtivo
                 ? window.sgciEquipamentoAtivo(eq)
                 : !['inativ', 'manutenc', 'indispon', 'quebrad', 'desativ', 'bloquead', 'offline'].some(t => String(eq.status || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().includes(t));
 
             return `
-            <tr class="clickable" tabindex="0" onclick="window.viewDossier(${eq.id})">
-                <td>
-                    <div class="cell-title-row">
-                        <span class="cell-icon">${window.Icon ? window.Icon('microscope', { size: 14 }) : ''}</span>
-                        <div class="cell-stack">
-                            <strong>${window.escapeHTML(eq.nome)}</strong>
-                            ${desc ? `<span class="cell-sub">${desc}</span>` : ''}
-                        </div>
+            <article class="item-card" role="listitem" aria-labelledby="eq-card-${eq.id}">
+                <header class="item-card-head">
+                    <span class="item-avatar" aria-hidden="true">${icone('microscope', 18)}</span>
+                    <div class="item-card-title">
+                        <h3 id="eq-card-${eq.id}"><button type="button" class="item-card-link" onclick="window.viewDossier(${eq.id})">${nome}</button></h3>
+                        <span class="badge ${ativo ? 'badge-success' : 'badge-warning'}">${window.escapeHTML(eq.status || 'ativo')}</span>
                     </div>
-                </td>
-                <td><span class="badge ${ativo ? 'badge-success' : 'badge-warning'}">${window.escapeHTML(eq.status || 'ativo')}</span></td>
-                <td class="end" onclick="event.stopPropagation()">
-                    <div class="row-actions">
-                        <button class="btn btn-primary btn-sm" onclick="window.openEquipmentCalendar(${eq.id})">${window.Icon ? window.Icon('calendar', { size: 13 }) : ''} Agendar</button>
-                        <button class="link-btn" onclick="window.viewDossier(${eq.id})">Ver</button>
-                        ${convidado ? '' : `<button class="link-btn muted" onclick="openDeepView('equipments', ${eq.id}, 'Equipamento')">Editar</button>`}
-                    </div>
-                </td>
-            </tr>`;
+                    ${convidado ? '' : `<button type="button" class="icon-btn" onclick="openDeepView('equipments', ${eq.id}, 'Equipamento')" aria-label="Editar ${nome}" title="Editar">${icone('edit-2', 15)}</button>`}
+                </header>
+                ${desc ? `<p class="item-card-desc">${desc}</p>` : ''}
+                <div class="item-card-facts">
+                    <div class="fact"><span class="fact-v${semVideo ? ' is-empty' : ''}">${video}</span><span class="fact-k">Treinamento</span></div>
+                    <div class="fact"><span class="fact-v${semPop ? ' is-empty' : ''}">${pop}</span><span class="fact-k">POP</span></div>
+                </div>
+                <footer class="item-card-actions">
+                    <button type="button" class="btn btn-secondary" onclick="window.viewDossier(${eq.id})">${icone('eye', 15)} Detalhes</button>
+                    <button type="button" class="btn btn-soft" onclick="window.openEquipmentCalendar(${eq.id})">${icone('calendar', 15)} Agendar</button>
+                </footer>
+            </article>`;
         }
     });
 }

@@ -35,6 +35,7 @@ function loadProcessesTable() {
     window.listagemAtual = window.Listagem.criar({
         alvo: 'processes-container',
         endpoint: '/processes/',
+        rotulos: ['processo', 'processos'],
         placeholder: 'Buscar por processo, responsável ou equipe',
         cabecalho: '<th>Processo &amp; objetivo</th><th class="col-hide-xs">Responsável</th><th class="col-hide-md">Equipe</th><th>Status</th><th class="col-hide-sm">Registrado em</th><th class="end">Ações</th>',
         filtros: [

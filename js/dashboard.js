@@ -128,7 +128,7 @@ window.confirmarAtivacao2FA = async function() {
 
     const btn = document.getElementById('btn-confirmar-2fa');
     const textoOriginal = btn.innerText;
-    btn.innerText = 'Verificando...';
+    btn.innerText = 'Verificando…';
     btn.disabled = true;
 
     try {
@@ -140,7 +140,7 @@ window.confirmarAtivacao2FA = async function() {
         const data = await response.json();
 
         if (response.ok) {
-            UI.showToast('Segurança ativada! Iniciando download das chaves...', 'success');
+            UI.showToast('Segurança ativada! Iniciando download das chaves…', 'success');
             if (data.codigos_backup) {
                 const conteudoArquivo = 
 ` SGCI LEQM - CÓDIGOS DE RECUPERAÇÃO 2FA 
@@ -249,7 +249,7 @@ function exibirModalTrocaSenhaObrigatoria() {
         }
 
         btn.disabled = true;
-        btn.innerText = 'Salvando...';
+        btn.innerText = 'Salvando…';
 
         try {
             const res = await window.api.fetchProtected('/trocar-senha', {

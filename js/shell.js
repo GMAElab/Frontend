@@ -25,6 +25,9 @@
         try { localStorage.setItem(CHAVE_TEMA, tema); } catch (e) { /* armazenamento bloqueado */ }
         const btn = document.getElementById('btn-theme');
         if (btn) btn.innerHTML = window.Icon(tema === 'dark' ? 'sun' : 'moon', { size: 15 });
+        // A barra do navegador acompanha o fundo da página no tema escolhido
+        const corDoFundo = getComputedStyle(document.documentElement).getPropertyValue('--bg-canvas').trim();
+        if (corDoFundo) document.querySelector('meta[name="theme-color"]')?.setAttribute('content', corDoFundo);
     }
 
     function alternarTema() {
@@ -173,8 +176,11 @@
         comando.executar();
     }
 
-    function abrirPaleta() {
+    // termoInicial (opcional) já filtra a lista — ex.: "Criar" no botão "Novo" da topbar.
+    // Quando chamada por addEventListener o argumento é o evento, então só vale texto.
+    function abrirPaleta(termoInicial) {
         if (paleta) return fecharPaleta();
+        const termo = typeof termoInicial === 'string' ? termoInicial : '';
 
         const overlay = document.createElement('div');
         overlay.className = 'cmdk-overlay';
@@ -221,8 +227,57 @@
         });
         overlay.addEventListener('mousedown', (e) => { if (e.target === overlay) fecharPaleta(); });
 
+        paleta.input.value = termo;
         renderLista();
         paleta.input.focus();
+        if (termo) paleta.input.select();
+    }
+
+    // ==========================================
+    // SUBMENU DA SIDEBAR (ex.: Equipamentos → Catálogo / Minhas reservas)
+    // ==========================================
+    function definirSubmenu(botao, aberto) {
+        const sub = document.getElementById(botao.getAttribute('aria-controls'));
+        botao.setAttribute('aria-expanded', String(aberto));
+        if (sub) sub.hidden = !aberto;
+    }
+
+    function marcarSubitem(item) {
+        item.closest('.nav-sub')?.querySelectorAll('.nav-subitem').forEach(el => {
+            if (el === item) el.setAttribute('aria-current', 'page');
+            else el.removeAttribute('aria-current');
+        });
+    }
+
+    function iniciarSubmenus() {
+        document.querySelectorAll('.nav-expand').forEach(botao => {
+            botao.addEventListener('click', () => definirSubmenu(botao, botao.getAttribute('aria-expanded') !== 'true'));
+        });
+
+        document.querySelectorAll('.nav-subitem').forEach(item => {
+            item.addEventListener('click', async () => {
+                const trocou = await irPara(item.dataset.subView);
+                if (!trocou) return;
+                marcarSubitem(item);
+                if (item.dataset.subAcao === 'reservas') window.openMyReservations?.();
+            });
+        });
+
+        // Ao trocar de tela: abre o submenu da seção ativa e marca o primeiro atalho.
+        const sincronizar = (view) => {
+            document.querySelectorAll('.nav-parent').forEach(pai => {
+                const ativo = pai.querySelector('.nav-item')?.dataset.view === view;
+                const botao = pai.querySelector('.nav-expand');
+                if (ativo && botao) definirSubmenu(botao, true);
+                pai.querySelectorAll('.nav-subitem').forEach((el, i) => {
+                    if (ativo && i === 0) el.setAttribute('aria-current', 'page');
+                    else el.removeAttribute('aria-current');
+                });
+            });
+        };
+        document.addEventListener('viewChanged', (e) => sincronizar(e.detail.view));
+        // ui.js já abriu a primeira tela antes deste script registrar o ouvinte
+        sincronizar(document.querySelector('.nav-item.active')?.dataset.view);
     }
 
     // ==========================================
@@ -294,7 +349,9 @@
 
         document.getElementById('btn-theme')?.addEventListener('click', alternarTema);
         document.getElementById('btn-densidade')?.addEventListener('click', alternarDensidade);
-        document.getElementById('btn-palette')?.addEventListener('click', abrirPaleta);
+        document.getElementById('btn-palette')?.addEventListener('click', () => abrirPaleta());
+        document.getElementById('btn-novo-global')?.addEventListener('click', () => abrirPaleta('Criar'));
+        iniciarSubmenus();
         document.querySelectorAll('kbd[data-mod]').forEach(k => { k.textContent = ehMac ? '⌘' : 'Ctrl'; });
 
         const sidebar = document.getElementById('sidebar');

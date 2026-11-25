@@ -1,31 +1,21 @@
 /* ==========================================
-   VARIÁVEIS E BASE DO SISTEMA
-   Cores, bordas e raios vêm de tokens.css (design-system-enforcer).
-   Este arquivo só define aliases semânticos, espaçamento e tipografia.
+   BASE DO SISTEMA
+   Cores, bordas, raios e fontes vêm de tokens.css (design-system-enforcer).
+   Aqui ficam: escala tipográfica, medidas de layout, aliases semânticos
+   usados pelos componentes e pelo JS, reset e utilitários.
    ========================================== */
 :root {
-    --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-    --font-serif: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-    --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    /* Família tabular: "mono" do sistema = Inter com algarismos de largura fixa */
+    --font-mono: var(--font-sans);
+    --font-serif: var(--font-sans);
 
-    /* Espaçamento (base 4) */
-    --space-1: 4px;
-    --space-2: 8px;
-    --space-3: 12px;
-    --space-4: 16px;
-    --space-5: 20px;
-    --space-6: 24px;
-    --space-7: 28px;
-    --space-8: 32px;
-    --space-10: 40px;
-    --space-12: 48px;
-
-    /* Raios: aliases legados apontando para tokens.css (--radius-sm / --radius-md) */
+    /* Raios — aliases legados */
     --radius-xs: var(--radius-sm);
     --radius: var(--radius-md);
-    --radius-lg: var(--radius-md);
+    --radius-lg: var(--radius-card);
 
-    /* Tipografia */
+    /* Escala tipográfica */
+    --fs-micro: 11px;
     --fs-2xs: 11px;
     --fs-xs: 12px;
     --fs-sm: 13px;
@@ -33,7 +23,8 @@
     --fs-md: 15px;
     --fs-lg: 17px;
     --fs-xl: 20px;
-    --fs-2xl: 24px;
+    --fs-2xl: 22px;
+    --fs-kpi: 24px;
 
     /* Alturas de controles */
     --ctrl-sm: 32px;
@@ -41,19 +32,20 @@
     --ctrl-lg: 42px;
 
     /* Layout */
-    --sidebar-w: 252px;
-    --topbar-h: 62px;
-    --content-max: 1300px;
+    --sidebar-w: 248px;
+    --topbar-h: 60px;
+    --content-max: 1280px;
 
-    /* Transições fluidas */
+    /* Movimento */
     --ease: cubic-bezier(0.22, 1, 0.36, 1);
-    --t-fast: 150ms;
+    --t-fast: 140ms;
     --t-base: 220ms;
-    --transition-fast: 150ms cubic-bezier(0.22, 1, 0.36, 1);
-    --transition-smooth: 240ms cubic-bezier(0.22, 1, 0.36, 1);
+    --transition-fast: 140ms cubic-bezier(0.22, 1, 0.36, 1);
+    --transition-smooth: 220ms cubic-bezier(0.22, 1, 0.36, 1);
 
     /* Camadas */
     --z-sidebar: 40;
+    --z-topbar: 30;
     --z-modal: 1000;
     --z-modal-top: 10050;
     --z-palette: 11000;
@@ -61,20 +53,18 @@
 }
 
 /* ==========================================
-   CAMADA SEMÂNTICA — mapeia os nomes usados nos componentes para tokens.css.
-   Padrão (sem data-theme) e [data-theme="light"]: paleta do design system.
-   Sem gradientes, sem brilhos, sem sombras difusas.
+   CAMADA SEMÂNTICA — nomes curtos usados por componentes, calendário e JS.
+   Todos apontam para tokens.css; nenhum valor de cor mora aqui.
    ========================================== */
 :root,
-[data-theme="light"] {
-    color-scheme: light;
-
+[data-theme="light"],
+[data-theme="dark"] {
     --bg: var(--bg-canvas);
     --surface: var(--bg-surface);
     --surface-2: var(--bg-subtle);
-    --surface-3: var(--bg-subtle);
-    --surface-sunk: var(--bg-subtle);
-    --surface-hover: var(--bg-subtle);
+    --surface-3: var(--bg-input);
+    --surface-sunk: var(--bg-canvas);
+    --surface-hover: var(--bg-hover);
 
     --line: var(--border-subtle);
     --line-strong: var(--border-strong);
@@ -87,45 +77,38 @@
 
     --accent: var(--accent-brand);
     --accent-solid: var(--accent-brand);
-    --accent-ink: var(--bg-surface);
+    --accent-ink: var(--text-on-dark);
     --accent-tint: var(--accent-brand-bg);
-    --accent-border: color-mix(in srgb, var(--accent-brand) 28%, var(--accent-brand-bg));
+    --accent-border: var(--accent-brand-border);
 
     --success: var(--success-text);
     --success-ink: var(--success-text);
     --success-tint: var(--success-bg);
-    --success-border: color-mix(in srgb, var(--success-text) 28%, var(--success-bg));
 
     --warning: var(--warning-text);
     --warning-ink: var(--warning-text);
     --warning-tint: var(--warning-bg);
-    --warning-border: color-mix(in srgb, var(--warning-text) 28%, var(--warning-bg));
 
     --danger: var(--danger-text);
     --danger-ink: var(--danger-text);
     --danger-tint: var(--danger-bg);
-    --danger-border: color-mix(in srgb, var(--danger-text) 28%, var(--danger-bg));
 
     --info: var(--accent-brand);
     --info-ink: var(--accent-brand);
     --info-tint: var(--accent-brand-bg);
-    --info-border: color-mix(in srgb, var(--accent-brand) 28%, var(--accent-brand-bg));
-
-    --overlay: color-mix(in srgb, var(--text-primary) 45%, transparent);
+    --info-border: var(--accent-brand-border);
 }
 
-/* Overlay do modo escuro (os tokens escuros ficam em tokens.css) */
+:root, [data-theme="light"] { color-scheme: light; }
 @media screen {
-    [data-theme="dark"] {
-        color-scheme: dark;
-        --overlay: color-mix(in srgb, var(--bg-canvas) 72%, transparent);
-    }
+    [data-theme="dark"] { color-scheme: dark; }
 }
 
 /* ==========================================
    MODO BANCADA (letras e controles maiores)
    ========================================== */
 [data-densidade="bancada"] {
+    --fs-micro: 12px;
     --fs-2xs: 12px;
     --fs-xs: 13px;
     --fs-sm: 14px;
@@ -134,13 +117,13 @@
     --fs-lg: 18px;
     --fs-xl: 22px;
     --fs-2xl: 24px;
+    --fs-kpi: 28px;
 
-    --ctrl-sm: 34px;
-    --ctrl-md: 40px;
-    --ctrl-lg: 44px;
+    --ctrl-sm: 36px;
+    --ctrl-md: 42px;
+    --ctrl-lg: 46px;
 
-    --sidebar-w: 250px;
-    --topbar-h: 54px;
+    --sidebar-w: 264px;
 }
 
 /* ==========================================
@@ -160,36 +143,40 @@ html {
 
 html, body {
     min-height: 100%;
-    background-color: var(--bg);
-    color: var(--text);
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
     font-family: var(--font-sans);
     font-size: var(--fs-base);
-    line-height: 1.45;
+    font-feature-settings: "cv11", "ss01";
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
 }
 
 h1, h2, h3, h4, h5, h6 {
-    color: var(--text);
+    color: var(--text-primary);
     font-family: var(--font-sans);
     font-weight: 600;
     line-height: 1.25;
+    letter-spacing: -0.01em;
     text-wrap: balance;
 }
 
-h1 { font-size: var(--fs-xl); }
+h1 { font-size: var(--fs-2xl); font-weight: 700; letter-spacing: -0.02em; }
 h2 { font-size: var(--fs-lg); }
 h3 { font-size: var(--fs-md); }
 h4 { font-size: var(--fs-base); }
 
-p { color: var(--text-2); }
+p { color: var(--text-secondary); }
 
 a {
-    color: var(--accent);
+    color: var(--accent-brand);
     text-decoration: none;
+    border-radius: 2px;
 }
 a:hover {
+    color: var(--accent-brand-hover);
     text-decoration: underline;
     text-underline-offset: 2px;
 }
@@ -203,7 +190,7 @@ a:hover {
 
 button, [role="button"], select, label[for], summary { touch-action: manipulation; }
 
-input[type="checkbox"], input[type="radio"], input[type="range"] { accent-color: var(--accent-primary); }
+input[type="checkbox"], input[type="radio"], input[type="range"] { accent-color: var(--accent-brand); }
 
 ::selection { background: var(--accent-brand-bg); color: var(--text-primary); }
 
@@ -214,37 +201,35 @@ button, input, select, textarea {
 
 code, pre, kbd, .mono {
     font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
 }
+code, pre { font-family: var(--font-code); font-size: 0.92em; }
 
 kbd {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 18px;
-    height: 18px;
-    padding: 0 4px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
     font-size: 11px;
+    font-weight: 500;
     color: var(--text-secondary);
-    background: var(--surface-2);
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-xs);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
 }
 
 hr {
     border: 0;
-    border-top: 1px solid var(--line);
+    border-top: 1px solid var(--border-subtle);
     margin: var(--space-4) 0;
 }
 
 /* ==========================================
-   CLASSES DE ESTADO E UTILITÁRIOS (SEM EFEITOS)
+   UTILITÁRIOS DE ESTADO
    ========================================== */
-.fade-in { /* sem animação de entrada */ }
-
-.skeleton {
-    background: var(--surface-2);
-    border-radius: var(--radius-xs);
-}
+.fade-in { /* sem animação de entrada (regra: movimento só em resposta a ação) */ }
 
 .hidden { display: none !important; }
 .sr-only {
@@ -259,39 +244,71 @@ hr {
     border: 0;
 }
 
-.text-default   { color: var(--text); }
-.text-secondary { color: var(--text-2); }
-.text-muted     { color: var(--muted); }
-.text-faint     { color: var(--faint); }
-.text-primary   { color: var(--accent); }
-.text-success   { color: var(--success); }
-.text-warning   { color: var(--warning); }
-.text-danger    { color: var(--danger); }
-.text-info      { color: var(--info); }
+/* Esqueleto de carregamento: bloco plano com pulso de opacidade discreto */
+.skeleton {
+    display: block;
+    background: var(--bg-input);
+    border-radius: 4px;
+    animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+@keyframes skeleton-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+}
+
+/* ==========================================
+   UTILITÁRIOS DE TEXTO
+   ========================================== */
+.text-default   { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-muted     { color: var(--text-muted); }
+.text-faint     { color: var(--text-muted); }
+.text-primary   { color: var(--accent-brand); }
+.text-success   { color: var(--success-text); }
+.text-warning   { color: var(--warning-text); }
+.text-danger    { color: var(--danger-text); }
+.text-info      { color: var(--accent-brand); }
 
 .text-xs     { font-size: var(--fs-xs); }
 .text-small  { font-size: var(--fs-sm); }
 .text-lg     { font-size: var(--fs-lg); }
 .font-bold   { font-weight: 600; }
 .font-medium { font-weight: 500; }
-.tabular     { font-variant-numeric: tabular-nums; }
+.tabular,
 table, time, .mono, code, kbd { font-variant-numeric: tabular-nums; }
 .truncate    { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pre-wrap    { white-space: pre-wrap; word-break: break-word; }
 .break-words { word-break: break-word; }
+.clamp {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
 
-/* Rótulo de contexto acima de um título: frase curta, sem caixa-alta */
+/* Micro-label: metadados, rótulos de KPI, grupos e cabeçalhos de tabela */
+.micro {
+    font-size: var(--fs-micro);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    line-height: 1.3;
+}
+
+/* Rótulo de contexto (fora do cabeçalho da página vira micro-label) */
 .eyebrow {
     display: block;
-    font-size: var(--fs-xs);
-    font-weight: 500;
-    color: var(--text-secondary);
+    font-size: var(--fs-micro);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-muted);
 }
-.eyebrow::first-letter { text-transform: uppercase; }
 
 .meta {
     font-size: var(--fs-xs);
-    color: var(--muted);
+    color: var(--text-muted);
     font-variant-numeric: tabular-nums;
 }
 
@@ -303,20 +320,28 @@ table, time, .mono, code, kbd { font-variant-numeric: tabular-nums; }
     z-index: var(--z-toast);
     padding: 8px 12px;
     background: var(--accent-primary);
-    color: var(--bg-surface);
+    color: var(--text-on-dark);
     border-radius: var(--radius-sm);
     font-weight: 600;
     transform: translateY(-200%);
 }
 .skip-link:focus-visible { transform: none; text-decoration: none; }
 
+/* Movimento reduzido: sem transições (nenhum JS depende de transitionend).
+   "transition: none" em vez de duração mínima evita que filhos herdem
+   visibility em transição e fiquem ocultos dentro de um pai já visível. */
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
-        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition: none !important;
         scroll-behavior: auto !important;
     }
 }
 
+/* ==========================================
+   UTILITÁRIOS DE LAYOUT
+   ========================================== */
 .stack-xs > * + * { margin-top: var(--space-1); }
 .stack-sm > * + * { margin-top: var(--space-2); }
 .stack-md > * + * { margin-top: var(--space-4); }
@@ -347,9 +372,12 @@ table, time, .mono, code, kbd { font-variant-numeric: tabular-nums; }
 .mb-md { margin-bottom: var(--space-4); }
 .mb-lg { margin-bottom: var(--space-6); }
 
+/* ==========================================
+   IMPRESSÃO
+   ========================================== */
 @media print {
     .sidebar, .top-bar, .topbar, .sidebar-backdrop, .toast-region, #toast-container, .cmdk-overlay,
-    .page-actions, .toolbar, .pagination, .row-actions, .doc-toolbar {
+    .page-actions, .toolbar, .pagination, .row-actions, .doc-toolbar, .item-card-actions {
         display: none !important;
     }
     html, body, .app-layout, .dashboard-layout, .main-content, .main-wrapper, .content-area {
@@ -360,5 +388,5 @@ table, time, .mono, code, kbd { font-variant-numeric: tabular-nums; }
         padding: 0 !important;
     }
     .doc-viewer { position: static !important; padding: 0 !important; background: var(--bg-surface) !important; }
-    .doc-page { box-shadow: none !important; padding: 0 !important; max-width: none !important; }
+    .doc-page { box-shadow: none !important; padding: 0 !important; max-width: none !important; border: 0 !important; }
 }

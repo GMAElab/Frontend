@@ -352,6 +352,7 @@ function loadPopsTable() {
     window.listagemAtual = window.Listagem.criar({
         alvo: 'pops-container',
         endpoint: '/pops/',
+        rotulos: ['POP', 'POPs'],
         placeholder: 'Buscar por código, título ou conteúdo',
         cabecalho: '<th>Código</th><th>Título</th><th class="col-hide-sm">Equipamento</th><th class="col-hide-xs">Versão</th><th class="col-hide-xs">Status</th><th class="end">Ações</th>',
         filtros: [{ param: 'equipamento_id', rotulo: 'Todos os equipamentos', opcoes: window.Vinculos.opcoesDeEquipamento }],
