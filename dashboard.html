@@ -16,6 +16,8 @@
     <link rel="stylesheet" href="css/layout.css?v=25">
     <link rel="stylesheet" href="css/components.css?v=25">
     <link rel="stylesheet" href="css/calendario.css?v=8">
+    <link rel="stylesheet" href="css/pta.css?v=1">
+    <link rel="stylesheet" href="css/insumos.css?v=1">
 </head>
 <body class="dashboard-layout">
     <a class="skip-link" href="#dynamic-content">Pular para o conteúdo</a>
@@ -52,6 +54,7 @@
                         <li><button type="button" class="nav-item" data-view="equipments" data-label="Equipamentos" data-key="e"><svg aria-hidden="true" focusable="false" class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18h8"/><path d="M3 22h18"/><path d="M14 22a7 7 0 1 0 0-14h-1"/><path d="M9 14h2"/><path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z"/><path d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3"/></svg><span class="nav-label">Equipamentos</span></button></li>
                         <li><button type="button" class="nav-item" data-view="processes" data-label="Processos de P&amp;D" data-key="p"><svg aria-hidden="true" focusable="false" class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6.34L4.24 17.5A2 2 0 0 0 6 20.5h12a2 2 0 0 0 1.76-3L15 8.34V2"/><path d="M8.5 2h7"/><path d="M6.5 14.5h11"/></svg><span class="nav-label">Processos de P&amp;D</span></button></li>
                         <li><button type="button" class="nav-item" data-view="pops" data-label="POPs" data-key="o"><svg aria-hidden="true" focusable="false" class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span class="nav-label">POPs</span></button></li>
+                        <li><button type="button" class="nav-item" data-view="insumos" data-label="Insumos" data-key="n"><svg aria-hidden="true" focusable="false" class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m16.5 9.4-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg><span class="nav-label">Insumos</span></button></li>
                         <li><button type="button" class="nav-item" data-view="rspace" data-label="RSpace ELN" data-key="r"><svg aria-hidden="true" focusable="false" class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg><span class="nav-label">RSpace ELN</span><span class="nav-tag" title="Em desenvolvimento">Beta</span></button></li>
                     </ul>
                 </li>
@@ -251,45 +254,6 @@
         </div>
     </div>
 
-    <!-- Detalhes de um planejamento mensal -->
-    <div id="pta-detalhes-modal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div>
-                    <p class="eyebrow" id="modal-detalhes-mes"></p>
-                    <h3 id="modal-detalhes-topico"></h3>
-                </div>
-                <button type="button" class="modal-close" onclick="fecharModalDetalhesPTA()" aria-label="Fechar"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
-            </div>
-
-            <div class="figure">
-                <span class="v" id="modal-detalhes-avanco"></span>
-                <span class="k">de avanço na pesquisa</span>
-            </div>
-
-            <dl class="dl">
-                <div>
-                    <dt>atividades</dt>
-                    <dd id="modal-detalhes-descricao"></dd>
-                </div>
-            </dl>
-        </div>
-    </div>
-
-    <!-- Confirmação: avanço igual ao do último pta -->
-    <div id="modal-confirmacao-avanco" class="modal-overlay">
-        <div class="modal-content modal-sm">
-            <div class="modal-header">
-                <h3>Avanço sem alteração</h3>
-            </div>
-            <p class="dialog-text">O avanço informado (<span class="mono"><span id="span-avanco-repetido"></span>%</span>) é o mesmo do seu último pta neste tópico. Enviar assim mesmo?</p>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="fecharModalAvanco()">Revisar</button>
-                <button type="button" class="btn btn-primary" onclick="confirmarEnvioAvancoRepetido()">Enviar assim mesmo</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Configuração do 2FA -->
     <div id="modal-setup-2fa" class="modal-overlay">
         <div class="modal-content modal-sm">
@@ -332,20 +296,21 @@
     <script src="js/api.js?v=6"></script>
     <script src="js/ui.js?v=3404"></script>
     <script src="js/salvaguardas.js?v=3"></script>
-    <script src="js/shell.js?v=9"></script>
+    <script src="js/shell.js?v=10"></script>
     <script src="js/auth.js?v=2004"></script>
     <script src="js/listagem.js?v=3"></script>
     <script src="js/vinculos.js?v=2"></script>
-    <script src="js/views/inicio.js?v=9"></script>
+    <script src="js/views/inicio.js?v=10"></script>
     <script src="js/views/equipments.js?v=10"></script>
     <script src="js/views/agendamentos.js?v=2"></script>
     <script src="js/views/processes.js?v=7"></script>
     <script src="js/dashboard.js?v=1303"></script>
-    <script src="js/views/pta.js?v=18"></script>
+    <script src="js/views/pta.js?v=19"></script>
     <script src="js/views/tarefas.js?v=8"></script>
     <script src="js/views/pops.js?v=294"></script>
     <script src="js/views/admin.js?v=556"></script>
     <script src="js/views/articles.js?v=5"></script>
     <script src="js/views/rspace.js?v=4"></script>
+    <script src="js/views/insumos.js?v=1"></script>
 </body>
 </html>

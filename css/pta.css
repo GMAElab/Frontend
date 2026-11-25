@@ -1,0 +1,255 @@
+/* ==========================================
+   PTA MENSAL: folha do mês, fila de avaliação, visão do ano
+   Só tokens de tokens.css; nenhuma cor literal.
+   ========================================== */
+
+/* Navegação de mês (‹ Novembro de 2026 ›) */
+.pta-mes-nav { display: inline-flex; align-items: center; gap: var(--space-1); }
+.pta-mes-nav .pta-mes-label {
+    min-width: 17ch;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Faixa de progresso do mês */
+.pta-progresso {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-6);
+    padding: var(--space-3) var(--space-4);
+    margin-bottom: var(--space-4);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+}
+.pta-progresso .pta-progresso-texto { font-size: 13.5px; font-weight: 600; color: var(--text-primary); }
+.pta-progresso .progress-track { width: 160px; }
+.pta-progresso .cluster { gap: var(--space-2); }
+.pta-progresso .push-end { margin-left: auto; }
+
+/* Avisos de devolução */
+.pta-devolvidos { margin-bottom: var(--space-4); }
+.pta-devolvidos ul { list-style: none; margin: var(--space-2) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.pta-devolvidos li { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-3); flex-wrap: wrap; }
+.pta-devolvidos .pta-motivo { color: var(--text-secondary); }
+
+/* Tabela da folha */
+.pta-folha td { vertical-align: middle; }
+.pta-folha tr.is-aberto > td { background: var(--bg-hover); }
+.pta-folha .pta-topico-sub { display: block; margin-top: 2px; font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.pta-folha .num { font-variant-numeric: tabular-nums; }
+.pta-grupo-row td {
+    padding-top: var(--space-4) !important;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    background: var(--bg-surface) !important;
+}
+
+.pta-delta { font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--text-muted); }
+.pta-delta.is-up { color: var(--success-text); }
+.pta-delta.is-down { color: var(--danger-text); }
+.pta-delta.is-low { color: var(--warning-text); }
+
+/* Minigráfico de evolução (linha real + previsão tracejada) */
+.pta-spark { display: block; overflow: visible; }
+.pta-spark .real { fill: none; stroke: var(--brand-primary); stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; }
+.pta-spark .ponto { fill: var(--brand-primary); }
+.pta-spark .previsto { fill: none; stroke: var(--border-control); stroke-width: 1; stroke-dasharray: 3 3; }
+.pta-spark .base { stroke: var(--border-soft); stroke-width: 1; }
+.pta-spark-vazio { font-size: 12px; color: var(--text-muted); }
+
+/* Editor expandido de um tópico */
+.pta-editor-row > td { padding: 0 !important; background: var(--bg-inset) !important; }
+.pta-editor-row:hover > td { background: var(--bg-inset) !important; }
+.pta-editor { padding: var(--space-5); border-top: 1px solid var(--border-soft); }
+.pta-editor-grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: var(--space-6); }
+.pta-editor-main { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+.pta-editor-side { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+.pta-editor .input-group { margin-bottom: 0; }
+.pta-editor textarea { min-height: 64px; resize: vertical; background: var(--bg-surface); }
+.pta-editor .label-row { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-2); }
+.pta-editor .pta-ajuda-secao { font-size: 12px; color: var(--text-muted); }
+.pta-ferramentas { display: flex; flex-wrap: wrap; gap: var(--space-4); }
+
+.pta-painel {
+    padding: var(--space-3) var(--space-4);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+}
+.pta-painel h5 { margin: 0 0 var(--space-2); font-size: 12.5px; font-weight: 500; color: var(--text-muted); }
+.pta-painel .pta-numeros { display: flex; justify-content: space-between; gap: var(--space-2); font-size: 12.5px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.pta-painel .pta-numeros strong { color: var(--text-primary); font-weight: 600; }
+.pta-avanco-aviso { margin-top: var(--space-2); font-size: 12.5px; }
+
+.pta-plano { white-space: pre-wrap; font-size: 13px; color: var(--text-secondary); max-height: 140px; overflow: auto; }
+
+.pta-editor-acoes {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-5);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--border-soft);
+}
+.pta-editor-acoes .pta-salvo-em { margin-right: auto; font-size: 12.5px; color: var(--text-muted); }
+
+/* Descrição estruturada (leitura) */
+.pta-desc { display: flex; flex-direction: column; gap: var(--space-2); font-size: 13px; color: var(--text-secondary); }
+.pta-desc h6 { margin: 0; font-size: 12px; font-weight: 600; color: var(--text-primary); }
+.pta-desc p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.pta-desc.is-recolhida { max-height: 7.5em; overflow: hidden; -webkit-mask-image: linear-gradient(to bottom, var(--bg-surface) 60%, transparent); mask-image: linear-gradient(to bottom, var(--bg-surface) 60%, transparent); }
+
+/* Notas */
+.pta-notas { display: flex; flex-direction: column; gap: var(--space-2); }
+.pta-nota { padding: 8px 10px; border: 1px solid var(--border-soft); border-radius: var(--radius-sm); background: var(--bg-surface); font-size: 12.5px; color: var(--text-secondary); }
+.pta-nota.is-chefia { background: var(--danger-soft); border-color: var(--danger-border); color: var(--text-primary); }
+.pta-nota .pta-nota-autor { display: flex; justify-content: space-between; gap: var(--space-2); font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
+.pta-nota p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.pta-comentar { display: flex; gap: var(--space-2); }
+.pta-comentar .form-control { flex: 1; min-width: 0; }
+
+/* Rodapé de envio em lote */
+.pta-rodape { display: flex; justify-content: flex-end; align-items: center; gap: var(--space-3); margin-top: var(--space-4); font-size: 13px; color: var(--text-muted); }
+
+/* ==========================================
+   COORDENAÇÃO
+   ========================================== */
+.pta-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); margin-bottom: var(--space-4); }
+.pta-toolbar .cluster { gap: var(--space-2); }
+.pta-secao { margin-top: var(--space-6); }
+.pta-secao > .section-head { margin-bottom: var(--space-3); }
+
+/* Matriz pessoas × tópicos */
+.pta-matriz-wrap { overflow-x: auto; }
+.pta-matriz th.pta-col-topico { max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; }
+.pta-matriz td.pta-cel-td { text-align: center; padding-left: 6px !important; padding-right: 6px !important; }
+.pta-cel {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 26px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-soft);
+    background: var(--bg-surface);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+.pta-cel.is-consolidado { background: var(--success-bg); border-color: var(--success-border); color: var(--success-text); }
+.pta-cel.is-aguardando_aprovacao { background: var(--brand-soft); border-color: var(--brand-border); color: var(--brand-primary); }
+.pta-cel.is-devolvido { background: var(--danger-soft); border-color: var(--danger-border); color: var(--danger-text); }
+.pta-cel.is-rascunho { background: var(--warning-bg); border-color: var(--warning-border); color: var(--warning-text); }
+.pta-cel.is-fora { border-color: transparent; background: transparent; }
+.pta-legenda { display: flex; flex-wrap: wrap; gap: var(--space-4); margin-top: var(--space-2); font-size: 12px; color: var(--text-muted); }
+.pta-legenda span { display: inline-flex; align-items: center; gap: 6px; }
+
+/* Fila de avaliação */
+.pta-bulk {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    margin-bottom: var(--space-3);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    font-size: 13px;
+}
+.pta-bulk .check-inline { display: inline-flex; align-items: center; gap: 6px; }
+.pta-bulk .pta-atalhos { margin-left: auto; font-size: 12px; color: var(--text-muted); }
+.pta-bulk kbd { font-family: var(--font-code); font-size: 11px; padding: 0 4px; border: 1px solid var(--border-strong); border-radius: 4px; background: var(--bg-surface); color: var(--text-secondary); }
+
+.pta-grupo { margin-bottom: var(--space-5); }
+.pta-grupo-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-2); }
+.pta-grupo-head h4 { margin: 0; font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.pta-grupo-head .meta { font-size: 12.5px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+.pta-avaliacao { outline: none; }
+.pta-avaliacao + .pta-avaliacao { margin-top: var(--space-2); }
+.pta-avaliacao:focus-visible { box-shadow: 0 0 0 2px var(--brand-primary); }
+.pta-avaliacao.is-selected { border-color: var(--brand-primary); background: var(--brand-soft); }
+.pta-avaliacao .entry-head { align-items: center; }
+.pta-avaliacao .entry-head .cluster { gap: var(--space-2); }
+.pta-avaliacao input[type="checkbox"] { accent-color: var(--brand-primary); }
+.pta-desfeito {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: 8px 12px;
+    margin-top: var(--space-2);
+    border: 1px dashed var(--success-border);
+    border-radius: var(--radius-md);
+    background: var(--success-bg);
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
+/* Motivos rápidos da devolução */
+.pta-motivos { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-3); }
+
+/* Síntese por tópico */
+.pta-sintese textarea { width: 100%; min-height: 140px; background: var(--bg-surface); }
+.pta-sintese .pta-sintese-acoes { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-2); }
+.pta-sintese .pta-sintese-acoes .push-end { margin-left: auto; }
+.pta-aprovados-lista { list-style: none; margin: 0 0 var(--space-3); padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--text-secondary); }
+.pta-aprovados-lista li { display: flex; justify-content: space-between; gap: var(--space-2); }
+
+/* Visão do ano */
+.pta-ano-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--space-3); }
+.pta-ano-mes {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: var(--space-3);
+    text-align: left;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    font: inherit;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: border-color var(--t-fast), background-color var(--t-fast);
+}
+.pta-ano-mes:hover { border-color: var(--border-strong); background: var(--bg-hover); }
+.pta-ano-mes.is-atual { border-color: var(--brand-primary); }
+.pta-ano-mes.is-futuro { cursor: default; background: var(--bg-canvas); box-shadow: none; }
+.pta-ano-mes.is-futuro:hover { border-color: var(--border-subtle); background: var(--bg-canvas); }
+.pta-ano-mes .pta-ano-nome { font-size: 13.5px; font-weight: 600; color: var(--text-primary); }
+.pta-ano-mes .pta-ano-linha { display: flex; justify-content: space-between; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.pta-ano-mes .pta-ano-linha.is-alerta { color: var(--warning-text); }
+.pta-ano-mes .pta-ano-linha.is-pendente { color: var(--brand-primary); }
+.pta-ano-mes .progress-track { width: 100%; margin-top: 4px; }
+
+/* Importação */
+.pta-previa dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px var(--space-4); margin: 0 0 var(--space-3); font-size: 13px; }
+.pta-previa dt { color: var(--text-muted); }
+.pta-previa dd { margin: 0; color: var(--text-primary); }
+.pta-perigo { border-color: var(--danger-border) !important; }
+
+@media (max-width: 960px) {
+    .pta-editor-grid { grid-template-columns: minmax(0, 1fr); }
+    .pta-progresso .push-end { margin-left: 0; }
+}
+@media (max-width: 640px) {
+    .pta-editor { padding: var(--space-4); }
+    .pta-bulk .pta-atalhos { display: none; }
+    .pta-mes-nav .pta-mes-label { min-width: 0; }
+}

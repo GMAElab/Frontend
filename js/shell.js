@@ -84,7 +84,7 @@
 
     const ICONE_DA_VIEW = {
         inicio: 'home', equipments: 'microscope', processes: 'flask', pops: 'file-text',
-        rspace: 'layers', pta: 'calendar', tarefas: 'check-square', articles: 'book-open', admin: 'shield',
+        rspace: 'layers', insumos: 'package', pta: 'calendar', tarefas: 'check-square', articles: 'book-open', admin: 'shield',
     };
 
     function comandos() {
@@ -104,6 +104,8 @@
             { rotulo: 'Novo POP', icone: 'file-plus', termos: 'procedimento operacional', executar: abrirEm('pops', () => window.openPopModal?.()) },
             { rotulo: 'Novo documento no RSpace ELN', icone: 'layers', termos: 'rspace caderno experimento eln', executar: abrirEm('rspace', () => window.rspaceAbrirModalNovoDoc?.()) },
             ehGestor() && { rotulo: 'Nova tarefa', icone: 'plus', termos: 'atribuir', executar: abrirEm('tarefas', () => window.abrirModalTarefa?.()) },
+            { rotulo: 'Registrar uso de insumo', icone: 'package', termos: 'insumo reagente estoque baixa retirada saída epi vidraria', executar: abrirEm('insumos', () => window.insumosFocarBusca?.()) },
+            ehGestor() && { rotulo: 'Novo insumo', icone: 'plus', termos: 'cadastrar reagente estoque epi vidraria', executar: abrirEm('insumos', () => window.insumosAbrirNovo?.()) },
             { rotulo: 'Registrar PTA do mês', icone: 'calendar', termos: 'planejamento pta avanço', executar: () => irPara('pta') },
         ].filter(Boolean).map(c => ({ grupo: 'Criar', ...c }));
 

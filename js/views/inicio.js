@@ -95,6 +95,11 @@
                 texto: 'Seu relato do planejamento mensal ainda não foi enviado. Informe o avanço de cada tópico de pesquisa.',
                 view: 'pta', acao: 'Registrar relato' });
         }
+        if (eu.relatos_devolvidos > 0) {
+            avisos.push({ tag: 'Relato mensal', tom: 'danger', titulo: `${plural(eu.relatos_devolvidos, 'relato devolvido', 'relatos devolvidos')} para ajuste`,
+                texto: 'A coordenação pediu ajustes no seu planejamento mensal. Veja o motivo e reenvie.',
+                view: 'pta', acao: 'Corrigir relato' });
+        }
         if (eu.atrasadas > 0) {
             avisos.push({ tag: 'Tarefas', tom: 'danger', titulo: `Você tem ${plural(eu.atrasadas, 'tarefa atrasada', 'tarefas atrasadas')}`,
                 texto: 'Atualize o andamento ou combine um novo prazo com a coordenação.',

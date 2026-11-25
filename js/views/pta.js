@@ -1,1454 +1,1464 @@
 // ==========================================
-// ROTEADOR DAS TELAS (PESQUISADOR e ADMINISTRAÇÃO)
+// PLANEJAMENTO MENSAL (PTA)
+// Quem relata: uma "folha do mês" com uma linha por tópico.
+// Coordenação: abas Avaliar · Visão do ano · Tópicos · Importar e exportar.
 // ==========================================
-document.addEventListener('viewChanged', (e) => {
-    if (e.detail.view === 'pta') routerPTA();
-});
+(function () {
+    'use strict';
 
-function routerPTA() {
-    const userString = localStorage.getItem('user_data');
-    if (!userString) return;
-    const user = JSON.parse(userString);
+    const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+    const MESES_CURTOS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+    const SECOES = [
+        { chave: 'realizado', titulo: 'Realizado', ajuda: 'Experimentos, ensaios e entregas do mês', linhas: 4 },
+        { chave: 'resultados', titulo: 'Resultados', ajuda: 'O que foi obtido ou concluído', linhas: 3 },
+        { chave: 'dificuldades', titulo: 'Dificuldades', ajuda: 'Bloqueios, falhas, falta de insumo (opcional)', linhas: 2 },
+        { chave: 'proximos', titulo: 'Próximos passos', ajuda: 'Vira o ponto de partida do próximo mês', linhas: 2 },
+        { chave: 'justificativa', titulo: 'Justificativa da redução', ajuda: '', linhas: 2, oculta: true },
+    ];
+    const MOTIVOS_RAPIDOS = [
+        'Detalhe melhor os resultados obtidos.',
+        'O avanço informado não condiz com as atividades descritas.',
+        'Faltou informar os próximos passos.',
+        'Relato está no tópico errado.',
+    ];
 
-    if (user.role === 'coordenador' || user.role === 'admin') {
-        renderPTACoordenador();
-    } else {
-        renderPTAPesquisador();
+    const esc = (v) => window.escapeHTML(v);
+    const icone = (nome, size = 14) => (window.Icon ? window.Icon(nome, { size }) : '');
+    const capital = (s) => (s ? s[0].toUpperCase() + s.slice(1) : '');
+    const nomeMes = (m) => capital(MESES[(m || 1) - 1]);
+    const mesAno = (m, a) => `${nomeMes(m)} de ${a}`;
+    const usuario = () => { try { return JSON.parse(localStorage.getItem('user_data') || '{}'); } catch (e) { return {}; } };
+    const ehGestor = () => ['coordenador', 'admin'].includes(usuario().role);
+    const ehAdmin = () => usuario().role === 'admin';
+    const hoje = () => { const d = new Date(); return { mes: d.getMonth() + 1, ano: d.getFullYear() }; };
+    const chave = (a, m) => a * 12 + m;
+
+    function dataHora(iso) {
+        if (!iso) return '';
+        const texto = /[zZ]|[+-]\d\d:?\d\d$/.test(iso) ? iso : `${iso}Z`;
+        const d = new Date(texto);
+        if (Number.isNaN(d.getTime())) return '';
+        return d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
     }
-}
 
-// ==========================================
-// CARREGAR TÓPICOS
-// ==========================================
-async function buscarTopicosPTA() {
-    const res = await window.api.fetchProtected('/pta/topicos');
-    const topicos = await res.json();
-    window.topicosPtaCache = Array.isArray(topicos) ? topicos : [];
-    return window.topicosPtaCache;
-}
-
-function resolverNomeTopicoPTA(rel) {
-    if (rel && rel.topico_titulo) {
-        return rel.topico_ano ? `${rel.topico_titulo} (${rel.topico_ano})` : rel.topico_titulo;
+    function prazoTopico(t) {
+        if (!t || !t.mes_fim) return t && t.ano ? `${t.ano} · sem prazo` : 'sem prazo';
+        const a = String(t.ano).slice(-2);
+        return `${String(t.mes_inicio || 1).padStart(2, '0')}/${a} → ${String(t.mes_fim).padStart(2, '0')}/${a}`;
     }
-    const topicoId = rel ? rel.topico_id : null;
-    if (topicoId !== null && topicoId !== undefined) {
-        const topicoCache = (window.topicosPtaCache || []).find(t => t.id == topicoId);
-        if (topicoCache && topicoCache.titulo) {
-            return topicoCache.ano ? `${topicoCache.titulo} (${topicoCache.ano})` : topicoCache.titulo;
+
+    async function req(caminho, opcoes = {}) {
+        const op = { ...opcoes };
+        if (op.json !== undefined) {
+            op.body = JSON.stringify(op.json);
+            op.headers = { 'Content-Type': 'application/json', ...(op.headers || {}) };
+            delete op.json;
         }
-        const selectTopico = document.getElementById('pta-topico') || document.getElementById('ia-topico-id');
-        if (selectTopico) {
-            const opt = Array.from(selectTopico.options).find(o => o.value == topicoId);
-            if (opt && opt.value) {
-                return opt.text;
-            }
+        const res = await window.api.fetchProtected(caminho, op);
+        const dados = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            const det = Array.isArray(dados.detail) ? dados.detail.map(d => d.msg).join('; ') : dados.detail;
+            throw new Error(det || 'Não foi possível concluir a ação.');
         }
-    }
-    return 'Tópico não identificado';
-}
-
-function obterDadosConclusaoTopico(topicoId) {
-    if (!topicoId || !Array.isArray(window.meusPtasCache)) return { concluido: false, meses: [] };
-    const idNum = parseInt(topicoId, 10);
-    const consolidados = window.meusPtasCache
-        .filter(r => r.topico_id == idNum && r.status === 'consolidado')
-        .sort((a, b) => (a.ano_referencia - b.ano_referencia) || (a.mes_referencia - b.mes_referencia));
-
-    const atingiu100 = consolidados.some(r => (r.percentual_avanco || 0) >= 100);
-    if (!atingiu100 || consolidados.length === 0) {
-        return { concluido: false, meses: consolidados };
+        return dados;
     }
 
-    const primeiro = consolidados[0];
-    const ultimo = consolidados.find(r => (r.percentual_avanco || 0) >= 100) || consolidados[consolidados.length - 1];
-    const spanMeses = Math.max(1, ((ultimo.ano_referencia - primeiro.ano_referencia) * 12) + (ultimo.mes_referencia - primeiro.mes_referencia) + 1);
+    function erroToast(err) { window.UI.showToast(err.message || 'Falha de conexão.', 'error'); }
 
-    return {
-        concluido: true,
-        meses: consolidados,
-        primeiro,
-        ultimo,
-        qtdRegistros: consolidados.length,
-        duracaoMeses: spanMeses
+    async function comBotao(btn, rotulo, fn) {
+        if (!btn) return fn();
+        const original = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${rotulo}`;
+        try { return await fn(); } finally { if (btn.isConnected) { btn.disabled = false; btn.innerHTML = original; } }
+    }
+
+    // ==========================================
+    // STATUS, NÚMEROS E MINIGRÁFICO
+    // ==========================================
+    const STATUS = {
+        pendente: { rotulo: 'Pendente', classe: 'badge-warning' },
+        rascunho: { rotulo: 'Rascunho', classe: '' },
+        aguardando_aprovacao: { rotulo: 'Enviado', classe: 'badge-info' },
+        devolvido: { rotulo: 'Devolvido', classe: 'badge-danger' },
+        consolidado: { rotulo: 'Aprovado', classe: 'badge-success' },
+        concluido: { rotulo: 'Tópico concluído', classe: 'badge-success' },
+        fora: { rotulo: 'Ainda não começou', classe: '' },
     };
-}
+    const badge = (st) => `<span class="badge ${STATUS[st]?.classe || ''}">${STATUS[st]?.rotulo || esc(st)}</span>`;
 
-function formatarPrazoTopicoPTA(topico) {
-    if (!topico || !topico.mes_fim) return `${topico?.ano || ''}`;
-    const ini = String(topico.mes_inicio || 1).padStart(2, '0');
-    const fim = String(topico.mes_fim).padStart(2, '0');
-    const anoCurto = String(topico.ano || '').slice(-2);
-    return `${ini}/${anoCurto} → ${fim}/${anoCurto}`;
-}
-
-window.atualizarIndicacaoTopicosConcluidos = function() {
-    const select = document.getElementById('pta-topico');
-    if (!select || !Array.isArray(window.topicosPtaCache) || window.topicosPtaCache.length === 0) return;
-
-    const valorAtual = select.value || localStorage.getItem('pta_ultimo_topico') || '';
-    let html = '<option value="">Selecione um tópico...</option>';
-    window.topicosPtaCache.forEach(t => {
-        const info = obterDadosConclusaoTopico(t.id);
-        const prazoStr = formatarPrazoTopicoPTA(t);
-        const tituloBase = `${t.titulo} (${prazoStr})`;
-        const label = info.concluido ? `✓ [Concluído 100%] ${tituloBase}` : tituloBase;
-        html += `<option value="${t.id}" data-titulo="${window.escapeHTML(tituloBase)}">${window.escapeHTML(label)}</option>`;
-    });
-    select.innerHTML = html;
-    if (valorAtual && select.querySelector(`option[value="${valorAtual}"]`)) {
-        select.value = valorAtual;
+    function delta(atual, anterior, esperado) {
+        const d = atual - anterior;
+        const sinal = d > 0 ? `+${d}` : `${d}`;
+        const abaixo = esperado !== null && esperado !== undefined && atual < esperado - 15;
+        const classe = abaixo ? 'is-low' : d > 0 ? 'is-up' : d < 0 ? 'is-down' : '';
+        const titulo = abaixo ? ` title="Abaixo do esperado para o mês (${esperado}%)"` : '';
+        return `<span class="pta-delta ${classe}"${titulo}>${sinal} p.p.${abaixo ? ' · abaixo do esperado' : ''}</span>`;
     }
-};
 
-window.abrirModalTopicoConcluido = function(topicoId) {
-    const id = topicoId || document.getElementById('pta-topico')?.value;
-    if (!id) return;
-    const info = obterDadosConclusaoTopico(id);
-    if (!info.concluido) return;
-
-    const topicoObj = (window.topicosPtaCache || []).find(t => t.id == id);
-    const nomeTopico = topicoObj ? `${topicoObj.titulo} (${topicoObj.ano})` : resolverNomeTopicoPTA(info.ultimo);
-
-    const fmtMesAno = (r) => `${String(r.mes_referencia).padStart(2, '0')}/${r.ano_referencia}`;
-    const fmtMesExtenso = (r) => {
-        const m = MESES_DO_ANO[(r.mes_referencia || 1) - 1] || String(r.mes_referencia).padStart(2, '0');
-        return `${m[0].toUpperCase() + m.slice(1)} de ${r.ano_referencia}`;
-    };
-
-    const periodoTexto = info.primeiro.mes_referencia === info.ultimo.mes_referencia && info.primeiro.ano_referencia === info.ultimo.ano_referencia
-        ? fmtMesAno(info.ultimo)
-        : `${fmtMesAno(info.primeiro)} a ${fmtMesAno(info.ultimo)}`;
-
-    const tempoTexto = info.duracaoMeses === 1 ? '1 mês' : `${info.duracaoMeses} meses`;
-    const relatosTexto = info.qtdRegistros === 1 ? '1 mês consolidado' : `${info.qtdRegistros} meses consolidados`;
-
-    const listaMesesHtml = info.meses.map(rel => `
-        <article class="entry">
-            <div class="entry-head">
-                <h4 class="entry-title">${window.escapeHTML(fmtMesExtenso(rel))} (${fmtMesAno(rel)})</h4>
-                <span class="mono">${rel.percentual_avanco || 0}%</span>
-            </div>
-            <div class="meter">
-                <div class="meter-track"><div class="meter-fill ok" style="width:${rel.percentual_avanco || 0}%"></div></div>
-                <span class="meter-value">${rel.percentual_avanco || 0}%</span>
-            </div>
-            <p class="entry-body pre-wrap">${window.escapeHTML(rel.descricao_atividades || 'Sem descrição.')}</p>
-        </article>
-    `).join('');
-
-    const modalId = 'modal-topico-concluido';
-    document.getElementById(modalId)?.remove();
-
-    const modal = document.createElement('div');
-    modal.id = modalId;
-    modal.className = 'modal-overlay';
-    modal.style.display = 'flex';
-    modal.innerHTML = `
-        <div class="modal-content modal-lg">
-            <div class="modal-header">
-                <div>
-                    <p class="eyebrow">tópico concluído · 100% de avanço</p>
-                    <h3>${window.escapeHTML(nomeTopico)}</h3>
-                </div>
-                <button type="button" class="modal-close" onclick="document.getElementById('${modalId}')?.remove()" aria-label="Fechar">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>
-                </button>
-            </div>
-
-            <div class="note" style="margin-bottom:var(--space-4);">
-                <p style="margin:0;"><strong>Este tópico já foi finalizado (100%).</strong> Não é necessário preencher novos planejamentos mensais para ele. Confira abaixo o resumo do tempo gasto e o histórico de todos os meses realizados.</p>
-            </div>
-
-            <div class="figures" style="margin-bottom:var(--space-4);">
-                <div class="figure">
-                    <span class="v">100%</span>
-                    <span class="k">status concluído</span>
-                </div>
-                <div class="figure">
-                    <span class="v">${window.escapeHTML(tempoTexto)}</span>
-                    <span class="k">duração (${window.escapeHTML(periodoTexto)})</span>
-                </div>
-                <div class="figure">
-                    <span class="v">${info.qtdRegistros}</span>
-                    <span class="k">${window.escapeHTML(relatosTexto)}</span>
-                </div>
-            </div>
-
-            <div class="section-head">
-                <h3>Meses realizados neste tópico</h3>
-            </div>
-            <div class="entries scroll-pane" style="max-height:360px;">
-                ${listaMesesHtml}
-            </div>
-
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" onclick="document.getElementById('${modalId}')?.remove()">Entendi</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.remove();
-    });
-};
-
-async function carregarDropdownTopicos(selectId) {
-    const select = document.getElementById(selectId);
-    if (!select) return;
-    select.innerHTML = '<option value="">Carregando tópicos...</option>';
-
-    try {
-        window.topicosPtaPromise = buscarTopicosPTA();
-        const topicos = await window.topicosPtaPromise;
-
-        if (topicos.length === 0) {
-            select.innerHTML = '<option value="">Nenhum tópico encontrado</option>';
-            return;
+    /** Linha do avanço aprovado mês a mês, com a previsão linear do prazo tracejada. */
+    function sparkline(topico, historico, { w = 96, h = 26, atual = null, mesAtual = null } = {}) {
+        const ini = topico.mes_inicio || 1;
+        const ultimoMes = Math.max(topico.mes_fim || 12, ...(historico || []).filter(p => p.ano === topico.ano).map(p => p.mes), mesAtual || 0);
+        const fim = Math.max(ultimoMes, ini + 1);
+        const x = (m) => ((m - ini) / (fim - ini)) * w;
+        const y = (v) => h - (Math.max(0, Math.min(100, v)) / 100) * h;
+        const pontos = (historico || []).filter(p => p.ano === topico.ano && p.mes >= ini).map(p => [x(p.mes), y(p.avanco)]);
+        if (atual !== null && mesAtual && !(historico || []).some(p => p.ano === topico.ano && p.mes === mesAtual)) {
+            pontos.push([x(mesAtual), y(atual)]);
         }
+        if (!pontos.length) return '<span class="pta-spark-vazio">sem histórico</span>';
+        const previsto = topico.mes_fim ? `<line class="previsto" x1="${x(ini).toFixed(1)}" y1="${h}" x2="${x(topico.mes_fim).toFixed(1)}" y2="0"/>` : '';
+        const caminho = pontos.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+        const ultimo = pontos[pontos.length - 1];
+        const resumo = (historico || []).map(p => `${MESES_CURTOS[p.mes - 1]}: ${p.avanco}%`).join(', ') || 'sem meses aprovados';
+        return `<svg class="pta-spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="Evolução aprovada: ${esc(resumo)}">
+            <line class="base" x1="0" y1="${h}" x2="${w}" y2="${h}"/>${previsto}
+            <path class="real" d="${caminho}"/><circle class="ponto" cx="${ultimo[0].toFixed(1)}" cy="${ultimo[1].toFixed(1)}" r="2.2"/>
+        </svg>`;
+    }
 
-        let html = '<option value="">Selecione um tópico...</option>';
-        topicos.forEach(t => {
-            html += `<option value="${t.id}" data-titulo="${window.escapeHTML(t.titulo)} (${t.ano})">${window.escapeHTML(t.titulo)} (${t.ano})</option>`;
+    // ==========================================
+    // DESCRIÇÃO ESTRUTURADA
+    // Fica salva como texto simples com cabeçalhos ("Realizado:"),
+    // então a importação, a exportação e a síntese por IA continuam lendo o mesmo campo.
+    // ==========================================
+    function lerDescricao(texto) {
+        const saida = {};
+        const titulos = SECOES.map(s => s.titulo);
+        const padrao = new RegExp(`^(${titulos.join('|')}):\\s*$`);
+        let atual = null;
+        let achou = false;
+        String(texto || '').split(/\r?\n/).forEach(linha => {
+            const m = linha.trim().match(padrao);
+            if (m) { atual = SECOES.find(s => s.titulo === m[1]).chave; achou = true; saida[atual] = saida[atual] || []; return; }
+            if (!atual) { atual = 'realizado'; saida[atual] = []; }
+            saida[atual].push(linha);
         });
-        select.innerHTML = html;
+        Object.keys(saida).forEach(k => { saida[k] = saida[k].join('\n').trim(); });
+        if (!achou) return { realizado: String(texto || '').trim() };
+        return saida;
+    }
 
-        if (selectId === 'pta-topico') {
-            window.atualizarIndicacaoTopicosConcluidos();
-            const ultimoTopico = localStorage.getItem('pta_ultimo_topico');
-            if (ultimoTopico && select.querySelector(`option[value="${ultimoTopico}"]`)) {
-                select.value = ultimoTopico;
-                window.carregarPTAUnificadoEquipe();
-            }
+    function comporDescricao(partes) {
+        return SECOES.filter(s => (partes[s.chave] || '').trim())
+            .map(s => `${s.titulo}:\n${partes[s.chave].trim()}`).join('\n\n');
+    }
+
+    function descricaoHTML(texto, recolher = false) {
+        const partes = lerDescricao(texto);
+        const blocos = SECOES.filter(s => partes[s.chave]).map(s =>
+            `<div><h6>${esc(s.titulo)}</h6><p>${esc(partes[s.chave])}</p></div>`).join('');
+        if (!blocos) return '<p class="text-muted text-small">Sem descrição.</p>';
+        return `<div class="pta-desc${recolher ? ' is-recolhida' : ''}">${blocos}</div>`;
+    }
+
+    // ==========================================
+    // MODAIS
+    // ==========================================
+    function abrirModal({ id, eyebrow = '', titulo, corpo, rodape = '', tamanho = 'modal-md' }) {
+        document.getElementById(id)?.remove();
+        const modal = document.createElement('div');
+        modal.id = id;
+        modal.className = 'modal-overlay';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+            <div class="modal-content ${tamanho}" role="dialog" aria-modal="true" aria-labelledby="${id}-titulo">
+                <div class="modal-header">
+                    <div>${eyebrow ? `<p class="eyebrow">${esc(eyebrow)}</p>` : ''}<h3 id="${id}-titulo">${esc(titulo)}</h3></div>
+                    <button type="button" class="modal-close" data-role="cancel" aria-label="Fechar">${icone('x', 16)}</button>
+                </div>
+                ${corpo}
+                ${rodape ? `<div class="modal-footer">${rodape}</div>` : ''}
+            </div>`;
+        document.body.appendChild(modal);
+        const fechar = () => modal.remove();
+        modal.querySelectorAll('[data-role="cancel"]').forEach(b => b.addEventListener('click', fechar));
+        modal.addEventListener('click', (e) => { if (e.target === modal) fechar(); });
+        return modal;
+    }
+
+    async function abrirHistorico(relatoId, titulo) {
+        const modal = abrirModal({ id: 'pta-historico', eyebrow: 'histórico do relato', titulo, corpo: `<div id="pta-historico-corpo">${window.UI.loading()}</div>`, tamanho: 'modal-sm' });
+        try {
+            const eventos = await req(`/pta/relatorios/${relatoId}/historico`);
+            const corpo = modal.querySelector('#pta-historico-corpo');
+            corpo.innerHTML = eventos.length ? `<ol class="timeline">${eventos.map(e => `
+                <li class="tl-item">
+                    <span class="tl-title">${esc(e.rotulo)}</span>
+                    <p>${esc([e.autor, dataHora(e.quando)].filter(Boolean).join(' · '))}</p>
+                    ${e.detalhe ? `<p class="tl-quote">${esc(e.detalhe)}</p>` : ''}
+                </li>`).join('')}</ol>` : window.UI.emptyState({ title: 'Sem eventos registrados' });
+        } catch (err) {
+            modal.querySelector('#pta-historico-corpo').innerHTML = window.UI.errorState(esc(err.message));
+        }
+    }
+
+    function notasHTML(notas) {
+        if (!notas || !notas.length) return '';
+        return `<div class="pta-notas">${notas.map(n => `
+            <div class="pta-nota${n.da_chefia ? ' is-chefia' : ''}">
+                <div class="pta-nota-autor"><span>${esc(n.da_chefia ? `Coordenação · ${n.autor_nome}` : n.autor_nome)}</span><span class="text-muted">${esc(dataHora(n.criado_em))}</span></div>
+                <p>${esc(n.texto)}</p>
+            </div>`).join('')}</div>`;
+    }
+
+    function navMes(acao, mes, ano) {
+        return `<div class="pta-mes-nav">
+            <button type="button" class="icon-btn" data-acao="${acao}" data-delta="-1" aria-label="Mês anterior">${icone('chevron-left', 16)}</button>
+            <span class="pta-mes-label" aria-live="polite">${esc(mesAno(mes, ano))}</span>
+            <button type="button" class="icon-btn" data-acao="${acao}" data-delta="1" aria-label="Próximo mês">${icone('chevron-right', 16)}</button>
+        </div>`;
+    }
+
+    function somarMes(mes, ano, d) {
+        const k = chave(ano, mes) - 1 + d;
+        return { mes: (k % 12) + 1, ano: Math.floor(k / 12) };
+    }
+
+    // ==========================================
+    // ROTEADOR
+    // ==========================================
+    document.addEventListener('viewChanged', (e) => {
+        if (e.detail.view !== 'pta') return;
+        if (ehGestor()) renderPTACoordenador(); else renderPTAPesquisador();
+    });
+
+    // ==========================================
+    // FOLHA DO MÊS (QUEM RELATA)
+    // ==========================================
+    const P = { mes: null, ano: null, dados: null, aberto: null };
+
+    function renderPTAPesquisador(opcoes = {}) {
+        const h = hoje();
+        P.mes = opcoes.mes || P.mes || h.mes;
+        P.ano = opcoes.ano || P.ano || h.ano;
+        P.aberto = opcoes.abrir || null;
+        const main = document.getElementById('dynamic-content');
+        main.innerHTML = `
+            <div id="pta-raiz">
+                <header class="page-head fade-in">
+                    <div>
+                        <p class="eyebrow">PTA mensal</p>
+                        <h1>Planejamento mensal</h1>
+                        <p class="lede">Uma linha por tópico. Preencha, guarde como rascunho e envie quando estiver pronto.</p>
+                    </div>
+                    <div class="page-actions">
+                        ${navMes('mes-folha', P.mes, P.ano)}
+                        <button type="button" class="btn btn-secondary btn-sm${P.mes === h.mes && P.ano === h.ano ? ' hidden' : ''}" data-acao="mes-atual">Mês atual</button>
+                        ${ehGestor() ? '<button type="button" class="btn btn-secondary btn-sm" data-acao="ir-coordenacao">Painel da coordenação</button>' : ''}
+                    </div>
+                </header>
+                <div id="pta-devolvidos"></div>
+                <div id="pta-progresso"></div>
+                <div class="table-container fade-in">
+                    <table class="data-table pta-folha">
+                        <thead><tr>
+                            <th>Tópico</th>
+                            <th class="col-hide-sm">Evolução</th>
+                            <th class="num">Último</th>
+                            <th class="num">Este mês</th>
+                            <th class="num col-hide-xs">Esperado</th>
+                            <th>Situação</th>
+                            <th class="end"><span class="sr-only">Ações</span></th>
+                        </tr></thead>
+                        <tbody id="pta-folha-corpo"><tr><td colspan="7">${window.UI.loading('Carregando seus tópicos')}</td></tr></tbody>
+                    </table>
+                </div>
+                <div class="pta-rodape" id="pta-rodape"></div>
+            </div>`;
+        const raiz = document.getElementById('pta-raiz');
+        raiz.addEventListener('click', aoClicarFolha);
+        raiz.addEventListener('input', aoDigitarFolha);
+        carregarFolha();
+    }
+
+    async function carregarFolha() {
+        try {
+            P.dados = await req(`/pta/meu-mes?mes=${P.mes}&ano=${P.ano}`);
+            renderFolha();
+        } catch (err) {
+            const corpo = document.getElementById('pta-folha-corpo');
+            if (corpo) corpo.innerHTML = `<tr><td colspan="7">${window.UI.errorState(esc(err.message))}</td></tr>`;
+        }
+    }
+
+    function situacaoDe(t) {
+        if (t.meu) return t.meu.status;
+        if (t.concluido) return 'concluido';
+        if (!t.no_periodo) return 'fora';
+        return 'pendente';
+    }
+
+    function renderFolha() {
+        const d = P.dados;
+        if (!d || !document.getElementById('pta-folha-corpo')) return;
+
+        // Devoluções (de qualquer mês) ficam sempre no topo.
+        const dev = document.getElementById('pta-devolvidos');
+        dev.innerHTML = d.devolvidos.length ? `
+            <div class="note danger pta-devolvidos" role="alert">
+                <strong>${d.devolvidos.length === 1 ? '1 relato devolvido para ajuste' : `${d.devolvidos.length} relatos devolvidos para ajuste`}</strong>
+                <ul>${d.devolvidos.map(r => `
+                    <li>
+                        <span><strong>${esc(r.topico_titulo || 'Tópico')}</strong> · ${esc(mesAno(r.mes, r.ano))}${r.motivo ? `<br><span class="pta-motivo">“${esc(r.motivo)}”${r.avaliador ? ` · ${esc(r.avaliador)}` : ''}</span>` : ''}</span>
+                        <button type="button" class="btn btn-secondary btn-sm" data-acao="corrigir" data-topico="${r.topico_id}" data-mes="${r.mes}" data-ano="${r.ano}">Corrigir</button>
+                    </li>`).join('')}</ul>
+            </div>` : '';
+
+        const ativos = d.topicos.filter(t => t.no_periodo && !(t.concluido && !t.meu));
+        const enviados = ativos.filter(t => t.meu && ['aguardando_aprovacao', 'consolidado'].includes(t.meu.status)).length;
+        const aprovados = ativos.filter(t => t.meu && t.meu.status === 'consolidado').length;
+        const rascunhos = d.topicos.filter(t => t.meu && t.meu.status === 'rascunho');
+        const pct = ativos.length ? Math.round((enviados / ativos.length) * 100) : 0;
+        document.getElementById('pta-progresso').innerHTML = ativos.length ? `
+            <div class="pta-progresso">
+                <span class="pta-progresso-texto">${enviados} de ${ativos.length} ${ativos.length === 1 ? 'tópico enviado' : 'tópicos enviados'} em ${esc(nomeMes(P.mes).toLowerCase())}</span>
+                <span class="progress-track" aria-hidden="true"><span class="progress-fill ${pct === 100 ? 'is-success' : ''}" style="width:${pct}%"></span></span>
+                <span class="cluster">
+                    ${aprovados ? `<span class="badge badge-success">${aprovados} aprovado${aprovados > 1 ? 's' : ''}</span>` : ''}
+                    ${rascunhos.length ? `<span class="badge">${rascunhos.length} rascunho${rascunhos.length > 1 ? 's' : ''}</span>` : ''}
+                    ${ativos.length - enviados - rascunhos.length > 0 ? `<span class="badge badge-warning">${ativos.length - enviados - rascunhos.length} sem relato</span>` : ''}
+                </span>
+            </div>` : '';
+
+        const corpo = document.getElementById('pta-folha-corpo');
+        if (!d.topicos.length) {
+            corpo.innerHTML = `<tr><td colspan="7">${window.UI.emptyState({
+                title: 'Nenhum tópico para este mês',
+                description: 'Não há tópicos de pesquisa cadastrados para este ano em que você participe. Fale com a coordenação.',
+            })}</td></tr>`;
+        } else {
+            let html = '';
+            let grupoConcluidos = false;
+            d.topicos.forEach(t => {
+                if (t.concluido && !t.meu && !grupoConcluidos) {
+                    grupoConcluidos = true;
+                    html += '<tr class="pta-grupo-row"><td colspan="7">Tópicos já concluídos (100%)</td></tr>';
+                }
+                html += linhaTopico(t);
+                if (P.aberto === t.id) html += linhaEditor(t);
+            });
+            corpo.innerHTML = html;
+            if (P.aberto) prepararEditor(P.aberto);
         }
 
-        setTimeout(() => window.atualizarAvisoUltimoPTA(false), 300);
-
-    } catch (err) {
-        select.innerHTML = '<option value="">Erro ao carregar tópicos</option>';
+        const rodape = document.getElementById('pta-rodape');
+        const prontos = rascunhos.filter(t => (t.meu.descricao_atividades || '').trim());
+        rodape.innerHTML = prontos.length ? `
+            <span>${prontos.length === 1 ? 'Há 1 rascunho pronto para enviar.' : `Há ${prontos.length} rascunhos prontos para enviar.`}</span>
+            <button type="button" class="btn btn-primary btn-sm" data-acao="enviar-rascunhos">Enviar ${prontos.length === 1 ? 'rascunho' : `${prontos.length} rascunhos`}</button>` : '';
     }
-}
 
-// ==========================================
-// VISÃO DO PESQUISADOR
-// ==========================================
-window.renderPTAPesquisador = renderPTAPesquisador;
-window.renderPTACoordenador = renderPTACoordenador;
+    function linhaTopico(t) {
+        const st = situacaoDe(t);
+        const atual = t.meu ? t.meu.percentual_avanco : null;
+        const aberto = P.aberto === t.id;
+        const rotuloAcao = !t.meu ? (t.concluido ? 'Ver' : 'Preencher') : t.meu.status === 'consolidado' ? 'Ver' : t.meu.status === 'devolvido' ? 'Corrigir' : 'Editar';
+        return `
+            <tr class="clickable${aberto ? ' is-aberto' : ''}${st === 'fora' || (t.concluido && !t.meu) ? ' is-dimmed' : ''}" tabindex="0" data-acao="alternar" data-topico="${t.id}" aria-expanded="${aberto}">
+                <td><strong>${esc(t.titulo)}</strong><span class="pta-topico-sub">${esc(prazoTopico(t))}${t.membros_definidos ? '' : ' · toda a equipe'}${t.prazo_vencido ? ' · <span class="text-danger">prazo vencido</span>' : ''}</span></td>
+                <td class="col-hide-sm">${sparkline(t, t.historico, { atual, mesAtual: P.ano === t.ano ? P.mes : null })}</td>
+                <td class="num">${t.ultimo_avanco}%</td>
+                <td class="num">${atual === null ? '<span class="text-faint">—</span>' : `<strong>${atual}%</strong><br>${delta(atual, t.ultimo_avanco, t.esperado)}`}</td>
+                <td class="num col-hide-xs">${t.esperado === null ? '<span class="text-faint">—</span>' : `${t.esperado}%`}</td>
+                <td>${badge(st)}</td>
+                <td class="end"><button type="button" class="link-btn" data-acao="alternar" data-topico="${t.id}">${rotuloAcao}</button></td>
+            </tr>`;
+    }
 
-function renderPTAPesquisador() {
-    const main = document.getElementById('dynamic-content');
-    const dataAtual = new Date();
-    const user = JSON.parse(localStorage.getItem('user_data') || '{}');
-    const isGestor = user.role === 'coordenador' || user.role === 'admin';
+    function linhaEditor(t) {
+        const meu = t.meu;
+        const somenteLeitura = (meu && meu.status === 'consolidado') || (t.concluido && !meu);
+        if (somenteLeitura) return linhaLeitura(t);
 
-    main.innerHTML = `
-        <header class="page-head fade-in">
-            <div>
-                <p class="eyebrow">PTA mensal</p>
-                <h1>Planejamento mensal</h1>
-                <p class="lede">Registre o avanço do mês em cada tópico de pesquisa e acompanhe o histórico consolidado.</p>
-            </div>
-            ${isGestor ? `<button type="button" class="btn btn-secondary btn-sm" onclick="window.renderPTACoordenador()">Painel da coordenação</button>` : ''}
-        </header>
+        const partes = lerDescricao(meu ? meu.descricao_atividades : '');
+        const valor = meu ? meu.percentual_avanco : t.ultimo_avanco;
+        const plano = t.plano_anterior ? (lerDescricao(t.plano_anterior.descricao).proximos || '') : '';
+        const devolucao = meu && meu.status === 'devolvido' ? (meu.notas || []).filter(n => n.da_chefia).pop() : null;
+        const id = (k) => `pta-${t.id}-${k}`;
 
-        <div class="columns fade-in">
-            <section>
-                <div class="section-head"><h3>Novo PTA</h3></div>
-                <form id="form-pta">
-                    <div class="input-group">
-                        <label for="pta-topico">Tópico de pesquisa</label>
-                        <select id="pta-topico" required onchange="localStorage.setItem('pta_ultimo_topico', this.value); window.atualizarAvisoUltimoPTA(true); window.carregarPTAUnificadoEquipe(); window.renderizarListaMeusPTAs && window.renderizarListaMeusPTAs()"></select>
-                    </div>
-
-                    <div id="aviso-topico-concluido" class="note hidden" style="margin-bottom:var(--space-4);">
-                        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
-                            <p style="margin:0;"><strong>Tópico já concluído (100%).</strong> Este tópico foi finalizado e não recebe novos envios.</p>
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="window.abrirModalTopicoConcluido()">Ver resumo e meses realizados</button>
-                        </div>
-                    </div>
-
-                    <div class="field-grid">
-                        <div class="input-group">
-                            <label for="pta-mes">Mês</label>
-                            <select id="pta-mes" required onchange="window.atualizarAvisoUltimoPTA(); window.carregarPTAUnificadoEquipe()">
-                                ${MESES_DO_ANO.map((nome, i) => `<option value="${i + 1}" ${i === dataAtual.getMonth() ? 'selected' : ''}>${nome[0].toUpperCase() + nome.slice(1)}</option>`).join('')}
-                            </select>
-                        </div>
-                        <div class="input-group">
-                            <label for="pta-ano">Ano</label>
-                            <select id="pta-ano" required onchange="window.atualizarAvisoUltimoPTA(); window.carregarPTAUnificadoEquipe()">
-                                ${[-2, -1, 0, 1].map(d => dataAtual.getFullYear() + d).map(a => `<option value="${a}" ${a === dataAtual.getFullYear() ? 'selected' : ''}>${a}</option>`).join('')}
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="input-group">
-                        <label for="pta-avanco-num" id="rotulo-avanco">Avanço geral da pesquisa</label>
-                        <div class="range-field">
-                            <input type="range" id="pta-avanco" min="0" max="100" value="50"
-                                   aria-labelledby="rotulo-avanco" aria-describedby="ajuda-avanco" aria-valuetext="50%"
-                                   oninput="window.sincronizarAvanco('controle')">
-                            <div class="num-suffix">
-                                <input type="number" id="pta-avanco-num" min="0" max="100" step="1" value="50"
-                                       inputmode="numeric" required aria-describedby="ajuda-avanco"
-                                       onfocus="this.select()"
-                                       oninput="window.sincronizarAvanco('caixa')"
-                                       onchange="window.sincronizarAvanco('confirmar')">
-                                <span aria-hidden="true">%</span>
+        return `
+            <tr class="pta-editor-row"><td colspan="7">
+                <form class="pta-editor" id="pta-form-${t.id}" data-topico="${t.id}" novalidate>
+                    <div class="pta-editor-grid">
+                        <div class="pta-editor-main">
+                            ${devolucao ? `<div class="note danger"><strong>Devolvido por ${esc(devolucao.autor_nome)}:</strong> ${esc(devolucao.texto)}</div>` : ''}
+                            ${plano ? `
+                                <div class="pta-painel">
+                                    <div class="label-row"><h5>Próximos passos que você registrou em ${esc(nomeMes(t.plano_anterior.mes).toLowerCase())}</h5>
+                                    <button type="button" class="link-btn" data-acao="copiar-plano" data-topico="${t.id}">Copiar para “Realizado”</button></div>
+                                    <div class="pta-plano" id="${id('plano')}">${esc(plano)}</div>
+                                </div>` : ''}
+                            ${SECOES.map(s => `
+                                <div class="input-group${s.oculta ? ' hidden' : ''}" id="${id(s.chave)}-grupo">
+                                    <div class="label-row"><label for="${id(s.chave)}">${esc(s.titulo)}</label>${s.ajuda ? `<span class="pta-ajuda-secao">${esc(s.ajuda)}</span>` : ''}</div>
+                                    <textarea id="${id(s.chave)}" rows="${s.linhas}" data-secao="${s.chave}">${esc(partes[s.chave] || '')}</textarea>
+                                </div>`).join('')}
+                            <div class="pta-ferramentas">
+                                <button type="button" class="link-btn" data-acao="importar-rspace" data-topico="${t.id}">${icone('layers', 13)} Importar experimentos do RSpace</button>
+                                ${t.tarefas_concluidas.length ? `<button type="button" class="link-btn" data-acao="incluir-tarefas" data-topico="${t.id}">${icone('check-square', 13)} Incluir ${t.tarefas_concluidas.length === 1 ? '1 tarefa concluída' : `${t.tarefas_concluidas.length} tarefas concluídas`} no mês</button>` : ''}
                             </div>
                         </div>
-                        <span class="help" id="ajuda-avanco" aria-live="polite">De 0 a 100. Digite o número ou arraste o controle; as setas ajustam de 1 em 1.</span>
+                        <aside class="pta-editor-side">
+                            <div class="pta-painel">
+                                <h5><label for="${id('avanco-num')}">Avanço geral do tópico</label></h5>
+                                <div class="range-field">
+                                    <input type="range" id="${id('avanco')}" min="0" max="100" value="${valor}" aria-label="Avanço em porcentagem" data-acao-input="avanco-range" data-topico="${t.id}">
+                                    <div class="num-suffix">
+                                        <input type="number" id="${id('avanco-num')}" min="0" max="100" step="1" value="${valor}" inputmode="numeric" data-acao-input="avanco-num" data-topico="${t.id}">
+                                        <span aria-hidden="true">%</span>
+                                    </div>
+                                </div>
+                                <div class="pta-numeros mt-sm">
+                                    <span>Último <strong>${t.ultimo_avanco}%</strong></span>
+                                    <span>Esperado <strong>${t.esperado === null ? '—' : `${t.esperado}%`}</strong></span>
+                                </div>
+                                <p class="pta-avanco-aviso" id="${id('aviso')}" aria-live="polite"></p>
+                            </div>
+                            <div class="pta-painel">
+                                <h5>Evolução aprovada</h5>
+                                ${sparkline(t, t.historico, { w: 264, h: 56 })}
+                            </div>
+                            ${meu ? `
+                                <div class="pta-painel">
+                                    <h5>Conversa com a coordenação</h5>
+                                    ${notasHTML(meu.notas) || '<p class="text-muted text-small">Nenhuma nota ainda.</p>'}
+                                    <div class="pta-comentar mt-sm">
+                                        <input type="text" class="form-control" id="${id('comentario')}" placeholder="Escreva uma nota" maxlength="2000" aria-label="Nova nota">
+                                        <button type="button" class="btn btn-secondary btn-sm" data-acao="comentar" data-topico="${t.id}" data-relato="${meu.id}">Enviar</button>
+                                    </div>
+                                    <button type="button" class="link-btn muted mt-sm" data-acao="historico" data-relato="${meu.id}" data-titulo="${esc(t.titulo)}">Ver histórico do relato</button>
+                                </div>` : ''}
+                        </aside>
                     </div>
-
-                    <div class="input-group">
-                        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
-                            <label for="pta-descricao">Atividades do mês</label>
-                            <button type="button" class="link-btn" onclick="window.importarExperimentosRSpaceParaPTA()">
-                                ${window.Icon ? window.Icon('layers', { size: 13 }) : ''} Importar do RSpace (mês selecionado)  ___ EM DESENVOLVIMENTO
-                            </button>
-                        </div>
-                        <textarea id="pta-descricao" rows="7" placeholder="Experimentos realizados, resultados obtidos, próximos passos" required></textarea>
+                    <div class="pta-editor-acoes">
+                        <span class="pta-salvo-em">${meu ? `${STATUS[meu.status]?.rotulo || ''} · atualizado ${esc(dataHora(meu.atualizado_em))}` : 'Ainda não salvo'}</span>
+                        <button type="button" class="btn btn-secondary" data-acao="fechar" data-topico="${t.id}">Fechar</button>
+                        <button type="button" class="btn btn-secondary" data-acao="salvar" data-topico="${t.id}">Salvar rascunho</button>
+                        <button type="button" class="btn btn-primary" data-acao="enviar" data-topico="${t.id}">${meu && meu.status === 'aguardando_aprovacao' ? 'Atualizar envio' : meu && meu.status === 'devolvido' ? 'Reenviar para avaliação' : 'Enviar para avaliação'}</button>
                     </div>
-
-                    <p class="pta-resumo" id="pta-resumo" aria-live="polite"></p>
-                    <button type="submit" class="btn btn-primary btn-block">Enviar planejamento</button>
                 </form>
-            </section>
+            </td></tr>`;
+    }
 
-            <div class="stack-lg">
-                <section>
-                    <div class="section-head">
-                        <h3>Histórico consolidado deste tópico</h3>
-                        <p class="meta">evolução mês a mês</p>
+    function linhaLeitura(t) {
+        const meu = t.meu;
+        const conteudo = meu ? `
+            <div class="pta-editor-grid">
+                <div class="pta-editor-main">${descricaoHTML(meu.descricao_atividades)}</div>
+                <aside class="pta-editor-side">
+                    <div class="pta-painel">
+                        <h5>Aprovado</h5>
+                        <div class="pta-numeros"><span>Avanço <strong>${meu.percentual_avanco}%</strong></span><span>${esc(meu.avaliado_por_nome || '')}</span></div>
+                        <p class="text-muted text-small mt-sm">${esc(dataHora(meu.avaliado_em))}</p>
                     </div>
-                    <div id="ptaunificado-equipe-lista" class="entries scroll-pane">
-                        <div class="empty-state"><p>Escolha um tópico para ver a evolução percentual e o que já foi consolidado em cada mês.</p></div>
-                    </div>
-                </section>
-
-                <section id="secao-meus-envios">
-                    <div class="section-head">
-                        <h3>Meus envios em andamento</h3>
-                        <p class="meta">aguardando avaliação ou revisão</p>
-                    </div>
-                    <div id="meus-ptas-lista" class="entries scroll-pane">${window.UI.loading('Buscando envios')}</div>
-                </section>
-            </div>
-        </div>
-    `;
-
-    carregarDropdownTopicos('pta-topico');
-    carregarMeusPTAs();
-    const form = document.getElementById('form-pta');
-    form.addEventListener('submit', window.prepararEnvioRelatorio);
-    form.addEventListener('change', atualizarResumoPTA);
-    form.addEventListener('reset', () => setTimeout(atualizarResumoPTA, 0));
-    window.Salvaguardas?.vincularRascunho(form, 'pta');
-    atualizarResumoPTA();
-}
-
-// ==========================================
-// RESUMO DO PTA ANTES DE ENVIAR
-// Evita o erro mais comum: relatar no mês errado.
-// ==========================================
-const MESES_DO_ANO = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-
-function atualizarResumoPTA() {
-    const resumo = document.getElementById('pta-resumo');
-    if (!resumo) return;
-
-    const topico = document.getElementById('pta-topico');
-    const mes = parseInt(document.getElementById('pta-mes').value, 10);
-    const ano = parseInt(document.getElementById('pta-ano').value, 10);
-    const opcao = topico && topico.value ? topico.selectedOptions[0] : null;
-    const nomeTopico = opcao ? (opcao.dataset.titulo || opcao.textContent) : '';
-    const hoje = new Date();
-    const foraDoMes = mes !== hoje.getMonth() + 1 || ano !== hoje.getFullYear();
-
-    const acao = window.ptaEditandoId ? 'Você está editando o PTA de' : 'Você está registrando';
-    resumo.innerHTML = `${acao} <strong>${MESES_DO_ANO[mes - 1]} de ${ano}</strong>${nomeTopico ? ` · ${window.escapeHTML(nomeTopico)}` : ''}${foraDoMes ? ' <span class="badge badge-warning">não é o mês atual</span>' : ''}`;
-}
-
-function garantirAnoNoSeletor(ano) {
-    const select = document.getElementById('pta-ano');
-    if (!select || select.querySelector(`option[value="${ano}"]`)) return;
-    const opcao = new Option(String(ano), String(ano));
-    const depois = Array.from(select.options).find(o => parseInt(o.value, 10) > ano);
-    select.insertBefore(opcao, depois || null);
-}
-
-// ==========================================
-// AVANÇO: CONTROLE DESLIZANTE + CAIXA NUMÉRICA
-// Os dois mostram o mesmo valor. O envio lê o
-// controle (#pta-avanco); a caixa só o alimenta.
-// ==========================================
-function elementosDoAvanco() {
-    return {
-        controle: document.getElementById('pta-avanco'),
-        caixa: document.getElementById('pta-avanco-num'),
-        ajuda: document.getElementById('ajuda-avanco'),
-    };
-}
-
-function textoDeAjudaAvanco(minimo, ajustadoPara) {
-    const base = minimo > 0
-        ? `De ${minimo} a 100. O mínimo é ${minimo}%, o avanço do último PTA neste tópico.`
-        : 'De 0 a 100. Digite o número ou arraste o controle; as setas ajustam de 1 em 1.';
-    return ajustadoPara === undefined ? base : `Ajustado para ${ajustadoPara}%. ${base}`;
-}
-
-function definirAvanco(valor) {
-    const { controle, caixa } = elementosDoAvanco();
-    if (!controle || !caixa) return;
-    controle.value = valor;
-    // O controle já limita ao mínimo/máximo; a caixa mostra o valor final.
-    caixa.value = controle.value;
-    controle.setAttribute('aria-valuetext', `${controle.value}%`);
-}
-
-function definirMinimoAvanco(minimo, sincronizarComUltimo = false) {
-    const { controle, caixa, ajuda } = elementosDoAvanco();
-    if (!controle || !caixa) return;
-    controle.min = minimo;
-    caixa.min = minimo;
-    if (sincronizarComUltimo) {
-        definirAvanco(minimo);
-    } else {
-        definirAvanco(Math.max(parseInt(controle.value, 10) || 0, minimo));
-    }
-    if (ajuda) ajuda.textContent = textoDeAjudaAvanco(minimo);
-}
-
-window.sincronizarAvanco = function(origem) {
-    const { controle, caixa, ajuda } = elementosDoAvanco();
-    if (!controle || !caixa) return;
-    const minimo = parseInt(controle.min, 10) || 0;
-
-    if (origem === 'controle') {
-        caixa.value = controle.value;
-        controle.setAttribute('aria-valuetext', `${controle.value}%`);
-        return;
+                    ${notasHTML(meu.notas)}
+                    <button type="button" class="link-btn muted" data-acao="historico" data-relato="${meu.id}" data-titulo="${esc(t.titulo)}">Ver histórico do relato</button>
+                </aside>
+            </div>` : `
+            <div class="note ok"><strong>Este tópico já chegou a 100%.</strong> Não é preciso relatar novos meses.</div>
+            <div class="pta-painel mt-md"><h5>Meses aprovados</h5>
+                ${t.historico.length ? `<ul class="pta-aprovados-lista">${t.historico.map(p => `<li><span>${esc(mesAno(p.mes, p.ano))}</span><strong>${p.avanco}%</strong></li>`).join('')}</ul>` : '<p class="text-muted text-small">Sem meses aprovados.</p>'}
+            </div>`;
+        return `<tr class="pta-editor-row"><td colspan="7"><div class="pta-editor">${conteudo}
+            <div class="pta-editor-acoes"><button type="button" class="btn btn-secondary" data-acao="fechar" data-topico="${t.id}">Fechar</button></div></div></td></tr>`;
     }
 
-    const digitado = Number(caixa.value);
-    const valido = caixa.value !== '' && Number.isFinite(digitado);
+    function topicoDaFolha(id) { return (P.dados?.topicos || []).find(t => t.id === Number(id)); }
 
-    // Enquanto digita: só acompanha valores já dentro da faixa,
-    // para não "pular" o número no meio da digitação (ex.: 7 → 75).
-    if (origem === 'caixa') {
-        if (valido && digitado >= minimo && digitado <= 100) {
-            controle.value = Math.round(digitado);
-            controle.setAttribute('aria-valuetext', `${controle.value}%`);
-        }
-        return;
+    function prepararEditor(tid) {
+        const form = document.getElementById(`pta-form-${tid}`);
+        if (!form) return;
+        window.Salvaguardas?.vincularRascunho(form, `pta-${P.ano}-${P.mes}-${tid}`);
+        atualizarAvisoAvanco(tid);
+        const primeiro = form.querySelector('textarea');
+        if (primeiro && !primeiro.value) primeiro.focus({ preventScroll: true });
+        form.closest('tr')?.previousElementSibling?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
 
-    // Ao confirmar (sair da caixa ou Enter): arredonda e traz para a faixa.
-    const ajustado = valido ? Math.min(100, Math.max(minimo, Math.round(digitado))) : parseInt(controle.value, 10);
-    definirAvanco(ajustado);
-    if (ajuda) ajuda.textContent = textoDeAjudaAvanco(minimo, valido && ajustado === digitado ? undefined : ajustado);
-};
-
-function obterUltimoRelatoDoTopico(topicoId) {
-    if (!topicoId || !window.meusPtasCache || window.meusPtasCache.length === 0) return null;
-    const topicoIdNum = parseInt(topicoId, 10);
-    const doTopico = window.meusPtasCache.filter(rel => rel.topico_id == topicoIdNum);
-    if (doTopico.length === 0) return null;
-
-    if (window.ptaEditandoId) {
-        const relEditando = window.meusPtasCache.find(r => r.id === window.ptaEditandoId);
-        if (relEditando) {
-            return doTopico.find(rel =>
-                rel.ano_referencia < relEditando.ano_referencia ||
-                (rel.ano_referencia === relEditando.ano_referencia && rel.mes_referencia < relEditando.mes_referencia)
-            ) || null;
-        }
+    function lerAvanco(tid) {
+        const v = parseInt(document.getElementById(`pta-${tid}-avanco-num`)?.value, 10);
+        return Number.isFinite(v) ? Math.max(0, Math.min(100, v)) : 0;
     }
 
-    const mesForm = parseInt(document.getElementById('pta-mes')?.value, 10);
-    const anoForm = parseInt(document.getElementById('pta-ano')?.value, 10);
-    if (mesForm && anoForm) {
-        const anterior = doTopico.find(rel =>
-            rel.ano_referencia < anoForm ||
-            (rel.ano_referencia === anoForm && rel.mes_referencia < mesForm)
-        );
-        if (anterior) return anterior;
-    }
-    return doTopico[0];
-}
-
-window.atualizarAvisoUltimoPTA = function(abrirModalSeConcluido = false) {
-    const topicoElement = document.getElementById('pta-topico');
-    if (!topicoElement) return;
-    atualizarResumoPTA();
-
-    const topicoId = topicoElement.value;
-    const inputAvanco = document.getElementById('pta-avanco');
-    const inputAvancoNum = document.getElementById('pta-avanco-num');
-    const textareaDesc = document.getElementById('pta-descricao');
-    const btnSubmit = document.querySelector('#form-pta button[type="submit"]');
-    const avisoConcluido = document.getElementById('aviso-topico-concluido');
-
-    const infoConclusao = obterDadosConclusaoTopico(topicoId);
-    if (infoConclusao.concluido && !window.ptaEditandoId) {
-        if (avisoConcluido) avisoConcluido.classList.remove('hidden');
-        definirMinimoAvanco(100, true);
-        if (inputAvanco) inputAvanco.disabled = true;
-        if (inputAvancoNum) inputAvancoNum.disabled = true;
-        if (textareaDesc) {
-            textareaDesc.disabled = true;
-            textareaDesc.placeholder = "Este tópico já atingiu 100% de avanço e foi concluído.";
-        }
-        if (btnSubmit) {
-            btnSubmit.disabled = true;
-            btnSubmit.innerText = "Tópico já concluído (100%)";
-        }
-        if (abrirModalSeConcluido) {
-            window.abrirModalTopicoConcluido(topicoId);
-        }
-        return;
-    } else {
-        if (avisoConcluido) avisoConcluido.classList.add('hidden');
-        if (inputAvanco) inputAvanco.disabled = false;
-        if (inputAvancoNum) inputAvancoNum.disabled = false;
-        if (textareaDesc) {
-            textareaDesc.disabled = false;
-            textareaDesc.placeholder = "Experimentos realizados, resultados obtidos, próximos passos";
-        }
-        if (btnSubmit) {
-            btnSubmit.disabled = false;
-            btnSubmit.innerText = window.ptaEditandoId ? "Atualizar Planejamento Mensal" : "Enviar planejamento";
-        }
+    function atualizarAvisoAvanco(tid) {
+        const t = topicoDaFolha(tid);
+        const aviso = document.getElementById(`pta-${tid}-aviso`);
+        if (!t || !aviso) return;
+        const v = lerAvanco(tid);
+        const reduziu = v < t.ultimo_avanco;
+        document.getElementById(`pta-${tid}-justificativa-grupo`)?.classList.toggle('hidden', !reduziu && !document.getElementById(`pta-${tid}-justificativa`)?.value.trim());
+        let texto = '';
+        let classe = 'text-muted';
+        if (reduziu) { texto = `Menor que o último (${t.ultimo_avanco}%). Explique a redução no campo abaixo.`; classe = 'text-danger'; }
+        else if (v === t.ultimo_avanco && t.ultimo_avanco > 0) { texto = 'Mesmo avanço do mês anterior.'; classe = 'text-warning'; }
+        else if (t.esperado !== null && v < t.esperado - 15) { texto = `Abaixo do esperado para o mês (${t.esperado}%). Vale citar as dificuldades.`; classe = 'text-warning'; }
+        else if (v > t.ultimo_avanco) { texto = `+${v - t.ultimo_avanco} pontos em relação ao último.`; classe = 'text-success'; }
+        aviso.className = `pta-avanco-aviso ${classe}`;
+        aviso.textContent = texto;
     }
 
-    if (!topicoId || !window.meusPtasCache || window.meusPtasCache.length === 0) {
-        if (inputAvanco) definirMinimoAvanco(0);
-        return;
+    function lerEditor(tid) {
+        const partes = {};
+        SECOES.forEach(s => { partes[s.chave] = document.getElementById(`pta-${tid}-${s.chave}`)?.value || ''; });
+        return { partes, avanco: lerAvanco(tid) };
     }
 
-    const ultimoRelato = obterUltimoRelatoDoTopico(topicoId);
-
-    if (ultimoRelato) {
-        definirMinimoAvanco(ultimoRelato.percentual_avanco, !window.ptaEditandoId);
-    } else {
-        definirMinimoAvanco(0, !window.ptaEditandoId);
-    }
-};
-
-window.renderizarListaMeusPTAs = function() {
-    const container = document.getElementById('meus-ptas-lista');
-    if (!container) return;
-    const todos = Array.isArray(window.meusPtasCache) ? [...window.meusPtasCache] : [];
-    // Exibe apenas PTAs ainda não consolidados (enviados para avaliação ou devolvidos para revisão),
-    // evitando duplicar os PTAs consolidados que já aparecem no Histórico consolidado do tópico.
-    const relatorios = todos.filter(r => r.status !== 'consolidado' && r.is_mine !== false);
-
-    if (relatorios.length === 0) {
-        container.innerHTML = window.UI.emptyState({
-            title: 'Nenhum envio pendente',
-            description: 'Seus PTAs aguardando avaliação ou devolvidos para revisão aparecem aqui.'
-        });
-        return;
-    }
-
-    const topicoSelecionado = parseInt(document.getElementById('pta-topico')?.value, 10) || null;
-    relatorios.sort((a, b) => {
-        if (topicoSelecionado) {
-            const aMatch = a.topico_id == topicoSelecionado ? 0 : 1;
-            const bMatch = b.topico_id == topicoSelecionado ? 0 : 1;
-            if (aMatch !== bMatch) return aMatch - bMatch;
-        }
-        return b.ano_referencia - a.ano_referencia || b.mes_referencia - a.mes_referencia;
-    });
-
-    let html = '';
-    relatorios.forEach(rel => {
-        let statusClass = '';
-        let statusText = 'aguardando aprovação';
-        let meterClass = '';
-
-        if (rel.status === 'rascunho') {
-            statusClass = 'badge-danger';
-            statusText = 'devolvido para revisão';
-            meterClass = 'bad';
-        }
-
-        const nomeTopicoFormatado = resolverNomeTopicoPTA(rel);
-        const btnEditar = `<button type="button" class="link-btn" onclick="window.carregarParaEdicao(${rel.id})">Editar</button>`;
-
-        html += `
-            <article class="entry"
-                 data-topico="${encodeURIComponent(nomeTopicoFormatado || 'Sem título')}"
-                 data-mes="${String(rel.mes_referencia).padStart(2, '0')}/${rel.ano_referencia}"
-                 data-avanco="${rel.percentual_avanco}%"
-                 data-descricao="${encodeURIComponent(rel.descricao_atividades || 'Nenhuma descrição fornecida.')}">
-
-                <div class="entry-head">
-                    <h4 class="entry-title">${window.escapeHTML(nomeTopicoFormatado)}</h4>
-                    <span class="badge ${statusClass}">${statusText}</span>
-                </div>
-                <p class="meta">${String(rel.mes_referencia).padStart(2, '0')}/${rel.ano_referencia}</p>
-
-                <div class="meter">
-                    <div class="meter-track"><div class="meter-fill ${meterClass}" style="width:${rel.percentual_avanco}%"></div></div>
-                    <span class="meter-value">${rel.percentual_avanco}%</span>
-                </div>
-
-                <p class="entry-body clamp">${window.escapeHTML(rel.descricao_atividades || '')}</p>
-
-                <div class="entry-foot">
-                    <button type="button" class="link-btn muted" onclick="abrirModalDetalhesPTA(this.closest('.entry'))">Ler completo</button>
-                    ${btnEditar}
-                </div>
-            </article>
-        `;
-    });
-    container.innerHTML = html;
-};
-
-async function carregarMeusPTAs() {
-    const container = document.getElementById('meus-ptas-lista');
-    try {
-        const [res] = await Promise.all([
-            window.api.fetchProtected('/pta/meus-relatorios'),
-            window.topicosPtaPromise ? window.topicosPtaPromise.catch(() => null) : Promise.resolve()
-        ]);
-        const relatorios = await res.json();
-
-        relatorios.sort((a, b) => b.ano_referencia - a.ano_referencia || b.mes_referencia - a.mes_referencia);
-        window.meusPtasCache = relatorios;
-
-        window.atualizarIndicacaoTopicosConcluidos();
-        window.renderizarListaMeusPTAs();
-        window.carregarPTAUnificadoEquipe();
-        setTimeout(() => window.atualizarAvisoUltimoPTA(false), 100);
-    } catch (err) {
-        if (container) container.innerHTML = window.UI.errorState('Erro ao carregar histórico.');
-    }
-}
-window.prepararEnvioRelatorio = function(e) {
-    e.preventDefault();
-
-    window.sincronizarAvanco('confirmar');
-    const topicoId = parseInt(document.getElementById('pta-topico').value);
-    const avancoNovo = parseInt(document.getElementById('pta-avanco').value);
-    if (!window.ptaEditandoId && window.meusPtasCache) {
-        const ultimoRelato = obterUltimoRelatoDoTopico(topicoId);
-
-        if (ultimoRelato && ultimoRelato.percentual_avanco === avancoNovo) {
-            document.getElementById('span-avanco-repetido').innerText = avancoNovo;
-            document.getElementById('modal-confirmacao-avanco').style.display = 'flex';
-            return;
-        }
-    }
-    executarEnvioPTA();
-};
-
-window.fecharModalAvanco = function() {
-    document.getElementById('modal-confirmacao-avanco').style.display = 'none';
-};
-
-window.confirmarEnvioAvancoRepetido = function() {
-    fecharModalAvanco();
-    executarEnvioPTA();
-};
-
-window.executarEnvioPTA = async function() {
-    const payload = {
-        topico_id: parseInt(document.getElementById('pta-topico').value),
-        mes_referencia: parseInt(document.getElementById('pta-mes').value),
-        ano_referencia: parseInt(document.getElementById('pta-ano').value),
-        percentual_avanco: parseInt(document.getElementById('pta-avanco').value),
-        descricao_atividades: document.getElementById('pta-descricao').value,
-        status: "aguardando_aprovacao"
-    };
-
-    const btn = document.querySelector('#form-pta button[type="submit"]');
-    const textoOriginal = btn.innerText;
-    btn.innerHTML = '<span class="spinner"></span> Processando...';
-    btn.disabled = true;
-
-    try {
-        let res;
-        if (window.ptaEditandoId) {
-            res = await window.api.fetchProtected(`/pta/relatorios/${window.ptaEditandoId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-        } else {
-            res = await window.api.fetchProtected('/pta/salvar', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-        }
-
-        if (res.ok) {
-            window.UI.showToast(window.ptaEditandoId ? "PTA atualizado com sucesso!" : "PTA enviado com sucesso!", "success");
-
-            if (window.ptaEditandoId) {
-                window.cancelarEdicaoPTA();
-            } else {
-                document.getElementById('form-pta').reset();
-                definirAvanco(50);
+    async function salvarTopico(tid, enviar, btn) {
+        const t = topicoDaFolha(tid);
+        if (!t) return;
+        const { partes, avanco } = lerEditor(tid);
+        if (enviar) {
+            if (!partes.realizado.trim() && !partes.resultados.trim()) {
+                window.UI.showToast('Descreva o que foi realizado no mês antes de enviar.', 'error');
+                document.getElementById(`pta-${tid}-realizado`)?.focus();
+                return;
             }
-            carregarMeusPTAs();
-        } else {
-            const errData = await res.json();
-            window.UI.showToast(errData.detail || "Erro ao salvar o PTA", "error");
-        }
-    } catch (err) {
-        window.UI.showToast("Falha de conexão.", "error");
-    } finally {
-        btn.innerText = textoOriginal;
-        btn.disabled = false;
-    }
-};
-// ==========================================
-// VISÃO DO ADMIN
-// ==========================================
-function renderPTACoordenador() {
-    const main = document.getElementById('dynamic-content');
-    const dataAtual = new Date();
-    const anoAtual = dataAtual.getFullYear();
-
-    main.innerHTML = `
-        <header class="page-head fade-in">
-            <div>
-                <p class="eyebrow">coordenação</p>
-                <h1>Planejamento mensal</h1>
-                <p class="lede">Escolha um mês para avaliar os PTAs enviados e gerar o texto consolidado.</p>
-            </div>
-            <div class="cluster">
-                <button type="button" class="btn btn-secondary btn-sm" onclick="window.renderPTAPesquisador()">Visão pesquisador / Preencher PTA</button>
-                <div class="year-nav">
-                    <button class="icon-btn" onclick="mudarAnoCalendario(-1)" aria-label="Ano anterior">${window.Icon('chevron-left', { size: 16 })}</button>
-                    <span id="calendario-ano-display" class="mono">${anoAtual}</span>
-                    <button class="icon-btn" onclick="mudarAnoCalendario(1)" aria-label="Próximo ano">${window.Icon('chevron-right', { size: 16 })}</button>
-                </div>
-            </div>
-        </header>
-
-        <div class="meses-grid fade-in" id="grid-meses"></div>
-
-        <div id="painel-mes-detalhe" class="month-panel hidden">
-            <div class="section-head">
-                <h3 id="painel-titulo">Mês</h3>
-                <button class="link-btn muted" onclick="fecharPainelMes()">Fechar mês</button>
-            </div>
-
-            <div class="columns">
-                <section>
-                    <div class="section-head"><h3>Aguardando avaliação</h3></div>
-                    <div id="lista-pendencias" class="entries scroll-pane"></div>
-                </section>
-
-                <section>
-                    <div class="section-head"><h3>Texto consolidado</h3></div>
-                    <p class="text-muted text-small mb-md">Reúne em um único texto os PTAs <strong>aprovados</strong> do tópico neste mês.</p>
-
-                    <div class="input-group">
-                        <label for="ia-topico-id">Tópico</label>
-                        <select id="ia-topico-id"></select>
-                    </div>
-
-                    <button id="btn-gerar-ia" class="btn btn-secondary" onclick="gerarSinteseIA()">Gerar texto</button>
-
-                    <div id="resultado-ia" class="note accent mt-md hidden">
-                        <p class="mono">gerado por IA · revise antes de usar</p>
-                        <p id="texto-ia" class="pre-wrap"></p>
-                    </div>
-                </section>
-            </div>
-
-            <section class="mt-md">
-                <div class="section-head"><h3>Aprovados</h3></div>
-                <div id="lista-aprovados" class="entries"></div>
-            </section>
-        </div>
-
-        <div class="columns setup-forms fade-in">
-            <section>
-                <div class="section-head"><h3>Novo tópico de pesquisa</h3></div>
-                <form id="form-novo-topico">
-                    <div class="input-group">
-                        <label for="novo-topico-titulo">Título</label>
-                        <input type="text" id="novo-topico-titulo" required>
-                    </div>
-                    <div class="input-group">
-                        <label for="novo-topico-ano">Ano vigente</label>
-                        <input type="number" id="novo-topico-ano" class="mono" value="${anoAtual}" required oninput="window.atualizarPreviewPrazoNovoTopico()">
-                    </div>
-                    <div class="field-grid">
-                        <div class="input-group">
-                            <label for="novo-topico-mes-inicio">Mês de início</label>
-                            <select id="novo-topico-mes-inicio" required onchange="window.atualizarPreviewPrazoNovoTopico()">
-                                ${MESES_DO_ANO.map((nome, i) => `<option value="${i + 1}" ${i === 0 ? 'selected' : ''}>${String(i + 1).padStart(2, '0')} · ${nome[0].toUpperCase() + nome.slice(1)}</option>`).join('')}
-                            </select>
-                        </div>
-                        <div class="input-group">
-                            <label for="novo-topico-mes-fim">Previsão de término</label>
-                            <select id="novo-topico-mes-fim" required onchange="window.atualizarPreviewPrazoNovoTopico()">
-                                ${MESES_DO_ANO.map((nome, i) => `<option value="${i + 1}" ${i === 11 ? 'selected' : ''}>${String(i + 1).padStart(2, '0')} · ${nome[0].toUpperCase() + nome.slice(1)}</option>`).join('')}
-                            </select>
-                        </div>
-                    </div>
-                    <p class="help" id="preview-prazo-novo-topico" style="margin-top:-4px; margin-bottom:var(--space-3);">Previsão: 01/${String(anoAtual).slice(-2)} → 12/${String(anoAtual).slice(-2)}</p>
-                    <button type="submit" class="btn btn-secondary">Cadastrar tópico</button>
-                </form>
-            </section>
-
-            <section>
-                <div class="section-head"><h3>Importar histórico</h3></div>
-                <form id="form-importar-pta">
-                    <div class="input-group">
-                        <label for="import-pta-ano">Ano de referência</label>
-                        <input type="number" id="import-pta-ano" class="mono" value="${anoAtual}" required>
-                    </div>
-                    <div class="input-group">
-                        <label for="import-pta-arquivo">Planilha (.xlsx)</label>
-                        <input type="file" id="import-pta-arquivo" accept=".xlsx, .xls" required>
-                    </div>
-                    <button type="submit" class="btn btn-secondary">Importar planilha</button>
-                </form>
-            </section>
-        </div>
-    `;
-
-    document.getElementById('form-novo-topico').addEventListener('submit', criarTopicoAction);
-    document.getElementById('form-importar-pta').addEventListener('submit', importarMatrizPTAAction);
-
-    window.estadoCalendario = { ano: anoAtual, mesSelecionado: null };
-    renderizarMeses();
-    carregarDropdownTopicos('ia-topico-id');
-}
-
-// ==========================================
-// FUNÇÕES DO CALENDÁRIO
-// ==========================================
-window.mudarAnoCalendario = function(delta) {
-    window.estadoCalendario.ano += delta;
-    document.getElementById('calendario-ano-display').innerText = window.estadoCalendario.ano;
-    fecharPainelMes();
-    renderizarMeses();
-}
-
-function renderizarMeses() {
-    const nomesMeses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-    const grid = document.getElementById('grid-meses');
-    let html = '';
-
-    nomesMeses.forEach((nome, index) => {
-        const numMes = index + 1;
-        const isActive = window.estadoCalendario.mesSelecionado === numMes ? 'active' : '';
-        html += `<div class="mes-card ${isActive}" id="card-mes-${numMes}" role="button" tabindex="0" onclick="selecionarMes(${numMes}, '${nome}')">${nome}</div>`;
-    });
-    grid.innerHTML = html;
-}
-
-window.selecionarMes = function(mes, nomeMes) {
-    window.estadoCalendario.mesSelecionado = mes;
-    document.querySelectorAll('.mes-card').forEach(el => el.classList.remove('active'));
-    document.getElementById(`card-mes-${mes}`).classList.add('active');
-
-    const painel = document.getElementById('painel-mes-detalhe');
-    painel.classList.remove('hidden');
-    const mesExtenso = new Date(window.estadoCalendario.ano, mes - 1, 1).toLocaleDateString('pt-BR', { month: 'long' });
-    document.getElementById('painel-titulo').innerText = `${mesExtenso.charAt(0).toUpperCase() + mesExtenso.slice(1)} de ${window.estadoCalendario.ano}`;
-    document.getElementById('resultado-ia').classList.add('hidden');
-
-    carregarPendenciasChefia(mes, window.estadoCalendario.ano);
-    carregarAprovadosChefia(mes, window.estadoCalendario.ano);
-}
-window.fecharPainelMes = function() {
-    document.getElementById('painel-mes-detalhe').classList.add('hidden');
-    window.estadoCalendario.mesSelecionado = null;
-    document.querySelectorAll('.mes-card').forEach(el => el.classList.remove('active'));
-}
-
-// ==========================================
-// CARREGAR DADOS DO MÊS
-// ==========================================
-window.carregarPendenciasChefia = async function(mes, ano) {
-    const container = document.getElementById('lista-pendencias');
-    container.innerHTML = window.UI.loading();
-
-    try {
-        const [res] = await Promise.all([
-            window.api.fetchProtected(`/pta/chefia/pendentes?mes=${mes}&ano=${ano}`),
-            window.topicosPtaPromise ? window.topicosPtaPromise.catch(() => null) : Promise.resolve()
-        ]);
-        const relatorios = await res.json();
-
-        if (relatorios.length === 0) {
-            container.innerHTML = window.UI.emptyState({ title: 'Nada aguardando avaliação', description: 'Nenhum PTA pendente neste mês.' });
-            return;
-        }
-
-        let html = '';
-        relatorios.forEach(rel => {
-            let notasHtml = '';
-            if (rel.notas && rel.notas.length > 0) {
-                notasHtml = '<div class="thread"><p class="thread-label">notas da equipe</p>';
-                rel.notas.forEach(nota => {
-                    notasHtml += `<div class="thread-item"><p><strong>${window.escapeHTML(nota.autor_nome)}</strong> ${window.escapeHTML(nota.texto)}</p></div>`;
-                });
-                notasHtml += '</div>';
+            if (avanco < t.ultimo_avanco && !partes.justificativa.trim()) {
+                window.UI.showToast('Explique por que o avanço ficou menor que o último.', 'error');
+                document.getElementById(`pta-${tid}-justificativa`)?.focus();
+                return;
             }
-
-            const nomeTopico = resolverNomeTopicoPTA(rel);
-
-            html += `
-                <article class="entry" id="card-relatorio-${rel.id}">
-                    <div class="entry-head">
-                        <h4 class="entry-title">${window.escapeHTML(rel.usuario_nome || `Usuário #${rel.usuario_id}`)}</h4>
-                        <span class="mono">${rel.percentual_avanco || 0}%</span>
-                    </div>
-                    <p class="meta">${window.escapeHTML(nomeTopico)}</p>
-                    <p class="entry-body pre-wrap">${window.escapeHTML(rel.descricao_atividades || 'Sem descrição')}</p>
-
-                    ${notasHtml}
-
-                    <div class="entry-foot">
-                        <button class="btn btn-primary btn-sm" onclick="avaliarRelato(${rel.id}, true)">Aprovar</button>
-                        <button class="link-btn danger" onclick="window.abrirModalDevolucao(${rel.id})">Devolver com observação</button>
-                    </div>
-                </article>
-            `;
-        });
-        container.innerHTML = html;
-    } catch (err) {
-        container.innerHTML = window.UI.errorState('Erro ao carregar dados.');
-    }
-}
-
-window.carregarAprovadosChefia = async function(mes, ano) {
-    const container = document.getElementById('lista-aprovados');
-    container.innerHTML = window.UI.loading();
-
-    try {
-        const res = await window.api.fetchProtected(`/pta/chefia/aprovados?mes=${mes}&ano=${ano}`);
-        if (!res.ok) throw new Error("Rota não encontrada");
-        const aprovados = await res.json();
-
-        if (aprovados.length === 0) {
-            container.innerHTML = window.UI.emptyState({ title: 'Nenhum PTA aprovado neste mês' });
-            return;
-        }
-        const mapaRelatorios = new Map();
-
-        aprovados.forEach(rel => {
-            const chave = rel.descricao_atividades.trim();
-            if (!mapaRelatorios.has(chave)) {
-                mapaRelatorios.set(chave, rel);
-            }
-
-        });
-
-        const aprovadosDeduplicados = Array.from(mapaRelatorios.values());
-
-        let html = '';
-        aprovadosDeduplicados.forEach(rel => {
-            html += `
-                <article class="entry">
-                    <div class="entry-head">
-                        <h4 class="entry-title">${window.escapeHTML(rel.topico_titulo)}</h4>
-                        <span class="mono">${rel.percentual_avanco}%</span>
-                    </div>
-                    <div class="meter">
-                        <div class="meter-track"><div class="meter-fill ok" style="width:${rel.percentual_avanco || 0}%"></div></div>
-                        <span class="meter-value">${rel.percentual_avanco || 0}%</span>
-                    </div>
-                    <p class="entry-body pre-wrap">${window.escapeHTML(rel.descricao_atividades)}</p>
-                </article>
-            `;
-        });
-        container.innerHTML = html;
-    } catch (err) {
-        container.innerHTML = window.UI.errorState('Não foi possível carregar os PTAs aprovados.');
-    }
-}
-
-// ==========================================
-// AÇÕES DO ADMIN
-// ==========================================
-window.avaliarRelato = async function(id, aprovado) {
-    try {
-        const res = await window.api.fetchProtected(`/pta/chefia/avaliar/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ aprovado: aprovado })
-        });
-
-        if (res.ok) {
-            window.UI.showToast(aprovado ? "Relatório Aprovado!" : "Devolvido para o pesquisador.", "success");
-            const card = document.getElementById(`card-relatorio-${id}`);
-            if (card) card.style.display = 'none';
-
-            if (aprovado) {
-                carregarAprovadosChefia(window.estadoCalendario.mesSelecionado, window.estadoCalendario.ano);
+            if (avanco === t.ultimo_avanco && t.ultimo_avanco > 0) {
+                const ok = await window.UI.confirm(`O avanço informado (${avanco}%) é o mesmo do último relato deste tópico. Enviar assim mesmo?`, { title: 'Avanço repetido', confirmText: 'Enviar' });
+                if (!ok) return;
             }
         }
-    } catch (err) {
-        window.UI.showToast("Falha ao avaliar.", "error");
-    }
-}
-
-window.gerarSinteseIA = async function() {
-    const topicoId = document.getElementById('ia-topico-id').value;
-    const mes = window.estadoCalendario.mesSelecionado;
-    const ano = window.estadoCalendario.ano;
-
-    if (!topicoId) {
-        window.UI.showToast("Selecione um tópico na lista acima primeiro.", "error"); return;
-    }
-    if (!mes) {
-        window.UI.showToast("Erro: Nenhum mês selecionado.", "error"); return;
-    }
-
-    const btn = document.getElementById('btn-gerar-ia');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<span class="spinner"></span> Processando...';
-    btn.disabled = true;
-    document.getElementById('resultado-ia').classList.add('hidden');
-
-    try {
-        const res = await window.api.fetchProtected(`/pta/chefia/sintetizar?topico_id=${topicoId}&mes=${mes}&ano=${ano}`, {
-            method: 'POST'
-        });
-        const data = await res.json();
-
-        if (res.ok) {
-            document.getElementById('resultado-ia').classList.remove('hidden');
-            document.getElementById('texto-ia').innerText = data.sintese;
-            if (!data.sintese.includes('Não há Planejamento Mensal aprovado')) {
-                 window.UI.showToast("Síntese gerada com sucesso!", "success");
-            }
-        } else {
-            window.UI.showToast(data.detail || "Erro ao processar na IA.", "error");
-        }
-    } catch (err) {
-        window.UI.showToast("Falha na comunicação com a Inteligência Artificial.", "error");
-    } finally {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-    }
-}
-
-window.atualizarPreviewPrazoNovoTopico = function() {
-    const anoEl = document.getElementById('novo-topico-ano');
-    const iniEl = document.getElementById('novo-topico-mes-inicio');
-    const fimEl = document.getElementById('novo-topico-mes-fim');
-    const prevEl = document.getElementById('preview-prazo-novo-topico');
-    if (!anoEl || !iniEl || !fimEl || !prevEl) return;
-
-    const ini = parseInt(iniEl.value, 10) || 1;
-    let fim = parseInt(fimEl.value, 10) || 12;
-    if (fim < ini) {
-        fim = ini;
-        fimEl.value = String(fim);
-    }
-    const anoCurto = String(anoEl.value || '').slice(-2);
-    const qtdMeses = fim - ini + 1;
-    prevEl.textContent = `Previsão no ano: ${String(ini).padStart(2, '0')}/${anoCurto} → ${String(fim).padStart(2, '0')}/${anoCurto} (${qtdMeses} ${qtdMeses === 1 ? 'mês' : 'meses'})`;
-};
-
-async function criarTopicoAction(e) {
-    e.preventDefault();
-    const mesInicio = parseInt(document.getElementById('novo-topico-mes-inicio')?.value, 10) || 1;
-    const mesFim = parseInt(document.getElementById('novo-topico-mes-fim')?.value, 10) || 12;
-    if (mesFim < mesInicio) {
-        window.UI.showToast("O mês de término não pode ser anterior ao mês de início.", "error");
-        return;
-    }
-    const payload = {
-        titulo: document.getElementById('novo-topico-titulo').value,
-        ano: parseInt(document.getElementById('novo-topico-ano').value, 10),
-        mes_inicio: mesInicio,
-        mes_fim: mesFim
-    };
-
-    const btn = e.target.querySelector('button');
-    const textoOriginal = btn.innerHTML;
-    btn.innerHTML = '<span class="spinner"></span> Cadastrando...';
-    btn.disabled = true;
-
-    try {
-        const res = await window.api.fetchProtected('/pta/topicos', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-
-        if (res.ok) {
-            window.UI.showToast("Tópico criado com sucesso!", "success");
-            e.target.reset();
-            carregarDropdownTopicos('ia-topico-id');
-        } else {
-            window.UI.showToast("Erro ao criar tópico.", "error");
-        }
-    } catch (err) {
-        window.UI.showToast("Falha de conexão.", "error");
-    } finally {
-        btn.innerHTML = textoOriginal;
-        btn.disabled = false;
-    }
-}
-
-// ==========================================
-// IMPORTAÇÃO DE HISTÓRICO
-// ==========================================
-async function importarMatrizPTAAction(e) {
-    e.preventDefault();
-
-    const arquivoInput = document.getElementById('import-pta-arquivo');
-    const anoInput = document.getElementById('import-pta-ano');
-    const btn = e.target.querySelector('button');
-
-    if (arquivoInput.files.length === 0) {
-        window.UI.showToast("Selecione um arquivo Excel.", "error");
-        return;
-    }
-
-    const arquivo = arquivoInput.files[0];
-    const ano = anoInput.value;
-
-    const formData = new FormData();
-    formData.append('file', arquivo);
-    formData.append('ano', ano);
-
-    const textoOriginal = btn.innerHTML;
-    btn.innerHTML = '<span class="spinner"></span> Processando...';
-    btn.disabled = true;
-
-    try {
-        const res = await window.api.fetchProtected('/pta/import-history', {
-            method: 'POST',
-            body: formData
-        });
-
-        const data = await res.json();
-
-        if (res.ok) {
-            window.UI.showToast(data.mensagem || "Importação concluída!", "success");
-            e.target.reset();
-            carregarDropdownTopicos('ia-topico-id');
-            if (window.estadoCalendario.mesSelecionado) {
-                carregarAprovadosChefia(window.estadoCalendario.mesSelecionado, window.estadoCalendario.ano);
-            }
-        } else {
-            window.UI.showToast(data.detail || "Erro ao processar planilha.", "error");
-        }
-    } catch (err) {
-        window.UI.showToast("Falha na comunicação com o servidor.", "error");
-    } finally {
-        btn.innerHTML = textoOriginal;
-        btn.disabled = false;
-    }
-}
-
-// ==========================================
-// DETALHES DO PTA
-// ==========================================
-window.abrirModalDetalhesPTA = function(elemento) {
-    const topico = decodeURIComponent(elemento.getAttribute('data-topico'));
-    const mes = elemento.getAttribute('data-mes');
-    const avanco = elemento.getAttribute('data-avanco');
-    const descricao = decodeURIComponent(elemento.getAttribute('data-descricao'));
-
-    document.getElementById('modal-detalhes-topico').innerText = topico;
-    document.getElementById('modal-detalhes-mes').innerText = mes;
-    document.getElementById('modal-detalhes-avanco').innerText = avanco;
-    document.getElementById('modal-detalhes-descricao').innerText = descricao;
-    document.getElementById('pta-detalhes-modal').style.display = 'flex';
-};
-
-window.fecharModalDetalhesPTA = function() {
-    document.getElementById('pta-detalhes-modal').style.display = 'none';
-};
-
-window.addEventListener('click', function(e) {
-    const modal = document.getElementById('pta-detalhes-modal');
-    if (e.target === modal) {
-        fecharModalDetalhesPTA();
-    }
-});
-
-// ==========================================
-// EDIÇÃO DE PTA PRÓPRIO
-// ==========================================
-window.carregarParaEdicao = function(id) {
-    const rel = window.meusPtasCache.find(r => r.id === id);
-    if(!rel) return;
-
-    document.getElementById('pta-topico').value = rel.topico_id;
-    document.getElementById('pta-mes').value = rel.mes_referencia;
-    garantirAnoNoSeletor(rel.ano_referencia);
-    document.getElementById('pta-ano').value = rel.ano_referencia;
-
-    window.ptaEditandoId = rel.id;
-
-    window.atualizarAvisoUltimoPTA();
-
-    definirAvanco(rel.percentual_avanco);
-    document.getElementById('pta-descricao').value = rel.descricao_atividades;
-    window.Salvaguardas?.vincularRascunho(document.getElementById('form-pta'), `pta-edicao-${rel.id}`);
-    atualizarResumoPTA();
-
-    const btnSubmit = document.querySelector('#form-pta button[type="submit"]');
-    btnSubmit.innerText = "Atualizar Planejamento Mensal";
-
-    if(!document.getElementById('btn-cancelar-edicao')) {
-        const btnCancel = document.createElement('button');
-        btnCancel.id = 'btn-cancelar-edicao';
-        btnCancel.type = 'button';
-        btnCancel.innerText = "Cancelar Edição";
-        btnCancel.className = 'btn btn-secondary btn-block mt-sm';
-        btnCancel.onclick = window.cancelarEdicaoPTA;
-        btnSubmit.parentNode.insertBefore(btnCancel, btnSubmit.nextSibling);
-    }
-
-    window.UI.showToast("Planejamento carregado para edição.", "info");
-    document.getElementById('dynamic-content').scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-window.cancelarEdicaoPTA = function() {
-    window.ptaEditandoId = null;
-    document.getElementById('form-pta').reset();
-    document.getElementById('form-pta').dataset.rascunho = 'pta';
-    definirAvanco(50);
-
-    const btnSubmit = document.querySelector('#form-pta button[type="submit"]');
-    btnSubmit.innerText = "Enviar Planejamento Mensal";
-
-    const btnCancel = document.getElementById('btn-cancelar-edicao');
-    if(btnCancel) btnCancel.remove();
-
-    window.atualizarAvisoUltimoPTA();
-}
-
-// ==========================================
-// PTA UNIFICADO DA EQUIPE E NOTAS
-// ==========================================
-window.carregarPTAUnificadoEquipe = async function() {
-    const topicoId = document.getElementById('pta-topico').value;
-    const mes = document.getElementById('pta-mes').value;
-    const ano = document.getElementById('pta-ano').value;
-    const container = document.getElementById('ptaunificado-equipe-lista');
-
-    if (!topicoId || !mes || !ano) return;
-
-    container.innerHTML = window.UI.loading('Buscando PTAs da equipe');
-
-    try {
-        const res = await window.api.fetchProtected(`/pta/equipe/ptaunificado?topico_id=${topicoId}&mes=${mes}&ano=${ano}`);
-        if (!res.ok) throw new Error("Falha na API.");
-        const relatoriosApi = await res.json();
-
-        // Garante que todos os meses consolidados do tópico apareçam uma única vez (sem duplicar)
-        const mapaPorMes = new Map();
-        const doCache = Array.isArray(window.meusPtasCache)
-            ? window.meusPtasCache.filter(r => r.topico_id == parseInt(topicoId, 10) && r.status === 'consolidado')
-            : [];
-
-        [...relatoriosApi, ...doCache].forEach(r => {
-            const m = r.mes_referencia || parseInt(mes, 10);
-            const a = r.ano_referencia || parseInt(ano, 10);
-            const chave = `${a}-${String(m).padStart(2, '0')}-${r.status === 'consolidado' ? 'cons' : r.id}`;
-            if (!mapaPorMes.has(chave)) {
-                mapaPorMes.set(chave, {
-                    ...r,
-                    topico_id: r.topico_id || parseInt(topicoId, 10),
-                    mes_referencia: m,
-                    ano_referencia: a,
-                    descricao: r.descricao || r.descricao_atividades || ''
-                });
-            }
-        });
-
-        const relatoriosExibir = Array.from(mapaPorMes.values()).sort((a, b) =>
-            (b.ano_referencia || 0) - (a.ano_referencia || 0) ||
-            (b.mes_referencia || 0) - (a.mes_referencia || 0)
-        );
-
-        if (relatoriosExibir.length === 0) {
-            container.innerHTML = window.UI.emptyState({ title: 'Nenhum registro neste tópico', description: 'Nenhum PTA consolidado ou enviado neste tópico.' });
-            return;
-        }
-
-        let html = '';
-
-        relatoriosExibir.forEach(rel => {
-            const nomeTopico = window.escapeHTML(resolverNomeTopicoPTA(rel));
-            const descricaoSegura = window.escapeHTML(rel.descricao || 'Nenhuma descrição fornecida.');
-            const numMes = rel.mes_referencia || parseInt(mes, 10);
-            const numAno = rel.ano_referencia || parseInt(ano, 10);
-            const mesAnoStr = `${String(numMes).padStart(2, '0')}/${numAno}`;
-            const meterClass = rel.status === 'consolidado' ? 'ok' : '';
-
-            html += `
-                <article class="entry"
-                     data-topico="${encodeURIComponent(resolverNomeTopicoPTA(rel) || 'Sem título')}"
-                     data-mes="${mesAnoStr}"
-                     data-avanco="${rel.percentual_avanco || 0}%"
-                     data-descricao="${encodeURIComponent(rel.descricao || 'Nenhuma descrição fornecida.')}">
-                    <div class="entry-head">
-                        <h4 class="entry-title">${nomeTopico}</h4>
-                    </div>
-                    <p class="meta">${mesAnoStr}</p>
-                    <div class="meter">
-                        <div class="meter-track"><div class="meter-fill ${meterClass}" style="width:${rel.percentual_avanco || 0}%"></div></div>
-                        <span class="meter-value">${rel.percentual_avanco || 0}%</span>
-                    </div>
-                    <p class="entry-body pre-wrap">${descricaoSegura}</p>
-                </article>
-            `;
-        });
-        container.innerHTML = html;
-    } catch (err) {
-        console.error("Erro interno do JS:", err);
-        container.innerHTML = window.UI.errorState('Erro ao carregar o Planejamento Mensal.');
-    }
-};
-
-window.adicionarNotaPTA = async function(relatorioId) {
-    const input = document.getElementById(`input-nota-${relatorioId}`);
-    const texto = input.value.trim();
-    if (!texto) return;
-
-    input.disabled = true;
-    try {
-        const res = await window.api.fetchProtected(`/pta/relatorios/${relatorioId}/notas`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ texto: texto })
-        });
-        if (res.ok) {
-            window.UI.showToast("Nota adicionada!", "success");
-            window.carregarPTAUnificadoEquipe();
-        } else {
-            window.UI.showToast("Erro ao adicionar nota.", "error");
-        }
-    } catch (err) {
-        window.UI.showToast("Falha de conexão.", "error");
-    } finally {
-        input.disabled = false;
-        input.value = '';
-    }
-};
-
-window.deletarNotaPTA = async function(notaId) {
-    const ok = await window.UI.confirm("Esta nota será apagada permanentemente.", { title: 'Apagar nota?', danger: true, confirmText: 'Apagar' });
-    if (!ok) return;
-
-    try {
-        const res = await window.api.fetchProtected(`/pta/notas/${notaId}`, {
-            method: 'DELETE'
-        });
-        if (res.ok) {
-            window.UI.showToast("Nota apagada.", "success");
-            window.carregarPTAUnificadoEquipe();
-        }
-    } catch (err) {
-        window.UI.showToast("Falha de conexão.", "error");
-    }
-};
-
-// ==========================================
-// DEVOLUÇÃO PTA
-// ==========================================
-window.abrirModalDevolucao = function(relatorioId) {
-    window.relatorioParaDevolver = relatorioId;
-
-    let modal = document.getElementById('modal-devolucao');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'modal-devolucao';
-        modal.className = 'modal-overlay';
-        modal.innerHTML = `
-            <div class="modal-content modal-sm">
-                <div class="modal-header"><h3>Devolver para revisão</h3></div>
-                <p class="dialog-text mb-md">A observação fica anexada ao PTA para orientar a correção.</p>
-
-                <label for="texto-motivo-devolucao">O que precisa ser ajustado</label>
-                <textarea id="texto-motivo-devolucao" rows="4" placeholder="Ex.: faltou detalhar a curva de temperatura do experimento 2"></textarea>
-
-                <div class="modal-footer">
-                    <button onclick="window.fecharModalDevolucao()" class="btn btn-secondary">Cancelar</button>
-                    <button onclick="window.confirmarDevolucao()" class="btn btn-danger">Devolver</button>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal && !document.getElementById('texto-motivo-devolucao').value.trim()) window.fecharModalDevolucao();
+        if (avanco >= t.ultimo_avanco) partes.justificativa = '';
+        const payload = {
+            topico_id: t.id, mes_referencia: P.mes, ano_referencia: P.ano,
+            percentual_avanco: avanco, descricao_atividades: comporDescricao(partes),
+            status: enviar ? 'aguardando_aprovacao' : 'rascunho',
+        };
+        await comBotao(btn, enviar ? 'Enviando' : 'Salvando', async () => {
+            try {
+                await req('/pta/salvar', { method: 'POST', json: payload });
+                const form = document.getElementById(`pta-form-${tid}`);
+                if (form) { delete form.dataset.sujo; window.Salvaguardas?.apagarRascunho(form); }
+                window.UI.showToast(enviar ? 'Relato enviado para avaliação.' : 'Rascunho salvo.', 'success');
+                if (enviar) P.aberto = null;
+                await carregarFolha();
+            } catch (err) { erroToast(err); }
         });
     }
-    document.getElementById('texto-motivo-devolucao').value = '';
-    modal.style.display = 'flex';
-};
 
-window.fecharModalDevolucao = function() {
-    const modal = document.getElementById('modal-devolucao');
-    if (modal) modal.style.display = 'none';
-    window.relatorioParaDevolver = null;
-};
-
-window.confirmarDevolucao = async function() {
-    const relatorioId = window.relatorioParaDevolver;
-    const motivo = document.getElementById('texto-motivo-devolucao').value.trim();
-
-    if (!motivo) {
-        window.UI.showToast("Por favor, escreva um motivo para a devolução.", "error");
-        return;
-    }
-    try {
-        await window.api.fetchProtected(`/pta/relatorios/${relatorioId}/notas`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ texto: `[AVALIAÇÃO DA CHEFIA]: ${motivo}` })
+    async function enviarRascunhos(btn) {
+        const prontos = (P.dados?.topicos || []).filter(t => t.meu && t.meu.status === 'rascunho' && (t.meu.descricao_atividades || '').trim());
+        if (!prontos.length) return;
+        const ok = await window.UI.confirm(`Enviar para avaliação: ${prontos.map(t => t.titulo).join(', ')}.`, { title: `Enviar ${prontos.length} rascunho(s)?`, confirmText: 'Enviar' });
+        if (!ok) return;
+        await comBotao(btn, 'Enviando', async () => {
+            try {
+                const r = await req('/pta/salvar-lote', { method: 'POST', json: { itens: prontos.map(t => ({
+                    topico_id: t.id, mes_referencia: P.mes, ano_referencia: P.ano,
+                    percentual_avanco: t.meu.percentual_avanco, descricao_atividades: t.meu.descricao_atividades,
+                    status: 'aguardando_aprovacao',
+                })) } });
+                if (r.erros.length) window.UI.showToast(`${r.salvos.length} enviado(s). Falhou: ${r.erros.map(e => e.erro).join('; ')}`, 'warning');
+                else window.UI.showToast(`${r.salvos.length} relato(s) enviado(s) para avaliação.`, 'success');
+                await carregarFolha();
+            } catch (err) { erroToast(err); }
         });
-        window.fecharModalDevolucao();
-        window.avaliarRelato(relatorioId, false);
-
-    } catch (err) {
-        window.UI.showToast("Falha ao processar o feedback de devolução.", "error");
     }
-};
 
-// ==========================================
-// IMPORTAR EXPERIMENTOS DO RSPACE PARA O PTA DO MÊS
-// ==========================================
-window.importarExperimentosRSpaceParaPTA = async function() {
-    const mes = document.getElementById('pta-mes')?.value;
-    const ano = document.getElementById('pta-ano')?.value;
-    const textarea = document.getElementById('pta-descricao');
-    if (!textarea) return;
+    async function podeSairDoEditor() {
+        const form = P.aberto && document.getElementById(`pta-form-${P.aberto}`);
+        if (!form || !form.dataset.sujo) return true;
+        return window.UI.confirm('As alterações deste tópico ainda não foram salvas. Elas ficam guardadas neste navegador como rascunho local.', { title: 'Sair sem salvar?', confirmText: 'Sair', cancelText: 'Continuar editando' });
+    }
 
-    try {
-        window.UI.showToast('Consultando experimentos do mês no RSpace...', 'info');
-        const res = await window.api.fetchProtected(`/rspace/documents?mes=${encodeURIComponent(mes || '')}&ano=${encodeURIComponent(ano || '')}&limit=30`);
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-            throw new Error(data.detail || 'Não foi possível buscar experimentos no RSpace.');
-        }
+    async function irParaMes(mes, ano, abrir = null) {
+        if (!(await podeSairDoEditor())) return;
+        const form = P.aberto && document.getElementById(`pta-form-${P.aberto}`);
+        if (form) delete form.dataset.sujo;
+        renderPTAPesquisador({ mes, ano, abrir });
+    }
 
-        const docs = data.documents || [];
-        if (!docs.length) {
-            window.UI.showToast(`Nenhum experimento modificado em ${mes}/${ano} foi encontrado no RSpace.`, 'warning');
-            return;
-        }
-
-        const linhas = docs.map((d) => {
-            const tags = (d.tags && d.tags.length) ? ` [${d.tags.join(', ')}]` : '';
-            return `• [${d.global_id}] ${d.titulo} (${d.formulario || 'ELN'})${tags}`;
-        });
-        const bloco = `Experimentos registrados no RSpace (${mes}/${ano}):\n${linhas.join('\n')}`;
-        textarea.value = textarea.value.trim() ? `${textarea.value.trim()}\n\n${bloco}` : bloco;
+    function anexarTexto(textarea, texto) {
+        if (!textarea) return;
+        textarea.value = textarea.value.trim() ? `${textarea.value.trim()}\n${texto}` : texto;
         textarea.dispatchEvent(new Event('input', { bubbles: true }));
-        window.UI.showToast(`${docs.length} experimento(s) do RSpace importado(s) para o relato!`, 'success');
-    } catch (err) {
-        window.UI.showToast(err.message || 'Erro ao importar do RSpace.', 'error');
+        textarea.focus();
     }
-};
+
+    async function importarRSpace(tid, btn) {
+        await comBotao(btn, 'Consultando o RSpace', async () => {
+            try {
+                const data = await req(`/rspace/documents?mes=${P.mes}&ano=${P.ano}&limit=30`);
+                const docs = data.documents || [];
+                if (!docs.length) { window.UI.showToast(`Nenhum experimento seu foi modificado no RSpace em ${nomeMes(P.mes).toLowerCase()}.`, 'warning'); return; }
+                const linhas = docs.map(d => `• [${d.global_id}] ${d.titulo}${d.tags && d.tags.length ? ` (${d.tags.join(', ')})` : ''}`);
+                anexarTexto(document.getElementById(`pta-${tid}-realizado`), linhas.join('\n'));
+                window.UI.showToast(`${docs.length} experimento(s) incluído(s) em “Realizado”. Revise antes de enviar.`, 'success');
+            } catch (err) { erroToast(err); }
+        });
+    }
+
+    function aoClicarFolha(e) {
+        const alvo = e.target.closest('[data-acao]');
+        if (!alvo || alvo.dataset.acaoInput) return;
+        const acao = alvo.dataset.acao;
+        const tid = Number(alvo.dataset.topico);
+        if (acao === 'alternar') {
+            if (e.target.closest('.pta-editor')) return;
+            e.preventDefault();
+            (async () => {
+                if (P.aberto === tid) { if (await podeSairDoEditor()) { P.aberto = null; renderFolha(); } return; }
+                if (!(await podeSairDoEditor())) return;
+                P.aberto = tid;
+                renderFolha();
+            })();
+        } else if (acao === 'fechar') {
+            (async () => { if (await podeSairDoEditor()) { P.aberto = null; renderFolha(); } })();
+        } else if (acao === 'salvar') salvarTopico(tid, false, alvo);
+        else if (acao === 'enviar') salvarTopico(tid, true, alvo);
+        else if (acao === 'enviar-rascunhos') enviarRascunhos(alvo);
+        else if (acao === 'mes-folha') { const n = somarMes(P.mes, P.ano, Number(alvo.dataset.delta)); irParaMes(n.mes, n.ano); }
+        else if (acao === 'mes-atual') { const h = hoje(); irParaMes(h.mes, h.ano); }
+        else if (acao === 'ir-coordenacao') renderPTACoordenador();
+        else if (acao === 'corrigir') irParaMes(Number(alvo.dataset.mes), Number(alvo.dataset.ano), tid);
+        else if (acao === 'historico') abrirHistorico(Number(alvo.dataset.relato), alvo.dataset.titulo || 'Relato');
+        else if (acao === 'importar-rspace') importarRSpace(tid, alvo);
+        else if (acao === 'copiar-plano') {
+            anexarTexto(document.getElementById(`pta-${tid}-realizado`), document.getElementById(`pta-${tid}-plano`)?.textContent || '');
+        } else if (acao === 'incluir-tarefas') {
+            const t = topicoDaFolha(tid);
+            const linhas = t.tarefas_concluidas.map(x => `• ${x.titulo}${x.resultado ? ` — ${x.resultado}` : ''}`);
+            anexarTexto(document.getElementById(`pta-${tid}-resultados`), linhas.join('\n'));
+        } else if (acao === 'comentar') {
+            const input = document.getElementById(`pta-${tid}-comentario`);
+            const texto = input?.value.trim();
+            if (!texto) return;
+            comBotao(alvo, '', async () => {
+                try {
+                    await req(`/pta/relatorios/${alvo.dataset.relato}/notas`, { method: 'POST', json: { texto } });
+                    input.value = '';
+                    window.UI.showToast('Nota enviada.', 'success');
+                    const form = document.getElementById(`pta-form-${tid}`);
+                    const sujo = form?.dataset.sujo;
+                    if (!sujo) await carregarFolha();
+                } catch (err) { erroToast(err); }
+            });
+        }
+    }
+
+    function aoDigitarFolha(e) {
+        const el = e.target;
+        const tipo = el.dataset.acaoInput;
+        if (!tipo) return;
+        const tid = el.dataset.topico;
+        const range = document.getElementById(`pta-${tid}-avanco`);
+        const num = document.getElementById(`pta-${tid}-avanco-num`);
+        if (tipo === 'avanco-range') num.value = range.value;
+        else if (num.value !== '') range.value = Math.max(0, Math.min(100, Number(num.value)));
+        atualizarAvisoAvanco(tid);
+    }
+
+    // ==========================================
+    // COORDENAÇÃO
+    // ==========================================
+    const G = { aba: 'avaliar', mes: null, ano: null, anoVisao: null, dados: null, resumo: null, selecionados: new Set(), recentes: new Map(), painel: null, equipe: null, previa: null };
+    const ABAS = [
+        { id: 'avaliar', rotulo: 'Avaliar' },
+        { id: 'ano', rotulo: 'Visão do ano' },
+        { id: 'topicos', rotulo: 'Tópicos' },
+        { id: 'dados', rotulo: 'Importar e exportar' },
+    ];
+
+    async function renderPTACoordenador(opcoes = {}) {
+        const h = hoje();
+        G.aba = opcoes.aba || G.aba || 'avaliar';
+        G.anoVisao = G.anoVisao || h.ano;
+        const main = document.getElementById('dynamic-content');
+        main.innerHTML = `
+            <div id="pta-raiz-gestao">
+                <header class="page-head fade-in">
+                    <div>
+                        <p class="eyebrow">coordenação</p>
+                        <h1>Planejamento mensal</h1>
+                        <p class="lede">Avalie os relatos do mês, acompanhe quem falta e feche o texto consolidado.</p>
+                    </div>
+                    <div class="page-actions">
+                        <button type="button" class="btn btn-secondary btn-sm" data-acao="ir-folha">Preencher meu PTA</button>
+                    </div>
+                    <nav class="tabs" role="tablist" aria-label="Seções do planejamento">
+                        ${ABAS.map(a => `<button type="button" class="tab-btn${G.aba === a.id ? ' active' : ''}" role="tab" aria-selected="${G.aba === a.id}" data-acao="aba" data-aba="${a.id}">${a.rotulo}${a.id === 'avaliar' ? '<span class="tab-count hidden" id="pta-contador-fila"></span>' : ''}</button>`).join('')}
+                    </nav>
+                </header>
+                <div id="pta-gestao-conteudo" class="fade-in">${window.UI.loading()}</div>
+            </div>`;
+        const raiz = document.getElementById('pta-raiz-gestao');
+        raiz.addEventListener('click', aoClicarGestao);
+        raiz.addEventListener('change', aoMudarGestao);
+
+        if (!G.mes) {
+            // Abre no mês mais recente com relatos esperando avaliação (geralmente o anterior, no começo do mês).
+            G.mes = h.mes; G.ano = h.ano;
+            try {
+                const resumo = await req(`/pta/chefia/resumo-ano?ano=${h.ano}`);
+                const comFila = resumo.filter(m => m.mes <= h.mes && m.aguardando > 0).map(m => m.mes);
+                if (comFila.length && !resumo[h.mes - 1].aguardando) G.mes = comFila[comFila.length - 1];
+            } catch (e) { /* segue no mês atual */ }
+        }
+        if (opcoes.mes) { G.mes = opcoes.mes; G.ano = opcoes.ano; }
+        renderAba();
+    }
+
+    function renderAba() {
+        document.querySelectorAll('#pta-raiz-gestao .tab-btn').forEach(b => {
+            const ativa = b.dataset.aba === G.aba;
+            b.classList.toggle('active', ativa);
+            b.setAttribute('aria-selected', String(ativa));
+        });
+        const alvo = document.getElementById('pta-gestao-conteudo');
+        if (!alvo) return;
+        alvo.innerHTML = window.UI.loading();
+        if (G.aba === 'avaliar') carregarAvaliacao();
+        else if (G.aba === 'ano') carregarAno();
+        else if (G.aba === 'topicos') carregarTopicos();
+        else renderDados();
+    }
+
+    // ---------- AVALIAR ----------
+    async function carregarAvaliacao() {
+        try {
+            G.dados = await req(`/pta/chefia/mes?mes=${G.mes}&ano=${G.ano}`);
+            renderAvaliacao();
+        } catch (err) {
+            const alvo = document.getElementById('pta-gestao-conteudo');
+            if (alvo) alvo.innerHTML = window.UI.errorState(esc(err.message));
+        }
+    }
+
+    function topicosVisiveis(d) {
+        const comRelato = new Set(d.relatos.map(r => r.topico_id));
+        return d.topicos.filter(t => t.no_periodo || comRelato.has(t.id));
+    }
+
+    function pessoasSemRelato(d) {
+        const relataram = new Set(d.relatos.map(r => r.usuario_id));
+        return d.pessoas.filter(p => p.esperado && !relataram.has(p.id));
+    }
+
+    function renderAvaliacao() {
+        const d = G.dados;
+        const alvo = document.getElementById('pta-gestao-conteudo');
+        if (!alvo || !d) return;
+        const fila = d.relatos.filter(r => r.status === 'aguardando_aprovacao');
+        const aprovados = d.relatos.filter(r => r.status === 'consolidado');
+        const devolvidos = d.relatos.filter(r => r.status === 'devolvido');
+        const semRelato = pessoasSemRelato(d);
+        const esperados = d.pessoas.filter(p => p.esperado).length;
+        G.selecionados = new Set([...G.selecionados].filter(id => fila.some(r => r.id === id)));
+
+        const cont = document.getElementById('pta-contador-fila');
+        if (cont) { cont.textContent = fila.length; cont.classList.toggle('hidden', !fila.length); }
+
+        alvo.innerHTML = `
+            <div class="pta-toolbar">
+                ${navMes('mes-gestao', G.mes, G.ano)}
+                <div class="cluster">
+                    ${semRelato.length ? `<button type="button" class="btn btn-secondary btn-sm" data-acao="cobrar">${icone('clock', 14)} Cobrar quem falta (${semRelato.length})</button>` : ''}
+                </div>
+            </div>
+            <div class="figures">
+                <div class="figure"><span class="v">${fila.length}</span><span class="k">aguardando avaliação</span></div>
+                <div class="figure"><span class="v">${aprovados.length}</span><span class="k">aprovados</span></div>
+                <div class="figure${devolvidos.length ? ' tone-danger' : ''}"><span class="v">${devolvidos.length}</span><span class="k">devolvidos, aguardando correção</span></div>
+                <div class="figure${semRelato.length ? ' tone-warning' : ''}"><span class="v">${esperados - semRelato.length}/${esperados}</span><span class="k">pessoas que já relataram</span></div>
+            </div>
+
+            <section class="pta-secao">
+                <div class="section-head"><h3>Aguardando avaliação</h3><p class="meta">agrupado por tópico</p></div>
+                <div id="pta-fila">${renderFila(d, fila)}</div>
+            </section>
+
+            <section class="pta-secao">
+                <div class="section-head"><h3>Quem já relatou</h3><p class="meta">pessoas × tópicos em ${esc(nomeMes(G.mes).toLowerCase())}</p></div>
+                ${renderMatriz(d)}
+            </section>
+
+            <section class="pta-secao">
+                <div class="section-head">
+                    <h3>Aprovados e texto consolidado</h3>
+                    ${aprovados.length ? '<button type="button" class="btn btn-secondary btn-sm" data-acao="gerar-todas">' + icone('sparkles', 14) + ' Gerar textos que faltam</button>' : ''}
+                </div>
+                ${renderAprovados(d, aprovados)}
+            </section>
+
+            ${devolvidos.length ? `
+                <section class="pta-secao">
+                    <div class="section-head"><h3>Devolvidos</h3><p class="meta">o autor já foi avisado por e-mail</p></div>
+                    <div class="table-container"><table class="data-table"><thead><tr><th>Pessoa</th><th>Tópico</th><th>Motivo</th><th class="end"></th></tr></thead><tbody>
+                        ${devolvidos.map(r => {
+                            const t = d.topicos.find(x => x.id === r.topico_id);
+                            const motivo = (r.notas || []).filter(n => n.da_chefia).pop();
+                            return `<tr><td>${window.UI.avatar(r.usuario_nome || '', { strong: true })}</td><td>${esc(t?.titulo || '')}</td>
+                                <td><span class="truncate" title="${esc(motivo?.texto || '')}">${esc(motivo?.texto || '—')}</span></td>
+                                <td class="end"><button type="button" class="link-btn muted" data-acao="historico" data-relato="${r.id}" data-titulo="${esc(t?.titulo || '')}">Histórico</button></td></tr>`;
+                        }).join('')}
+                    </tbody></table></div>
+                </section>` : ''}`;
+    }
+
+    function renderFila(d, fila) {
+        const recentes = d.relatos.filter(r => G.recentes.has(r.id) && r.status === 'consolidado');
+        if (!fila.length && !recentes.length) {
+            return window.UI.emptyState({ title: 'Nada aguardando avaliação', description: `Nenhum relato de ${nomeMes(G.mes).toLowerCase()} está na fila.` });
+        }
+        const total = fila.length;
+        const sel = G.selecionados.size;
+        let html = total ? `
+            <div class="pta-bulk">
+                <label class="check-inline"><input type="checkbox" data-acao-change="selecionar-todos" ${sel && sel === total ? 'checked' : ''}> Selecionar todos</label>
+                <span>${sel ? `${sel} selecionado${sel > 1 ? 's' : ''}` : `${total} na fila`}</span>
+                <button type="button" class="btn btn-primary btn-sm" data-acao="aprovar-selecionados" ${sel ? '' : 'disabled'}>Aprovar selecionados</button>
+                <span class="pta-atalhos"><kbd>J</kbd>/<kbd>K</kbd> navegar · <kbd>X</kbd> selecionar · <kbd>A</kbd> aprovar · <kbd>D</kbd> devolver</span>
+            </div>` : '';
+        topicosVisiveis(d).concat(d.topicos.filter(t => !topicosVisiveis(d).includes(t))).forEach(t => {
+            const doTopico = fila.filter(r => r.topico_id === t.id);
+            const recentesDoTopico = recentes.filter(r => r.topico_id === t.id);
+            if (!doTopico.length && !recentesDoTopico.length) return;
+            html += `
+                <div class="pta-grupo">
+                    <div class="pta-grupo-head">
+                        <h4>${esc(t.titulo)}</h4>
+                        <span class="meta">aprovado até agora ${t.avanco_anterior}%${t.esperado !== null ? ` · esperado para o mês ${t.esperado}%` : ''}${t.prazo_vencido ? ' · <span class="text-danger">prazo vencido</span>' : ''}</span>
+                    </div>
+                    ${doTopico.map(r => cartaoAvaliacao(r)).join('')}
+                    ${recentesDoTopico.map(r => `
+                        <div class="pta-desfeito" role="status">
+                            <span>${icone('check-circle', 14)} Aprovado: <strong>${esc(r.usuario_nome || '')}</strong> · ${r.percentual_avanco}%</span>
+                            <button type="button" class="link-btn" data-acao="desfazer" data-relato="${r.id}">Desfazer</button>
+                        </div>`).join('')}
+                </div>`;
+        });
+        return html;
+    }
+
+    function cartaoAvaliacao(r) {
+        const selecionado = G.selecionados.has(r.id);
+        return `
+            <article class="entry pta-avaliacao${selecionado ? ' is-selected' : ''}" tabindex="0" data-relato="${r.id}">
+                <div class="entry-head">
+                    <span class="cluster">
+                        <input type="checkbox" data-acao-change="selecionar" data-relato="${r.id}" ${selecionado ? 'checked' : ''} aria-label="Selecionar relato de ${esc(r.usuario_nome || '')}">
+                        ${window.UI.avatar(r.usuario_nome || '', { strong: true })}
+                    </span>
+                    <span class="cluster"><span class="mono">${r.avanco_anterior}% → <strong>${r.percentual_avanco}%</strong></span>${delta(r.percentual_avanco, r.avanco_anterior, r.esperado)}</span>
+                </div>
+                <div class="entry-body">${descricaoHTML(r.descricao_atividades, (r.descricao_atividades || '').length > 420)}</div>
+                ${(r.descricao_atividades || '').length > 420 ? '<button type="button" class="link-btn muted" data-acao="expandir">Ler tudo</button>' : ''}
+                ${notasHTML(r.notas)}
+                <div class="entry-foot">
+                    <span class="meta">enviado ${esc(dataHora(r.enviado_em))}</span>
+                    <span class="cluster">
+                        <button type="button" class="link-btn muted" data-acao="historico" data-relato="${r.id}" data-titulo="${esc(r.usuario_nome || '')}">Histórico</button>
+                        <button type="button" class="link-btn danger" data-acao="devolver" data-relato="${r.id}">Devolver</button>
+                        <button type="button" class="btn btn-primary btn-sm" data-acao="aprovar" data-relato="${r.id}">Aprovar</button>
+                    </span>
+                </div>
+            </article>`;
+    }
+
+    function renderMatriz(d) {
+        const topicos = topicosVisiveis(d);
+        if (!d.pessoas.length || !topicos.length) return window.UI.emptyState({ title: 'Sem pessoas ou tópicos para este mês' });
+        const porCelula = new Map(d.relatos.map(r => [`${r.usuario_id}:${r.topico_id}`, r]));
+        const rascunhos = new Set(d.rascunhos.map(r => `${r.usuario_id}:${r.topico_id}`));
+        const linhas = d.pessoas.map(p => {
+            let devidos = 0;
+            let feitos = 0;
+            const celulas = topicos.map(t => {
+                const k = `${p.id}:${t.id}`;
+                const r = porCelula.get(k);
+                const participa = !t.membros.length || t.membros.includes(p.id);
+                if (participa && t.no_periodo) { devidos++; if (r) feitos++; }
+                if (r) return `<td class="pta-cel-td"><span class="pta-cel is-${r.status}" title="${esc(`${t.titulo}: ${STATUS[r.status].rotulo} · ${r.percentual_avanco}%`)}">${r.percentual_avanco}</span></td>`;
+                if (rascunhos.has(k)) return `<td class="pta-cel-td"><span class="pta-cel is-rascunho" title="${esc(`${t.titulo}: rascunho não enviado`)}">…</span></td>`;
+                if (!participa) return `<td class="pta-cel-td"><span class="pta-cel is-fora" title="Não participa deste tópico">·</span></td>`;
+                return `<td class="pta-cel-td"><span class="pta-cel" title="${esc(`${t.titulo}: sem relato`)}">—</span></td>`;
+            }).join('');
+            const nenhum = !d.relatos.some(r => r.usuario_id === p.id);
+            return `<tr>
+                <td>${window.UI.avatar(p.nome, { strong: true })}</td>${celulas}
+                <td class="end">${p.esperado && nenhum ? `<button type="button" class="link-btn" data-acao="cobrar" data-usuario="${p.id}">Cobrar</button>` : `<span class="text-muted text-small tabular">${feitos}/${devidos}</span>`}</td>
+            </tr>`;
+        }).join('');
+        return `
+            <div class="table-container pta-matriz-wrap">
+                <table class="data-table pta-matriz">
+                    <thead><tr><th>Pessoa</th>${topicos.map(t => `<th class="pta-col-topico" title="${esc(t.titulo)}">${esc(t.titulo)}</th>`).join('')}<th class="end">Relatos</th></tr></thead>
+                    <tbody>${linhas}</tbody>
+                </table>
+            </div>
+            <div class="pta-legenda" aria-hidden="true">
+                <span><span class="pta-cel is-consolidado">70</span> aprovado</span>
+                <span><span class="pta-cel is-aguardando_aprovacao">70</span> aguardando</span>
+                <span><span class="pta-cel is-devolvido">70</span> devolvido</span>
+                <span><span class="pta-cel is-rascunho">…</span> rascunho</span>
+                <span><span class="pta-cel">—</span> sem relato</span>
+                <span><span class="pta-cel is-fora">·</span> não participa</span>
+            </div>`;
+    }
+
+    function renderAprovados(d, aprovados) {
+        if (!aprovados.length) return window.UI.emptyState({ title: 'Nenhum relato aprovado neste mês', description: 'O texto consolidado é gerado a partir dos relatos aprovados.' });
+        const sinteses = new Map(d.sinteses.map(s => [s.topico_id, s]));
+        return d.topicos.filter(t => aprovados.some(r => r.topico_id === t.id)).map(t => {
+            const doTopico = aprovados.filter(r => r.topico_id === t.id);
+            const s = sinteses.get(t.id);
+            return `
+                <div class="pta-grupo pta-sintese" data-topico="${t.id}">
+                    <div class="pta-grupo-head"><h4>${esc(t.titulo)}</h4><span class="meta">avanço aprovado ${Math.max(...doTopico.map(r => r.percentual_avanco))}%</span></div>
+                    <ul class="pta-aprovados-lista">${doTopico.map(r => `<li><span>${esc(r.usuario_nome || '')}</span><span class="tabular">${r.percentual_avanco}%</span></li>`).join('')}</ul>
+                    ${s ? `
+                        <label class="sr-only" for="pta-sintese-${t.id}">Texto consolidado de ${esc(t.titulo)}</label>
+                        <textarea id="pta-sintese-${t.id}" class="form-control">${esc(s.texto)}</textarea>
+                        <div class="pta-sintese-acoes">
+                            <label class="check-inline"><input type="checkbox" id="pta-sintese-final-${t.id}" ${s.final ? 'checked' : ''}> Versão final (vai para a planilha exportada)</label>
+                            <span class="text-muted text-small">gerado por IA · revise · salvo ${esc(dataHora(s.atualizado_em))}</span>
+                            <span class="cluster push-end">
+                                <button type="button" class="link-btn muted" data-acao="copiar-sintese" data-topico="${t.id}">Copiar</button>
+                                <button type="button" class="link-btn" data-acao="gerar-sintese" data-topico="${t.id}">Gerar novamente</button>
+                                <button type="button" class="btn btn-secondary btn-sm" data-acao="salvar-sintese" data-topico="${t.id}">Salvar</button>
+                            </span>
+                        </div>` : `
+                        <button type="button" class="btn btn-secondary btn-sm" data-acao="gerar-sintese" data-topico="${t.id}">${icone('sparkles', 14)} Gerar texto consolidado</button>`}
+                </div>`;
+        }).join('');
+    }
+
+    async function aprovar(id) {
+        try {
+            await req(`/pta/chefia/avaliar/${id}`, { method: 'PUT', json: { aprovado: true } });
+            G.recentes.set(id, Date.now());
+            G.selecionados.delete(id);
+            await recarregarFilaMantendoFoco(id);
+        } catch (err) { erroToast(err); carregarAvaliacao(); }
+    }
+
+    async function recarregarFilaMantendoFoco(idAnterior) {
+        const cartoes = Array.from(document.querySelectorAll('.pta-avaliacao'));
+        const pos = cartoes.findIndex(c => Number(c.dataset.relato) === idAnterior);
+        await carregarAvaliacao();
+        const novos = Array.from(document.querySelectorAll('.pta-avaliacao'));
+        (novos[Math.min(Math.max(pos, 0), novos.length - 1)] || null)?.focus({ preventScroll: false });
+    }
+
+    async function aprovarSelecionados(btn) {
+        const ids = [...G.selecionados];
+        if (!ids.length) return;
+        await comBotao(btn, 'Aprovando', async () => {
+            try {
+                const r = await req('/pta/chefia/aprovar-lote', { method: 'POST', json: { ids } });
+                r.aprovados.forEach(id => G.recentes.set(id, Date.now()));
+                G.selecionados.clear();
+                window.UI.showToast(`${r.aprovados.length} relato(s) aprovado(s).${r.ignorados.length ? ` ${r.ignorados.length} já tinham sido avaliados.` : ''}`, 'success');
+                await carregarAvaliacao();
+            } catch (err) { erroToast(err); }
+        });
+    }
+
+    function abrirDevolucao(id) {
+        const r = G.dados.relatos.find(x => x.id === id);
+        const modal = abrirModal({
+            id: 'pta-devolucao', eyebrow: 'devolver para ajuste', titulo: r ? `Relato de ${r.usuario_nome}` : 'Devolver relato', tamanho: 'modal-sm',
+            corpo: `
+                <p class="dialog-text mb-md">A observação vai por e-mail para o autor e aparece no topo da folha dele.</p>
+                <div class="pta-motivos">${MOTIVOS_RAPIDOS.map((m, i) => `<button type="button" class="check-chip" data-motivo="${i}">${esc(m)}</button>`).join('')}</div>
+                <label for="pta-motivo-texto">O que precisa ser ajustado</label>
+                <textarea id="pta-motivo-texto" class="form-control" rows="4" maxlength="4000" placeholder="Ex.: detalhe a curva de temperatura do experimento 2"></textarea>`,
+            rodape: `<button type="button" class="btn btn-secondary" data-role="cancel">Cancelar</button><button type="button" class="btn btn-danger" id="pta-confirmar-devolucao">Devolver</button>`,
+        });
+        const campo = modal.querySelector('#pta-motivo-texto');
+        modal.querySelectorAll('[data-motivo]').forEach(b => b.addEventListener('click', () => {
+            const texto = MOTIVOS_RAPIDOS[Number(b.dataset.motivo)];
+            campo.value = campo.value.includes(texto) ? campo.value : (campo.value.trim() ? `${campo.value.trim()} ${texto}` : texto);
+            campo.focus();
+        }));
+        setTimeout(() => campo.focus(), 50);
+        modal.querySelector('#pta-confirmar-devolucao').addEventListener('click', (e) => {
+            const motivo = campo.value.trim();
+            if (!motivo) { window.UI.showToast('Escreva o que precisa ser ajustado.', 'error'); campo.focus(); return; }
+            comBotao(e.currentTarget, 'Devolvendo', async () => {
+                try {
+                    await req(`/pta/chefia/avaliar/${id}`, { method: 'PUT', json: { aprovado: false, motivo } });
+                    modal.remove();
+                    window.UI.showToast('Relato devolvido. O autor foi avisado.', 'success');
+                    await recarregarFilaMantendoFoco(id);
+                } catch (err) { erroToast(err); }
+            });
+        });
+    }
+
+    async function cobrar(usuarioId, btn) {
+        const faltam = pessoasSemRelato(G.dados);
+        const alvo = usuarioId ? faltam.filter(p => p.id === usuarioId) : faltam;
+        if (!alvo.length) return;
+        const ok = await window.UI.confirm(`Enviar lembrete por e-mail para: ${alvo.map(p => p.nome).join(', ')}. Cada pessoa recebe no máximo um lembrete por dia.`, { title: 'Cobrar relato do mês?', confirmText: 'Enviar lembrete' });
+        if (!ok) return;
+        await comBotao(btn, 'Enviando', async () => {
+            try {
+                const r = await req('/pta/chefia/cobrar', { method: 'POST', json: { mes: G.mes, ano: G.ano, usuario_ids: alvo.map(p => p.id) } });
+                const partes = [];
+                if (r.enviados.length) partes.push(`Lembrete enviado para ${r.enviados.length} pessoa(s).`);
+                if (r.ja_cobrados_hoje.length) partes.push(`Já cobrados hoje: ${r.ja_cobrados_hoje.join(', ')}.`);
+                window.UI.showToast(partes.join(' ') || 'Ninguém para cobrar (sem e-mail verificado).', r.enviados.length ? 'success' : 'warning');
+            } catch (err) { erroToast(err); }
+        });
+    }
+
+    async function gerarSintese(tid, btn, silencioso = false) {
+        return comBotao(btn, 'Gerando', async () => {
+            try {
+                await req(`/pta/chefia/sintetizar?topico_id=${tid}&mes=${G.mes}&ano=${G.ano}`, { method: 'POST' });
+                if (!silencioso) { window.UI.showToast('Texto consolidado gerado. Revise antes de marcar como final.', 'success'); await carregarAvaliacao(); }
+                return true;
+            } catch (err) { erroToast(err); return false; }
+        });
+    }
+
+    async function gerarTodas(btn) {
+        const comSintese = new Set(G.dados.sinteses.map(s => s.topico_id));
+        const faltam = [...new Set(G.dados.relatos.filter(r => r.status === 'consolidado').map(r => r.topico_id))].filter(t => !comSintese.has(t));
+        if (!faltam.length) { window.UI.showToast('Todos os tópicos aprovados já têm texto.', 'info'); return; }
+        await comBotao(btn, `Gerando ${faltam.length}`, async () => {
+            let ok = 0;
+            for (const tid of faltam) { if (await gerarSintese(tid, null, true)) ok++; }
+            window.UI.showToast(`${ok} de ${faltam.length} texto(s) gerado(s).`, ok === faltam.length ? 'success' : 'warning');
+            await carregarAvaliacao();
+        });
+    }
+
+    async function salvarSintese(tid, btn) {
+        const texto = document.getElementById(`pta-sintese-${tid}`)?.value || '';
+        const final = !!document.getElementById(`pta-sintese-final-${tid}`)?.checked;
+        await comBotao(btn, 'Salvando', async () => {
+            try {
+                await req('/pta/chefia/sinteses', { method: 'PUT', json: { topico_id: tid, mes: G.mes, ano: G.ano, texto, final } });
+                const area = document.getElementById(`pta-sintese-${tid}`);
+                const form = area?.closest('form');
+                if (form) delete form.dataset.sujo;
+                window.UI.showToast(final ? 'Texto salvo como versão final.' : 'Texto salvo.', 'success');
+            } catch (err) { erroToast(err); }
+        });
+    }
+
+    // Atalhos de teclado da fila (só quando a fila está na tela e o foco não está num campo).
+    if (!window.__ptaAtalhos) {
+        window.__ptaAtalhos = true;
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey || e.altKey || e.defaultPrevented) return;
+            if (!document.getElementById('pta-fila') || document.querySelector('.modal-overlay[style*="flex"]')) return;
+            if (e.target.closest('input, textarea, select, [contenteditable="true"]')) return;
+            const tecla = e.key.toLowerCase();
+            if (!['j', 'k', 'a', 'd', 'x'].includes(tecla)) return;
+            const cartoes = Array.from(document.querySelectorAll('.pta-avaliacao'));
+            if (!cartoes.length) return;
+            const atual = e.target.closest('.pta-avaliacao');
+            const i = cartoes.indexOf(atual);
+            e.preventDefault();
+            if (tecla === 'j') (cartoes[i + 1] || cartoes[i < 0 ? 0 : i])?.focus();
+            else if (tecla === 'k') (cartoes[i - 1] || cartoes[0])?.focus();
+            else if (!atual) cartoes[0].focus();
+            else if (tecla === 'a') aprovar(Number(atual.dataset.relato));
+            else if (tecla === 'd') abrirDevolucao(Number(atual.dataset.relato));
+            else if (tecla === 'x') alternarSelecao(Number(atual.dataset.relato));
+        });
+    }
+
+    function alternarSelecao(id, marcar) {
+        const deve = marcar === undefined ? !G.selecionados.has(id) : marcar;
+        if (deve) G.selecionados.add(id); else G.selecionados.delete(id);
+        const fila = G.dados.relatos.filter(r => r.status === 'aguardando_aprovacao');
+        const foco = document.activeElement?.closest('.pta-avaliacao')?.dataset.relato;
+        document.getElementById('pta-fila').innerHTML = renderFila(G.dados, fila);
+        if (foco) document.querySelector(`.pta-avaliacao[data-relato="${foco}"]`)?.focus();
+    }
+
+    // ---------- VISÃO DO ANO ----------
+    async function carregarAno() {
+        const alvo = document.getElementById('pta-gestao-conteudo');
+        try {
+            const [resumo, painel] = await Promise.all([req(`/pta/chefia/resumo-ano?ano=${G.anoVisao}`), req('/pta/topicos/painel')]);
+            G.resumo = resumo; G.painel = painel;
+            if (!alvo?.isConnected) return;
+            const h = hoje();
+            const cartoes = resumo.map(m => {
+                const futuro = chave(G.anoVisao, m.mes) > chave(h.ano, h.mes);
+                const atual = G.anoVisao === h.ano && m.mes === h.mes;
+                const pct = m.esperados ? Math.round((m.relataram / m.esperados) * 100) : 0;
+                return `
+                    <button type="button" class="pta-ano-mes${atual ? ' is-atual' : ''}${futuro ? ' is-futuro' : ''}" ${futuro ? 'disabled' : `data-acao="abrir-mes" data-mes="${m.mes}"`} aria-label="${esc(mesAno(m.mes, G.anoVisao))}">
+                        <span class="pta-ano-nome">${esc(nomeMes(m.mes))}</span>
+                        ${futuro ? '<span class="pta-ano-linha"><span>—</span></span>' : `
+                            <span class="pta-ano-linha"><span>Aprovados</span><span>${m.aprovados}</span></span>
+                            <span class="pta-ano-linha${m.aguardando ? ' is-pendente' : ''}"><span>Aguardando</span><span>${m.aguardando}</span></span>
+                            ${m.devolvidos ? `<span class="pta-ano-linha is-alerta"><span>Devolvidos</span><span>${m.devolvidos}</span></span>` : ''}
+                            <span class="pta-ano-linha${m.faltam ? ' is-alerta' : ''}"><span>Relataram</span><span>${m.relataram}/${m.esperados}</span></span>
+                            <span class="progress-track" aria-hidden="true"><span class="progress-fill ${pct === 100 ? 'is-success' : ''}" style="width:${pct}%"></span></span>`}
+                    </button>`;
+            }).join('');
+            const topicosAno = painel.filter(t => t.ano === G.anoVisao);
+            alvo.innerHTML = `
+                <div class="pta-toolbar">
+                    <div class="year-nav">
+                        <button type="button" class="icon-btn" data-acao="ano-visao" data-delta="-1" aria-label="Ano anterior">${icone('chevron-left', 16)}</button>
+                        <span class="mono">${G.anoVisao}</span>
+                        <button type="button" class="icon-btn" data-acao="ano-visao" data-delta="1" aria-label="Próximo ano">${icone('chevron-right', 16)}</button>
+                    </div>
+                    <span class="text-muted text-small">Clique em um mês para avaliar</span>
+                </div>
+                <div class="pta-ano-grid">${cartoes}</div>
+                <section class="pta-secao">
+                    <div class="section-head"><h3>Avanço dos tópicos em ${G.anoVisao}</h3><p class="meta">linha tracejada: avanço previsto pelo prazo</p></div>
+                    ${topicosAno.length ? tabelaAvancoTopicos(topicosAno, false) : window.UI.emptyState({ title: `Nenhum tópico cadastrado para ${G.anoVisao}` })}
+                </section>`;
+        } catch (err) {
+            if (alvo) alvo.innerHTML = window.UI.errorState(esc(err.message));
+        }
+    }
+
+    const SITUACAO = {
+        concluido: { rotulo: 'Concluído', classe: 'badge-success' },
+        em_dia: { rotulo: 'Em dia', classe: 'badge-info' },
+        abaixo: { rotulo: 'Abaixo do previsto', classe: 'badge-warning' },
+        atrasado: { rotulo: 'Prazo vencido', classe: 'badge-danger' },
+        sem_prazo: { rotulo: 'Sem prazo', classe: '' },
+    };
+
+    function tabelaAvancoTopicos(lista, comAcoes) {
+        return `
+            <div class="table-container"><table class="data-table">
+                <thead><tr>
+                    <th>Tópico</th>${comAcoes ? '<th>Membros</th>' : ''}<th class="col-hide-sm">Evolução</th><th class="num">Avanço</th><th class="num col-hide-xs">Previsto hoje</th><th>Situação</th>${comAcoes ? '<th class="end"><span class="sr-only">Ações</span></th>' : ''}
+                </tr></thead>
+                <tbody>${lista.map(t => `
+                    <tr data-topico-linha="${t.id}">
+                        <td><strong>${esc(t.titulo)}</strong><span class="pta-topico-sub">${esc(prazoTopico(t))} · ${t.qtd_relatos} relato${t.qtd_relatos === 1 ? '' : 's'}</span></td>
+                        ${comAcoes ? `<td>${t.membros.length ? window.UI.avatarStack(t.membros, 3) : '<span class="text-muted text-small">Toda a equipe</span>'}</td>` : ''}
+                        <td class="col-hide-sm">${sparkline(t, t.historico)}</td>
+                        <td class="num">${window.UI.progressBar(t.avanco, { tone: t.avanco >= 100 ? 'is-success' : t.situacao === 'atrasado' ? 'is-danger' : t.situacao === 'abaixo' ? 'is-warning' : '' })}</td>
+                        <td class="num col-hide-xs">${t.esperado === null ? '—' : `${t.esperado}%`}</td>
+                        <td><span class="badge ${SITUACAO[t.situacao]?.classe || ''}">${SITUACAO[t.situacao]?.rotulo || ''}</span></td>
+                        ${comAcoes ? `<td class="end"><span class="row-actions">
+                            <button type="button" class="link-btn" data-acao="membros" data-topico="${t.id}">Membros</button>
+                            <button type="button" class="link-btn" data-acao="editar-topico" data-topico="${t.id}">Editar</button>
+                            ${ehAdmin() ? `<button type="button" class="link-btn danger" data-acao="excluir-topico" data-topico="${t.id}">Excluir</button>` : ''}
+                        </span></td>` : ''}
+                    </tr>`).join('')}
+                </tbody>
+            </table></div>`;
+    }
+
+    // ---------- TÓPICOS ----------
+    async function carregarTopicos() {
+        const alvo = document.getElementById('pta-gestao-conteudo');
+        try {
+            G.painel = await req('/pta/topicos/painel');
+            if (!alvo?.isConnected) return;
+            const anos = [...new Set(G.painel.map(t => t.ano))].sort((a, b) => b - a);
+            const anoFiltro = G.topicosAno && anos.includes(G.topicosAno) ? G.topicosAno : (anos.includes(hoje().ano) ? hoje().ano : 'todos');
+            G.topicosAno = anoFiltro;
+            alvo.innerHTML = `
+                <div class="pta-toolbar">
+                    <span class="result-count" id="pta-topicos-contador"></span>
+                    <div class="cluster">
+                        <input type="search" class="form-control" id="pta-topicos-busca" placeholder="Buscar tópico" aria-label="Buscar tópico">
+                        <select class="form-control" id="pta-topicos-ano" aria-label="Filtrar por ano">
+                            <option value="todos">Todos os anos</option>
+                            ${anos.map(a => `<option value="${a}" ${a === anoFiltro ? 'selected' : ''}>${a}</option>`).join('')}
+                        </select>
+                        <button type="button" class="btn btn-primary btn-sm" data-acao="novo-topico">${icone('plus', 14)} Novo tópico</button>
+                    </div>
+                </div>
+                <div id="pta-topicos-tabela"></div>
+                <p class="help mt-sm">Tópico sem membros aparece na folha de toda a equipe. Ao definir membros, só eles relatam e são cobrados nesse tópico.</p>`;
+            const filtrar = () => {
+                const termo = document.getElementById('pta-topicos-busca').value.trim().toLowerCase();
+                const ano = document.getElementById('pta-topicos-ano').value;
+                G.topicosAno = ano === 'todos' ? 'todos' : Number(ano);
+                const lista = G.painel.filter(t => (ano === 'todos' || t.ano === Number(ano)) && (!termo || t.titulo.toLowerCase().includes(termo)));
+                document.getElementById('pta-topicos-contador').textContent = `${lista.length} ${lista.length === 1 ? 'tópico encontrado' : 'tópicos encontrados'}`;
+                document.getElementById('pta-topicos-tabela').innerHTML = lista.length ? tabelaAvancoTopicos(lista, true)
+                    : window.UI.emptyState({ title: 'Nenhum tópico encontrado', actionLabel: 'Cadastrar tópico', actionOnclick: "document.querySelector('[data-acao=novo-topico]').click()" });
+            };
+            document.getElementById('pta-topicos-busca').addEventListener('input', filtrar);
+            document.getElementById('pta-topicos-ano').addEventListener('change', filtrar);
+            filtrar();
+        } catch (err) {
+            if (alvo) alvo.innerHTML = window.UI.errorState(esc(err.message));
+        }
+    }
+
+    function modalTopico(t) {
+        const ano = t ? t.ano : hoje().ano;
+        const opcoesMes = (sel) => MESES.map((m, i) => `<option value="${i + 1}" ${i + 1 === sel ? 'selected' : ''}>${String(i + 1).padStart(2, '0')} · ${capital(m)}</option>`).join('');
+        const modal = abrirModal({
+            id: 'pta-modal-topico', eyebrow: t ? 'editar tópico' : 'novo tópico', titulo: t ? t.titulo : 'Novo tópico de pesquisa',
+            corpo: `
+                <form id="pta-form-topico" novalidate>
+                    <div class="input-group"><label for="pta-topico-titulo">Título</label><input type="text" id="pta-topico-titulo" class="form-control" required maxlength="300" value="${esc(t?.titulo || '')}"></div>
+                    <div class="field-grid">
+                        <div class="input-group"><label for="pta-topico-ano">Ano</label><input type="number" id="pta-topico-ano" class="form-control mono" required min="2000" max="2100" value="${ano}"></div>
+                        <div class="input-group"><label for="pta-topico-ini">Mês de início</label><select id="pta-topico-ini" class="form-control">${opcoesMes(t?.mes_inicio || 1)}</select></div>
+                        <div class="input-group"><label for="pta-topico-fim">Previsão de término</label><select id="pta-topico-fim" class="form-control">${opcoesMes(t?.mes_fim || 12)}</select></div>
+                    </div>
+                    <p class="help" id="pta-topico-previa"></p>
+                </form>`,
+            rodape: `<button type="button" class="btn btn-secondary" data-role="cancel">Cancelar</button><button type="button" class="btn btn-primary" id="pta-salvar-topico">${t ? 'Salvar' : 'Cadastrar tópico'}</button>`,
+        });
+        const previa = () => {
+            const ini = Number(modal.querySelector('#pta-topico-ini').value);
+            const fim = Number(modal.querySelector('#pta-topico-fim').value);
+            const n = fim - ini + 1;
+            modal.querySelector('#pta-topico-previa').textContent = n < 1 ? 'O término não pode ser antes do início.' : `${n} ${n === 1 ? 'mês' : 'meses'}. O avanço previsto cresce de forma linear até 100% no mês de término.`;
+        };
+        modal.querySelectorAll('select').forEach(s => s.addEventListener('change', previa));
+        previa();
+        modal.querySelector('#pta-salvar-topico').addEventListener('click', (e) => {
+            const payload = {
+                titulo: modal.querySelector('#pta-topico-titulo').value.trim(),
+                ano: Number(modal.querySelector('#pta-topico-ano').value),
+                mes_inicio: Number(modal.querySelector('#pta-topico-ini').value),
+                mes_fim: Number(modal.querySelector('#pta-topico-fim').value),
+            };
+            if (!payload.titulo) { window.UI.showToast('Informe o título do tópico.', 'error'); return; }
+            if (payload.mes_fim < payload.mes_inicio) { window.UI.showToast('O término não pode ser antes do início.', 'error'); return; }
+            comBotao(e.currentTarget, 'Salvando', async () => {
+                try {
+                    await req(t ? `/pta/topicos/${t.id}` : '/pta/topicos', { method: t ? 'PUT' : 'POST', json: payload });
+                    const form = modal.querySelector('form'); if (form) delete form.dataset.sujo;
+                    modal.remove();
+                    window.UI.showToast(t ? 'Tópico atualizado.' : 'Tópico cadastrado.', 'success');
+                    carregarTopicos();
+                } catch (err) { erroToast(err); }
+            });
+        });
+    }
+
+    async function modalMembros(t) {
+        try {
+            G.equipe = G.equipe || await req('/usuarios/equipe');
+        } catch (err) { erroToast(err); return; }
+        const atuais = new Set(t.membros.map(m => m.id));
+        const modal = abrirModal({
+            id: 'pta-modal-membros', eyebrow: 'membros do tópico', titulo: t.titulo,
+            corpo: `
+                <p class="dialog-text mb-md">Só os membros veem este tópico na folha do mês e são cobrados por ele. Sem membros, o tópico fica aberto a toda a equipe.</p>
+                <input type="search" class="form-control mb-sm" id="pta-membros-busca" placeholder="Filtrar pessoas" aria-label="Filtrar pessoas">
+                <div class="check-chips" id="pta-membros-lista">${G.equipe.map(u => `
+                    <label class="check-chip" data-nome="${esc((u.nome || '').toLowerCase())}"><input type="checkbox" name="pta-membro" value="${u.id}" ${atuais.has(u.id) ? 'checked' : ''}> ${esc(u.nome)}</label>`).join('')}
+                </div>`,
+            rodape: `<button type="button" class="link-btn muted" id="pta-membros-limpar">Abrir a toda a equipe</button><span class="grow"></span><button type="button" class="btn btn-secondary" data-role="cancel">Cancelar</button><button type="button" class="btn btn-primary" id="pta-salvar-membros">Salvar membros</button>`,
+        });
+        modal.querySelector('#pta-membros-busca').addEventListener('input', (e) => {
+            const termo = e.target.value.trim().toLowerCase();
+            modal.querySelectorAll('#pta-membros-lista .check-chip').forEach(c => { c.style.display = !termo || c.dataset.nome.includes(termo) ? '' : 'none'; });
+        });
+        modal.querySelector('#pta-membros-limpar').addEventListener('click', () => modal.querySelectorAll('input[name="pta-membro"]').forEach(i => { i.checked = false; }));
+        modal.querySelector('#pta-salvar-membros').addEventListener('click', (e) => {
+            const ids = Array.from(modal.querySelectorAll('input[name="pta-membro"]:checked')).map(i => Number(i.value));
+            comBotao(e.currentTarget, 'Salvando', async () => {
+                try {
+                    await req(`/pta/topicos/${t.id}/membros`, { method: 'PUT', json: { usuario_ids: ids } });
+                    modal.remove();
+                    window.UI.showToast(ids.length ? `${ids.length} membro(s) definido(s).` : 'Tópico aberto a toda a equipe.', 'success');
+                    carregarTopicos();
+                } catch (err) { erroToast(err); }
+            });
+        });
+    }
+
+    async function excluirTopico(t) {
+        const ok = await window.UI.confirm(`“${t.titulo}” e todos os ${t.qtd_relatos} relato(s) ligados a ele serão apagados. Isso não pode ser desfeito.`, { title: 'Excluir tópico?', danger: true, confirmText: 'Excluir' });
+        if (!ok) return;
+        const token = await window.api.confirmStepUp({ title: 'Confirme para excluir', message: `Você está excluindo o tópico “${t.titulo}” e o histórico dele.` });
+        if (!token) return;
+        try {
+            await req(`/pta/admin/topicos/${t.id}`, { method: 'DELETE', headers: { 'X-Step-Up-Token': token } });
+            window.UI.showToast('Tópico excluído.', 'success');
+            carregarTopicos();
+        } catch (err) { erroToast(err); }
+    }
+
+    // ---------- IMPORTAR E EXPORTAR ----------
+    function renderDados() {
+        const alvo = document.getElementById('pta-gestao-conteudo');
+        const ano = hoje().ano;
+        alvo.innerHTML = `
+            <div class="columns">
+                <section class="pta-painel">
+                    <div class="section-head"><h3>Exportar planilha do ano</h3></div>
+                    <p class="text-muted text-small mb-md">Um mês por linha e, para cada tópico, o texto do mês e a coluna %. Usa o texto consolidado salvo; quando não houver, junta os relatos aprovados. É o mesmo formato aceito pela importação.</p>
+                    <div class="input-group"><label for="pta-export-ano">Ano</label><input type="number" id="pta-export-ano" class="form-control mono" value="${ano}" min="2000" max="2100"></div>
+                    <button type="button" class="btn btn-primary" data-acao="exportar">${icone('download', 14)} Baixar planilha (.xlsx)</button>
+                </section>
+                ${ehAdmin() ? `
+                <section class="pta-painel">
+                    <div class="section-head"><h3>Importar histórico</h3></div>
+                    <p class="text-muted text-small mb-md">Os tópicos ficam na linha logo acima dos meses, cada um seguido da coluna “%”. Você vê um resumo antes de gravar.</p>
+                    <div class="input-group"><label for="pta-import-ano">Ano de referência</label><input type="number" id="pta-import-ano" class="form-control mono" value="${ano}" min="2000" max="2100"></div>
+                    <div class="input-group"><label for="pta-import-arquivo">Planilha (.xlsx)</label><input type="file" id="pta-import-arquivo" accept=".xlsx,.xls"></div>
+                    <button type="button" class="btn btn-secondary" data-acao="previa-import">${icone('upload', 14)} Pré-visualizar</button>
+                    <div id="pta-previa" class="pta-previa mt-md"></div>
+                </section>` : ''}
+            </div>
+            ${ehAdmin() ? `
+            <section class="pta-painel pta-perigo pta-secao">
+                <div class="section-head"><h3>Zona de risco</h3></div>
+                <p class="text-muted text-small mb-md">Apaga todos os relatos e textos consolidados de todos os anos. Os tópicos são mantidos. Use só para recomeçar uma base de testes.</p>
+                <button type="button" class="btn btn-danger-outline btn-sm" data-acao="limpar-tudo">${icone('trash-2', 14)} Apagar todos os relatos</button>
+            </section>` : ''}`;
+    }
+
+    async function exportar(btn) {
+        const ano = Number(document.getElementById('pta-export-ano').value);
+        await comBotao(btn, 'Gerando planilha', async () => {
+            try {
+                const res = await window.api.fetchProtected(`/pta/export?ano=${ano}`);
+                if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.detail || 'Não foi possível gerar a planilha.'); }
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = `PTA_${ano}.xlsx`;
+                document.body.appendChild(a); a.click(); a.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+            } catch (err) { erroToast(err); }
+        });
+    }
+
+    function formImportacao(simular) {
+        const arquivo = G.previa?.arquivo || document.getElementById('pta-import-arquivo').files[0];
+        const fd = new FormData();
+        fd.append('file', arquivo);
+        fd.append('ano', G.previa?.ano || document.getElementById('pta-import-ano').value);
+        fd.append('simular', simular ? 'true' : 'false');
+        return fd;
+    }
+
+    async function previaImportacao(btn) {
+        const arquivo = document.getElementById('pta-import-arquivo').files[0];
+        if (!arquivo) { window.UI.showToast('Escolha a planilha.', 'error'); return; }
+        G.previa = null;
+        const ano = document.getElementById('pta-import-ano').value;
+        const caixa = document.getElementById('pta-previa');
+        await comBotao(btn, 'Lendo planilha', async () => {
+            try {
+                const r = await req('/pta/import-history', { method: 'POST', body: formImportacao(true) });
+                G.previa = { arquivo, ano };
+                caixa.innerHTML = `
+                    <div class="note accent">
+                        <dl>
+                            <dt>Registros</dt><dd>${r.registros}</dd>
+                            <dt>Meses</dt><dd>${r.meses.map(m => MESES_CURTOS[m - 1]).join(', ')}</dd>
+                            <dt>Tópicos</dt><dd>${r.topicos.length}${r.topicos_novos.length ? ` · ${r.topicos_novos.length} novo(s): ${esc(r.topicos_novos.join(', '))}` : ' · todos já existem'}</dd>
+                        </dl>
+                        <p class="text-small mb-sm">Os registros entram como aprovados, em nome de quem importa. Meses já importados antes são substituídos.</p>
+                        <span class="cluster"><button type="button" class="btn btn-primary btn-sm" data-acao="confirmar-import">Importar ${r.registros} registros</button><button type="button" class="link-btn muted" data-acao="cancelar-import">Cancelar</button></span>
+                    </div>`;
+            } catch (err) { caixa.innerHTML = ''; erroToast(err); }
+        });
+    }
+
+    async function confirmarImportacao(btn) {
+        if (!G.previa) return;
+        await comBotao(btn, 'Importando', async () => {
+            try {
+                const r = await req('/pta/import-history', { method: 'POST', body: formImportacao(false) });
+                window.UI.showToast(r.mensagem || 'Importação concluída.', 'success');
+                G.previa = null;
+                renderDados();
+            } catch (err) { erroToast(err); }
+        });
+    }
+
+    function limparTudo() {
+        const modal = abrirModal({
+            id: 'pta-modal-limpar', eyebrow: 'zona de risco', titulo: 'Apagar todos os relatos?', tamanho: 'modal-sm',
+            corpo: `<p class="dialog-text mb-md">Todos os relatos, notas e textos consolidados serão apagados de forma permanente. Digite <strong class="mono">APAGAR</strong> para confirmar.</p>
+                    <input type="text" class="form-control mono" id="pta-limpar-confirmacao" autocomplete="off" aria-label="Digite APAGAR para confirmar">`,
+            rodape: `<button type="button" class="btn btn-secondary" data-role="cancel">Cancelar</button><button type="button" class="btn btn-danger" id="pta-limpar-ok" disabled>Apagar tudo</button>`,
+        });
+        const campo = modal.querySelector('#pta-limpar-confirmacao');
+        const ok = modal.querySelector('#pta-limpar-ok');
+        campo.addEventListener('input', () => { ok.disabled = campo.value.trim() !== 'APAGAR'; });
+        setTimeout(() => campo.focus(), 50);
+        ok.addEventListener('click', async () => {
+            modal.remove();
+            const token = await window.api.confirmStepUp({ title: 'Confirme para apagar', message: 'Você está apagando todo o histórico do planejamento mensal.' });
+            if (!token) return;
+            try {
+                const r = await req('/pta/admin/limpar-tudo/relatorios', { method: 'DELETE', headers: { 'X-Step-Up-Token': token } });
+                window.UI.showToast(r.mensagem || 'Relatos apagados.', 'success');
+            } catch (err) { erroToast(err); }
+        });
+    }
+
+    // ---------- EVENTOS DA COORDENAÇÃO ----------
+    function aoClicarGestao(e) {
+        const alvo = e.target.closest('[data-acao]');
+        if (!alvo) return;
+        const acao = alvo.dataset.acao;
+        const rid = Number(alvo.dataset.relato);
+        const tid = Number(alvo.dataset.topico);
+        const topicoPainel = () => (G.painel || []).find(t => t.id === tid);
+        switch (acao) {
+            case 'aba': G.aba = alvo.dataset.aba; G.previa = null; renderAba(); break;
+            case 'ir-folha': renderPTAPesquisador(); break;
+            case 'mes-gestao': { const n = somarMes(G.mes, G.ano, Number(alvo.dataset.delta)); G.mes = n.mes; G.ano = n.ano; G.recentes.clear(); G.selecionados.clear(); renderAba(); break; }
+            case 'ano-visao': G.anoVisao += Number(alvo.dataset.delta); carregarAno(); break;
+            case 'abrir-mes': G.mes = Number(alvo.dataset.mes); G.ano = G.anoVisao; G.aba = 'avaliar'; G.recentes.clear(); renderAba(); break;
+            case 'aprovar': comBotao(alvo, '', () => aprovar(rid)); break;
+            case 'aprovar-selecionados': aprovarSelecionados(alvo); break;
+            case 'devolver': abrirDevolucao(rid); break;
+            case 'desfazer':
+                comBotao(alvo, '', async () => {
+                    try { await req(`/pta/chefia/desfazer/${rid}`, { method: 'POST' }); G.recentes.delete(rid); await carregarAvaliacao(); }
+                    catch (err) { erroToast(err); }
+                });
+                break;
+            case 'expandir': {
+                const desc = alvo.closest('.pta-avaliacao')?.querySelector('.pta-desc');
+                if (desc) { desc.classList.toggle('is-recolhida'); alvo.textContent = desc.classList.contains('is-recolhida') ? 'Ler tudo' : 'Recolher'; }
+                break;
+            }
+            case 'historico': abrirHistorico(rid, alvo.dataset.titulo || 'Relato'); break;
+            case 'cobrar': cobrar(alvo.dataset.usuario ? Number(alvo.dataset.usuario) : null, alvo); break;
+            case 'gerar-sintese': gerarSintese(tid, alvo); break;
+            case 'gerar-todas': gerarTodas(alvo); break;
+            case 'salvar-sintese': salvarSintese(tid, alvo); break;
+            case 'copiar-sintese': {
+                const texto = document.getElementById(`pta-sintese-${tid}`)?.value || '';
+                navigator.clipboard?.writeText(texto).then(() => window.UI.showToast('Texto copiado.', 'success'), () => window.UI.showToast('Não foi possível copiar.', 'error'));
+                break;
+            }
+            case 'novo-topico': modalTopico(null); break;
+            case 'editar-topico': if (topicoPainel()) modalTopico(topicoPainel()); break;
+            case 'membros': if (topicoPainel()) modalMembros(topicoPainel()); break;
+            case 'excluir-topico': if (topicoPainel()) excluirTopico(topicoPainel()); break;
+            case 'exportar': exportar(alvo); break;
+            case 'previa-import': previaImportacao(alvo); break;
+            case 'confirmar-import': confirmarImportacao(alvo); break;
+            case 'cancelar-import': G.previa = null; document.getElementById('pta-previa').innerHTML = ''; break;
+            case 'limpar-tudo': limparTudo(); break;
+            default: break;
+        }
+    }
+
+    function aoMudarGestao(e) {
+        const el = e.target;
+        const tipo = el.dataset.acaoChange;
+        if (tipo === 'selecionar') alternarSelecao(Number(el.dataset.relato), el.checked);
+        else if (tipo === 'selecionar-todos') {
+            const fila = G.dados.relatos.filter(r => r.status === 'aguardando_aprovacao');
+            G.selecionados = el.checked ? new Set(fila.map(r => r.id)) : new Set();
+            document.getElementById('pta-fila').innerHTML = renderFila(G.dados, fila);
+        }
+    }
+
+    window.renderPTAPesquisador = renderPTAPesquisador;
+    window.renderPTACoordenador = renderPTACoordenador;
+})();

@@ -1,0 +1,112 @@
+/* ==========================================
+   INSUMOS: estoque de reagentes, EPIs, vidrarias e utilidades
+   Só tokens de tokens.css; nenhuma cor literal.
+   ========================================== */
+
+/* Indicadores */
+.ins-figures { margin-bottom: var(--space-4); }
+.ins-figures .figure .k { text-transform: none; }
+
+/* Barra de filtros */
+.ins-toolbar { margin-bottom: var(--space-3); }
+.ins-toolbar .toolbar-controls > .form-control { flex: 0 1 180px; }
+.ins-toolbar .search-box kbd { pointer-events: none; }
+
+/* Tabela */
+.ins-table td { vertical-align: middle; }
+.ins-table .ins-nome { display: block; font-weight: 600; color: var(--text-primary); overflow-wrap: anywhere; }
+.ins-table .ins-sub { display: block; margin-top: 2px; font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.ins-table .ins-sub a { color: var(--brand-primary); text-decoration: none; }
+.ins-table .ins-sub a:hover { text-decoration: underline; }
+.ins-table .ins-sub a:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; border-radius: 2px; }
+.ins-table tr.is-critico td:first-child { box-shadow: inset 2px 0 0 var(--danger-solid); }
+
+/* Saldo / mínimo: número tabular + régua com a marca do mínimo */
+.ins-saldo { display: flex; flex-direction: column; gap: 4px; min-width: 150px; }
+.ins-saldo-linha { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.ins-saldo-num { font-variant-numeric: tabular-nums; font-size: 13px; color: var(--text-secondary); white-space: nowrap; }
+.ins-saldo-num strong { color: var(--text-primary); font-weight: 600; }
+.ins-regua { position: relative; width: 120px; height: 4px; border-radius: 2px; background: var(--bg-subtle); }
+.ins-regua-fill { position: absolute; inset: 0 auto 0 0; border-radius: 2px; background: var(--success-solid); }
+.ins-regua.is-repor .ins-regua-fill { background: var(--warning-solid); }
+.ins-regua.is-critico .ins-regua-fill { background: var(--danger-solid); }
+.ins-regua-min { position: absolute; top: -3px; width: 1px; height: 10px; background: var(--text-secondary); }
+
+/* Validade */
+.ins-validade { font-variant-numeric: tabular-nums; font-size: 13px; color: var(--text-secondary); white-space: nowrap; }
+.ins-validade.is-vencendo { color: var(--warning-text); font-weight: 500; }
+.ins-validade.is-vencido { color: var(--danger-text); font-weight: 600; }
+.ins-validade small { display: block; font-size: 12px; font-weight: 400; }
+
+/* Ações por linha */
+.ins-acoes { display: inline-flex; align-items: center; justify-content: flex-end; gap: 2px; flex-wrap: wrap; }
+.ins-acoes .link-btn { height: 28px; padding: 0 8px; font-size: 12.5px; color: var(--text-primary); white-space: nowrap; }
+.ins-acoes .link-btn:hover { background: var(--bg-subtle); }
+.ins-acoes .link-btn.is-uso { font-weight: 600; }
+.ins-acoes .link-btn.is-reportar { color: var(--danger-text); }
+.ins-acoes .link-btn.muted { color: var(--text-secondary); }
+.ins-acoes .ins-sep { width: 1px; height: 16px; margin: 0 4px; background: var(--border-subtle); }
+.ins-acoes .link-btn:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 1px; }
+
+/* Modais de movimentação */
+.ins-mov-resumo {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-3);
+    padding: var(--space-3);
+    margin-bottom: var(--space-4);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface);
+}
+.ins-mov-resumo dt { font-size: 12px; font-weight: 500; color: var(--text-muted); }
+.ins-mov-resumo dd { margin: 2px 0 0; font-size: 15px; font-weight: 600; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.ins-mov-resumo dd.is-alerta { color: var(--danger-text); }
+.ins-qtd { display: flex; align-items: stretch; gap: var(--space-2); }
+.ins-qtd input { flex: 1; min-width: 0; font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; height: 44px; }
+.ins-qtd .ins-unidade { display: inline-flex; align-items: center; padding: 0 12px; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); background: var(--bg-subtle); color: var(--text-secondary); font-weight: 600; }
+.ins-atalhos-qtd { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2); }
+.ins-aviso { margin-top: var(--space-2); font-size: 12.5px; }
+.ins-motivos { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-3); }
+.ins-motivos .check-chip[aria-pressed="true"] { border-color: var(--brand-primary); background: var(--brand-soft); color: var(--brand-primary); }
+
+/* Histórico */
+.ins-historico { max-height: 60vh; overflow-y: auto; }
+.ins-historico .tl-title { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.ins-historico .ins-mov-qtd { font-variant-numeric: tabular-nums; }
+.ins-historico .ins-mov-qtd.is-entrada { color: var(--success-text); }
+.ins-historico .ins-mov-qtd.is-saida { color: var(--text-primary); }
+.ins-historico .ins-mov-qtd.is-reporte { color: var(--danger-text); }
+.tl-item.is-entrada::before { background: var(--success-solid); border-color: var(--success-solid); }
+.tl-item.is-reporte::before { background: var(--danger-solid); border-color: var(--danger-solid); }
+
+/* Formulário do insumo */
+.ins-form .field-grid { gap: var(--space-3) var(--space-4); }
+.ins-form .help { margin-top: 4px; }
+.ins-zona-remover { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-4); padding-top: var(--space-3); border-top: 1px solid var(--border-soft); font-size: 12.5px; color: var(--text-muted); }
+
+/* Em telas menores, as colunas escondidas reaparecem como linha de apoio sob o nome */
+.ins-table .ins-local-curto,
+.ins-table .ins-validade-curta { display: none; }
+@media (max-width: 1180px) {
+    .ins-table .ins-local-curto { display: block; }
+}
+@media (max-width: 640px) {
+    .ins-table .ins-validade-curta { display: block; }
+}
+
+@media (max-width: 900px) {
+    .ins-regua { width: 96px; }
+    .ins-acoes { max-width: 220px; }
+}
+@media (max-width: 640px) {
+    .ins-mov-resumo { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ins-acoes .ins-sep { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .ins-regua-fill { transition: none; }
+}
+
+/* Linhas de apoio coloridas: vencem a cor neutra de .ins-sub */
+.ins-table .ins-sub.text-danger { color: var(--danger-text); font-weight: 500; }
+.ins-table .ins-sub.text-warning { color: var(--warning-text); font-weight: 500; }
