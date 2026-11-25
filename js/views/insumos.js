@@ -9,8 +9,6 @@
 
     const CATEGORIAS = ['Reagentes', 'EPIs', 'Vidrarias', 'Utilidades'];
     const UNIDADES = ['mL', 'L', 'g', 'kg', 'un', 'cx', 'par'];
-    const PODE_CADASTRAR = ['coordenador', 'admin', 'tecnico'];
-    const PODE_REMOVER = ['coordenador', 'admin'];
     const MOTIVOS_REPORTE = [
         { id: 'acabou', rotulo: 'Acabou o estoque', texto: 'O insumo acabou.', saldo: 0 },
         { id: 'danificado', rotulo: 'Embalagem danificada', texto: 'Frasco ou embalagem danificada.' },
@@ -20,9 +18,6 @@
 
     const esc = (v) => window.escapeHTML(v);
     const icone = (nome, size = 14) => (window.Icon ? window.Icon(nome, { size }) : '');
-    const papel = () => { try { return JSON.parse(localStorage.getItem('user_data') || '{}').role; } catch (e) { return null; } };
-    const podeCadastrar = () => PODE_CADASTRAR.includes(papel());
-    const podeRemover = () => PODE_REMOVER.includes(papel());
     const FORMATO_NUM = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 3 });
     const num = (n) => FORMATO_NUM.format(Number(n || 0));
     const FORMATO_DIA = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' });
@@ -115,8 +110,6 @@
         return `<span class="ins-validade">${dataBR(i.validade)}</span>`;
     }
 
-    const linkSeguro = (url) => (/^https?:\/\//i.test(String(url || '').trim()) ? esc(String(url).trim()) : '');
-
     // ==========================================
     // TELA
     // ==========================================
@@ -137,7 +130,7 @@
                     </div>
                     <div class="page-actions">
                         <button type="button" class="btn btn-secondary" data-acao="exportar">${icone('download')} Exportar Excel</button>
-                        ${podeCadastrar() ? `<button type="button" class="btn btn-primary" id="btn-novo-insumo" data-acao="novo">${icone('plus')} Novo insumo</button>` : ''}
+                        <button type="button" class="btn btn-primary" id="btn-novo-insumo" data-acao="novo">${icone('plus')} Novo insumo</button>
                     </div>
                 </header>
                 <div class="figures ins-figures fade-in" id="ins-indicadores" aria-live="polite">${indicadoresHTML(null)}</div>
@@ -146,7 +139,7 @@
                     <div class="toolbar-controls">
                         <div class="search-box">
                             ${icone('search', 15)}
-                            <input type="search" class="form-control" id="ins-busca" name="busca" data-busca autocomplete="off" placeholder="Buscar por nome ou CAS…" aria-label="Buscar por nome ou código CAS" value="${esc(E.busca)}">
+                            <input type="search" class="form-control" id="ins-busca" name="busca" data-busca autocomplete="off" placeholder="Buscar insumo…" aria-label="Buscar insumo pelo nome" value="${esc(E.busca)}">
                             <kbd title="Pressione / para focar na busca">/</kbd>
                         </div>
                         <select class="form-control" id="ins-categoria" name="categoria" aria-label="Categoria">
@@ -163,7 +156,7 @@
                 <div class="table-container fade-in">
                     <table class="data-table ins-table">
                         <thead><tr>
-                            <th scope="col">Insumo / CAS</th>
+                            <th scope="col">Insumo</th>
                             <th scope="col" class="col-hide-sm">Categoria</th>
                             <th scope="col" class="col-hide-md">Localização</th>
                             <th scope="col">Saldo / mínimo</th>
@@ -226,7 +219,7 @@
     function filtrados() {
         const termo = E.busca.trim().toLowerCase();
         return E.itens.filter(i => {
-            if (termo && !(i.nome || '').toLowerCase().includes(termo) && !(i.codigo_cas || '').toLowerCase().includes(termo)) return false;
+            if (termo && !(i.nome || '').toLowerCase().includes(termo)) return false;
             if (E.categoria && i.categoria !== E.categoria) return false;
             if (E.alerta === 'baixo' && !i.abaixo_minimo) return false;
             if (E.alerta === 'validade' && !(i.vencendo || i.vencido)) return false;
@@ -244,9 +237,12 @@
 
         if (!E.itens.length) {
             contador.textContent = '';
-            corpo.innerHTML = `<tr><td colspan="6">${window.UI.emptyState(podeCadastrar()
-                ? { title: 'Nenhum insumo cadastrado', description: 'Cadastre os reagentes, EPIs e vidrarias do laboratório para acompanhar saldo, validade e reposição.', actionLabel: 'Cadastrar o primeiro insumo', actionOnclick: "document.getElementById('btn-novo-insumo')?.click()" }
-                : { title: 'Nenhum insumo cadastrado', description: 'A coordenação ou a equipe técnica ainda não cadastrou os insumos do laboratório.' })}</td></tr>`;
+            corpo.innerHTML = `<tr><td colspan="6">${window.UI.emptyState({
+                title: 'Nenhum insumo cadastrado',
+                description: 'Cadastre os reagentes, EPIs e vidrarias do laboratório para acompanhar saldo, validade e reposição.',
+                actionLabel: 'Cadastrar o primeiro insumo',
+                actionOnclick: "document.getElementById('btn-novo-insumo')?.click()",
+            })}</td></tr>`;
             return;
         }
         contador.textContent = `${lista.length} ${lista.length === 1 ? 'insumo encontrado' : 'insumos encontrados'}`;
@@ -267,15 +263,11 @@
     }
 
     function linhaHTML(i) {
-        const fispq = linkSeguro(i.link_fispq);
-        const sub = [i.codigo_cas ? `CAS <span translate="no">${esc(i.codigo_cas)}</span>` : '', fispq ? `<a href="${fispq}" target="_blank" rel="noopener noreferrer">FISPQ<span class="sr-only"> de ${esc(i.nome)} (abre em nova aba)</span></a>` : '']
-            .filter(Boolean).join(' · ');
         const semSaldo = (i.quantidade_atual || 0) <= 0;
         return `
             <tr class="${nivel(i) === 'critico' ? 'is-critico' : ''}" data-insumo="${i.id}">
                 <td>
                     <span class="ins-nome">${esc(i.nome)}</span>
-                    ${sub ? `<span class="ins-sub">${sub}</span>` : ''}
                     ${i.localizacao ? `<span class="ins-sub ins-local-curto">${esc(i.localizacao)}</span>` : ''}
                     ${i.vencido || i.vencendo ? `<span class="ins-sub ins-validade-curta ${i.vencido ? 'text-danger' : 'text-warning'}">${i.vencido ? 'Vencido' : 'Vence'} em ${dataBR(i.validade)}</span>` : ''}
                 </td>
@@ -290,7 +282,7 @@
                         <button type="button" class="link-btn is-reportar" data-acao="REPORTE" data-id="${i.id}">${icone('alert-triangle', 13)} Reportar</button>
                         <span class="ins-sep" aria-hidden="true"></span>
                         <button type="button" class="link-btn muted" data-acao="historico" data-id="${i.id}">Histórico</button>
-                        ${podeCadastrar() ? `<button type="button" class="link-btn muted" data-acao="editar" data-id="${i.id}">Editar</button>` : ''}
+                        <button type="button" class="link-btn muted" data-acao="editar" data-id="${i.id}">Editar</button>
                     </span>
                 </td>
             </tr>`;
@@ -563,11 +555,6 @@
                             <select id="ins-f-categoria" name="categoria" class="form-control">${CATEGORIAS.map(c => `<option ${c === i.categoria ? 'selected' : ''}>${c}</option>`).join('')}</select>
                         </div>
                         <div class="input-group">
-                            <label for="ins-f-cas">Código CAS <span class="text-muted">(opcional)</span></label>
-                            <input type="text" id="ins-f-cas" name="codigo_cas" class="form-control mono" maxlength="20" autocomplete="off" spellcheck="false" value="${esc(i.codigo_cas || '')}" placeholder="64-17-5" aria-describedby="ins-f-cas-erro">
-                            <p class="field-error hidden" id="ins-f-cas-erro" role="alert"></p>
-                        </div>
-                        <div class="input-group span-2">
                             <label for="ins-f-local">Localização</label>
                             <input type="text" id="ins-f-local" name="localizacao" class="form-control" maxlength="200" list="ins-locais" autocomplete="off" value="${esc(i.localizacao || '')}" placeholder="Ex.: Armário 2, prateleira de cima…">
                             <datalist id="ins-locais">${locais.map(l => `<option value="${esc(l)}"></option>`).join('')}</datalist>
@@ -596,13 +583,8 @@
                             <label for="ins-f-validade">Validade <span class="text-muted">(opcional)</span></label>
                             <input type="date" id="ins-f-validade" name="validade" class="form-control" value="${esc(i.validade || '')}">
                         </div>
-                        <div class="input-group span-2">
-                            <label for="ins-f-fispq">Link da FISPQ <span class="text-muted">(opcional)</span></label>
-                            <input type="url" id="ins-f-fispq" name="link_fispq" class="form-control" maxlength="1000" autocomplete="off" value="${esc(i.link_fispq || '')}" placeholder="https://…" aria-describedby="ins-f-fispq-erro">
-                            <p class="field-error hidden" id="ins-f-fispq-erro" role="alert"></p>
-                        </div>
                     </div>
-                    ${!novo && podeRemover() ? `
+                    ${!novo ? `
                     <div class="ins-zona-remover">
                         <span>Remover tira o item da lista. O histórico de movimentações é mantido.</span>
                         <button type="button" class="btn btn-danger-outline btn-sm" id="ins-f-remover">Remover do estoque</button>
@@ -618,28 +600,18 @@
         modal.querySelector('#ins-form').addEventListener('submit', (ev) => {
             ev.preventDefault();
             const nome = campo('nome').value.trim();
-            const cas = campo('cas').value.trim();
-            const fispq = campo('fispq').value.trim();
             let invalido = null;
             erroNoCampo(campo('nome'), nome ? '' : 'Informe o nome do insumo.');
             if (!nome) invalido = invalido || campo('nome');
-            const casOk = !cas || /^\d{2,7}-\d{2}-\d$/.test(cas);
-            erroNoCampo(campo('cas'), casOk ? '' : 'Use o formato do CAS, por exemplo 64-17-5.');
-            if (!casOk) invalido = invalido || campo('cas');
-            const linkOk = !fispq || /^https?:\/\//i.test(fispq);
-            erroNoCampo(campo('fispq'), linkOk ? '' : 'O link deve começar com http:// ou https://.');
-            if (!linkOk) invalido = invalido || campo('fispq');
             if (invalido) { invalido.focus(); return; }
 
             const payload = {
                 nome,
-                codigo_cas: cas || null,
                 categoria: campo('categoria').value,
                 localizacao: campo('local').value.trim() || null,
                 unidade: campo('unidade').value,
                 estoque_minimo: Math.max(0, Number(campo('minimo').value) || 0),
                 validade: campo('validade').value || null,
-                link_fispq: fispq || null,
             };
             if (novo) payload.quantidade_atual = Math.max(0, Number(campo('saldo').value) || 0);
 
@@ -652,8 +624,7 @@
                     await carregar();
                     if (!novo) focarAcao('editar', i.id);
                 } catch (err) {
-                    const alvoErro = /CAS/i.test(err.message) ? campo('cas') : /FISPQ|link/i.test(err.message) ? campo('fispq') : null;
-                    if (alvoErro) { erroNoCampo(alvoErro, err.message); alvoErro.focus(); } else window.UI.showToast(err.message, 'error');
+                    window.UI.showToast(err.message, 'error');
                 }
             });
         });

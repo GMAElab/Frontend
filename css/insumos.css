@@ -16,9 +16,6 @@
 .ins-table td { vertical-align: middle; }
 .ins-table .ins-nome { display: block; font-weight: 600; color: var(--text-primary); overflow-wrap: anywhere; }
 .ins-table .ins-sub { display: block; margin-top: 2px; font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
-.ins-table .ins-sub a { color: var(--brand-primary); text-decoration: none; }
-.ins-table .ins-sub a:hover { text-decoration: underline; }
-.ins-table .ins-sub a:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; border-radius: 2px; }
 .ins-table tr.is-critico td:first-child { box-shadow: inset 2px 0 0 var(--danger-solid); }
 
 /* Saldo / mínimo: número tabular + régua com a marca do mínimo */

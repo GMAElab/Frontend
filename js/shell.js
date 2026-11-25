@@ -105,7 +105,7 @@
             { rotulo: 'Novo documento no RSpace ELN', icone: 'layers', termos: 'rspace caderno experimento eln', executar: abrirEm('rspace', () => window.rspaceAbrirModalNovoDoc?.()) },
             ehGestor() && { rotulo: 'Nova tarefa', icone: 'plus', termos: 'atribuir', executar: abrirEm('tarefas', () => window.abrirModalTarefa?.()) },
             { rotulo: 'Registrar uso de insumo', icone: 'package', termos: 'insumo reagente estoque baixa retirada saída epi vidraria', executar: abrirEm('insumos', () => window.insumosFocarBusca?.()) },
-            ehGestor() && { rotulo: 'Novo insumo', icone: 'plus', termos: 'cadastrar reagente estoque epi vidraria', executar: abrirEm('insumos', () => window.insumosAbrirNovo?.()) },
+            { rotulo: 'Novo insumo', icone: 'plus', termos: 'cadastrar reagente estoque epi vidraria', executar: abrirEm('insumos', () => window.insumosAbrirNovo?.()) },
             { rotulo: 'Registrar PTA do mês', icone: 'calendar', termos: 'planejamento pta avanço', executar: () => irPara('pta') },
         ].filter(Boolean).map(c => ({ grupo: 'Criar', ...c }));
 

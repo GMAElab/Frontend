@@ -87,35 +87,29 @@
     };
     const badge = (st) => `<span class="badge ${STATUS[st]?.classe || ''}">${STATUS[st]?.rotulo || esc(st)}</span>`;
 
-    function delta(atual, anterior, esperado) {
-        const d = atual - anterior;
-        const sinal = d > 0 ? `+${d}` : `${d}`;
-        const abaixo = esperado !== null && esperado !== undefined && atual < esperado - 15;
-        const classe = abaixo ? 'is-low' : d > 0 ? 'is-up' : d < 0 ? 'is-down' : '';
-        const titulo = abaixo ? ` title="Abaixo do esperado para o mês (${esperado}%)"` : '';
-        return `<span class="pta-delta ${classe}"${titulo}>${sinal} p.p.${abaixo ? ' · abaixo do esperado' : ''}</span>`;
-    }
+    const abaixoDoEsperado = (atual, esperado) => esperado !== null && esperado !== undefined && atual < esperado - 15;
 
-    /** Linha do avanço aprovado mês a mês, com a previsão linear do prazo tracejada. */
-    function sparkline(topico, historico, { w = 96, h = 26, atual = null, mesAtual = null } = {}) {
-        const ini = topico.mes_inicio || 1;
-        const ultimoMes = Math.max(topico.mes_fim || 12, ...(historico || []).filter(p => p.ano === topico.ano).map(p => p.mes), mesAtual || 0);
-        const fim = Math.max(ultimoMes, ini + 1);
-        const x = (m) => ((m - ini) / (fim - ini)) * w;
-        const y = (v) => h - (Math.max(0, Math.min(100, v)) / 100) * h;
-        const pontos = (historico || []).filter(p => p.ano === topico.ano && p.mes >= ini).map(p => [x(p.mes), y(p.avanco)]);
-        if (atual !== null && mesAtual && !(historico || []).some(p => p.ano === topico.ano && p.mes === mesAtual)) {
-            pontos.push([x(mesAtual), y(atual)]);
+    /** O que foi relatado no tópico no mês anterior. `resumo`: só o "Realizado", em poucas linhas (tabela). */
+    function mesAnteriorHTML(ma, { resumo = false } = {}) {
+        if (!ma) return '';
+        const relatos = ma.relatos || [];
+        if (!relatos.length) {
+            return `<span class="pta-anterior-vazio">Nada relatado em ${esc(nomeMes(ma.mes).toLowerCase())}${ma.mes === 12 ? ` de ${ma.ano}` : ''}.</span>`;
         }
-        if (!pontos.length) return '<span class="pta-spark-vazio">sem histórico</span>';
-        const previsto = topico.mes_fim ? `<line class="previsto" x1="${x(ini).toFixed(1)}" y1="${h}" x2="${x(topico.mes_fim).toFixed(1)}" y2="0"/>` : '';
-        const caminho = pontos.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
-        const ultimo = pontos[pontos.length - 1];
-        const resumo = (historico || []).map(p => `${MESES_CURTOS[p.mes - 1]}: ${p.avanco}%`).join(', ') || 'sem meses aprovados';
-        return `<svg class="pta-spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="Evolução aprovada: ${esc(resumo)}">
-            <line class="base" x1="0" y1="${h}" x2="${w}" y2="${h}"/>${previsto}
-            <path class="real" d="${caminho}"/><circle class="ponto" cx="${ultimo[0].toFixed(1)}" cy="${ultimo[1].toFixed(1)}" r="2.2"/>
-        </svg>`;
+        const varios = relatos.length > 1;
+        const rotuloDe = (r) => [varios || !r.meu ? (r.meu ? 'Você' : r.autor) : '', `${r.percentual_avanco}%`,
+            r.status === 'consolidado' ? '' : (STATUS[r.status]?.rotulo || '').toLowerCase()].filter(Boolean).join(' · ');
+        if (resumo) {
+            return `<div class="pta-anterior-resumo">${relatos.map(r => {
+                const partes = lerDescricao(r.descricao);
+                return `<p><span class="pta-anterior-autor">${esc(rotuloDe(r))}</span> ${esc(partes.realizado || partes.resultados || r.descricao)}</p>`;
+            }).join('')}</div>`;
+        }
+        return relatos.map(r => `
+            <div class="pta-anterior-item">
+                <p class="pta-anterior-autor">${esc(rotuloDe(r))}</p>
+                ${descricaoHTML(r.descricao)}
+            </div>`).join('');
     }
 
     // ==========================================
@@ -255,7 +249,7 @@
                     <table class="data-table pta-folha">
                         <thead><tr>
                             <th>Tópico</th>
-                            <th class="col-hide-sm">Evolução</th>
+                            <th class="col-hide-sm" id="pta-th-anterior">Feito em ${esc(nomeMes(somarMes(P.mes, P.ano, -1).mes).toLowerCase())}</th>
                             <th class="num">Último</th>
                             <th class="num">Este mês</th>
                             <th class="num col-hide-xs">Esperado</th>
@@ -310,11 +304,9 @@
         const enviados = ativos.filter(t => t.meu && ['aguardando_aprovacao', 'consolidado'].includes(t.meu.status)).length;
         const aprovados = ativos.filter(t => t.meu && t.meu.status === 'consolidado').length;
         const rascunhos = d.topicos.filter(t => t.meu && t.meu.status === 'rascunho');
-        const pct = ativos.length ? Math.round((enviados / ativos.length) * 100) : 0;
         document.getElementById('pta-progresso').innerHTML = ativos.length ? `
             <div class="pta-progresso">
                 <span class="pta-progresso-texto">${enviados} de ${ativos.length} ${ativos.length === 1 ? 'tópico enviado' : 'tópicos enviados'} em ${esc(nomeMes(P.mes).toLowerCase())}</span>
-                <span class="progress-track" aria-hidden="true"><span class="progress-fill ${pct === 100 ? 'is-success' : ''}" style="width:${pct}%"></span></span>
                 <span class="cluster">
                     ${aprovados ? `<span class="badge badge-success">${aprovados} aprovado${aprovados > 1 ? 's' : ''}</span>` : ''}
                     ${rascunhos.length ? `<span class="badge">${rascunhos.length} rascunho${rascunhos.length > 1 ? 's' : ''}</span>` : ''}
@@ -357,10 +349,13 @@
         const rotuloAcao = !t.meu ? (t.concluido ? 'Ver' : 'Preencher') : t.meu.status === 'consolidado' ? 'Ver' : t.meu.status === 'devolvido' ? 'Corrigir' : 'Editar';
         return `
             <tr class="clickable${aberto ? ' is-aberto' : ''}${st === 'fora' || (t.concluido && !t.meu) ? ' is-dimmed' : ''}" tabindex="0" data-acao="alternar" data-topico="${t.id}" aria-expanded="${aberto}">
-                <td><strong>${esc(t.titulo)}</strong><span class="pta-topico-sub">${esc(prazoTopico(t))}${t.membros_definidos ? '' : ' · toda a equipe'}${t.prazo_vencido ? ' · <span class="text-danger">prazo vencido</span>' : ''}</span></td>
-                <td class="col-hide-sm">${sparkline(t, t.historico, { atual, mesAtual: P.ano === t.ano ? P.mes : null })}</td>
+                <td>
+                    <strong>${esc(t.titulo)}</strong><span class="pta-topico-sub">${esc(prazoTopico(t))}${t.membros_definidos ? '' : ' · toda a equipe'}${t.prazo_vencido ? ' · <span class="text-danger">prazo vencido</span>' : ''}</span>
+                    <div class="pta-anterior-curto"><span class="pta-anterior-titulo">Feito em ${esc(nomeMes(t.mes_anterior?.mes || 1).toLowerCase())}</span>${mesAnteriorHTML(t.mes_anterior, { resumo: true })}</div>
+                </td>
+                <td class="col-hide-sm pta-anterior-td">${mesAnteriorHTML(t.mes_anterior, { resumo: true })}</td>
                 <td class="num">${t.ultimo_avanco}%</td>
-                <td class="num">${atual === null ? '<span class="text-faint">—</span>' : `<strong>${atual}%</strong><br>${delta(atual, t.ultimo_avanco, t.esperado)}`}</td>
+                <td class="num">${atual === null ? '<span class="text-faint">—</span>' : `<strong>${atual}%</strong>`}</td>
                 <td class="num col-hide-xs">${t.esperado === null ? '<span class="text-faint">—</span>' : `${t.esperado}%`}</td>
                 <td>${badge(st)}</td>
                 <td class="end"><button type="button" class="link-btn" data-acao="alternar" data-topico="${t.id}">${rotuloAcao}</button></td>
@@ -384,12 +379,14 @@
                     <div class="pta-editor-grid">
                         <div class="pta-editor-main">
                             ${devolucao ? `<div class="note danger"><strong>Devolvido por ${esc(devolucao.autor_nome)}:</strong> ${esc(devolucao.texto)}</div>` : ''}
-                            ${plano ? `
-                                <div class="pta-painel">
-                                    <div class="label-row"><h5>Próximos passos que você registrou em ${esc(nomeMes(t.plano_anterior.mes).toLowerCase())}</h5>
-                                    <button type="button" class="link-btn" data-acao="copiar-plano" data-topico="${t.id}">Copiar para “Realizado”</button></div>
-                                    <div class="pta-plano" id="${id('plano')}">${esc(plano)}</div>
-                                </div>` : ''}
+                            <div class="pta-painel pta-anterior">
+                                <div class="label-row">
+                                    <h5>O que foi feito em ${esc(mesAno(t.mes_anterior.mes, t.mes_anterior.ano).toLowerCase())}</h5>
+                                    ${plano ? `<button type="button" class="link-btn" data-acao="copiar-plano" data-topico="${t.id}">Copiar seus próximos passos para “Realizado”</button>` : ''}
+                                </div>
+                                ${mesAnteriorHTML(t.mes_anterior)}
+                                ${plano ? `<template id="${id('plano')}">${esc(plano)}</template>` : ''}
+                            </div>
                             ${SECOES.map(s => `
                                 <div class="input-group${s.oculta ? ' hidden' : ''}" id="${id(s.chave)}-grupo">
                                     <div class="label-row"><label for="${id(s.chave)}">${esc(s.titulo)}</label>${s.ajuda ? `<span class="pta-ajuda-secao">${esc(s.ajuda)}</span>` : ''}</div>
@@ -415,10 +412,6 @@
                                     <span>Esperado <strong>${t.esperado === null ? '—' : `${t.esperado}%`}</strong></span>
                                 </div>
                                 <p class="pta-avanco-aviso" id="${id('aviso')}" aria-live="polite"></p>
-                            </div>
-                            <div class="pta-painel">
-                                <h5>Evolução aprovada</h5>
-                                ${sparkline(t, t.historico, { w: 264, h: 56 })}
                             </div>
                             ${meu ? `
                                 <div class="pta-painel">
@@ -446,7 +439,10 @@
         const meu = t.meu;
         const conteudo = meu ? `
             <div class="pta-editor-grid">
-                <div class="pta-editor-main">${descricaoHTML(meu.descricao_atividades)}</div>
+                <div class="pta-editor-main">
+                    <div class="pta-painel pta-anterior"><h5>O que foi feito em ${esc(mesAno(t.mes_anterior.mes, t.mes_anterior.ano).toLowerCase())}</h5>${mesAnteriorHTML(t.mes_anterior)}</div>
+                    <div class="pta-painel"><h5>Seu relato de ${esc(nomeMes(P.mes).toLowerCase())}</h5>${descricaoHTML(meu.descricao_atividades)}</div>
+                </div>
                 <aside class="pta-editor-side">
                     <div class="pta-painel">
                         <h5>Aprovado</h5>
@@ -494,7 +490,6 @@
         if (reduziu) { texto = `Menor que o último (${t.ultimo_avanco}%). Explique a redução no campo abaixo.`; classe = 'text-danger'; }
         else if (v === t.ultimo_avanco && t.ultimo_avanco > 0) { texto = 'Mesmo avanço do mês anterior.'; classe = 'text-warning'; }
         else if (t.esperado !== null && v < t.esperado - 15) { texto = `Abaixo do esperado para o mês (${t.esperado}%). Vale citar as dificuldades.`; classe = 'text-warning'; }
-        else if (v > t.ultimo_avanco) { texto = `+${v - t.ultimo_avanco} pontos em relação ao último.`; classe = 'text-success'; }
         aviso.className = `pta-avanco-aviso ${classe}`;
         aviso.textContent = texto;
     }
@@ -621,7 +616,7 @@
         else if (acao === 'historico') abrirHistorico(Number(alvo.dataset.relato), alvo.dataset.titulo || 'Relato');
         else if (acao === 'importar-rspace') importarRSpace(tid, alvo);
         else if (acao === 'copiar-plano') {
-            anexarTexto(document.getElementById(`pta-${tid}-realizado`), document.getElementById(`pta-${tid}-plano`)?.textContent || '');
+            anexarTexto(document.getElementById(`pta-${tid}-realizado`), document.getElementById(`pta-${tid}-plano`)?.content.textContent || '');
         } else if (acao === 'incluir-tarefas') {
             const t = topicoDaFolha(tid);
             const linhas = t.tarefas_concluidas.map(x => `• ${x.titulo}${x.resultado ? ` — ${x.resultado}` : ''}`);
@@ -826,6 +821,11 @@
                         <h4>${esc(t.titulo)}</h4>
                         <span class="meta">aprovado até agora ${t.avanco_anterior}%${t.esperado !== null ? ` · esperado para o mês ${t.esperado}%` : ''}${t.prazo_vencido ? ' · <span class="text-danger">prazo vencido</span>' : ''}</span>
                     </div>
+                    ${(t.mes_anterior?.relatos || []).length ? `
+                    <details class="pta-anterior-detalhes">
+                        <summary>O que foi feito em ${esc(mesAno(t.mes_anterior.mes, t.mes_anterior.ano).toLowerCase())}</summary>
+                        <div class="pta-painel pta-anterior">${mesAnteriorHTML(t.mes_anterior)}</div>
+                    </details>` : `<p class="pta-anterior-detalhes">${mesAnteriorHTML(t.mes_anterior)}</p>`}
                     ${doTopico.map(r => cartaoAvaliacao(r)).join('')}
                     ${recentesDoTopico.map(r => `
                         <div class="pta-desfeito" role="status">
@@ -846,7 +846,7 @@
                         <input type="checkbox" data-acao-change="selecionar" data-relato="${r.id}" ${selecionado ? 'checked' : ''} aria-label="Selecionar relato de ${esc(r.usuario_nome || '')}">
                         ${window.UI.avatar(r.usuario_nome || '', { strong: true })}
                     </span>
-                    <span class="cluster"><span class="mono">${r.avanco_anterior}% → <strong>${r.percentual_avanco}%</strong></span>${delta(r.percentual_avanco, r.avanco_anterior, r.esperado)}</span>
+                    <span class="cluster"><span class="mono">Avanço <strong>${r.percentual_avanco}%</strong></span>${abaixoDoEsperado(r.percentual_avanco, r.esperado) ? `<span class="badge badge-warning" title="Esperado para o mês: ${r.esperado}%">abaixo do esperado</span>` : ''}</span>
                 </div>
                 <div class="entry-body">${descricaoHTML(r.descricao_atividades, (r.descricao_atividades || '').length > 420)}</div>
                 ${(r.descricao_atividades || '').length > 420 ? '<button type="button" class="link-btn muted" data-acao="expandir">Ler tudo</button>' : ''}
@@ -1089,7 +1089,6 @@
             const cartoes = resumo.map(m => {
                 const futuro = chave(G.anoVisao, m.mes) > chave(h.ano, h.mes);
                 const atual = G.anoVisao === h.ano && m.mes === h.mes;
-                const pct = m.esperados ? Math.round((m.relataram / m.esperados) * 100) : 0;
                 return `
                     <button type="button" class="pta-ano-mes${atual ? ' is-atual' : ''}${futuro ? ' is-futuro' : ''}" ${futuro ? 'disabled' : `data-acao="abrir-mes" data-mes="${m.mes}"`} aria-label="${esc(mesAno(m.mes, G.anoVisao))}">
                         <span class="pta-ano-nome">${esc(nomeMes(m.mes))}</span>
@@ -1097,8 +1096,7 @@
                             <span class="pta-ano-linha"><span>Aprovados</span><span>${m.aprovados}</span></span>
                             <span class="pta-ano-linha${m.aguardando ? ' is-pendente' : ''}"><span>Aguardando</span><span>${m.aguardando}</span></span>
                             ${m.devolvidos ? `<span class="pta-ano-linha is-alerta"><span>Devolvidos</span><span>${m.devolvidos}</span></span>` : ''}
-                            <span class="pta-ano-linha${m.faltam ? ' is-alerta' : ''}"><span>Relataram</span><span>${m.relataram}/${m.esperados}</span></span>
-                            <span class="progress-track" aria-hidden="true"><span class="progress-fill ${pct === 100 ? 'is-success' : ''}" style="width:${pct}%"></span></span>`}
+                            <span class="pta-ano-linha${m.faltam ? ' is-alerta' : ''}"><span>Relataram</span><span>${m.relataram}/${m.esperados}</span></span>`}
                     </button>`;
             }).join('');
             const topicosAno = painel.filter(t => t.ano === G.anoVisao);
@@ -1113,7 +1111,7 @@
                 </div>
                 <div class="pta-ano-grid">${cartoes}</div>
                 <section class="pta-secao">
-                    <div class="section-head"><h3>Avanço dos tópicos em ${G.anoVisao}</h3><p class="meta">linha tracejada: avanço previsto pelo prazo</p></div>
+                    <div class="section-head"><h3>Avanço dos tópicos em ${G.anoVisao}</h3><p class="meta">previsto: avanço linear até o fim do prazo</p></div>
                     ${topicosAno.length ? tabelaAvancoTopicos(topicosAno, false) : window.UI.emptyState({ title: `Nenhum tópico cadastrado para ${G.anoVisao}` })}
                 </section>`;
         } catch (err) {
@@ -1133,14 +1131,13 @@
         return `
             <div class="table-container"><table class="data-table">
                 <thead><tr>
-                    <th>Tópico</th>${comAcoes ? '<th>Membros</th>' : ''}<th class="col-hide-sm">Evolução</th><th class="num">Avanço</th><th class="num col-hide-xs">Previsto hoje</th><th>Situação</th>${comAcoes ? '<th class="end"><span class="sr-only">Ações</span></th>' : ''}
+                    <th>Tópico</th>${comAcoes ? '<th>Membros</th>' : ''}<th class="num">Avanço</th><th class="num col-hide-xs">Previsto hoje</th><th>Situação</th>${comAcoes ? '<th class="end"><span class="sr-only">Ações</span></th>' : ''}
                 </tr></thead>
                 <tbody>${lista.map(t => `
                     <tr data-topico-linha="${t.id}">
                         <td><strong>${esc(t.titulo)}</strong><span class="pta-topico-sub">${esc(prazoTopico(t))} · ${t.qtd_relatos} relato${t.qtd_relatos === 1 ? '' : 's'}</span></td>
                         ${comAcoes ? `<td>${t.membros.length ? window.UI.avatarStack(t.membros, 3) : '<span class="text-muted text-small">Toda a equipe</span>'}</td>` : ''}
-                        <td class="col-hide-sm">${sparkline(t, t.historico)}</td>
-                        <td class="num">${window.UI.progressBar(t.avanco, { tone: t.avanco >= 100 ? 'is-success' : t.situacao === 'atrasado' ? 'is-danger' : t.situacao === 'abaixo' ? 'is-warning' : '' })}</td>
+                        <td class="num"><strong>${t.avanco}%</strong></td>
                         <td class="num col-hide-xs">${t.esperado === null ? '—' : `${t.esperado}%`}</td>
                         <td><span class="badge ${SITUACAO[t.situacao]?.classe || ''}">${SITUACAO[t.situacao]?.rotulo || ''}</span></td>
                         ${comAcoes ? `<td class="end"><span class="row-actions">
