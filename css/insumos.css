@@ -112,8 +112,22 @@
 .ins-dup { margin-top: var(--space-2); padding: var(--space-2) var(--space-3); border: 1px solid var(--warning-border); border-radius: var(--radius-sm); background: var(--warning-bg); font-size: 12.5px; color: var(--text-secondary); }
 .ins-dup p + p { margin-top: 2px; }
 .ins-dup strong { color: var(--text-primary); font-weight: 600; }
-.ins-dup ul { margin: 4px 0 0; padding-left: 18px; }
-.ins-dup .link-btn { margin-top: var(--space-1); padding: 0; height: auto; font-size: 12.5px; font-weight: 600; color: var(--text-primary); }
+.ins-dup ul { margin: 4px 0 0; padding: 0; list-style: none; }
+.ins-dup li { display: flex; align-items: center; justify-content: space-between; gap: 2px var(--space-3); flex-wrap: wrap; padding: 4px 0; }
+.ins-dup li + li { border-top: 1px solid var(--warning-border); }
+.ins-dup.is-exato li + li { border-top-color: var(--danger-border); }
+.ins-dup-desc { min-width: 0; overflow-wrap: anywhere; }
+.ins-dup-acoes { display: inline-flex; align-items: center; gap: 2px; flex-wrap: wrap; }
+.ins-dup-acoes .link-btn { height: 26px; padding: 0 8px; font-size: 12.5px; font-weight: 500; color: var(--text-primary); white-space: nowrap; }
+.ins-dup-acoes .link-btn:first-child { font-weight: 600; }
+.ins-dup-acoes .link-btn.muted { color: var(--text-secondary); }
+.ins-dup-acoes .link-btn:hover:not(:disabled) { background: var(--bg-surface); }
+.ins-dup-acoes .link-btn:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 1px; }
+
+/* Linha destacada ao vir do atalho "Ver na lista" */
+.ins-table td { transition: background-color .6s ease; }
+.ins-table tr.is-destaque td { background: var(--brand-soft); }
+@media (prefers-reduced-motion: reduce) { .ins-table td { transition: none; } }
 .ins-dup.is-exato { border-color: var(--danger-border); background: var(--danger-soft); }
 .ins-dup.is-exato p:first-child { color: var(--danger-text); font-weight: 500; }
 

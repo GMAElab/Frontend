@@ -207,6 +207,22 @@
         else document.querySelector(`#ins-corpo tr[data-insumo="${id}"] [data-acao="historico"]`)?.focus();
     }
 
+    /** Limpa os filtros, rola até a linha do insumo e a destaca por alguns segundos. */
+    function destacarNaLista(id) {
+        if (!document.querySelector(`#ins-corpo tr[data-insumo="${id}"]`)) {
+            E.busca = ''; E.categoria = ''; E.alerta = '';
+            ['ins-busca', 'ins-categoria', 'ins-alerta'].forEach(c => { const el = document.getElementById(c); if (el) el.value = ''; });
+            renderTabela();
+        }
+        const linha = document.querySelector(`#ins-corpo tr[data-insumo="${id}"]`);
+        if (!linha) return;
+        const suave = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        linha.scrollIntoView({ behavior: suave ? 'smooth' : 'auto', block: 'center' });
+        linha.classList.add('is-destaque');
+        setTimeout(() => linha.classList.remove('is-destaque'), 2400);
+        linha.querySelector('[data-acao="ENTRADA"]')?.focus({ preventScroll: true });
+    }
+
     function linhasEsqueleto() {
         return Array.from({ length: 5 }, () => `<tr class="is-skeleton">${'<td><span class="skeleton"></span></td>'.repeat(6)}</tr>`).join('');
     }
@@ -632,17 +648,25 @@
             const mudou = chaveNome(nome) !== nomeOriginal;
             const { exato, parecidos } = mudou ? procurarDuplicados(nome, i.id) : { exato: null, parecidos: [] };
             duplicadoExato = exato;
-            const descrever = (x) => `<strong>${esc(x.nome)}</strong>${x.localizacao ? ` · ${esc(x.localizacao)}` : ''} · ${num(x.quantidade_atual)} ${esc(x.unidade)}`;
+            const descrever = (x) => `<span class="ins-dup-desc"><strong>${esc(x.nome)}</strong>${x.localizacao ? ` · ${esc(x.localizacao)}` : ''} · ${num(x.quantidade_atual)} ${esc(x.unidade)}</span>`;
+            // Atalhos para agir no item que já existe sem sair do formulário e procurar na tabela.
+            // Só no cadastro: na edição, sair daqui descartaria as alterações em andamento.
+            const atalhos = (x) => (novo ? `
+                <span class="ins-dup-acoes" role="group" aria-label="Ações para ${esc(x.nome)}">
+                    <button type="button" class="link-btn" data-dup-acao="ENTRADA" data-dup-id="${x.id}">+ Entrada</button>
+                    <button type="button" class="link-btn" data-dup-acao="SAIDA" data-dup-id="${x.id}" ${(x.quantidade_atual || 0) <= 0 ? 'disabled title="Sem saldo para registrar uso"' : ''}>− Uso</button>
+                    <button type="button" class="link-btn muted" data-dup-acao="historico" data-dup-id="${x.id}">Histórico</button>
+                    <button type="button" class="link-btn muted" data-dup-acao="ver" data-dup-id="${x.id}">Ver na lista</button>
+                </span>` : '');
             if (exato) {
                 caixaDup.className = 'ins-dup is-exato';
                 caixaDup.innerHTML = `
-                    <p>Este insumo já está no estoque: ${descrever(exato)}.</p>
-                    <p>Para somar quantidade, registre uma entrada nele em vez de cadastrar de novo.</p>
-                    ${novo ? `<button type="button" class="link-btn" data-dup-entrada="${exato.id}">+ Registrar entrada em ${esc(exato.nome)}</button>` : ''}`;
+                    <p>Este insumo já está no estoque. Para somar quantidade, registre uma entrada nele em vez de cadastrar de novo.</p>
+                    <ul><li>${descrever(exato)}${atalhos(exato)}</li></ul>`;
             } else if (parecidos.length) {
                 caixaDup.className = 'ins-dup';
                 caixaDup.innerHTML = `<p>Itens parecidos no estoque. Confira se não é o mesmo:</p>
-                    <ul>${parecidos.map(x => `<li>${descrever(x)}</li>`).join('')}</ul>`;
+                    <ul>${parecidos.map(x => `<li>${descrever(x)}${atalhos(x)}</li>`).join('')}</ul>`;
             } else {
                 caixaDup.className = 'ins-dup hidden';
                 caixaDup.innerHTML = '';
@@ -652,11 +676,17 @@
         let esperaDup;
         campo('nome').addEventListener('input', () => { clearTimeout(esperaDup); esperaDup = setTimeout(checarDuplicidade, 150); });
         caixaDup.addEventListener('click', (ev) => {
-            const btn = ev.target.closest('[data-dup-entrada]');
-            if (!btn) return;
-            const existente = E.itens.find(x => x.id === Number(btn.dataset.dupEntrada));
+            const btn = ev.target.closest('[data-dup-acao]');
+            if (!btn || btn.disabled) return;
+            const existente = E.itens.find(x => x.id === Number(btn.dataset.dupId));
+            if (!existente) return;
             modal.fechar();
-            if (existente) abrirMovimento('ENTRADA', existente, origem);
+            switch (btn.dataset.dupAcao) {
+                case 'ENTRADA': case 'SAIDA': abrirMovimento(btn.dataset.dupAcao, existente, origem); break;
+                case 'historico': abrirHistorico(existente, origem); break;
+                case 'ver': destacarNaLista(existente.id); break;
+                default: break;
+            }
         });
 
         modal.querySelector('#ins-form').addEventListener('submit', (ev) => {
