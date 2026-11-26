@@ -1361,13 +1361,18 @@
                 <form id="form-novo-bloqueio">
                     <div class="field-grid">
                         <div class="input-group">
-                            <label for="bloq-data">Data</label>
+                            <label for="bloq-data">Data inicial</label>
                             <input type="date" id="bloq-data" required min="${toISODate(new Date())}">
                         </div>
                         <div class="input-group">
-                            <label for="bloq-escopo">Abrangência</label>
-                            <select id="bloq-escopo">${eqOptions}</select>
+                            <label for="bloq-data-fim">Data final <span class="text-faint">(opcional)</span></label>
+                            <input type="date" id="bloq-data-fim" min="${toISODate(new Date())}" aria-describedby="bloq-periodo-help">
                         </div>
+                    </div>
+                    <p id="bloq-periodo-help" class="help">Deixe a data final em branco para bloquear um único dia. Com ela, todos os dias do período ficam bloqueados.</p>
+                    <div class="input-group">
+                        <label for="bloq-escopo">Abrangência</label>
+                        <select id="bloq-escopo">${eqOptions}</select>
                     </div>
                     <div class="input-group">
                         <label for="bloq-motivo">Motivo</label>
@@ -1397,22 +1402,49 @@
                 box.innerHTML = '<p class="text-faint">Nenhum feriado ou bloqueio futuro cadastrado.</p>';
                 return;
             }
-            box.innerHTML = itens.map(b => `
+            // Agrupa dias consecutivos com o mesmo motivo e abrangência num só período
+            const periodos = [];
+            itens.forEach(b => {
+                const ultimo = periodos[periodos.length - 1];
+                const dia = parseLocalDate(b.data);
+                if (ultimo && ultimo.motivo === b.motivo && ultimo.equipamento_id === b.equipamento_id
+                    && Math.round((dia - ultimo.fim) / 86400000) === 1) {
+                    ultimo.fim = dia;
+                    ultimo.ids.push(b.id);
+                } else {
+                    periodos.push({ motivo: b.motivo, equipamento_id: b.equipamento_id, equipamento_nome: b.equipamento_nome,
+                        inicio: dia, fim: dia, ids: [b.id] });
+                }
+            });
+
+            box.innerHTML = periodos.map((p, i) => {
+                const dias = p.ids.length;
+                const quando = dias === 1
+                    ? formatDateBR(p.inicio)
+                    : `${formatDateBR(p.inicio)} → ${formatDateBR(p.fim)}`;
+                return `
                 <div class="bloqueio-row">
                     <div>
-                        <strong class="mono">${formatDateBR(parseLocalDate(b.data))}</strong>
-                        · ${esc(b.motivo)}
-                        <span class="meta">(${b.equipamento_nome ? esc(b.equipamento_nome) : 'Laboratório inteiro'})</span>
+                        <strong class="mono">${quando}</strong>
+                        ${dias > 1 ? `<span class="meta">(${dias} dias)</span>` : ''}
+                        · ${esc(p.motivo)}
+                        <span class="meta">(${p.equipamento_nome ? esc(p.equipamento_nome) : 'Laboratório inteiro'})</span>
                     </div>
-                    <button type="button" class="link-btn danger" data-del-bloq="${b.id}">Remover</button>
-                </div>`).join('');
+                    <button type="button" class="link-btn danger" data-del-periodo="${i}">${dias > 1 ? 'Remover período' : 'Remover'}</button>
+                </div>`;
+            }).join('');
 
-            box.querySelectorAll('[data-del-bloq]').forEach(btn => {
+            box.querySelectorAll('[data-del-periodo]').forEach(btn => {
                 btn.addEventListener('click', async () => {
-                    const id = Number(btn.getAttribute('data-del-bloq'));
-                    const r = await window.api.fetchProtected(`/agendamentos/bloqueios/${id}`, { method: 'DELETE' });
+                    const { ids } = periodos[Number(btn.getAttribute('data-del-periodo'))];
+                    btn.disabled = true;
+                    const r = await window.api.fetchProtected('/agendamentos/bloqueios/remover-lote', {
+                        method: 'POST',
+                        body: JSON.stringify({ ids }),
+                    });
+                    btn.disabled = false;
                     if (r.ok) {
-                        window.UI.showToast('Bloqueio removido.', 'success');
+                        window.UI.showToast(ids.length > 1 ? 'Período desbloqueado.' : 'Bloqueio removido.', 'success');
                         await carregarListaBloqueios();
                         await atualizarView();
                     } else {
@@ -1422,16 +1454,30 @@
             });
         }
 
+        // A data final não pode ser escolhida antes da inicial
+        document.getElementById('bloq-data').addEventListener('change', (e) => {
+            const fim = document.getElementById('bloq-data-fim');
+            fim.min = e.target.value || toISODate(new Date());
+            if (fim.value && e.target.value && fim.value < e.target.value) fim.value = '';
+        });
+
         document.getElementById('form-novo-bloqueio').addEventListener('submit', async (e) => {
             e.preventDefault();
             const data = document.getElementById('bloq-data').value;
+            const dataFim = document.getElementById('bloq-data-fim').value;
             const eqVal = document.getElementById('bloq-escopo').value;
             const motivo = document.getElementById('bloq-motivo').value.trim();
+
+            if (dataFim && dataFim < data) {
+                window.UI.showFormFeedback('bloq-feedback', 'A data final não pode ser anterior à data inicial.', true);
+                return;
+            }
 
             const res = await window.api.fetchProtected('/agendamentos/bloqueios', {
                 method: 'POST',
                 body: JSON.stringify({
                     data,
+                    data_fim: dataFim && dataFim !== data ? dataFim : null,
                     equipamento_id: eqVal ? Number(eqVal) : null,
                     motivo,
                 }),
@@ -1443,7 +1489,11 @@
             }
             window.UI.showFormFeedback('bloq-feedback', '', false);
             e.target.reset();
-            window.UI.showToast('Feriado/bloqueio cadastrado.', 'success');
+            const criados = (payload.criados || []).length;
+            const ignorados = (payload.ignorados || []).length;
+            let msg = criados > 1 ? `${criados} dias bloqueados.` : 'Feriado/bloqueio cadastrado.';
+            if (ignorados) msg += ` ${ignorados} ${ignorados === 1 ? 'dia já estava bloqueado' : 'dias já estavam bloqueados'}.`;
+            window.UI.showToast(msg, 'success');
             await carregarListaBloqueios();
             await atualizarView();
         });

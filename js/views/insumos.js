@@ -32,6 +32,29 @@
 
     const E = { itens: [], resumo: null, busca: '', categoria: '', alerta: '' };
 
+    /** Mesma chave do backend: sem acento, sem caixa e sem pontuação. */
+    const chaveNome = (nome) => String(nome || '').normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .toLowerCase().replace(/[^a-z0-9]+/g, '');
+    const palavras = (nome) => String(nome || '').normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .toLowerCase().split(/[^a-z0-9]+/).filter(p => p.length >= 3);
+
+    /** Exato: mesmo nome normalizado. Parecidos: um contém o outro ou dividem as palavras principais. */
+    function procurarDuplicados(nome, ignorarId) {
+        const chave = chaveNome(nome);
+        if (chave.length < 3) return { exato: null, parecidos: [] };
+        const outros = E.itens.filter(i => i.id !== ignorarId);
+        const exato = outros.find(i => chaveNome(i.nome) === chave) || null;
+        const minhas = palavras(nome);
+        const parecidos = outros.filter(i => i !== exato && (() => {
+            const k = chaveNome(i.nome);
+            if (k.includes(chave) || chave.includes(k)) return true;
+            const delas = palavras(i.nome);
+            const comuns = minhas.filter(p => delas.includes(p)).length;
+            return minhas.length > 0 && comuns >= Math.min(2, minhas.length) && comuns >= Math.ceil(Math.min(minhas.length, delas.length) / 2);
+        })()).slice(0, 3);
+        return { exato, parecidos };
+    }
+
     // ==========================================
     // API
     // ==========================================
@@ -129,6 +152,7 @@
                         <p class="lede">Controle de reagentes, EPIs, vidrarias e alertas de reposição.</p>
                     </div>
                     <div class="page-actions">
+                        <button type="button" class="btn btn-secondary" data-acao="importar">${icone('upload')} Importar planilha</button>
                         <button type="button" class="btn btn-secondary" data-acao="exportar">${icone('download')} Exportar Excel</button>
                         <button type="button" class="btn btn-primary" id="btn-novo-insumo" data-acao="novo">${icone('plus')} Novo insumo</button>
                     </div>
@@ -299,6 +323,7 @@
             case 'editar': if (item) abrirFormulario(item, alvo); break;
             case 'novo': abrirFormulario(null, alvo); break;
             case 'exportar': exportar(alvo); break;
+            case 'importar': abrirImportacao(alvo); break;
             default: break;
         }
     }
@@ -549,6 +574,7 @@
                             <label for="ins-f-nome">Nome</label>
                             <input type="text" id="ins-f-nome" name="nome" class="form-control" required maxlength="300" autocomplete="off" value="${esc(i.nome || '')}" placeholder="Ex.: Etanol absoluto P.A.…" aria-describedby="ins-f-nome-erro">
                             <p class="field-error hidden" id="ins-f-nome-erro" role="alert"></p>
+                            <div class="ins-dup hidden" id="ins-f-dup" aria-live="polite"></div>
                         </div>
                         <div class="input-group">
                             <label for="ins-f-categoria">Categoria</label>
@@ -597,12 +623,50 @@
         const campo = (id) => modal.querySelector(`#ins-f-${id}`);
         setTimeout(() => campo('nome').focus(), 30);
 
+        // Verificação rápida no inventário enquanto digita o nome
+        const caixaDup = modal.querySelector('#ins-f-dup');
+        const nomeOriginal = chaveNome(i.nome);
+        let duplicadoExato = null;
+        const checarDuplicidade = () => {
+            const nome = campo('nome').value;
+            const mudou = chaveNome(nome) !== nomeOriginal;
+            const { exato, parecidos } = mudou ? procurarDuplicados(nome, i.id) : { exato: null, parecidos: [] };
+            duplicadoExato = exato;
+            const descrever = (x) => `<strong>${esc(x.nome)}</strong>${x.localizacao ? ` · ${esc(x.localizacao)}` : ''} · ${num(x.quantidade_atual)} ${esc(x.unidade)}`;
+            if (exato) {
+                caixaDup.className = 'ins-dup is-exato';
+                caixaDup.innerHTML = `
+                    <p>Este insumo já está no estoque: ${descrever(exato)}.</p>
+                    <p>Para somar quantidade, registre uma entrada nele em vez de cadastrar de novo.</p>
+                    ${novo ? `<button type="button" class="link-btn" data-dup-entrada="${exato.id}">+ Registrar entrada em ${esc(exato.nome)}</button>` : ''}`;
+            } else if (parecidos.length) {
+                caixaDup.className = 'ins-dup';
+                caixaDup.innerHTML = `<p>Itens parecidos no estoque. Confira se não é o mesmo:</p>
+                    <ul>${parecidos.map(x => `<li>${descrever(x)}</li>`).join('')}</ul>`;
+            } else {
+                caixaDup.className = 'ins-dup hidden';
+                caixaDup.innerHTML = '';
+            }
+            campo('nome').setAttribute('aria-invalid', exato ? 'true' : 'false');
+        };
+        let esperaDup;
+        campo('nome').addEventListener('input', () => { clearTimeout(esperaDup); esperaDup = setTimeout(checarDuplicidade, 150); });
+        caixaDup.addEventListener('click', (ev) => {
+            const btn = ev.target.closest('[data-dup-entrada]');
+            if (!btn) return;
+            const existente = E.itens.find(x => x.id === Number(btn.dataset.dupEntrada));
+            modal.fechar();
+            if (existente) abrirMovimento('ENTRADA', existente, origem);
+        });
+
         modal.querySelector('#ins-form').addEventListener('submit', (ev) => {
             ev.preventDefault();
             const nome = campo('nome').value.trim();
             let invalido = null;
             erroNoCampo(campo('nome'), nome ? '' : 'Informe o nome do insumo.');
             if (!nome) invalido = invalido || campo('nome');
+            checarDuplicidade();
+            if (duplicadoExato) invalido = invalido || campo('nome');
             if (invalido) { invalido.focus(); return; }
 
             const payload = {
@@ -643,6 +707,166 @@
                 } catch (err) { window.UI.showToast(err.message, 'error'); }
             });
         });
+    }
+
+    // ==========================================
+    // IMPORTAÇÃO DE PLANILHA (.xlsx ou .csv)
+    // Envia o arquivo, mostra a prévia linha a linha e só grava o que for novo.
+    // ==========================================
+    const SITUACAO_IMPORT = {
+        novo: { rotulo: 'Novo', classe: 'badge-success' },
+        duplicado: { rotulo: 'Já no estoque', classe: 'badge-warning' },
+        repetido: { rotulo: 'Repetido', classe: 'badge-warning' },
+        erro: { rotulo: 'Erro', classe: 'badge-danger' },
+    };
+
+    async function baixarArquivo(caminho, nomeArquivo, mensagemErro) {
+        const res = await window.api.fetchProtected(caminho);
+        if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.detail || mensagemErro); }
+        const url = URL.createObjectURL(await res.blob());
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = nomeArquivo;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function abrirImportacao(origem) {
+        let previa = null;
+        const modal = abrirModal({
+            id: 'ins-modal-import', origem, tamanho: 'modal-lg',
+            eyebrow: 'importar insumos', titulo: 'Importar planilha',
+            corpo: `
+                <div id="ins-imp-envio">
+                    <p class="dialog-text">Envie uma planilha com um insumo por linha. A primeira linha deve ter os nomes das colunas:
+                        <strong>Nome</strong> (obrigatória), Categoria, Localização, Unidade, Saldo atual, Estoque mínimo e Validade.</p>
+                    <p class="help mb-md">Antes de gravar, você confere a prévia. Itens que já estão no estoque ou que se repetem na planilha não são importados.</p>
+                    <div class="input-group">
+                        <label for="ins-imp-arquivo">Arquivo .xlsx ou .csv</label>
+                        <input type="file" id="ins-imp-arquivo" name="arquivo" accept=".xlsx,.csv" aria-describedby="ins-imp-arquivo-erro">
+                        <p class="field-error hidden" id="ins-imp-arquivo-erro" role="alert"></p>
+                    </div>
+                    <button type="button" class="link-btn" id="ins-imp-modelo">${icone('download', 13)} Baixar planilha modelo</button>
+                </div>
+                <div id="ins-imp-previa" class="hidden" aria-live="polite"></div>`,
+            rodape: `<button type="button" class="btn btn-secondary" data-role="cancel">Cancelar</button>
+                     <button type="button" class="btn btn-secondary hidden" id="ins-imp-outro">Escolher outro arquivo</button>
+                     <button type="button" class="btn btn-primary" id="ins-imp-ok" disabled>Importar</button>`,
+        });
+
+        const arquivo = modal.querySelector('#ins-imp-arquivo');
+        const envio = modal.querySelector('#ins-imp-envio');
+        const caixaPrevia = modal.querySelector('#ins-imp-previa');
+        const ok = modal.querySelector('#ins-imp-ok');
+        const outro = modal.querySelector('#ins-imp-outro');
+
+        const voltarAoEnvio = () => {
+            previa = null;
+            arquivo.value = '';
+            envio.classList.remove('hidden');
+            caixaPrevia.classList.add('hidden');
+            caixaPrevia.innerHTML = '';
+            outro.classList.add('hidden');
+            ok.disabled = true;
+            ok.textContent = 'Importar';
+            arquivo.focus();
+        };
+
+        modal.querySelector('#ins-imp-modelo').addEventListener('click', (ev) => comBotao(ev.currentTarget, 'Gerando', async () => {
+            try { await baixarArquivo('/insumos/importar/modelo', 'modelo_importacao_insumos.xlsx', 'Não foi possível baixar o modelo.'); }
+            catch (err) { window.UI.showToast(err.message, 'error'); }
+        }));
+
+        arquivo.addEventListener('change', async () => {
+            const f = arquivo.files && arquivo.files[0];
+            erroNoCampo(arquivo, '');
+            if (!f) return;
+            if (!/\.(xlsx|csv)$/i.test(f.name)) { erroNoCampo(arquivo, 'Use um arquivo .xlsx ou .csv. Arquivos .xls antigos precisam ser salvos de novo como .xlsx.'); return; }
+            if (f.size > 10 * 1024 * 1024) { erroNoCampo(arquivo, 'O arquivo passa de 10 MB.'); return; }
+
+            caixaPrevia.classList.remove('hidden');
+            caixaPrevia.setAttribute('aria-busy', 'true');
+            caixaPrevia.innerHTML = window.UI.loading('Lendo a planilha…');
+            arquivo.disabled = true;
+            try {
+                const fd = new FormData();
+                fd.append('file', f);
+                previa = await req('/insumos/importar/previa', { method: 'POST', body: fd });
+                envio.classList.add('hidden');
+                outro.classList.remove('hidden');
+                renderPrevia(f.name);
+            } catch (err) {
+                caixaPrevia.classList.add('hidden');
+                caixaPrevia.innerHTML = '';
+                erroNoCampo(arquivo, err.message);
+                arquivo.value = '';
+            } finally {
+                arquivo.disabled = false;
+                caixaPrevia.setAttribute('aria-busy', 'false');
+            }
+        });
+
+        function renderPrevia(nomeArquivo) {
+            const r = previa.resumo;
+            const problemas = r.duplicado + r.repetido + r.erro;
+            // Linhas com aviso primeiro; dentro de cada grupo, a ordem da planilha
+            const linhas = [...previa.linhas].sort((a, b) =>
+                (a.status === 'novo') - (b.status === 'novo') || a.linha - b.linha);
+            caixaPrevia.innerHTML = `
+                <p class="ins-imp-arquivo">${icone('file-text', 14)} <span>${esc(nomeArquivo)}</span></p>
+                <dl class="ins-mov-resumo ins-imp-resumo">
+                    <div><dt>Novos</dt><dd>${r.novo}</dd></div>
+                    <div><dt>Já no estoque</dt><dd>${r.duplicado}</dd></div>
+                    <div><dt>Repetidos</dt><dd>${r.repetido}</dd></div>
+                    <div><dt>Com erro</dt><dd class="${r.erro ? 'is-alerta' : ''}">${r.erro}</dd></div>
+                </dl>
+                ${problemas ? `<p class="help mb-sm">${problemas === 1 ? 'A linha com aviso aparece primeiro e não será importada.' : `As ${problemas} linhas com aviso aparecem primeiro e não serão importadas.`} Para incluir as com erro, corrija a planilha e envie de novo.</p>` : ''}
+                <div class="table-container ins-imp-tabela">
+                    <table class="data-table">
+                        <thead><tr>
+                            <th scope="col" class="num">Linha</th>
+                            <th scope="col">Insumo</th>
+                            <th scope="col">Situação</th>
+                            <th scope="col" class="col-hide-sm">Detalhe</th>
+                        </tr></thead>
+                        <tbody>${linhas.map(l => {
+                            const d = l.dados;
+                            const detalhe = l.mensagem || (d ? [d.categoria, d.localizacao, `${num(d.quantidade_atual)} ${d.unidade}`, d.validade ? `validade ${dataBR(d.validade)}` : ''].filter(Boolean).join(' · ') : '');
+                            return `<tr>
+                                <td class="num tabular">${l.linha}</td>
+                                <td><span class="ins-nome">${l.nome ? esc(l.nome) : '<span class="text-faint">sem nome</span>'}</span>
+                                    <span class="ins-sub ins-imp-detalhe-curto">${esc(detalhe)}</span></td>
+                                <td><span class="badge ${SITUACAO_IMPORT[l.status].classe}">${SITUACAO_IMPORT[l.status].rotulo}</span></td>
+                                <td class="col-hide-sm ins-imp-detalhe">${esc(detalhe)}</td>
+                            </tr>`;
+                        }).join('')}</tbody>
+                    </table>
+                </div>`;
+            ok.disabled = r.novo === 0;
+            ok.textContent = r.novo === 0 ? 'Nada novo para importar' : `Importar ${r.novo} ${r.novo === 1 ? 'insumo' : 'insumos'}`;
+        }
+
+        outro.addEventListener('click', voltarAoEnvio);
+
+        ok.addEventListener('click', () => {
+            if (!previa) return;
+            const itens = previa.linhas.filter(l => l.status === 'novo').map(l => l.dados);
+            if (!itens.length) return;
+            comBotao(ok, 'Importando', async () => {
+                try {
+                    const r = await req('/insumos/importar', { method: 'POST', json: { itens } });
+                    modal.fechar();
+                    const n = r.criados.length;
+                    const pulados = r.ignorados.length;
+                    let msg = `${n} ${n === 1 ? 'insumo importado' : 'insumos importados'}.`;
+                    if (pulados) msg += ` ${pulados} ${pulados === 1 ? 'já tinha sido cadastrado' : 'já tinham sido cadastrados'} enquanto você conferia e ${pulados === 1 ? 'ficou' : 'ficaram'} de fora.`;
+                    window.UI.showToast(msg, pulados ? 'warning' : 'success');
+                    await carregar();
+                } catch (err) { window.UI.showToast(err.message, 'error'); }
+            });
+        });
+
+        setTimeout(() => arquivo.focus(), 30);
     }
 
     async function exportar(btn) {

@@ -107,3 +107,28 @@
 /* Linhas de apoio coloridas: vencem a cor neutra de .ins-sub */
 .ins-table .ins-sub.text-danger { color: var(--danger-text); font-weight: 500; }
 .ins-table .ins-sub.text-warning { color: var(--warning-text); font-weight: 500; }
+
+/* Verificação de duplicidade no formulário */
+.ins-dup { margin-top: var(--space-2); padding: var(--space-2) var(--space-3); border: 1px solid var(--warning-border); border-radius: var(--radius-sm); background: var(--warning-bg); font-size: 12.5px; color: var(--text-secondary); }
+.ins-dup p + p { margin-top: 2px; }
+.ins-dup strong { color: var(--text-primary); font-weight: 600; }
+.ins-dup ul { margin: 4px 0 0; padding-left: 18px; }
+.ins-dup .link-btn { margin-top: var(--space-1); padding: 0; height: auto; font-size: 12.5px; font-weight: 600; color: var(--text-primary); }
+.ins-dup.is-exato { border-color: var(--danger-border); background: var(--danger-soft); }
+.ins-dup.is-exato p:first-child { color: var(--danger-text); font-weight: 500; }
+
+/* Importação de planilha */
+.ins-imp-arquivo { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); font-size: 13px; font-weight: 500; color: var(--text-secondary); overflow-wrap: anywhere; }
+.ins-imp-resumo { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.ins-imp-tabela { max-height: 46vh; overflow-y: auto; }
+.ins-imp-tabela thead th { position: sticky; top: 0; z-index: 1; background: var(--bg-surface); }
+.ins-imp-tabela td.num { width: 56px; color: var(--text-muted); }
+.ins-imp-detalhe { font-size: 12.5px; color: var(--text-secondary); }
+.ins-imp-tabela .ins-nome { font-weight: 600; color: var(--text-primary); overflow-wrap: anywhere; }
+.ins-imp-detalhe-curto { display: none; margin-top: 2px; font-size: 12px; color: var(--text-muted); }
+@media (max-width: 900px) {
+    .ins-imp-detalhe-curto { display: block; } /* a coluna Detalhe some (.col-hide-sm) */
+}
+@media (max-width: 640px) {
+    .ins-imp-resumo { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

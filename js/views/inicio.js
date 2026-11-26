@@ -529,9 +529,12 @@
             ? listaDeTarefas(visiveis, true)
             : window.UI.emptyState({ title: 'Nada pendente', description: 'Nenhuma tarefa atrasada ou aguardando revisão.' });
 
+        // Admin não vê o carrossel de avisos nem o painel de indicadores
+        const ehAdmin = resumo.papel === 'admin';
+
         return `
-            ${renderDestaque(avisosDoGestor(resumo))}
-            ${painelResumo('Resumo da equipe', `
+            ${ehAdmin ? '' : renderDestaque(avisosDoGestor(resumo))}
+            ${ehAdmin ? '' : painelResumo('Resumo da equipe', `
                 ${cartao(t.atrasadas, 'atrasadas', 'text-danger', 'alert-triangle', 'tone-danger')}
                 ${cartao(t.em_revisao, 'aguardando revisão', 'text-primary', 'check-circle', '')}
                 ${cartao(t.vencem_em_breve, 'vencem em 7 dias', 'text-warning', 'clock', 'tone-warning')}
