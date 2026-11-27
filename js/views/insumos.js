@@ -1,14 +1,22 @@
 // ==========================================
 // INSUMOS DO LABORATÓRIO
-// Reagentes, EPIs, vidrarias e utilidades: saldo, validade e reposição.
+// Reagentes, EPIs, vidrarias e utilidades: saldo por lote, validade e reposição.
 // O saldo só muda por movimentação (entrada, uso ou reporte), então cada
 // número da tabela tem data e responsável no histórico.
+//
+// Normas: NR-26 / ABNT NBR 14725:2023 (classificação GHS e FDS) e NR-06 (CA de EPI).
+// O usuário comum faz o cadastro mínimo; os gestores completam os campos técnicos
+// e marcam o item como revisado (o backend confere a permissão de novo).
 // ==========================================
 (function () {
     'use strict';
 
-    const CATEGORIAS = ['Reagentes', 'EPIs', 'Vidrarias', 'Utilidades'];
-    const UNIDADES = ['mL', 'L', 'g', 'kg', 'un', 'cx', 'par'];
+    const CATEGORIAS_PADRAO = ['Reagentes', 'EPIs', 'Vidrarias', 'Utilidades'];
+    const UNIDADES_PADRAO = ['mL', 'L', 'g', 'kg', 'un', 'cx', 'par', 'mg', 'µL'];
+    const TIPOS_PROTECAO = ['Proteção das mãos', 'Proteção dos olhos e face', 'Proteção respiratória', 'Proteção do corpo', 'Proteção auditiva', 'Proteção dos pés', 'Proteção da cabeça'];
+    const CAMPOS_TECNICOS = ['cas', 'mistura', 'codigo_fabricante', 'ghs_perigoso', 'ghs_pictogramas', 'ghs_palavra', 'ghs_frases_h', 'ghs_frases_p',
+        'fds_revisao', 'fds_data', 'fds_nbr14725', 'fds_portugues', 'validade_apos_aberto_dias',
+        'epi_ca', 'epi_ca_validade', 'epi_tipo_protecao', 'epi_tamanho', 'vid_volume', 'vid_classe', 'vid_material', 'vid_volumetrica'];
     const MOTIVOS_REPORTE = [
         { id: 'acabou', rotulo: 'Acabou o estoque', texto: 'O insumo acabou.', saldo: 0 },
         { id: 'danificado', rotulo: 'Embalagem danificada', texto: 'Frasco ou embalagem danificada.' },
@@ -30,7 +38,10 @@
         return Number.isNaN(d.getTime()) ? '' : FORMATO_DATA_HORA.format(d);
     }
 
-    const E = { itens: [], resumo: null, busca: '', categoria: '', alerta: '' };
+    const E = { itens: [], resumo: null, busca: '', categoria: '', alerta: '', ref: null, locais: [] };
+    const podeRevisar = () => !!(E.ref && E.ref.pode_revisar);
+    const categorias = () => (E.ref && E.ref.categorias) || CATEGORIAS_PADRAO;
+    const unidades = () => (E.ref && E.ref.unidades) || UNIDADES_PADRAO;
 
     /** Mesma chave do backend: sem acento, sem caixa e sem pontuação. */
     const chaveNome = (nome) => String(nome || '').normalize('NFD').replace(/[̀-ͯ]/g, '')
@@ -54,6 +65,25 @@
         })()).slice(0, 3);
         return { exato, parecidos };
     }
+
+    // ==========================================
+    // GHS (mesmas regras de services/ghs.py, só para sugerir)
+    // ==========================================
+    const fraseH = (codigo) => (E.ref?.frases_h || []).find(f => f.codigo === codigo);
+    const nomePictograma = (codigo) => (E.ref?.pictogramas || []).find(p => p.codigo === codigo)?.nome || codigo;
+
+    function sugerirGhs(frases) {
+        const validas = frases.filter(fraseH);
+        const pictos = new Set(validas.map(c => fraseH(c).pictograma).filter(Boolean));
+        const motivos07 = validas.filter(c => fraseH(c).pictograma === 'GHS07');
+        if (pictos.has('GHS06')) pictos.delete('GHS07');
+        else if (pictos.has('GHS05') && motivos07.length && motivos07.every(c => c === 'H315' || c === 'H319')) pictos.delete('GHS07');
+        const ws = new Set(validas.map(c => fraseH(c).palavra));
+        return { pictogramas: [...pictos].sort(), palavra: ws.has('Perigo') ? 'Perigo' : ws.has('Atenção') ? 'Atenção' : null };
+    }
+
+    /** Losango GHS compacto (código + nome no title): sinalização visual da NR-26 na tabela e no formulário. */
+    const losango = (codigo) => `<span class="ins-ghs" title="${esc(`${codigo} · ${nomePictograma(codigo)}`)}" aria-label="${esc(`${codigo}, ${nomePictograma(codigo)}`)}"><span>${esc(codigo.slice(3))}</span></span>`;
 
     // ==========================================
     // API
@@ -85,6 +115,20 @@
         btn.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${rotulo}…`;
         try { return await fn(); } finally {
             if (btn.isConnected) { btn.disabled = false; btn.removeAttribute('aria-busy'); btn.innerHTML = original; }
+        }
+    }
+
+    /** Abre a FDS ou o certificado por um link assinado de poucos minutos (o bucket é privado). */
+    async function abrirArquivo(anexoId, btn) {
+        // A aba abre já no clique: depois do await, o navegador bloquearia o pop-up.
+        const aba = window.open('', '_blank');
+        try {
+            const r = await req(`/insumos/anexos/${anexoId}/link`);
+            if (aba) { aba.opener = null; aba.location.href = r.url; } else window.location.href = r.url;
+        } catch (err) {
+            if (aba) aba.close();
+            window.UI.showToast(err.message, 'error');
+            btn?.focus();
         }
     }
 
@@ -122,6 +166,7 @@
                     <span class="badge ${NIVEL[n].classe}">${NIVEL[n].rotulo}</span>
                 </div>
                 <span class="ins-regua is-${n}" role="img" aria-label="${esc(descricao)}"><span class="ins-regua-fill" style="width:${pct.toFixed(1)}%"></span>${marca}</span>
+                ${i.lotes_com_saldo > 1 ? `<span class="ins-sub">${i.lotes_com_saldo} lotes</span>` : ''}
             </div>`;
     }
 
@@ -131,6 +176,18 @@
         if (i.vencido) return `<span class="ins-validade is-vencido">${dataBR(i.validade)}<small>vencido há ${Math.abs(dias)} ${Math.abs(dias) === 1 ? 'dia' : 'dias'}</small></span>`;
         if (i.vencendo) return `<span class="ins-validade is-vencendo">${dataBR(i.validade)}<small>${dias === 0 ? 'vence hoje' : `vence em ${dias} ${dias === 1 ? 'dia' : 'dias'}`}</small></span>`;
         return `<span class="ins-validade">${dataBR(i.validade)}</span>`;
+    }
+
+    /** Selos de conformidade sob o nome: revisão, FDS e CA. */
+    function selosHTML(i) {
+        const selos = [];
+        if (i.pendente_revisao) selos.push('<span class="badge badge-warning">Revisão pendente</span>');
+        if (i.fds_pendente) selos.push('<span class="badge badge-danger">FDS pendente</span>');
+        if (i.ca_situacao === 'vencido') selos.push('<span class="badge badge-danger">CA vencido</span>');
+        else if (i.ca_situacao === 'vencendo') selos.push('<span class="badge badge-warning">CA vencendo</span>');
+        const pictos = (i.ghs_pictogramas || []).map(losango).join('');
+        if (!selos.length && !pictos) return '';
+        return `<span class="ins-selos">${pictos ? `<span class="ins-ghs-lista">${pictos}</span>` : ''}${selos.join('')}</span>`;
     }
 
     // ==========================================
@@ -149,9 +206,10 @@
                     <div>
                         <p class="eyebrow">laboratório</p>
                         <h1>Insumos</h1>
-                        <p class="lede">Controle de reagentes, EPIs, vidrarias e alertas de reposição.</p>
+                        <p class="lede">Reagentes, EPIs e vidrarias com lote, validade, FDS e alertas de reposição.</p>
                     </div>
                     <div class="page-actions">
+                        <button type="button" class="btn btn-secondary hidden" data-acao="locais" id="ins-btn-locais">${icone('folder')} Locais</button>
                         <button type="button" class="btn btn-secondary" data-acao="importar">${icone('upload')} Importar planilha</button>
                         <button type="button" class="btn btn-secondary" data-acao="exportar">${icone('download')} Exportar Excel</button>
                         <button type="button" class="btn btn-primary" id="btn-novo-insumo" data-acao="novo">${icone('plus')} Novo insumo</button>
@@ -168,12 +226,15 @@
                         </div>
                         <select class="form-control" id="ins-categoria" name="categoria" aria-label="Categoria">
                             <option value="">Todas as categorias</option>
-                            ${CATEGORIAS.map(c => `<option value="${c}" ${E.categoria === c ? 'selected' : ''}>${c}</option>`).join('')}
+                            ${categorias().map(c => `<option value="${esc(c)}" ${E.categoria === c ? 'selected' : ''}>${esc(c)}</option>`).join('')}
                         </select>
                         <select class="form-control" id="ins-alerta" name="alerta" aria-label="Alerta">
                             <option value="">Todos os alertas</option>
                             <option value="baixo" ${E.alerta === 'baixo' ? 'selected' : ''}>Abaixo do mínimo</option>
                             <option value="validade" ${E.alerta === 'validade' ? 'selected' : ''}>Vencendo ou vencidos</option>
+                            <option value="pendente" ${E.alerta === 'pendente' ? 'selected' : ''}>Pendentes de revisão</option>
+                            <option value="fds" ${E.alerta === 'fds' ? 'selected' : ''}>FDS pendente</option>
+                            <option value="ca" ${E.alerta === 'ca' ? 'selected' : ''}>CA vencido ou vencendo</option>
                         </select>
                     </div>
                 </div>
@@ -229,10 +290,18 @@
 
     async function carregar() {
         try {
-            const dados = await req('/insumos');
+            const [dados, ref, locais] = await Promise.all([
+                req('/insumos'),
+                E.ref ? Promise.resolve(E.ref) : req('/insumos/referencias'),
+                req('/insumos/locais').catch(() => E.locais),
+            ]);
             E.itens = dados.itens || [];
             E.resumo = dados.resumo;
-            document.getElementById('ins-indicadores').innerHTML = indicadoresHTML(E.resumo);
+            E.ref = ref;
+            E.locais = locais || [];
+            document.getElementById('ins-btn-locais')?.classList.toggle('hidden', !podeRevisar());
+            const indicadores = document.getElementById('ins-indicadores');
+            if (indicadores) indicadores.innerHTML = indicadoresHTML(E.resumo);
             renderTabela();
         } catch (err) {
             const corpo = document.getElementById('ins-corpo');
@@ -249,20 +318,26 @@
         const tomBaixo = r && r.abaixo_minimo ? (criticos ? ' tone-danger' : ' tone-warning') : '';
         const tomValidade = r && r.vencidos ? ' tone-danger' : r && r.vencendo_30d ? ' tone-warning' : '';
         const vencidos = r && r.vencidos ? ` (${r.vencidos} já ${r.vencidos === 1 ? 'vencido' : 'vencidos'})` : '';
+        const tomRevisao = r && r.pendentes_revisao ? ' tone-warning' : '';
+        const fds = r && r.fds_pendentes ? ` (${r.fds_pendentes} sem FDS)` : '';
         return `
             <div class="figure"><span class="v">${v(r?.total)}</span><span class="k">Total de itens</span></div>
             <div class="figure${tomBaixo}"><span class="v">${v(r?.abaixo_minimo)}</span><span class="k">Abaixo do mínimo</span></div>
             <div class="figure${tomValidade}"><span class="v">${v(r?.vencendo_30d)}</span><span class="k">Vencendo em 30 dias${vencidos}</span></div>
+            <div class="figure${tomRevisao}"><span class="v">${v(r?.pendentes_revisao)}</span><span class="k">Aguardando revisão${fds}</span></div>
             <div class="figure"><span class="v">${v(r?.movimentacoes_mes)}</span><span class="k">Movimentações no mês</span></div>`;
     }
 
     function filtrados() {
         const termo = E.busca.trim().toLowerCase();
         return E.itens.filter(i => {
-            if (termo && !(i.nome || '').toLowerCase().includes(termo)) return false;
+            if (termo && !(i.nome || '').toLowerCase().includes(termo) && !(i.cas || '').includes(termo)) return false;
             if (E.categoria && i.categoria !== E.categoria) return false;
             if (E.alerta === 'baixo' && !i.abaixo_minimo) return false;
             if (E.alerta === 'validade' && !(i.vencendo || i.vencido)) return false;
+            if (E.alerta === 'pendente' && !i.pendente_revisao) return false;
+            if (E.alerta === 'fds' && !i.fds_pendente) return false;
+            if (E.alerta === 'ca' && !i.ca_situacao) return false;
             return true;
         });
     }
@@ -308,8 +383,10 @@
             <tr class="${nivel(i) === 'critico' ? 'is-critico' : ''}" data-insumo="${i.id}">
                 <td>
                     <span class="ins-nome">${esc(i.nome)}</span>
+                    ${i.cas || i.fabricante ? `<span class="ins-sub">${esc([i.cas ? `CAS ${i.cas}` : '', i.fabricante].filter(Boolean).join(' · '))}</span>` : ''}
                     ${i.localizacao ? `<span class="ins-sub ins-local-curto">${esc(i.localizacao)}</span>` : ''}
                     ${i.vencido || i.vencendo ? `<span class="ins-sub ins-validade-curta ${i.vencido ? 'text-danger' : 'text-warning'}">${i.vencido ? 'Vencido' : 'Vence'} em ${dataBR(i.validade)}</span>` : ''}
+                    ${selosHTML(i)}
                 </td>
                 <td class="col-hide-sm">${esc(i.categoria)}</td>
                 <td class="col-hide-md">${i.localizacao ? esc(i.localizacao) : '<span class="text-faint">—</span>'}</td>
@@ -317,12 +394,17 @@
                 <td class="col-hide-xs">${validadeHTML(i)}</td>
                 <td class="end">
                     <span class="ins-acoes" role="group" aria-label="Ações para ${esc(i.nome)}">
-                        <button type="button" class="link-btn" data-acao="ENTRADA" data-id="${i.id}">+ Entrada</button>
-                        <button type="button" class="link-btn is-uso" data-acao="SAIDA" data-id="${i.id}" ${semSaldo ? 'disabled title="Sem saldo para registrar uso"' : ''}>− Uso</button>
-                        <button type="button" class="link-btn is-reportar" data-acao="REPORTE" data-id="${i.id}">${icone('alert-triangle', 13)} Reportar</button>
-                        <span class="ins-sep" aria-hidden="true"></span>
-                        <button type="button" class="link-btn muted" data-acao="historico" data-id="${i.id}">Histórico</button>
-                        <button type="button" class="link-btn muted" data-acao="editar" data-id="${i.id}">Editar</button>
+                        <span class="ins-acoes-linha">
+                            <button type="button" class="link-btn" data-acao="ENTRADA" data-id="${i.id}">+ Entrada</button>
+                            <button type="button" class="link-btn is-uso" data-acao="SAIDA" data-id="${i.id}" ${semSaldo ? 'disabled title="Sem saldo para registrar uso"' : ''}>− Uso</button>
+                            <button type="button" class="link-btn is-reportar" data-acao="REPORTE" data-id="${i.id}">${icone('alert-triangle', 13)} Reportar</button>
+                        </span>
+                        <span class="ins-acoes-linha">
+                            ${i.fds ? `<button type="button" class="link-btn muted" data-acao="fds" data-id="${i.id}" title="Ficha com Dados de Segurança">FDS</button>` : ''}
+                            <button type="button" class="link-btn muted" data-acao="lotes" data-id="${i.id}">Lotes</button>
+                            <button type="button" class="link-btn muted" data-acao="historico" data-id="${i.id}">Histórico</button>
+                            <button type="button" class="link-btn muted" data-acao="editar" data-id="${i.id}">${podeRevisar() && i.pendente_revisao ? 'Revisar' : 'Editar'}</button>
+                        </span>
                     </span>
                 </td>
             </tr>`;
@@ -336,8 +418,11 @@
             case 'ENTRADA': case 'SAIDA': if (item) abrirMovimento(alvo.dataset.acao, item, alvo); break;
             case 'REPORTE': if (item) abrirReporte(item, alvo); break;
             case 'historico': if (item) abrirHistorico(item, alvo); break;
+            case 'lotes': if (item) abrirLotes(item, alvo); break;
+            case 'fds': if (item?.fds) abrirArquivo(item.fds.id, alvo); break;
             case 'editar': if (item) abrirFormulario(item, alvo); break;
             case 'novo': abrirFormulario(null, alvo); break;
+            case 'locais': abrirLocais(alvo); break;
             case 'exportar': exportar(alvo); break;
             case 'importar': abrirImportacao(alvo); break;
             default: break;
@@ -379,35 +464,86 @@
         if (ajuda) { ajuda.textContent = mensagem || ''; ajuda.classList.toggle('hidden', !mensagem); }
     }
 
-    /** Entrada (+) e uso (−): o mais curto possível, com o foco já na quantidade. */
+    const datalistLocais = (id) => `<datalist id="${id}">${E.locais.map(l => `<option value="${esc(l.nome)}"></option>`).join('')}</datalist>`;
+
+    function rotuloLote(l, unidade) {
+        const partes = [l.lote ? `Lote ${l.lote}` : 'Lote sem número', `${num(l.quantidade)} ${unidade}`];
+        if (l.validade_efetiva) partes.push(`vence ${dataBR(l.validade_efetiva)}`);
+        if (l.local_nome) partes.push(l.local_nome);
+        return partes.join(' · ');
+    }
+
+    /** Entrada (+) e uso (−): o mais curto possível, com o foco já na quantidade. Cada entrada é um lote. */
     function abrirMovimento(tipo, item, origem) {
         const entrada = tipo === 'ENTRADA';
         const min = item.estoque_minimo || 0;
+        const un = esc(item.unidade);
         const modal = abrirModal({
-            id: 'ins-modal-mov', origem,
+            id: 'ins-modal-mov', origem, tamanho: entrada ? 'modal-md' : 'modal-sm',
             eyebrow: item.localizacao ? `${item.nome} · ${item.localizacao}` : item.nome,
             titulo: entrada ? 'Registrar entrada' : 'Registrar uso',
             corpo: `
                 <form id="ins-form-mov" novalidate>
                     <dl class="ins-mov-resumo">
-                        <div><dt>Saldo atual</dt><dd>${num(item.quantidade_atual)} ${esc(item.unidade)}</dd></div>
-                        <div><dt>Mínimo</dt><dd>${min > 0 ? `${num(min)} ${esc(item.unidade)}` : '—'}</dd></div>
-                        <div><dt>Saldo após</dt><dd id="ins-mov-apos">${num(item.quantidade_atual)} ${esc(item.unidade)}</dd></div>
+                        <div><dt>Saldo atual</dt><dd>${num(item.quantidade_atual)} ${un}</dd></div>
+                        <div><dt>Mínimo</dt><dd>${min > 0 ? `${num(min)} ${un}` : '—'}</dd></div>
+                        <div><dt>Saldo após</dt><dd id="ins-mov-apos">${num(item.quantidade_atual)} ${un}</dd></div>
                     </dl>
                     <div class="input-group">
                         <label for="ins-mov-qtd">${entrada ? 'Quantidade recebida' : 'Quantidade usada'}</label>
                         <div class="ins-qtd">
                             <input type="number" id="ins-mov-qtd" name="quantidade" class="form-control" inputmode="decimal" min="0" step="any" required autocomplete="off" aria-describedby="ins-mov-qtd-erro ins-mov-aviso">
-                            <span class="ins-unidade" aria-hidden="true" translate="no">${esc(item.unidade)}</span>
+                            <span class="ins-unidade" aria-hidden="true" translate="no">${un}</span>
                         </div>
-                        ${entrada ? '' : `<div class="ins-atalhos-qtd"><button type="button" class="check-chip" data-tudo>Usar todo o saldo (${num(item.quantidade_atual)} ${esc(item.unidade)})</button></div>`}
+                        ${entrada ? '' : '<div class="ins-atalhos-qtd"><button type="button" class="check-chip" data-tudo></button></div>'}
                         <p class="field-error hidden" id="ins-mov-qtd-erro" role="alert"></p>
                         <p class="ins-aviso" id="ins-mov-aviso" aria-live="polite"></p>
                     </div>
-                    <div class="input-group">
-                        <label for="ins-mov-obs">${entrada ? 'Origem' : 'Onde foi usado'} <span class="text-muted">(opcional)</span></label>
-                        <input type="text" id="ins-mov-obs" name="observacao" class="form-control" maxlength="2000" autocomplete="off" placeholder="${entrada ? 'Fornecedor, nota fiscal ou lote…' : 'Processo, experimento ou ensaio…'}">
+                    <div class="input-group hidden" id="ins-mov-lote-grupo">
+                        <label for="ins-mov-lote">${entrada ? 'Somar a um lote que já está no estoque?' : 'De qual lote'}</label>
+                        <select id="ins-mov-lote" name="lote_id" class="form-control"></select>
                     </div>
+                    ${entrada ? `
+                    <div class="field-grid ins-mov-novo-lote" id="ins-mov-novo">
+                        <div class="input-group">
+                            <label for="ins-mov-numlote">Lote <span class="text-muted">(opcional)</span></label>
+                            <input type="text" id="ins-mov-numlote" name="lote" class="form-control" maxlength="100" autocomplete="off" placeholder="Como está no rótulo">
+                        </div>
+                        <div class="input-group">
+                            <label for="ins-mov-validade">Validade <span class="text-muted">(opcional)</span></label>
+                            <input type="date" id="ins-mov-validade" name="validade" class="form-control">
+                        </div>
+                        <div class="input-group span-2">
+                            <label for="ins-mov-local">Onde vai ficar</label>
+                            <input type="text" id="ins-mov-local" name="localizacao" class="form-control" maxlength="200" list="ins-mov-locais" autocomplete="off" placeholder="Ex.: Armário de inflamáveis 1…">
+                            ${datalistLocais('ins-mov-locais')}
+                        </div>
+                    </div>
+                    <details class="ins-mais">
+                        <summary>Fornecedor, nota fiscal e observação</summary>
+                        <div class="field-grid">
+                            <div class="input-group">
+                                <label for="ins-mov-fornecedor">Fornecedor</label>
+                                <input type="text" id="ins-mov-fornecedor" name="fornecedor" class="form-control" maxlength="200" autocomplete="off">
+                            </div>
+                            <div class="input-group">
+                                <label for="ins-mov-nf">Nota fiscal</label>
+                                <input type="text" id="ins-mov-nf" name="nota_fiscal" class="form-control" maxlength="100" autocomplete="off">
+                            </div>
+                            <div class="input-group">
+                                <label for="ins-mov-receb">Recebido em</label>
+                                <input type="date" id="ins-mov-receb" name="data_recebimento" class="form-control">
+                            </div>
+                            <div class="input-group">
+                                <label for="ins-mov-obs">Observação</label>
+                                <input type="text" id="ins-mov-obs" name="observacao" class="form-control" maxlength="2000" autocomplete="off">
+                            </div>
+                        </div>
+                    </details>` : `
+                    <div class="input-group">
+                        <label for="ins-mov-obs">Onde foi usado <span class="text-muted">(opcional)</span></label>
+                        <input type="text" id="ins-mov-obs" name="observacao" class="form-control" maxlength="2000" autocomplete="off" placeholder="Processo, experimento ou ensaio…">
+                    </div>`}
                 </form>`,
             rodape: `<button type="button" class="btn btn-secondary" data-role="cancel">Cancelar</button>
                      <button type="submit" form="ins-form-mov" class="btn btn-primary" id="ins-mov-ok">${entrada ? 'Registrar entrada' : 'Registrar uso'}</button>`,
@@ -417,6 +553,19 @@
         const apos = modal.querySelector('#ins-mov-apos');
         const aviso = modal.querySelector('#ins-mov-aviso');
         const ok = modal.querySelector('#ins-mov-ok');
+        const grupoLote = modal.querySelector('#ins-mov-lote-grupo');
+        const selLote = modal.querySelector('#ins-mov-lote');
+        const tudo = modal.querySelector('[data-tudo]');
+        const campoLocal = modal.querySelector('#ins-mov-local');
+        let lotes = [];
+
+        // Quanto dá para tirar: o lote escolhido ou o saldo todo (a saída automática percorre os lotes).
+        const disponivel = () => {
+            const l = lotes.find(x => String(x.id) === selLote.value);
+            return entrada ? Infinity : (l ? l.quantidade : item.quantidade_atual);
+        };
+        const atualizarTudo = () => { if (tudo) tudo.textContent = `Usar todo o saldo${selLote.value ? ' do lote' : ''} (${num(disponivel())} ${item.unidade})`; };
+        atualizarTudo();
 
         const validar = () => {
             const v = Number(qtd.value);
@@ -426,7 +575,7 @@
             apos.classList.toggle('is-alerta', !entrada && preenchido && min > 0 && depois <= min);
             let erro = '';
             if (preenchido && v <= 0) erro = 'Informe uma quantidade maior que zero.';
-            else if (!entrada && preenchido && v > item.quantidade_atual) erro = `Maior que o saldo disponível (${num(item.quantidade_atual)} ${item.unidade}).`;
+            else if (!entrada && preenchido && v > disponivel()) erro = `Maior que o saldo disponível (${num(disponivel())} ${item.unidade}).`;
             erroNoCampo(qtd, erro);
             aviso.className = 'ins-aviso';
             aviso.textContent = '';
@@ -442,21 +591,49 @@
             return !erro && preenchido;
         };
         qtd.addEventListener('input', validar);
-        modal.querySelector('[data-tudo]')?.addEventListener('click', () => { qtd.value = String(item.quantidade_atual); validar(); qtd.focus(); });
+        tudo?.addEventListener('click', () => { qtd.value = String(disponivel()); validar(); qtd.focus(); });
+        selLote.addEventListener('change', () => {
+            modal.querySelector('#ins-mov-novo')?.classList.toggle('hidden', !!selLote.value);
+            atualizarTudo();
+            validar();
+        });
         setTimeout(() => qtd.focus(), 30);
+
+        // Lotes: na saída, escolher de qual tirar (o padrão é o que vence primeiro); na entrada, somar a um existente.
+        req(`/insumos/${item.id}/lotes`).then((todos) => {
+            if (!modal.isConnected) return;
+            lotes = todos.filter(l => l.quantidade > 0);
+            if (entrada && campoLocal && !campoLocal.value) campoLocal.value = (lotes[lotes.length - 1] || todos[0])?.local_nome || '';
+            if (!lotes.length || (!entrada && lotes.length < 2)) return;
+            selLote.innerHTML = (entrada
+                ? '<option value="">Não, é um lote novo</option>'
+                : '<option value="">Automático: o que vence primeiro</option>')
+                + lotes.map(l => `<option value="${l.id}">${esc(rotuloLote(l, item.unidade))}</option>`).join('');
+            grupoLote.classList.remove('hidden');
+            atualizarTudo();
+        }).catch(() => { /* sem a lista, a saída segue pelo que vence primeiro */ });
 
         modal.querySelector('#ins-form-mov').addEventListener('submit', (ev) => {
             ev.preventDefault();
             if (!validar()) { if (qtd.value === '') erroNoCampo(qtd, 'Informe a quantidade.'); qtd.focus(); return; }
             const quantidade = Number(qtd.value);
+            const valor = (id) => modal.querySelector(`#${id}`)?.value.trim() || null;
+            const corpo = { tipo, quantidade, observacao: valor('ins-mov-obs'), lote_id: selLote.value ? Number(selLote.value) : null };
+            if (entrada && !selLote.value) {
+                Object.assign(corpo, {
+                    lote: valor('ins-mov-numlote'), validade: valor('ins-mov-validade'), localizacao: valor('ins-mov-local'),
+                    fornecedor: valor('ins-mov-fornecedor'), nota_fiscal: valor('ins-mov-nf'), data_recebimento: valor('ins-mov-receb'),
+                });
+            }
             comBotao(ok, 'Registrando', async () => {
                 try {
-                    const r = await req(`/insumos/${item.id}/movimentar`, { method: 'POST', json: { tipo, quantidade, observacao: modal.querySelector('#ins-mov-obs').value.trim() || null } });
+                    const r = await req(`/insumos/${item.id}/movimentar`, { method: 'POST', json: corpo });
                     delete modal.querySelector('form').dataset.sujo;
                     modal.fechar();
                     const novo = r.insumo;
+                    const lote = r.movimentacao?.lote ? ` (lote ${r.movimentacao.lote})` : '';
                     const base = entrada
-                        ? `Entrada registrada: +${num(quantidade)} ${novo.unidade} de ${novo.nome}. Saldo: ${num(novo.quantidade_atual)} ${novo.unidade}.`
+                        ? `Entrada registrada: +${num(quantidade)} ${novo.unidade} de ${novo.nome}${lote}. Saldo: ${num(novo.quantidade_atual)} ${novo.unidade}.`
                         : `Uso registrado: −${num(quantidade)} ${novo.unidade} de ${novo.nome}. Saldo: ${num(novo.quantidade_atual)} ${novo.unidade}.`;
                     window.UI.showToast(r.gestores_avisados ? `${base} A coordenação foi avisada do estoque baixo.` : base, r.gestores_avisados ? 'warning' : 'success');
                     await carregar();
@@ -469,7 +646,7 @@
         });
     }
 
-    /** Reportar: avisa os gestores na hora. Pode corrigir o saldo com a contagem física. */
+    /** Reportar: avisa os gestores na hora. Pode corrigir o saldo com a contagem física (por lote). */
     function abrirReporte(item, origem) {
         const modal = abrirModal({
             id: 'ins-modal-reporte', origem,
@@ -487,14 +664,21 @@
                         <p class="field-error hidden" id="ins-rep-obs-erro" role="alert"></p>
                     </div>
                     <label class="check-inline"><input type="checkbox" id="ins-rep-ajustar" name="ajustar_saldo"> Corrigir o saldo com a contagem física</label>
-                    <div class="input-group mt-sm hidden" id="ins-rep-saldo-grupo">
-                        <label for="ins-rep-saldo">Quantidade encontrada no local</label>
-                        <div class="ins-qtd">
-                            <input type="number" id="ins-rep-saldo" name="novo_saldo" class="form-control" inputmode="decimal" min="0" step="any" aria-describedby="ins-rep-saldo-erro">
-                            <span class="ins-unidade" aria-hidden="true" translate="no">${esc(item.unidade)}</span>
+                    <div class="hidden" id="ins-rep-saldo-grupo">
+                        <div class="input-group mt-sm hidden" id="ins-rep-lote-grupo">
+                            <label for="ins-rep-lote">Lote contado</label>
+                            <select id="ins-rep-lote" name="lote_id" class="form-control" aria-describedby="ins-rep-lote-erro"></select>
+                            <p class="field-error hidden" id="ins-rep-lote-erro" role="alert"></p>
                         </div>
-                        <p class="help">No sistema: ${num(item.quantidade_atual)} ${esc(item.unidade)}.</p>
-                        <p class="field-error hidden" id="ins-rep-saldo-erro" role="alert"></p>
+                        <div class="input-group mt-sm">
+                            <label for="ins-rep-saldo">Quantidade encontrada no local</label>
+                            <div class="ins-qtd">
+                                <input type="number" id="ins-rep-saldo" name="novo_saldo" class="form-control" inputmode="decimal" min="0" step="any" aria-describedby="ins-rep-saldo-erro">
+                                <span class="ins-unidade" aria-hidden="true" translate="no">${esc(item.unidade)}</span>
+                            </div>
+                            <p class="help" id="ins-rep-saldo-ajuda">No sistema: ${num(item.quantidade_atual)} ${esc(item.unidade)}.</p>
+                            <p class="field-error hidden" id="ins-rep-saldo-erro" role="alert"></p>
+                        </div>
                     </div>
                 </form>`,
             rodape: `<button type="button" class="btn btn-secondary" data-role="cancel">Cancelar</button>
@@ -504,16 +688,35 @@
         const ajustar = modal.querySelector('#ins-rep-ajustar');
         const grupoSaldo = modal.querySelector('#ins-rep-saldo-grupo');
         const saldo = modal.querySelector('#ins-rep-saldo');
+        const selLote = modal.querySelector('#ins-rep-lote');
+        const ajudaSaldo = modal.querySelector('#ins-rep-saldo-ajuda');
+        let lotes = [];
+        const precisaLote = () => lotes.length > 1;
         const alternarSaldo = (ligado) => { ajustar.checked = ligado; grupoSaldo.classList.toggle('hidden', !ligado); };
 
-        ajustar.addEventListener('change', () => { alternarSaldo(ajustar.checked); if (ajustar.checked) saldo.focus(); });
+        // Com mais de um lote com saldo, a contagem física corrige um lote específico.
+        if (item.lotes_com_saldo > 1) {
+            req(`/insumos/${item.id}/lotes`).then((todos) => {
+                lotes = todos.filter(l => l.quantidade > 0);
+                if (!modal.isConnected || !precisaLote()) return;
+                selLote.innerHTML = '<option value="">Escolha o lote</option>' + lotes.map(l => `<option value="${l.id}">${esc(rotuloLote(l, item.unidade))}</option>`).join('');
+                modal.querySelector('#ins-rep-lote-grupo').classList.remove('hidden');
+            }).catch(() => {});
+        }
+        selLote.addEventListener('change', () => {
+            const l = lotes.find(x => String(x.id) === selLote.value);
+            ajudaSaldo.textContent = l ? `No sistema, este lote tem ${num(l.quantidade)} ${item.unidade}.` : `No sistema: ${num(item.quantidade_atual)} ${item.unidade}.`;
+            erroNoCampo(selLote, '');
+        });
+
+        ajustar.addEventListener('change', () => { alternarSaldo(ajustar.checked); if (ajustar.checked) (precisaLote() ? selLote : saldo).focus(); });
         modal.querySelectorAll('[data-motivo]').forEach(b => b.addEventListener('click', () => {
             const m = MOTIVOS_REPORTE.find(x => x.id === b.dataset.motivo);
             const ativo = b.getAttribute('aria-pressed') !== 'true';
             b.setAttribute('aria-pressed', String(ativo));
             if (ativo && !obs.value.includes(m.texto)) obs.value = obs.value.trim() ? `${obs.value.trim()} ${m.texto}` : m.texto;
             if (ativo && m.saldo !== undefined) { alternarSaldo(true); saldo.value = String(m.saldo); }
-            if (ativo && m.contar) { alternarSaldo(true); saldo.focus(); return; }
+            if (ativo && m.contar) { alternarSaldo(true); (precisaLote() ? selLote : saldo).focus(); return; }
             erroNoCampo(obs, '');
             obs.focus();
         }));
@@ -524,15 +727,18 @@
             const texto = obs.value.trim();
             if (!texto) { erroNoCampo(obs, 'Descreva o problema encontrado.'); obs.focus(); return; }
             let novoSaldo = null;
+            let loteId = null;
             if (ajustar.checked) {
+                if (precisaLote() && !selLote.value) { erroNoCampo(selLote, 'Escolha qual lote foi contado.'); selLote.focus(); return; }
                 if (saldo.value === '' || Number(saldo.value) < 0 || !Number.isFinite(Number(saldo.value))) {
                     erroNoCampo(saldo, 'Informe a quantidade encontrada (zero ou mais).'); saldo.focus(); return;
                 }
                 novoSaldo = Number(saldo.value);
+                loteId = selLote.value ? Number(selLote.value) : null;
             }
             comBotao(modal.querySelector('#ins-rep-ok'), 'Enviando', async () => {
                 try {
-                    const r = await req(`/insumos/${item.id}/movimentar`, { method: 'POST', json: { tipo: 'REPORTE', quantidade: 0, observacao: texto, novo_saldo: novoSaldo } });
+                    const r = await req(`/insumos/${item.id}/movimentar`, { method: 'POST', json: { tipo: 'REPORTE', quantidade: 0, observacao: texto, novo_saldo: novoSaldo, lote_id: loteId } });
                     delete modal.querySelector('form').dataset.sujo;
                     modal.fechar();
                     const ajuste = novoSaldo !== null ? ` Saldo corrigido para ${num(r.insumo.quantidade_atual)} ${r.insumo.unidade}.` : '';
@@ -564,6 +770,7 @@
                 return `
                     <li class="tl-item ${classe[m.tipo] || ''}">
                         <span class="tl-title">${rotulo[m.tipo] || esc(m.tipo)} ${qtd ? `<span class="ins-mov-qtd ${classe[m.tipo]}">${esc(qtd)}</span>` : ''}
+                            ${m.lote ? `<span class="text-muted text-small">lote ${esc(m.lote)}</span>` : ''}
                             ${m.saldo_apos !== null ? `<span class="text-muted text-small">saldo ${num(m.saldo_apos)} ${esc(m.unidade)}</span>` : ''}</span>
                         <p>${esc([m.usuario_nome, dataHora(m.criado_em)].filter(Boolean).join(' · '))}</p>
                         ${m.observacao ? `<p class="tl-quote">${esc(m.observacao)}</p>` : ''}
@@ -575,57 +782,545 @@
         }
     }
 
+    // ==========================================
+    // LOTES
+    // ==========================================
+    async function abrirLotes(item, origem) {
+        const modal = abrirModal({
+            id: 'ins-modal-lotes', origem, tamanho: 'modal-lg',
+            eyebrow: 'lotes em estoque', titulo: item.nome,
+            corpo: `<div id="ins-lotes-corpo" aria-busy="true">${window.UI.loading('Carregando lotes…')}</div>`,
+        });
+        const corpo = modal.querySelector('#ins-lotes-corpo');
+        try {
+            const lotes = await req(`/insumos/${item.id}/lotes`);
+            corpo.setAttribute('aria-busy', 'false');
+            if (!lotes.length) {
+                corpo.innerHTML = window.UI.emptyState({ title: 'Nenhum lote registrado', description: 'Cada entrada no estoque cria um lote, com número, validade e local.' });
+                return;
+            }
+            const comSaldo = lotes.filter(l => l.quantidade > 0);
+            const esgotados = lotes.filter(l => l.quantidade <= 0);
+            const validadeLote = (l) => {
+                if (!l.validade_efetiva) return '<span class="text-faint">—</span>';
+                const cls = l.situacao_validade === 'vencido' ? 'is-vencido' : l.situacao_validade === 'vencendo' ? 'is-vencendo' : '';
+                const aberto = l.validade && l.validade_efetiva !== l.validade ? '<small>após aberto</small>' : '';
+                return `<span class="ins-validade ${cls}">${dataBR(l.validade_efetiva)}${aberto}</span>`;
+            };
+            const linha = (l) => `
+                <tr>
+                    <td><span class="ins-nome">${l.lote ? esc(l.lote) : '<span class="text-faint">sem número</span>'}</span>
+                        ${l.certificados.length ? `<span class="ins-sub">${l.certificados.length === 1 ? 'Certificado anexado' : `${l.certificados.length} certificados`}</span>` : ''}</td>
+                    <td>${l.local_nome ? esc(l.local_nome) : '<span class="text-faint">—</span>'}</td>
+                    <td class="num tabular">${num(l.quantidade)} <span translate="no">${esc(item.unidade)}</span></td>
+                    <td>${validadeLote(l)}</td>
+                    <td class="col-hide-sm tabular">${l.data_abertura ? dataBR(l.data_abertura) : '<span class="text-faint">fechado</span>'}</td>
+                    <td class="col-hide-sm tabular">${l.data_recebimento ? dataBR(l.data_recebimento) : '—'}</td>
+                    <td class="end"><button type="button" class="link-btn" data-lote="${l.id}">Editar</button></td>
+                </tr>`;
+            const tabela = (lista) => `
+                <div class="table-container">
+                    <table class="data-table ins-lotes-tabela">
+                        <thead><tr>
+                            <th scope="col">Lote</th><th scope="col">Local</th><th scope="col" class="num">Quantidade</th>
+                            <th scope="col">Validade</th><th scope="col" class="col-hide-sm">Aberto em</th>
+                            <th scope="col" class="col-hide-sm">Recebido em</th><th scope="col" class="end"><span class="sr-only">Ações</span></th>
+                        </tr></thead>
+                        <tbody>${lista.map(linha).join('')}</tbody>
+                    </table>
+                </div>`;
+            corpo.innerHTML = `
+                ${comSaldo.length ? `<p class="help mb-sm">Na ordem em que devem sair: o que vence primeiro fica no topo.</p>${tabela(comSaldo)}`
+                    : '<p class="dialog-text">Nenhum lote com saldo.</p>'}
+                ${esgotados.length ? `<details class="ins-mais mt-md"><summary>Lotes esgotados (${esgotados.length})</summary>${tabela(esgotados)}</details>` : ''}`;
+            corpo.addEventListener('click', (ev) => {
+                const btn = ev.target.closest('[data-lote]');
+                if (!btn) return;
+                const lote = lotes.find(l => l.id === Number(btn.dataset.lote));
+                if (lote) { modal.fechar(); abrirEditarLote(lote, item, origem); }
+            });
+        } catch (err) {
+            corpo.setAttribute('aria-busy', 'false');
+            corpo.innerHTML = window.UI.errorState(esc(err.message));
+        }
+    }
+
+    function abrirEditarLote(lote, item, origem) {
+        const modal = abrirModal({
+            id: 'ins-modal-lote', origem, tamanho: 'modal-md',
+            eyebrow: `${item.nome} · ${num(lote.quantidade)} ${item.unidade}`,
+            titulo: lote.lote ? `Lote ${lote.lote}` : 'Lote sem número',
+            corpo: `
+                <form id="ins-form-lote" class="ins-form" novalidate>
+                    <div class="field-grid">
+                        <div class="input-group">
+                            <label for="ins-l-lote">Número do lote</label>
+                            <input type="text" id="ins-l-lote" class="form-control" maxlength="100" autocomplete="off" value="${esc(lote.lote || '')}">
+                        </div>
+                        <div class="input-group">
+                            <label for="ins-l-local">Local</label>
+                            <input type="text" id="ins-l-local" class="form-control" maxlength="200" list="ins-l-locais" autocomplete="off" value="${esc(lote.local_nome || '')}">
+                            ${datalistLocais('ins-l-locais')}
+                        </div>
+                        <div class="input-group">
+                            <label for="ins-l-validade">Validade do fabricante</label>
+                            <input type="date" id="ins-l-validade" class="form-control" value="${esc(lote.validade || '')}">
+                        </div>
+                        <div class="input-group">
+                            <label for="ins-l-abertura">Aberto em</label>
+                            <input type="date" id="ins-l-abertura" class="form-control" value="${esc(lote.data_abertura || '')}" aria-describedby="ins-l-abertura-ajuda">
+                            <p class="help" id="ins-l-abertura-ajuda">Gravada sozinha no primeiro uso.${item.validade_apos_aberto_dias ? ` Depois de aberto, vale ${item.validade_apos_aberto_dias} dias.` : ''}</p>
+                        </div>
+                        <div class="input-group">
+                            <label for="ins-l-receb">Recebido em</label>
+                            <input type="date" id="ins-l-receb" class="form-control" value="${esc(lote.data_recebimento || '')}">
+                        </div>
+                        <div class="input-group">
+                            <label for="ins-l-fornecedor">Fornecedor</label>
+                            <input type="text" id="ins-l-fornecedor" class="form-control" maxlength="200" autocomplete="off" value="${esc(lote.fornecedor || '')}">
+                        </div>
+                        <div class="input-group">
+                            <label for="ins-l-nf">Nota fiscal</label>
+                            <input type="text" id="ins-l-nf" class="form-control" maxlength="100" autocomplete="off" value="${esc(lote.nota_fiscal || '')}">
+                        </div>
+                    </div>
+                    <div class="ins-secao-arquivos">
+                        <span class="label">Certificado de análise</span>
+                        <ul class="ins-arquivos">${lote.certificados.map(a => `
+                            <li><button type="button" class="link-btn" data-arquivo="${a.id}">${icone('file-text', 13)} ${esc(a.nome_arquivo)}</button>
+                                <span class="text-muted text-small">${esc([a.enviado_por_nome, dataHora(a.criado_em)].filter(Boolean).join(' · '))}</span></li>`).join('')
+                            || '<li class="text-muted text-small">Nenhum certificado anexado.</li>'}</ul>
+                        <label class="btn btn-secondary btn-sm ins-enviar-arquivo">${icone('upload', 13)} Anexar PDF
+                            <input type="file" accept="application/pdf,.pdf" class="sr-only" id="ins-l-cert"></label>
+                    </div>
+                    <p class="help mt-sm">A quantidade só muda por entrada, uso ou reporte.</p>
+                </form>`,
+            rodape: `<button type="button" class="btn btn-secondary" data-role="cancel">Cancelar</button>
+                     <button type="submit" form="ins-form-lote" class="btn btn-primary" id="ins-l-ok">Salvar lote</button>`,
+        });
+        const v = (id) => modal.querySelector(`#ins-l-${id}`).value.trim() || null;
+        modal.querySelectorAll('[data-arquivo]').forEach(b => b.addEventListener('click', () => abrirArquivo(Number(b.dataset.arquivo), b)));
+        modal.querySelector('#ins-l-cert').addEventListener('change', async (ev) => {
+            const f = ev.target.files && ev.target.files[0];
+            if (!f) return;
+            try {
+                await enviarPdf(item.id, 'certificado', f, lote.id);
+                window.UI.showToast('Certificado anexado.', 'success');
+                modal.fechar();
+                abrirLotes(item, origem);
+            } catch (err) { window.UI.showToast(err.message, 'error'); }
+        });
+        modal.querySelector('#ins-form-lote').addEventListener('submit', (ev) => {
+            ev.preventDefault();
+            comBotao(modal.querySelector('#ins-l-ok'), 'Salvando', async () => {
+                try {
+                    await req(`/insumos/lotes/${lote.id}`, { method: 'PUT', json: {
+                        lote: v('lote'), localizacao: v('local'), validade: v('validade'), data_abertura: v('abertura'),
+                        data_recebimento: v('receb'), fornecedor: v('fornecedor'), nota_fiscal: v('nf'),
+                    } });
+                    delete modal.querySelector('form').dataset.sujo;
+                    modal.fechar();
+                    window.UI.showToast('Lote atualizado.', 'success');
+                    await carregar();
+                    abrirLotes(E.itens.find(x => x.id === item.id) || item, origem);
+                } catch (err) { window.UI.showToast(err.message, 'error'); }
+            });
+        });
+        setTimeout(() => modal.querySelector('#ins-l-lote').focus(), 30);
+    }
+
+    /** Envia um PDF (FDS ou certificado) para o bucket privado, passando pelo backend. */
+    async function enviarPdf(insumoId, tipo, arquivo, loteId) {
+        if (!/\.pdf$/i.test(arquivo.name)) throw new Error('Envie o arquivo em PDF.');
+        if (arquivo.size > 15 * 1024 * 1024) throw new Error('O PDF passa de 15 MB.');
+        const fd = new FormData();
+        fd.append('tipo', tipo);
+        if (loteId) fd.append('lote_id', String(loteId));
+        fd.append('file', arquivo);
+        return req(`/insumos/${insumoId}/anexos`, { method: 'POST', body: fd });
+    }
+
+    // ==========================================
+    // LOCAIS (só gestores: tipo e capacidade de inflamáveis)
+    // ==========================================
+    function abrirLocais(origem) {
+        const tipos = (E.ref && E.ref.tipos_local) || [];
+        const opcoesTipo = (atual) => `<option value="">Tipo não definido</option>${tipos.map(t => `<option ${t === atual ? 'selected' : ''}>${esc(t)}</option>`).join('')}`;
+        const modal = abrirModal({
+            id: 'ins-modal-locais', origem, tamanho: 'modal-lg',
+            eyebrow: 'armazenamento', titulo: 'Locais dos insumos',
+            corpo: `
+                <p class="help mb-md">Qualquer pessoa cria um local ao digitar um nome novo numa entrada. Aqui a coordenação define o tipo de cada um
+                    e a capacidade dos armários de inflamáveis (NR-20 / NBR 17505).</p>
+                <form id="ins-form-local-novo" class="ins-local-novo" novalidate>
+                    <div class="input-group">
+                        <label for="ins-loc-nome">Novo local</label>
+                        <input type="text" id="ins-loc-nome" class="form-control" maxlength="200" autocomplete="off" placeholder="Ex.: Armário de inflamáveis 2" aria-describedby="ins-loc-nome-erro">
+                        <p class="field-error hidden" id="ins-loc-nome-erro" role="alert"></p>
+                    </div>
+                    <div class="input-group">
+                        <label for="ins-loc-tipo">Tipo</label>
+                        <select id="ins-loc-tipo" class="form-control">${opcoesTipo('')}</select>
+                    </div>
+                    <button type="submit" class="btn btn-secondary" id="ins-loc-add">${icone('plus', 13)} Adicionar</button>
+                </form>
+                <div id="ins-locais-lista" aria-live="polite"></div>`,
+        });
+        const lista = modal.querySelector('#ins-locais-lista');
+
+        const render = () => {
+            if (!E.locais.length) { lista.innerHTML = window.UI.emptyState({ title: 'Nenhum local cadastrado' }); return; }
+            lista.innerHTML = `
+                <div class="table-container">
+                    <table class="data-table ins-locais-tabela">
+                        <thead><tr><th scope="col">Local</th><th scope="col">Tipo</th><th scope="col">Inflamáveis (L)</th>
+                            <th scope="col" class="num">Itens</th><th scope="col" class="end"><span class="sr-only">Ações</span></th></tr></thead>
+                        <tbody>${E.locais.map(l => `
+                            <tr data-local="${l.id}">
+                                <td><input type="text" class="form-control" data-campo="nome" maxlength="200" value="${esc(l.nome)}" aria-label="Nome do local"></td>
+                                <td><select class="form-control" data-campo="tipo" aria-label="Tipo de ${esc(l.nome)}">${opcoesTipo(l.tipo)}</select></td>
+                                <td><input type="number" class="form-control" data-campo="capacidade" min="0" step="any" inputmode="decimal"
+                                    value="${l.capacidade_inflamaveis_l ?? ''}" placeholder="—" aria-label="Capacidade de inflamáveis em litros"
+                                    ${l.tipo === 'Armário de inflamáveis' ? '' : 'disabled'}></td>
+                                <td class="num tabular">${l.itens}</td>
+                                <td class="end"><span class="ins-acoes-linha ins-acoes-local">
+                                    <button type="button" class="link-btn" data-local-acao="salvar">Salvar</button>
+                                    <button type="button" class="link-btn is-reportar" data-local-acao="remover" ${l.itens ? 'disabled title="Há lotes com saldo neste local"' : ''}>Remover</button>
+                                </span></td>
+                            </tr>`).join('')}</tbody>
+                    </table>
+                </div>`;
+        };
+        const recarregar = async () => { E.locais = await req('/insumos/locais'); render(); };
+        render();
+
+        lista.addEventListener('change', (ev) => {
+            if (ev.target.dataset.campo !== 'tipo') return;
+            const cap = ev.target.closest('tr').querySelector('[data-campo="capacidade"]');
+            cap.disabled = ev.target.value !== 'Armário de inflamáveis';
+        });
+        lista.addEventListener('click', async (ev) => {
+            const btn = ev.target.closest('[data-local-acao]');
+            if (!btn || btn.disabled) return;
+            const tr = btn.closest('tr');
+            const id = Number(tr.dataset.local);
+            const local = E.locais.find(l => l.id === id);
+            if (btn.dataset.localAcao === 'remover') {
+                const ok = await window.UI.confirm(`${local.nome} sai da lista de locais.`, { title: 'Remover local?', danger: true, confirmText: 'Remover' });
+                if (!ok) return;
+                comBotao(btn, 'Removendo', async () => {
+                    try { await req(`/insumos/locais/${id}`, { method: 'DELETE' }); await recarregar(); window.UI.showToast('Local removido.', 'success'); }
+                    catch (err) { window.UI.showToast(err.message, 'error'); }
+                });
+                return;
+            }
+            const campo = (c) => tr.querySelector(`[data-campo="${c}"]`);
+            const tipo = campo('tipo').value || null;
+            const cap = campo('capacidade').value;
+            comBotao(btn, 'Salvando', async () => {
+                try {
+                    await req(`/insumos/locais/${id}`, { method: 'PUT', json: {
+                        nome: campo('nome').value.trim() || local.nome, tipo,
+                        capacidade_inflamaveis_l: tipo === 'Armário de inflamáveis' && cap !== '' ? Number(cap) : null,
+                    } });
+                    await recarregar();
+                    window.UI.showToast('Local atualizado.', 'success');
+                    carregar();
+                } catch (err) { window.UI.showToast(err.message, 'error'); }
+            });
+        });
+        modal.querySelector('#ins-form-local-novo').addEventListener('submit', (ev) => {
+            ev.preventDefault();
+            const nome = modal.querySelector('#ins-loc-nome');
+            if (!nome.value.trim()) { erroNoCampo(nome, 'Informe o nome do local.'); nome.focus(); return; }
+            erroNoCampo(nome, '');
+            comBotao(modal.querySelector('#ins-loc-add'), 'Adicionando', async () => {
+                try {
+                    await req('/insumos/locais', { method: 'POST', json: { nome: nome.value.trim(), tipo: modal.querySelector('#ins-loc-tipo').value || null } });
+                    nome.value = '';
+                    await recarregar();
+                    nome.focus();
+                } catch (err) { erroNoCampo(nome, err.message); nome.focus(); }
+            });
+        });
+        setTimeout(() => modal.querySelector('#ins-loc-nome').focus(), 30);
+    }
+
+    // ==========================================
+    // FORMULÁRIO DO INSUMO
+    // Cadastro mínimo para todos; seções técnicas (GHS, FDS, CA, vidraria) e revisão só para gestores.
+    // ==========================================
+    /** Checkbox de segurança: na tela é uma checkbox, mas guarda três estados (não verificado, sim, não). */
+    function checkSeguranca(id, rotulo, valor) {
+        const estado = valor === null || valor === undefined ? 'null' : String(!!valor);
+        return `<label class="check-inline ins-tri" for="${id}">
+                    <input type="checkbox" id="${id}" data-tri="${estado}" ${valor ? 'checked' : ''} aria-describedby="${id}-estado">
+                    <span>${esc(rotulo)}</span>
+                    <span class="ins-tri-estado" id="${id}-estado" data-tri-estado></span>
+                </label>`;
+    }
+    function ligarTriEstados(raiz) {
+        raiz.querySelectorAll('[data-tri]').forEach((c) => {
+            const marcador = raiz.querySelector(`#${c.id}-estado`);
+            const pintar = () => {
+                c.indeterminate = c.dataset.tri === 'null';
+                marcador.textContent = c.dataset.tri === 'null' ? 'Não verificado' : (c.checked ? 'Sim' : 'Não');
+                marcador.classList.toggle('is-pendente', c.dataset.tri === 'null');
+            };
+            c.addEventListener('change', () => { c.dataset.tri = String(c.checked); pintar(); });
+            pintar();
+        });
+    }
+    const valorTri = (c) => (c.dataset.tri === 'null' ? null : c.checked);
+
+    function secaoGhs(i, travado) {
+        const pictos = new Set(i.ghs_pictogramas || []);
+        const palavra = i.ghs_palavra || '';
+        return `
+            <fieldset class="ins-secao" data-so="Reagentes" data-tecnico ${travado}>
+                <legend>Classificação GHS <span class="text-muted">· NR-26</span></legend>
+                <div class="field-grid">
+                    <div class="input-group span-2">${checkSeguranca('ins-f-perigoso', 'Produto perigoso pelo GHS', i.ghs_perigoso)}</div>
+                </div>
+                <div class="ins-ghs-detalhe" id="ins-f-ghs-detalhe">
+                    <div class="input-group">
+                        <label for="ins-f-frase-h">Frases H (perigo)</label>
+                        <input type="text" id="ins-f-frase-h" class="form-control" list="ins-frases-h" autocomplete="off" placeholder="Digite o código ou parte do texto e tecle Enter" aria-describedby="ins-f-frase-h-ajuda">
+                        <datalist id="ins-frases-h">${(E.ref?.frases_h || []).map(f => `<option value="${esc(`${f.codigo} · ${f.texto}`)}"></option>`).join('')}</datalist>
+                        <p class="help" id="ins-f-frase-h-ajuda">Copie da seção 2 da FDS.</p>
+                        <ul class="ins-frases" id="ins-f-frases" aria-live="polite"></ul>
+                        <button type="button" class="link-btn" id="ins-f-sugerir">${icone('sparkles', 13)} Sugerir pictogramas e palavra de advertência</button>
+                    </div>
+                    <div class="input-group">
+                        <span class="label" id="ins-f-pictos-rotulo">Pictogramas</span>
+                        <div class="check-chips ins-pictos" role="group" aria-labelledby="ins-f-pictos-rotulo">
+                            ${(E.ref?.pictogramas || []).map(p => `<label class="check-chip"><input type="checkbox" name="ghs_pictogramas" value="${p.codigo}" ${pictos.has(p.codigo) ? 'checked' : ''}>${losango(p.codigo)} ${esc(p.nome)}</label>`).join('')}
+                        </div>
+                    </div>
+                    <div class="field-grid">
+                        <div class="input-group">
+                            <span class="label" id="ins-f-palavra-rotulo">Palavra de advertência</span>
+                            <div class="check-chips" role="radiogroup" aria-labelledby="ins-f-palavra-rotulo">
+                                ${['Perigo', 'Atenção', ''].map(p => `<label class="check-chip"><input type="radio" name="ghs_palavra" value="${p}" ${palavra === p ? 'checked' : ''}> ${p || 'Nenhuma'}</label>`).join('')}
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="ins-f-frases-p">Frases P (precaução)</label>
+                            <textarea id="ins-f-frases-p" class="form-control" rows="2" maxlength="1000" placeholder="P210, P305+P351+P338…">${esc(i.ghs_frases_p || '')}</textarea>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>`;
+    }
+
     function abrirFormulario(item, origem) {
         const novo = !item;
+        const gestor = podeRevisar();
         const i = item || { categoria: 'Reagentes', unidade: 'un', estoque_minimo: 0 };
-        const locais = [...new Set(E.itens.map(x => x.localizacao).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+        const umLote = !novo && i.lotes_com_saldo === 1;
+        const opcoes = (lista, atual, vazio) => `${vazio !== undefined ? `<option value="">${esc(vazio)}</option>` : ''}${lista.map(v => `<option ${v === atual ? 'selected' : ''}>${esc(v)}</option>`).join('')}`;
+        const estados = (E.ref && E.ref.estados_fisicos) || ['Sólido', 'Líquido', 'Gás'];
+        // Usuário comum: no cadastro, as seções técnicas nem aparecem; na edição aparecem só para leitura.
+        const mostrarTecnico = gestor || !novo;
+        const travado = gestor ? '' : 'disabled';
+
         const modal = abrirModal({
-            id: 'ins-modal-form', origem, tamanho: 'modal-md',
-            eyebrow: novo ? 'novo insumo' : 'editar insumo',
+            id: 'ins-modal-form', origem, tamanho: 'modal-lg',
+            eyebrow: novo ? 'novo insumo' : (gestor && i.pendente_revisao ? 'revisar insumo' : 'editar insumo'),
             titulo: novo ? 'Cadastrar insumo' : i.nome,
             corpo: `
                 <form id="ins-form" class="ins-form" novalidate>
-                    <div class="field-grid">
-                        <div class="input-group span-2">
-                            <label for="ins-f-nome">Nome</label>
-                            <input type="text" id="ins-f-nome" name="nome" class="form-control" required maxlength="300" autocomplete="off" value="${esc(i.nome || '')}" placeholder="Ex.: Etanol absoluto P.A.…" aria-describedby="ins-f-nome-erro">
-                            <p class="field-error hidden" id="ins-f-nome-erro" role="alert"></p>
-                            <div class="ins-dup hidden" id="ins-f-dup" aria-live="polite"></div>
+                    ${!novo ? `<div class="ins-status-revisao ${i.pendente_revisao ? 'is-pendente' : 'is-ok'}">
+                        ${i.pendente_revisao
+                            ? `<strong>Revisão pendente.</strong> ${gestor ? 'Complete os dados técnicos abaixo e marque como revisado.' : 'A coordenação foi avisada e vai completar os dados técnicos.'}`
+                            : `<strong>Revisado</strong>${i.revisado_por_nome ? ` por ${esc(i.revisado_por_nome)}` : ''}${i.revisado_em ? ` em ${dataHora(i.revisado_em)}` : ''}.${gestor ? '' : ' Mudar nome, categoria, estado físico, concentração ou fabricante reabre a revisão.'}`}
+                    </div>` : (gestor ? '' : '<p class="help mb-md">Preencha o básico. A classificação GHS, a FDS e o CA ficam com a coordenação, que recebe um aviso por e-mail.</p>')}
+
+                    <fieldset class="ins-secao">
+                        <legend>Identificação</legend>
+                        <div class="field-grid">
+                            <div class="input-group span-2">
+                                <label for="ins-f-nome">Nome</label>
+                                <input type="text" id="ins-f-nome" name="nome" class="form-control" required maxlength="300" autocomplete="off" value="${esc(i.nome || '')}" placeholder="Ex.: Etanol absoluto P.A.…" aria-describedby="ins-f-nome-erro">
+                                <p class="field-error hidden" id="ins-f-nome-erro" role="alert"></p>
+                                <div class="ins-dup hidden" id="ins-f-dup" aria-live="polite"></div>
+                            </div>
+                            <div class="input-group">
+                                <label for="ins-f-categoria">Categoria</label>
+                                <select id="ins-f-categoria" name="categoria" class="form-control">${opcoes(categorias(), i.categoria)}</select>
+                            </div>
+                            <div class="input-group">
+                                <label for="ins-f-unidade">Unidade</label>
+                                <select id="ins-f-unidade" name="unidade" class="form-control">${opcoes(unidades(), i.unidade)}</select>
+                            </div>
+                            <div class="input-group" data-so="Reagentes">
+                                <label for="ins-f-estado">Estado físico</label>
+                                <select id="ins-f-estado" name="estado_fisico" class="form-control">${opcoes(estados, i.estado_fisico, 'Não informado')}</select>
+                            </div>
+                            <div class="input-group" data-so="Reagentes">
+                                <label for="ins-f-concentracao">Concentração / pureza (%) <span class="text-muted">(opcional)</span></label>
+                                <input type="number" id="ins-f-concentracao" name="concentracao_pct" class="form-control" inputmode="decimal" min="0" max="100" step="any" value="${i.concentracao_pct ?? ''}" aria-describedby="ins-f-concentracao-erro">
+                                <p class="field-error hidden" id="ins-f-concentracao-erro" role="alert"></p>
+                            </div>
+                            <div class="input-group" data-so="Reagentes">
+                                <label for="ins-f-grau">Grau <span class="text-muted">(opcional)</span></label>
+                                <input type="text" id="ins-f-grau" name="grau" class="form-control" maxlength="50" list="ins-graus" autocomplete="off" value="${esc(i.grau || '')}">
+                                <datalist id="ins-graus"><option value="P.A."></option><option value="ACS"></option><option value="HPLC"></option><option value="UV/HPLC"></option><option value="Técnico"></option><option value="Farmacêutico"></option></datalist>
+                            </div>
+                            <div class="input-group">
+                                <label for="ins-f-fabricante">Fabricante / marca <span class="text-muted">(opcional)</span></label>
+                                <input type="text" id="ins-f-fabricante" name="fabricante" class="form-control" maxlength="200" autocomplete="off" value="${esc(i.fabricante || '')}">
+                            </div>
+                            <div class="input-group">
+                                <label for="ins-f-codigo">Código interno <span class="text-muted">(opcional)</span></label>
+                                <input type="text" id="ins-f-codigo" name="codigo_interno" class="form-control" maxlength="50" autocomplete="off" value="${esc(i.codigo_interno || '')}">
+                            </div>
+                            <div class="input-group">
+                                <label for="ins-f-minimo">Estoque mínimo</label>
+                                <input type="number" id="ins-f-minimo" name="estoque_minimo" class="form-control" inputmode="decimal" min="0" step="any" value="${i.estoque_minimo ?? 0}" aria-describedby="ins-f-minimo-ajuda">
+                                <p class="help" id="ins-f-minimo-ajuda">Ao chegar nele, a coordenação recebe um aviso. Use 0 para não avisar.</p>
+                            </div>
                         </div>
-                        <div class="input-group">
-                            <label for="ins-f-categoria">Categoria</label>
-                            <select id="ins-f-categoria" name="categoria" class="form-control">${CATEGORIAS.map(c => `<option ${c === i.categoria ? 'selected' : ''}>${c}</option>`).join('')}</select>
+                    </fieldset>
+
+                    <fieldset class="ins-secao">
+                        <legend>${novo ? 'Primeiro lote' : 'Estoque'}</legend>
+                        <div class="field-grid">
+                            ${novo ? `
+                            <div class="input-group">
+                                <label for="ins-f-saldo">Saldo inicial</label>
+                                <input type="number" id="ins-f-saldo" name="quantidade_inicial" class="form-control" inputmode="decimal" min="0" step="any" value="0">
+                                <p class="help">Entra no histórico como a primeira entrada.</p>
+                            </div>
+                            <div class="input-group">
+                                <label for="ins-f-lote">Lote <span class="text-muted">(opcional)</span></label>
+                                <input type="text" id="ins-f-lote" name="lote" class="form-control" maxlength="100" autocomplete="off">
+                            </div>` : `
+                            <div class="input-group">
+                                <span class="label">Saldo atual</span>
+                                <p class="mt-xs"><strong class="tabular">${num(i.quantidade_atual)} ${esc(i.unidade)}</strong>${i.lotes_com_saldo > 1 ? ` em ${i.lotes_com_saldo} lotes` : ''}</p>
+                                <p class="help">Muda só por entrada, uso ou reporte.</p>
+                            </div>`}
+                            ${novo || umLote ? `
+                            <div class="input-group">
+                                <label for="ins-f-local">Localização</label>
+                                <input type="text" id="ins-f-local" name="localizacao" class="form-control" maxlength="200" list="ins-f-locais" autocomplete="off" value="${esc(i.localizacao || '')}" placeholder="Ex.: Armário 2, prateleira de cima…">
+                                ${datalistLocais('ins-f-locais')}
+                            </div>
+                            <div class="input-group">
+                                <label for="ins-f-validade">Validade <span class="text-muted">(opcional)</span></label>
+                                <input type="date" id="ins-f-validade" name="validade" class="form-control" value="${esc(umLote ? (i.validade || '') : '')}">
+                            </div>` : `
+                            <div class="input-group">
+                                <span class="label">Local e validade</span>
+                                <p class="help mt-xs">${i.lotes_com_saldo > 1 ? 'Cada lote tem os seus.' : 'Entram com a próxima entrada.'}
+                                    <button type="button" class="link-btn" id="ins-f-ver-lotes">Ver lotes</button></p>
+                            </div>`}
                         </div>
-                        <div class="input-group">
-                            <label for="ins-f-local">Localização</label>
-                            <input type="text" id="ins-f-local" name="localizacao" class="form-control" maxlength="200" list="ins-locais" autocomplete="off" value="${esc(i.localizacao || '')}" placeholder="Ex.: Armário 2, prateleira de cima…">
-                            <datalist id="ins-locais">${locais.map(l => `<option value="${esc(l)}"></option>`).join('')}</datalist>
-                        </div>
-                        <div class="input-group">
-                            <label for="ins-f-unidade">Unidade</label>
-                            <select id="ins-f-unidade" name="unidade" class="form-control">${UNIDADES.map(u => `<option ${u === i.unidade ? 'selected' : ''}>${u}</option>`).join('')}</select>
-                        </div>
-                        <div class="input-group">
-                            <label for="ins-f-minimo">Estoque mínimo</label>
-                            <input type="number" id="ins-f-minimo" name="estoque_minimo" class="form-control" inputmode="decimal" min="0" step="any" value="${i.estoque_minimo ?? 0}" aria-describedby="ins-f-minimo-ajuda">
-                            <p class="help" id="ins-f-minimo-ajuda">Ao chegar nele, a coordenação recebe um aviso. Use 0 para não avisar.</p>
-                        </div>
-                        ${novo ? `
-                        <div class="input-group">
-                            <label for="ins-f-saldo">Saldo inicial</label>
-                            <input type="number" id="ins-f-saldo" name="quantidade_inicial" class="form-control" inputmode="decimal" min="0" step="any" value="0">
-                            <p class="help">Entra no histórico como a primeira entrada.</p>
-                        </div>` : `
-                        <div class="input-group">
-                            <span class="label">Saldo atual</span>
-                            <p class="mt-xs"><strong class="tabular">${num(i.quantidade_atual)} ${esc(i.unidade)}</strong></p>
-                            <p class="help">Muda só por entrada, uso ou reporte.</p>
+                    </fieldset>
+
+                    <fieldset class="ins-secao" data-so="Reagentes">
+                        <legend>FDS <span class="text-muted">· Ficha com Dados de Segurança (NBR 14725:2023)</span></legend>
+                        ${novo ? '<p class="help">Depois de cadastrar, abra o item de novo para anexar a FDS em PDF.</p>' : `
+                        <div class="ins-secao-arquivos">
+                            <div id="ins-f-fds-atual">${i.fds
+                                ? `<button type="button" class="link-btn" data-arquivo="${i.fds.id}">${icone('file-text', 13)} ${esc(i.fds.nome_arquivo)}</button>
+                                   <span class="text-muted text-small">${esc([i.fds.enviado_por_nome, dataHora(i.fds.criado_em)].filter(Boolean).join(' · '))}</span>`
+                                : '<span class="text-muted text-small">Nenhuma FDS anexada.</span>'}</div>
+                            <label class="btn btn-secondary btn-sm ins-enviar-arquivo">${icone('upload', 13)} ${i.fds ? 'Enviar FDS mais nova' : 'Anexar FDS (PDF)'}
+                                <input type="file" accept="application/pdf,.pdf" class="sr-only" id="ins-f-fds-arquivo"></label>
                         </div>`}
-                        <div class="input-group">
-                            <label for="ins-f-validade">Validade <span class="text-muted">(opcional)</span></label>
-                            <input type="date" id="ins-f-validade" name="validade" class="form-control" value="${esc(i.validade || '')}">
+                        ${mostrarTecnico ? `
+                        <fieldset class="ins-subsecao" data-tecnico ${travado}>
+                            <div class="field-grid">
+                                <div class="input-group">
+                                    <label for="ins-f-fds-revisao">Revisão da FDS</label>
+                                    <input type="text" id="ins-f-fds-revisao" class="form-control" maxlength="50" autocomplete="off" value="${esc(i.fds_revisao || '')}">
+                                </div>
+                                <div class="input-group">
+                                    <label for="ins-f-fds-data">Data da FDS</label>
+                                    <input type="date" id="ins-f-fds-data" class="form-control" value="${esc(i.fds_data || '')}">
+                                </div>
+                                <div class="input-group span-2 ins-checks">
+                                    ${checkSeguranca('ins-f-nbr', 'FDS conforme a NBR 14725:2023', i.fds_nbr14725)}
+                                    <label class="check-inline"><input type="checkbox" id="ins-f-fds-pt" ${i.fds_portugues ? 'checked' : ''}> FDS em português</label>
+                                </div>
+                            </div>
+                        </fieldset>` : ''}
+                    </fieldset>
+
+                    ${mostrarTecnico ? `
+                    <fieldset class="ins-secao" data-so="Reagentes" data-tecnico ${travado}>
+                        <legend>Identificação química</legend>
+                        <div class="field-grid">
+                            <div class="input-group">
+                                <label for="ins-f-cas">Número CAS</label>
+                                <input type="text" id="ins-f-cas" class="form-control" maxlength="12" autocomplete="off" inputmode="numeric" value="${esc(i.cas || '')}" placeholder="64-17-5" aria-describedby="ins-f-cas-erro">
+                                <p class="field-error hidden" id="ins-f-cas-erro" role="alert"></p>
+                                <label class="check-inline mt-xs"><input type="checkbox" id="ins-f-mistura" ${i.mistura ? 'checked' : ''}> É uma mistura (sem CAS único)</label>
+                            </div>
+                            <div class="input-group">
+                                <label for="ins-f-cod-fab">Código do fabricante (catálogo)</label>
+                                <input type="text" id="ins-f-cod-fab" class="form-control" maxlength="100" autocomplete="off" value="${esc(i.codigo_fabricante || '')}">
+                            </div>
+                            <div class="input-group">
+                                <label for="ins-f-aberto">Validade depois de aberto (dias)</label>
+                                <input type="number" id="ins-f-aberto" class="form-control" min="1" max="3650" step="1" inputmode="numeric" value="${i.validade_apos_aberto_dias ?? ''}" placeholder="—">
+                            </div>
                         </div>
-                    </div>
+                    </fieldset>
+                    ${secaoGhs(i, travado)}
+                    <fieldset class="ins-secao" data-so="EPIs" data-tecnico ${travado}>
+                        <legend>Certificado de Aprovação <span class="text-muted">· NR-06</span></legend>
+                        <div class="field-grid">
+                            <div class="input-group">
+                                <label for="ins-f-ca">Número do CA</label>
+                                <input type="text" id="ins-f-ca" class="form-control" maxlength="20" inputmode="numeric" autocomplete="off" value="${esc(i.epi_ca || '')}">
+                            </div>
+                            <div class="input-group">
+                                <label for="ins-f-ca-validade">Validade do CA</label>
+                                <input type="date" id="ins-f-ca-validade" class="form-control" value="${esc(i.epi_ca_validade || '')}">
+                            </div>
+                            <div class="input-group">
+                                <label for="ins-f-protecao">Tipo de proteção</label>
+                                <select id="ins-f-protecao" class="form-control">${opcoes(TIPOS_PROTECAO, i.epi_tipo_protecao, 'Não informado')}</select>
+                            </div>
+                            <div class="input-group">
+                                <label for="ins-f-tamanho">Tamanho</label>
+                                <input type="text" id="ins-f-tamanho" class="form-control" maxlength="20" autocomplete="off" value="${esc(i.epi_tamanho || '')}" placeholder="P, M, G, 42…">
+                            </div>
+                        </div>
+                    </fieldset>
+                    <fieldset class="ins-secao" data-so="Vidrarias" data-tecnico ${travado}>
+                        <legend>Vidraria</legend>
+                        <div class="field-grid">
+                            <div class="input-group">
+                                <label for="ins-f-vid-volume">Volume nominal</label>
+                                <input type="text" id="ins-f-vid-volume" class="form-control" maxlength="50" autocomplete="off" value="${esc(i.vid_volume || '')}" placeholder="250 mL">
+                            </div>
+                            <div class="input-group">
+                                <label for="ins-f-vid-classe">Classe</label>
+                                <select id="ins-f-vid-classe" class="form-control">${opcoes(['A', 'B'], i.vid_classe, 'Não se aplica')}</select>
+                            </div>
+                            <div class="input-group">
+                                <label for="ins-f-vid-material">Material</label>
+                                <input type="text" id="ins-f-vid-material" class="form-control" maxlength="100" list="ins-materiais" autocomplete="off" value="${esc(i.vid_material || '')}">
+                                <datalist id="ins-materiais"><option value="Borossilicato"></option><option value="Vidro soda-cal"></option><option value="Quartzo"></option><option value="Polipropileno"></option></datalist>
+                            </div>
+                            <div class="input-group ins-checks">
+                                <label class="check-inline"><input type="checkbox" id="ins-f-vid-volumetrica" ${i.vid_volumetrica ? 'checked' : ''}> Vidraria volumétrica</label>
+                            </div>
+                        </div>
+                    </fieldset>` : ''}
+
+                    ${gestor ? `
+                    <fieldset class="ins-secao ins-secao-revisao">
+                        <legend>Revisão técnica</legend>
+                        <label class="check-inline"><input type="checkbox" id="ins-f-revisado" ${!novo && !i.pendente_revisao ? 'checked' : ''}> Marcar como revisado</label>
+                        <p class="help">Confirma que os dados técnicos conferem com a FDS do fornecedor. O sistema não deixa marcar com dados obrigatórios faltando.</p>
+                        ${!novo && i.faltas_para_revisar?.length ? `<p class="help text-warning">Na última gravação faltava: ${esc(i.faltas_para_revisar.join('; '))}.</p>` : ''}
+                    </fieldset>` : ''}
+
                     ${!novo ? `
                     <div class="ins-zona-remover">
                         <span>Remover tira o item da lista. O histórico de movimentações é mantido.</span>
@@ -637,7 +1332,89 @@
         });
 
         const campo = (id) => modal.querySelector(`#ins-f-${id}`);
+        const form = modal.querySelector('#ins-form');
         setTimeout(() => campo('nome').focus(), 30);
+        ligarTriEstados(modal);
+
+        // Seções que dependem da categoria
+        const aplicarCategoria = () => {
+            const cat = campo('categoria').value;
+            form.querySelectorAll('[data-so]').forEach(el => el.classList.toggle('hidden', el.dataset.so !== cat));
+        };
+        campo('categoria').addEventListener('change', aplicarCategoria);
+        aplicarCategoria();
+
+        // GHS: frases H em chips, detalhe só quando o produto é perigoso, sugestão a partir das frases
+        let frases = [...(i.ghs_frases_h || [])];
+        const listaFrases = campo('frases');
+        const desenharFrases = () => {
+            if (!listaFrases) return;
+            listaFrases.innerHTML = frases.map(c => `
+                <li><span class="ins-frase-cod">${esc(c)}</span> <span>${esc(fraseH(c)?.texto || '')}</span>
+                    ${gestor ? `<button type="button" class="link-btn muted" data-tirar-frase="${esc(c)}" aria-label="Tirar ${esc(c)}">${icone('x', 12)}</button>` : ''}</li>`).join('');
+        };
+        desenharFrases();
+        const entradaFrase = campo('frase-h');
+        const adicionarFrase = () => {
+            const m = /H\d{3}/i.exec(entradaFrase.value || '');
+            if (!m) return;
+            const codigo = m[0].toUpperCase();
+            if (!fraseH(codigo)) { window.UI.showToast(`${codigo} não é uma frase H conhecida.`, 'error'); return; }
+            if (!frases.includes(codigo)) { frases.push(codigo); frases.sort(); desenharFrases(); }
+            entradaFrase.value = '';
+        };
+        entradaFrase?.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); adicionarFrase(); } });
+        entradaFrase?.addEventListener('change', adicionarFrase);
+        listaFrases?.addEventListener('click', (ev) => {
+            const b = ev.target.closest('[data-tirar-frase]');
+            if (b) { frases = frases.filter(c => c !== b.dataset.tirarFrase); desenharFrases(); }
+        });
+        campo('sugerir')?.addEventListener('click', () => {
+            if (!frases.length) { window.UI.showToast('Adicione as frases H da FDS primeiro.', 'warning'); entradaFrase.focus(); return; }
+            const s = sugerirGhs(frases);
+            form.querySelectorAll('input[name="ghs_pictogramas"]').forEach(c => { c.checked = s.pictogramas.includes(c.value); });
+            form.querySelectorAll('input[name="ghs_palavra"]').forEach(r => { r.checked = r.value === (s.palavra || ''); });
+            window.UI.showToast('Sugestão aplicada. Confira com a seção 2 da FDS.', 'success');
+        });
+        const perigoso = campo('perigoso');
+        const detalheGhs = campo('ghs-detalhe');
+        const aplicarPerigo = () => { if (detalheGhs && perigoso) detalheGhs.classList.toggle('hidden', !(perigoso.dataset.tri === 'true')); };
+        perigoso?.addEventListener('change', aplicarPerigo);
+        aplicarPerigo();
+        if (!gestor) { campo('sugerir')?.classList.add('hidden'); entradaFrase?.closest('.input-group')?.querySelector('.help')?.classList.add('hidden'); }
+
+        // CAS: confere o formato e o dígito verificador já na digitação
+        const cas = campo('cas');
+        const casValido = (v) => {
+            const m = /^(\d{2,7})-(\d{2})-(\d)$/.exec(v);
+            if (!m) return false;
+            const d = (m[1] + m[2]).split('').reverse();
+            return d.reduce((s, x, k) => s + (k + 1) * Number(x), 0) % 10 === Number(m[3]);
+        };
+        cas?.addEventListener('blur', () => { const v = cas.value.trim(); erroNoCampo(cas, v && !casValido(v) ? 'CAS inválido. Use o formato 64-17-5 e confira os dígitos.' : ''); });
+
+        // FDS: envio imediato (não depende de salvar o formulário)
+        form.querySelectorAll('[data-arquivo]').forEach(b => b.addEventListener('click', () => abrirArquivo(Number(b.dataset.arquivo), b)));
+        campo('fds-arquivo')?.addEventListener('change', async (ev) => {
+            const f = ev.target.files && ev.target.files[0];
+            if (!f) return;
+            const rotulo = ev.target.closest('label');
+            rotulo.classList.add('is-busy');
+            try {
+                const r = await enviarPdf(i.id, 'fds', f);
+                campo('fds-atual').innerHTML = `<button type="button" class="link-btn" data-arquivo="${r.anexo.id}">${icone('file-text', 13)} ${esc(r.anexo.nome_arquivo)}</button>
+                    <span class="text-muted text-small">enviada agora</span>`;
+                campo('fds-atual').querySelector('[data-arquivo]').addEventListener('click', (e2) => abrirArquivo(r.anexo.id, e2.currentTarget));
+                window.UI.showToast(r.voltou_pendente ? 'FDS anexada. A revisão foi reaberta e a coordenação avisada.' : 'FDS anexada.', r.voltou_pendente ? 'warning' : 'success');
+                carregar();
+            } catch (err) {
+                window.UI.showToast(err.message, 'error');
+            } finally {
+                rotulo.classList.remove('is-busy');
+                ev.target.value = '';
+            }
+        });
+        campo('ver-lotes')?.addEventListener('click', () => { modal.fechar(); abrirLotes(i, origem); });
 
         // Verificação rápida no inventário enquanto digita o nome
         const caixaDup = modal.querySelector('#ins-f-dup');
@@ -689,7 +1466,36 @@
             }
         });
 
-        modal.querySelector('#ins-form').addEventListener('submit', (ev) => {
+        const texto = (id) => (campo(id) ? campo(id).value.trim() || null : null);
+        const numero = (id) => (campo(id) && campo(id).value !== '' ? Number(campo(id).value) : null);
+
+        function camposTecnicos() {
+            return {
+                cas: texto('cas'),
+                mistura: campo('mistura')?.checked || false,
+                codigo_fabricante: texto('cod-fab'),
+                validade_apos_aberto_dias: numero('aberto'),
+                ghs_perigoso: perigoso ? valorTri(perigoso) : null,
+                ghs_frases_h: frases,
+                ghs_pictogramas: [...form.querySelectorAll('input[name="ghs_pictogramas"]:checked')].map(c => c.value),
+                ghs_palavra: form.querySelector('input[name="ghs_palavra"]:checked')?.value || null,
+                ghs_frases_p: texto('frases-p'),
+                fds_revisao: texto('fds-revisao'),
+                fds_data: texto('fds-data'),
+                fds_nbr14725: campo('nbr') ? valorTri(campo('nbr')) : null,
+                fds_portugues: campo('fds-pt')?.checked || false,
+                epi_ca: texto('ca'),
+                epi_ca_validade: texto('ca-validade'),
+                epi_tipo_protecao: texto('protecao'),
+                epi_tamanho: texto('tamanho'),
+                vid_volume: texto('vid-volume'),
+                vid_classe: texto('vid-classe'),
+                vid_material: texto('vid-material'),
+                vid_volumetrica: campo('vid-volumetrica')?.checked || false,
+            };
+        }
+
+        form.addEventListener('submit', (ev) => {
             ev.preventDefault();
             const nome = campo('nome').value.trim();
             let invalido = null;
@@ -697,24 +1503,46 @@
             if (!nome) invalido = invalido || campo('nome');
             checarDuplicidade();
             if (duplicadoExato) invalido = invalido || campo('nome');
+            const conc = numero('concentracao');
+            erroNoCampo(campo('concentracao'), conc !== null && (conc < 0 || conc > 100) ? 'Use um valor de 0 a 100.' : '');
+            if (conc !== null && (conc < 0 || conc > 100)) invalido = invalido || campo('concentracao');
+            if (cas && cas.value.trim() && !casValido(cas.value.trim())) { erroNoCampo(cas, 'CAS inválido. Use o formato 64-17-5 e confira os dígitos.'); invalido = invalido || cas; }
             if (invalido) { invalido.focus(); return; }
 
+            const categoria = campo('categoria').value;
+            const reagente = categoria === 'Reagentes';
             const payload = {
                 nome,
-                categoria: campo('categoria').value,
-                localizacao: campo('local').value.trim() || null,
+                categoria,
                 unidade: campo('unidade').value,
                 estoque_minimo: Math.max(0, Number(campo('minimo').value) || 0),
-                validade: campo('validade').value || null,
+                fabricante: texto('fabricante'),
+                codigo_interno: texto('codigo'),
+                estado_fisico: reagente ? texto('estado') : null,
+                concentracao_pct: reagente ? conc : null,
+                grau: reagente ? texto('grau') : null,
             };
-            if (novo) payload.quantidade_atual = Math.max(0, Number(campo('saldo').value) || 0);
+            if (campo('local')) payload.localizacao = texto('local');
+            if (campo('validade')) payload.validade = texto('validade');
+            if (novo) {
+                payload.quantidade_atual = Math.max(0, Number(campo('saldo').value) || 0);
+                payload.lote = texto('lote');
+            }
+            if (gestor) {
+                Object.assign(payload, camposTecnicos());
+                payload.revisado = !!campo('revisado')?.checked;
+            }
 
             comBotao(modal.querySelector('#ins-f-ok'), 'Salvando', async () => {
                 try {
-                    await req(novo ? '/insumos' : `/insumos/${i.id}`, { method: novo ? 'POST' : 'PUT', json: payload });
-                    delete modal.querySelector('form').dataset.sujo;
+                    const r = await req(novo ? '/insumos' : `/insumos/${i.id}`, { method: novo ? 'POST' : 'PUT', json: payload });
+                    delete form.dataset.sujo;
                     modal.fechar();
-                    window.UI.showToast(novo ? `${nome} cadastrado.` : 'Alterações salvas.', 'success');
+                    let msg = novo ? `${nome} cadastrado.` : 'Alterações salvas.';
+                    if (r.status_revisao === 'revisado' && (novo || i.pendente_revisao)) msg += ' Marcado como revisado.';
+                    else if (!gestor && novo) msg += ' A coordenação foi avisada para completar a revisão técnica.';
+                    else if (!gestor && !i.pendente_revisao && r.pendente_revisao) msg += ' A revisão foi reaberta e a coordenação avisada.';
+                    window.UI.showToast(msg, 'success');
                     await carregar();
                     if (!novo) focarAcao('editar', i.id);
                 } catch (err) {
@@ -730,7 +1558,7 @@
             comBotao(btn, 'Removendo', async () => {
                 try {
                     const r = await req(`/insumos/${i.id}`, { method: 'DELETE' });
-                    delete modal.querySelector('form').dataset.sujo;
+                    delete form.dataset.sujo;
                     modal.fechar();
                     window.UI.showToast(r.mensagem || 'Insumo removido.', 'success');
                     await carregar();
@@ -769,8 +1597,10 @@
             corpo: `
                 <div id="ins-imp-envio">
                     <p class="dialog-text">Envie uma planilha com um insumo por linha. A primeira linha deve ter os nomes das colunas:
-                        <strong>Nome</strong> (obrigatória), Categoria, Localização, Unidade, Saldo atual, Estoque mínimo e Validade.</p>
-                    <p class="help mb-md">Antes de gravar, você confere a prévia. Itens que já estão no estoque ou que se repetem na planilha não são importados.</p>
+                        <strong>Nome</strong> (obrigatória), Categoria, Localização, Unidade, Saldo atual, Estoque mínimo, Validade,
+                        Lote, Fabricante, Estado físico e Concentração (%).</p>
+                    <p class="help mb-md">Antes de gravar, você confere a prévia. Itens que já estão no estoque ou que se repetem na planilha não são importados.
+                        A classificação GHS, a FDS e o CA não entram pela planilha: os itens ficam pendentes de revisão para a coordenação completar.</p>
                     <div class="input-group">
                         <label for="ins-imp-arquivo">Arquivo .xlsx ou .csv</label>
                         <input type="file" id="ins-imp-arquivo" name="arquivo" accept=".xlsx,.csv" aria-describedby="ins-imp-arquivo-erro">
@@ -861,7 +1691,7 @@
                         </tr></thead>
                         <tbody>${linhas.map(l => {
                             const d = l.dados;
-                            const detalhe = l.mensagem || (d ? [d.categoria, d.localizacao, `${num(d.quantidade_atual)} ${d.unidade}`, d.validade ? `validade ${dataBR(d.validade)}` : ''].filter(Boolean).join(' · ') : '');
+                            const detalhe = l.mensagem || (d ? [d.categoria, d.localizacao, `${num(d.quantidade_atual)} ${d.unidade}`, d.lote ? `lote ${d.lote}` : '', d.validade ? `validade ${dataBR(d.validade)}` : ''].filter(Boolean).join(' · ') : '');
                             return `<tr>
                                 <td class="num tabular">${l.linha}</td>
                                 <td><span class="ins-nome">${l.nome ? esc(l.nome) : '<span class="text-faint">sem nome</span>'}</span>

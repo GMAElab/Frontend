@@ -146,3 +146,106 @@
 @media (max-width: 640px) {
     .ins-imp-resumo { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* ==========================================
+   Conformidade (NR-26 / NBR 14725 / NR-06): selos, GHS, seções técnicas, lotes e locais
+   ========================================== */
+
+/* Selos sob o nome: pictogramas GHS e pendências */
+.ins-selos { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 6px; margin-top: 6px; }
+.ins-ghs-lista { display: inline-flex; gap: 3px; margin-right: 2px; }
+
+/* Losango GHS: borda vermelha como no rótulo, código no centro */
+.ins-ghs {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 15px; height: 15px; margin: 2px;
+    border: 1.5px solid var(--danger-solid); border-radius: 2px;
+    background: var(--bg-surface);
+    transform: rotate(45deg);
+    flex-shrink: 0;
+}
+.ins-ghs span { transform: rotate(-45deg); font-size: 8px; font-weight: 600; line-height: 1; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.ins-pictos .check-chip { height: 32px; }
+.ins-pictos .check-chip .ins-ghs { margin: 0 3px; }
+
+/* Formulário em seções */
+.ins-form .ins-secao { margin: 0 0 var(--space-4); padding: var(--space-4) 0 0; border: 0; border-top: 1px solid var(--border-soft); min-width: 0; }
+.ins-form .ins-secao:first-of-type { border-top: 0; padding-top: 0; }
+.ins-form .ins-secao > legend { padding: 0; margin-bottom: var(--space-3); font-size: 13.5px; font-weight: 600; color: var(--text-primary); }
+.ins-form .ins-secao > legend .text-muted { font-weight: 400; font-size: 12.5px; }
+.ins-form .ins-subsecao { margin: var(--space-3) 0 0; padding: 0; border: 0; min-width: 0; }
+.ins-form fieldset[disabled] .form-control,
+.ins-form fieldset[disabled] .check-chip { background: var(--bg-hover); color: var(--text-secondary); cursor: default; }
+.ins-form .ins-checks { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-5); }
+.ins-form .ins-ghs-detalhe { display: grid; gap: var(--space-3); margin-top: var(--space-3); }
+
+/* Checkbox de três estados: "Não verificado" até alguém marcar */
+.ins-tri .ins-tri-estado { font-size: 12px; font-weight: 500; color: var(--text-muted); }
+.ins-tri .ins-tri-estado.is-pendente { color: var(--warning-text); }
+.ins-tri .ins-tri-estado::before { content: "·"; margin-right: 6px; color: var(--text-muted); }
+
+/* Faixa de status da revisão no topo do formulário */
+.ins-status-revisao { margin-bottom: var(--space-4); padding: var(--space-2) var(--space-3); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); font-size: 12.5px; color: var(--text-secondary); }
+.ins-status-revisao strong { color: var(--text-primary); font-weight: 600; }
+.ins-status-revisao.is-pendente { border-color: var(--warning-border); background: var(--warning-bg); }
+.ins-status-revisao.is-ok { border-color: var(--success-border); background: var(--success-bg); }
+.ins-secao-revisao .help.text-warning { color: var(--warning-text); }
+
+/* Frases H escolhidas */
+.ins-frases { margin: var(--space-2) 0 0; padding: 0; list-style: none; }
+.ins-frases li { display: flex; align-items: baseline; gap: var(--space-2); padding: 4px 0; font-size: 12.5px; color: var(--text-secondary); border-top: 1px solid var(--border-soft); }
+.ins-frases li:first-child { border-top: 0; }
+.ins-frases li span:nth-child(2) { flex: 1; min-width: 0; }
+.ins-frases .ins-frase-cod { font-weight: 600; color: var(--text-primary); font-variant-numeric: tabular-nums; min-width: 40px; }
+.ins-frases .link-btn { height: 22px; padding: 0 6px; }
+#ins-f-sugerir { margin-top: var(--space-2); font-size: 12.5px; }
+
+/* Arquivos (FDS e certificados) */
+.ins-secao-arquivos { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-2) var(--space-3); margin-top: var(--space-3); }
+.ins-secao-arquivos > .label { width: 100%; font-size: 13px; font-weight: 500; color: var(--text-primary); }
+.ins-arquivos { flex: 1; min-width: 0; margin: 0; padding: 0; list-style: none; }
+.ins-arquivos li { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px var(--space-2); padding: 2px 0; }
+.ins-secao-arquivos .link-btn { overflow-wrap: anywhere; }
+.ins-enviar-arquivo { position: relative; cursor: pointer; }
+.ins-enviar-arquivo:focus-within { outline: 2px solid var(--brand-primary); outline-offset: 1px; }
+.ins-enviar-arquivo.is-busy { opacity: .6; pointer-events: none; }
+
+/* Blocos recolhíveis (dados opcionais da entrada, lotes esgotados) */
+.ins-mais { margin-top: var(--space-2); }
+.ins-mais > summary { cursor: pointer; width: fit-content; font-size: 12.5px; font-weight: 500; color: var(--text-secondary); padding: 4px 0; }
+.ins-mais > summary:hover { color: var(--text-primary); }
+.ins-mais > summary:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; border-radius: 4px; }
+.ins-mais[open] > summary { margin-bottom: var(--space-2); }
+.ins-mov-novo-lote { margin-top: var(--space-1); }
+
+/* Lotes e locais */
+.ins-lotes-tabela td, .ins-locais-tabela td { vertical-align: middle; }
+.ins-lotes-tabela td.num, .ins-locais-tabela td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ins-lotes-tabela .ins-nome { font-weight: 600; color: var(--text-primary); }
+.ins-lotes-tabela .ins-sub { display: block; margin-top: 2px; font-size: 12px; color: var(--text-muted); }
+.ins-locais-tabela .form-control { height: 32px; min-width: 0; }
+.ins-locais-tabela td:nth-child(1) { min-width: 180px; }
+.ins-locais-tabela td:nth-child(3) { width: 120px; }
+.ins-local-novo { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr) auto; align-items: end; gap: var(--space-3); margin-bottom: var(--space-4); }
+.ins-local-novo .input-group { margin-bottom: 0; }
+
+@media (max-width: 640px) {
+    .ins-local-novo { grid-template-columns: 1fr; }
+    .ins-locais-tabela td:nth-child(1) { min-width: 140px; }
+}
+
+/* Ações da linha em duas faixas fixas: operação (entrada, uso, reporte) e consulta (FDS, lotes, histórico, editar) */
+.ins-acoes { flex-direction: column; align-items: flex-end; gap: 0; }
+.ins-acoes-linha { display: inline-flex; align-items: center; justify-content: flex-end; gap: 2px; flex-wrap: nowrap; }
+@media (max-width: 900px) {
+    .ins-acoes-linha { flex-wrap: wrap; }
+}
+
+/* Legenda dentro da seção (o divisor fica acima dela, não cortado por ela) */
+.ins-form .ins-secao > legend { float: left; width: 100%; }
+.ins-form .ins-secao > legend + * { clear: both; }
+.ins-form .input-group > .check-inline { align-self: flex-start; }
+.ins-form .ins-checks { flex-direction: row; justify-content: flex-start; }
+.ins-acoes-local .link-btn { height: 28px; padding: 0 8px; font-size: 12.5px; color: var(--text-primary); }
+.ins-acoes-local .link-btn.is-reportar { color: var(--danger-text); }
+.ins-acoes-local .link-btn:disabled { color: var(--text-muted); cursor: not-allowed; }
