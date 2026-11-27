@@ -98,12 +98,68 @@
         const res = await window.api.fetchProtected(caminho, op);
         const dados = await res.json().catch(() => ({}));
         if (!res.ok) {
+            // 409 com avisos: armazenagem ou uso fora do recomendado. Não bloqueia; pede justificativa.
+            if (dados.detail && Array.isArray(dados.detail.avisos)) {
+                const err = new Error(dados.detail.mensagem || 'Confira os avisos antes de continuar.');
+                err.avisos = dados.detail.avisos;
+                throw err;
+            }
             const det = Array.isArray(dados.detail)
                 ? dados.detail.map(d => String(d.msg || '').replace(/^Value error, /, '')).join(' ')
                 : dados.detail;
             throw new Error(det || 'Não foi possível concluir a ação.');
         }
         return dados;
+    }
+
+    /** Mostra os avisos e pede a justificativa. Devolve o texto, ou null se a pessoa desistir. */
+    function pedirJustificativa(avisos) {
+        return new Promise((resolver) => {
+            const modal = abrirModal({
+                id: 'ins-modal-avisos', tamanho: 'modal-sm',
+                eyebrow: 'aviso de segurança', titulo: avisos.length === 1 ? 'Confira antes de continuar' : `${avisos.length} avisos antes de continuar`,
+                corpo: `
+                    <form id="ins-form-avisos" novalidate>
+                        <ul class="ins-avisos">${avisos.map(a => `<li>${icone('alert-triangle', 14)}<span>${esc(a.mensagem)}</span></li>`).join('')}</ul>
+                        <div class="input-group">
+                            <label for="ins-av-just">Por que seguir assim?</label>
+                            <textarea id="ins-av-just" class="form-control" rows="3" maxlength="1000" required aria-describedby="ins-av-just-ajuda ins-av-just-erro"
+                                placeholder="Ex.: armário de inflamáveis lotado; transferência programada para amanhã…"></textarea>
+                            <p class="help" id="ins-av-just-ajuda">Fica registrado no histórico do item, com o seu nome, e a coordenação recebe um e-mail.</p>
+                            <p class="field-error hidden" id="ins-av-just-erro" role="alert"></p>
+                        </div>
+                    </form>`,
+                rodape: `<button type="button" class="btn btn-secondary" data-role="cancel">Voltar e corrigir</button>
+                         <button type="submit" form="ins-form-avisos" class="btn btn-primary">Seguir com justificativa</button>`,
+            });
+            const texto = modal.querySelector('#ins-av-just');
+            let respondeu = false;
+            const fecharOriginal = modal.fechar;
+            modal.fechar = () => { fecharOriginal(); if (!respondeu) resolver(null); };
+            modal.querySelectorAll('[data-role="cancel"]').forEach(b => b.addEventListener('click', () => { if (!respondeu) resolver(null); }));
+            modal.addEventListener('click', (ev) => { if (ev.target === modal && !respondeu) resolver(null); });
+            modal.querySelector('#ins-form-avisos').addEventListener('submit', (ev) => {
+                ev.preventDefault();
+                if (!texto.value.trim()) { erroNoCampo(texto, 'Escreva a justificativa.'); texto.focus(); return; }
+                respondeu = true;
+                delete modal.querySelector('form').dataset.sujo;
+                fecharOriginal();
+                resolver(texto.value.trim());
+            });
+            setTimeout(() => texto.focus(), 30);
+        });
+    }
+
+    /** Envia; se o backend devolver avisos, pergunta a justificativa e envia de novo com ela. */
+    async function comJustificativa(enviar) {
+        try {
+            return await enviar(null);
+        } catch (err) {
+            if (!err.avisos) throw err;
+            const justificativa = await pedirJustificativa(err.avisos);
+            if (justificativa === null) { err.cancelado = true; throw err; }
+            return enviar(justificativa);
+        }
     }
 
     /** Trava o botão durante a requisição: evita o duplo clique registrar duas saídas. */
@@ -185,6 +241,14 @@
         if (i.fds_pendente) selos.push('<span class="badge badge-danger">FDS pendente</span>');
         if (i.ca_situacao === 'vencido') selos.push('<span class="badge badge-danger">CA vencido</span>');
         else if (i.ca_situacao === 'vencendo') selos.push('<span class="badge badge-warning">CA vencendo</span>');
+        const pf = i.pf || {};
+        if (pf.status === 'controlado') selos.push(`<span class="badge badge-info">PF · Lista ${esc(pf.lista)}</span>`);
+        else if (pf.status === 'possivel') selos.push(`<span class="badge badge-danger" title="Reconhecido pelo nome: ${esc(pf.nome || '')}">Possível controlado PF · ${esc(pf.lista)}</span>`);
+        if (i.anvisa_controlado) selos.push(`<span class="badge badge-info">Anvisa${i.anvisa_lista ? ` · ${esc(i.anvisa_lista)}` : ''}</span>`);
+        if (i.exercito_controlado) selos.push('<span class="badge badge-info">Exército</span>');
+        if (i.nr20 === 'inflamavel' || i.nr20 === 'gas_inflamavel') selos.push(`<span class="badge">NR-20 · ${i.nr20 === 'inflamavel' ? 'inflamável' : 'gás inflamável'}</span>`);
+        else if (i.nr20 === 'combustivel') selos.push('<span class="badge">NR-20 · combustível</span>');
+        if (i.peroxido_alerta) selos.push('<span class="badge badge-warning">Testar peróxidos</span>');
         const pictos = (i.ghs_pictogramas || []).map(losango).join('');
         if (!selos.length && !pictos) return '';
         return `<span class="ins-selos">${pictos ? `<span class="ins-ghs-lista">${pictos}</span>` : ''}${selos.join('')}</span>`;
@@ -209,6 +273,7 @@
                         <p class="lede">Reagentes, EPIs e vidrarias com lote, validade, FDS e alertas de reposição.</p>
                     </div>
                     <div class="page-actions">
+                        <button type="button" class="btn btn-secondary hidden" data-acao="relatorios" id="ins-btn-relatorios">${icone('file-text')} Relatórios</button>
                         <button type="button" class="btn btn-secondary hidden" data-acao="locais" id="ins-btn-locais">${icone('folder')} Locais</button>
                         <button type="button" class="btn btn-secondary" data-acao="importar">${icone('upload')} Importar planilha</button>
                         <button type="button" class="btn btn-secondary" data-acao="exportar">${icone('download')} Exportar Excel</button>
@@ -235,6 +300,9 @@
                             <option value="pendente" ${E.alerta === 'pendente' ? 'selected' : ''}>Pendentes de revisão</option>
                             <option value="fds" ${E.alerta === 'fds' ? 'selected' : ''}>FDS pendente</option>
                             <option value="ca" ${E.alerta === 'ca' ? 'selected' : ''}>CA vencido ou vencendo</option>
+                            <option value="controlados" ${E.alerta === 'controlados' ? 'selected' : ''}>Controlados (PF, Anvisa, Exército)</option>
+                            <option value="nr20" ${E.alerta === 'nr20' ? 'selected' : ''}>Inflamáveis e combustíveis (NR-20)</option>
+                            <option value="peroxido" ${E.alerta === 'peroxido' ? 'selected' : ''}>Teste de peróxido vencido</option>
                         </select>
                     </div>
                 </div>
@@ -300,6 +368,7 @@
             E.ref = ref;
             E.locais = locais || [];
             document.getElementById('ins-btn-locais')?.classList.toggle('hidden', !podeRevisar());
+            document.getElementById('ins-btn-relatorios')?.classList.toggle('hidden', !podeRevisar());
             const indicadores = document.getElementById('ins-indicadores');
             if (indicadores) indicadores.innerHTML = indicadoresHTML(E.resumo);
             renderTabela();
@@ -325,6 +394,7 @@
             <div class="figure${tomBaixo}"><span class="v">${v(r?.abaixo_minimo)}</span><span class="k">Abaixo do mínimo</span></div>
             <div class="figure${tomValidade}"><span class="v">${v(r?.vencendo_30d)}</span><span class="k">Vencendo em 30 dias${vencidos}</span></div>
             <div class="figure${tomRevisao}"><span class="v">${v(r?.pendentes_revisao)}</span><span class="k">Aguardando revisão${fds}</span></div>
+            <div class="figure${r && r.controlados ? ' tone-warning' : ''}"><span class="v">${v(r?.controlados)}</span><span class="k">Controlados ou a confirmar</span></div>
             <div class="figure"><span class="v">${v(r?.movimentacoes_mes)}</span><span class="k">Movimentações no mês</span></div>`;
     }
 
@@ -338,6 +408,9 @@
             if (E.alerta === 'pendente' && !i.pendente_revisao) return false;
             if (E.alerta === 'fds' && !i.fds_pendente) return false;
             if (E.alerta === 'ca' && !i.ca_situacao) return false;
+            if (E.alerta === 'controlados' && !(i.controlado || i.pf?.status === 'possivel')) return false;
+            if (E.alerta === 'nr20' && !['inflamavel', 'combustivel', 'gas_inflamavel'].includes(i.nr20)) return false;
+            if (E.alerta === 'peroxido' && !i.peroxido_alerta) return false;
             return true;
         });
     }
@@ -396,7 +469,7 @@
                     <span class="ins-acoes" role="group" aria-label="Ações para ${esc(i.nome)}">
                         <span class="ins-acoes-linha">
                             <button type="button" class="link-btn" data-acao="ENTRADA" data-id="${i.id}">+ Entrada</button>
-                            <button type="button" class="link-btn is-uso" data-acao="SAIDA" data-id="${i.id}" ${semSaldo ? 'disabled title="Sem saldo para registrar uso"' : ''}>− Uso</button>
+                            <button type="button" class="link-btn is-uso" data-acao="SAIDA" data-id="${i.id}" ${semSaldo ? 'disabled title="Sem saldo para registrar uso"' : i.exige_revisao_para_saida ? 'title="Possível produto controlado: a saída fica bloqueada até a revisão"' : ''}>− Uso</button>
                             <button type="button" class="link-btn is-reportar" data-acao="REPORTE" data-id="${i.id}">${icone('alert-triangle', 13)} Reportar</button>
                         </span>
                         <span class="ins-acoes-linha">
@@ -423,6 +496,7 @@
             case 'editar': if (item) abrirFormulario(item, alvo); break;
             case 'novo': abrirFormulario(null, alvo); break;
             case 'locais': abrirLocais(alvo); break;
+            case 'relatorios': abrirRelatorios(alvo); break;
             case 'exportar': exportar(alvo); break;
             case 'importar': abrirImportacao(alvo); break;
             default: break;
@@ -540,13 +614,38 @@
                             </div>
                         </div>
                     </details>` : `
+                    <label class="check-inline mb-sm"><input type="checkbox" id="ins-mov-descarte"> É descarte como resíduo</label>
+                    <div class="input-group hidden" id="ins-mov-destino-grupo">
+                        <label for="ins-mov-destino">Destino do resíduo</label>
+                        <input type="text" id="ins-mov-destino" name="destino_residuo" class="form-control" maxlength="300" autocomplete="off"
+                            placeholder="Ex.: coleta de solventes do programa de resíduos…" aria-describedby="ins-mov-destino-erro">
+                        <p class="field-error hidden" id="ins-mov-destino-erro" role="alert"></p>
+                    </div>
                     <div class="input-group">
-                        <label for="ins-mov-obs">Onde foi usado <span class="text-muted">(opcional)</span></label>
-                        <input type="text" id="ins-mov-obs" name="observacao" class="form-control" maxlength="2000" autocomplete="off" placeholder="Processo, experimento ou ensaio…">
+                        <label for="ins-mov-obs" id="ins-mov-obs-rotulo">${item.controlado ? 'Para que foi usado <span class="text-muted">(obrigatório: produto controlado)</span>' : 'Onde foi usado <span class="text-muted">(opcional)</span>'}</label>
+                        <input type="text" id="ins-mov-obs" name="observacao" class="form-control" maxlength="2000" autocomplete="off" placeholder="Processo, experimento ou ensaio…" aria-describedby="ins-mov-obs-erro">
+                        <p class="field-error hidden" id="ins-mov-obs-erro" role="alert"></p>
                     </div>`}
                 </form>`,
             rodape: `<button type="button" class="btn btn-secondary" data-role="cancel">Cancelar</button>
                      <button type="submit" form="ins-form-mov" class="btn btn-primary" id="ins-mov-ok">${entrada ? 'Registrar entrada' : 'Registrar uso'}</button>`,
+        });
+
+        // Possível produto controlado ainda não revisado: a saída fica travada até um gestor revisar.
+        if (!entrada && item.exige_revisao_para_saida) {
+            const form = modal.querySelector('#ins-form-mov');
+            form.insertAdjacentHTML('afterbegin', `<div class="ins-status-revisao is-bloqueio" role="alert"><strong>Saída bloqueada.</strong>
+                ${esc(item.nome)} pode ser um produto controlado${item.pf?.lista ? ` (Polícia Federal, Lista ${esc(item.pf.lista)})` : ''} e ainda não foi revisado.
+                Peça a um gestor para revisar o cadastro.</div>`);
+            form.querySelectorAll('input, select, button').forEach(c => { c.disabled = true; });
+            modal.querySelector('#ins-mov-ok').disabled = true;
+        }
+        const descarte = modal.querySelector('#ins-mov-descarte');
+        descarte?.addEventListener('change', () => {
+            modal.querySelector('#ins-mov-destino-grupo').classList.toggle('hidden', !descarte.checked);
+            modal.querySelector('#ins-mov-ok').textContent = descarte.checked ? 'Registrar descarte' : 'Registrar uso';
+            modal.querySelector(`#${modal.querySelector('[role="dialog"]').getAttribute('aria-labelledby')}`).textContent = descarte.checked ? 'Registrar descarte' : 'Registrar uso';
+            if (descarte.checked) modal.querySelector('#ins-mov-destino').focus();
         });
 
         const qtd = modal.querySelector('#ins-mov-qtd');
@@ -618,7 +717,16 @@
             if (!validar()) { if (qtd.value === '') erroNoCampo(qtd, 'Informe a quantidade.'); qtd.focus(); return; }
             const quantidade = Number(qtd.value);
             const valor = (id) => modal.querySelector(`#${id}`)?.value.trim() || null;
-            const corpo = { tipo, quantidade, observacao: valor('ins-mov-obs'), lote_id: selLote.value ? Number(selLote.value) : null };
+            const ehDescarte = !!descarte?.checked;
+            const tipoFinal = ehDescarte ? 'DESCARTE' : tipo;
+            if (ehDescarte && !valor('ins-mov-destino')) {
+                const d = modal.querySelector('#ins-mov-destino'); erroNoCampo(d, 'Informe o destino do resíduo.'); d.focus(); return;
+            }
+            if (!entrada && item.controlado && !valor('ins-mov-obs')) {
+                const o = modal.querySelector('#ins-mov-obs'); erroNoCampo(o, 'Produto controlado: informe para que foi usado.'); o.focus(); return;
+            }
+            const corpo = { tipo: tipoFinal, quantidade, observacao: valor('ins-mov-obs'), lote_id: selLote.value ? Number(selLote.value) : null };
+            if (ehDescarte) corpo.destino_residuo = valor('ins-mov-destino');
             if (entrada && !selLote.value) {
                 Object.assign(corpo, {
                     lote: valor('ins-mov-numlote'), validade: valor('ins-mov-validade'), localizacao: valor('ins-mov-local'),
@@ -627,18 +735,20 @@
             }
             comBotao(ok, 'Registrando', async () => {
                 try {
-                    const r = await req(`/insumos/${item.id}/movimentar`, { method: 'POST', json: corpo });
+                    const r = await comJustificativa((justificativa) => req(`/insumos/${item.id}/movimentar`, { method: 'POST', json: { ...corpo, justificativa } }));
                     delete modal.querySelector('form').dataset.sujo;
                     modal.fechar();
                     const novo = r.insumo;
                     const lote = r.movimentacao?.lote ? ` (lote ${r.movimentacao.lote})` : '';
                     const base = entrada
                         ? `Entrada registrada: +${num(quantidade)} ${novo.unidade} de ${novo.nome}${lote}. Saldo: ${num(novo.quantidade_atual)} ${novo.unidade}.`
-                        : `Uso registrado: −${num(quantidade)} ${novo.unidade} de ${novo.nome}. Saldo: ${num(novo.quantidade_atual)} ${novo.unidade}.`;
-                    window.UI.showToast(r.gestores_avisados ? `${base} A coordenação foi avisada do estoque baixo.` : base, r.gestores_avisados ? 'warning' : 'success');
+                        : `${ehDescarte ? 'Descarte' : 'Uso'} registrado: −${num(quantidade)} ${novo.unidade} de ${novo.nome}. Saldo: ${num(novo.quantidade_atual)} ${novo.unidade}.`;
+                    const extra = [r.gestores_avisados ? 'A coordenação foi avisada do estoque baixo.' : '', r.avisos_registrados ? 'A justificativa foi registrada e a coordenação avisada.' : ''].filter(Boolean).join(' ');
+                    window.UI.showToast(extra ? `${base} ${extra}` : base, extra ? 'warning' : 'success');
                     await carregar();
                     focarAcao(tipo, item.id);
                 } catch (err) {
+                    if (err.cancelado) return;
                     erroNoCampo(qtd, err.message);
                     qtd.focus();
                 }
@@ -758,14 +868,23 @@
         });
         const corpo = modal.querySelector('#ins-historico-corpo');
         try {
-            const movs = await req(`/insumos/movimentacoes?insumo_id=${item.id}&limite=300`);
+            const [movs, avisos] = await Promise.all([
+                req(`/insumos/movimentacoes?insumo_id=${item.id}&limite=300`),
+                req(`/insumos/${item.id}/avisos`).catch(() => []),
+            ]);
             corpo.setAttribute('aria-busy', 'false');
-            if (!movs.length) { corpo.innerHTML = window.UI.emptyState({ title: 'Nenhuma movimentação registrada' }); return; }
-            const rotulo = { ENTRADA: 'Entrada', SAIDA: 'Uso', REPORTE: 'Reporte' };
-            const classe = { ENTRADA: 'is-entrada', SAIDA: 'is-saida', REPORTE: 'is-reporte' };
-            corpo.innerHTML = `<ol class="timeline">${movs.map(m => {
+            if (!movs.length && !avisos.length) { corpo.innerHTML = window.UI.emptyState({ title: 'Nenhuma movimentação registrada' }); return; }
+            const rotulo = { ENTRADA: 'Entrada', SAIDA: 'Uso', DESCARTE: 'Descarte', REPORTE: 'Reporte' };
+            const classe = { ENTRADA: 'is-entrada', SAIDA: 'is-saida', DESCARTE: 'is-saida', REPORTE: 'is-reporte' };
+            const blocoAvisos = avisos.length ? `
+                <details class="ins-mais ins-avisos-hist" ${avisos.length <= 3 ? 'open' : ''}>
+                    <summary>Avisos ignorados com justificativa (${avisos.length})</summary>
+                    <ul class="ins-avisos">${avisos.map(a => `<li>${icone('alert-triangle', 14)}<span>${esc(a.mensagem)}
+                        <small>“${esc(a.justificativa)}” · ${esc([a.usuario_nome, dataHora(a.criado_em)].filter(Boolean).join(' · '))}</small></span></li>`).join('')}</ul>
+                </details>` : '';
+            corpo.innerHTML = blocoAvisos + `<ol class="timeline">${movs.map(m => {
                 const qtd = m.tipo === 'ENTRADA' ? `+${num(m.quantidade)} ${m.unidade}`
-                    : m.tipo === 'SAIDA' ? `−${num(m.quantidade)} ${m.unidade}`
+                    : (m.tipo === 'SAIDA' || m.tipo === 'DESCARTE') ? `−${num(m.quantidade)} ${m.unidade}`
                     : (m.quantidade ? `divergência de ${num(m.quantidade)} ${m.unidade}` : '');
                 return `
                     <li class="tl-item ${classe[m.tipo] || ''}">
@@ -773,6 +892,7 @@
                             ${m.lote ? `<span class="text-muted text-small">lote ${esc(m.lote)}</span>` : ''}
                             ${m.saldo_apos !== null ? `<span class="text-muted text-small">saldo ${num(m.saldo_apos)} ${esc(m.unidade)}</span>` : ''}</span>
                         <p>${esc([m.usuario_nome, dataHora(m.criado_em)].filter(Boolean).join(' · '))}</p>
+                        ${m.destino_residuo ? `<p>Destino do resíduo: ${esc(m.destino_residuo)}</p>` : ''}
                         ${m.observacao ? `<p class="tl-quote">${esc(m.observacao)}</p>` : ''}
                     </li>`;
             }).join('')}</ol>`;
@@ -810,13 +930,16 @@
             const linha = (l) => `
                 <tr>
                     <td><span class="ins-nome">${l.lote ? esc(l.lote) : '<span class="text-faint">sem número</span>'}</span>
-                        ${l.certificados.length ? `<span class="ins-sub">${l.certificados.length === 1 ? 'Certificado anexado' : `${l.certificados.length} certificados`}</span>` : ''}</td>
+                        ${l.certificados.length ? `<span class="ins-sub">${l.certificados.length === 1 ? 'Certificado anexado' : `${l.certificados.length} certificados`}</span>` : ''}
+                        ${l.peroxido_vencido ? '<span class="ins-sub text-warning">Testar peróxidos antes de usar</span>' : ''}</td>
                     <td>${l.local_nome ? esc(l.local_nome) : '<span class="text-faint">—</span>'}</td>
                     <td class="num tabular">${num(l.quantidade)} <span translate="no">${esc(item.unidade)}</span></td>
                     <td>${validadeLote(l)}</td>
                     <td class="col-hide-sm tabular">${l.data_abertura ? dataBR(l.data_abertura) : '<span class="text-faint">fechado</span>'}</td>
                     <td class="col-hide-sm tabular">${l.data_recebimento ? dataBR(l.data_recebimento) : '—'}</td>
-                    <td class="end"><button type="button" class="link-btn" data-lote="${l.id}">Editar</button></td>
+                    <td class="end"><span class="ins-acoes-linha ins-acoes-local">
+                        ${item.categoria === 'Reagentes' && l.quantidade > 0 ? `<button type="button" class="link-btn" data-rotulo="${l.id}">Rótulo</button>` : ''}
+                        <button type="button" class="link-btn" data-lote="${l.id}">Editar</button></span></td>
                 </tr>`;
             const tabela = (lista) => `
                 <div class="table-container">
@@ -834,6 +957,8 @@
                     : '<p class="dialog-text">Nenhum lote com saldo.</p>'}
                 ${esgotados.length ? `<details class="ins-mais mt-md"><summary>Lotes esgotados (${esgotados.length})</summary>${tabela(esgotados)}</details>` : ''}`;
             corpo.addEventListener('click', (ev) => {
+                const rot = ev.target.closest('[data-rotulo]');
+                if (rot) { imprimirRotulo(item, lotes.find(l => l.id === Number(rot.dataset.rotulo))); return; }
                 const btn = ev.target.closest('[data-lote]');
                 if (!btn) return;
                 const lote = lotes.find(l => l.id === Number(btn.dataset.lote));
@@ -883,6 +1008,14 @@
                             <label for="ins-l-nf">Nota fiscal</label>
                             <input type="text" id="ins-l-nf" class="form-control" maxlength="100" autocomplete="off" value="${esc(lote.nota_fiscal || '')}">
                         </div>
+                        ${item.formador_peroxido ? `
+                        <div class="input-group">
+                            <label for="ins-l-peroxido">Último teste de peróxidos</label>
+                            <input type="date" id="ins-l-peroxido" class="form-control" value="${esc(lote.ultimo_teste_peroxido || '')}" aria-describedby="ins-l-peroxido-ajuda">
+                            <p class="help ${lote.peroxido_vencido ? 'text-warning' : ''}" id="ins-l-peroxido-ajuda">${lote.peroxido_vencido
+                                ? 'Teste vencido: teste o frasco antes de usar e registre a data.'
+                                : `Testar a cada ${item.intervalo_teste_peroxido_dias || 90} dias depois de aberto.`}</p>
+                        </div>` : ''}
                     </div>
                     <div class="ins-secao-arquivos">
                         <span class="label">Certificado de análise</span>
@@ -914,19 +1047,81 @@
             ev.preventDefault();
             comBotao(modal.querySelector('#ins-l-ok'), 'Salvando', async () => {
                 try {
-                    await req(`/insumos/lotes/${lote.id}`, { method: 'PUT', json: {
+                    const dados = {
                         lote: v('lote'), localizacao: v('local'), validade: v('validade'), data_abertura: v('abertura'),
                         data_recebimento: v('receb'), fornecedor: v('fornecedor'), nota_fiscal: v('nf'),
-                    } });
+                    };
+                    if (modal.querySelector('#ins-l-peroxido')) dados.ultimo_teste_peroxido = v('peroxido');
+                    await comJustificativa((justificativa) => req(`/insumos/lotes/${lote.id}`, { method: 'PUT', json: { ...dados, justificativa } }));
                     delete modal.querySelector('form').dataset.sujo;
                     modal.fechar();
                     window.UI.showToast('Lote atualizado.', 'success');
                     await carregar();
                     abrirLotes(E.itens.find(x => x.id === item.id) || item, origem);
-                } catch (err) { window.UI.showToast(err.message, 'error'); }
+                } catch (err) { if (!err.cancelado) window.UI.showToast(err.message, 'error'); }
             });
         });
         setTimeout(() => modal.querySelector('#ins-l-lote').focus(), 30);
+    }
+
+    /**
+     * Rótulo de frasco fracionado (NR-26 / NBR 14725): identificação, pictogramas, palavra de advertência,
+     * frases H e P, lote, data e responsável. Abre numa janela própria, pronta para imprimir.
+     * É um documento de impressão (como a prévia do POP): o losango vermelho segue o padrão do GHS.
+     */
+    async function imprimirRotulo(item, lote) {
+        if (item.pendente_revisao) {
+            const ok = await window.UI.confirm('A classificação GHS deste item ainda não foi revisada por um gestor. O rótulo pode sair incompleto.',
+                { title: 'Imprimir mesmo assim?', confirmText: 'Imprimir' });
+            if (!ok) return;
+        }
+        let usuario = {};
+        try { usuario = JSON.parse(localStorage.getItem('user_data') || '{}'); } catch (e) { usuario = {}; }
+        const frasesH = (item.ghs_frases_h || []).map(c => `<li><b>${esc(c)}</b> ${esc(fraseH(c)?.texto || '')}</li>`).join('');
+        const pictos = (item.ghs_pictogramas || []).map(c => `
+            <div class="p"><div class="d"><span>${esc(nomePictograma(c))}</span></div><small>${esc(c)}</small></div>`).join('');
+        const hoje = FORMATO_DIA.format(new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00Z`));
+        const linha = (rotulo, valor) => (valor ? `<div><dt>${esc(rotulo)}</dt><dd>${esc(valor)}</dd></div>` : '');
+        const janela = window.open('', '_blank', 'width=720,height=640');
+        if (!janela) { window.UI.showToast('O navegador bloqueou a janela do rótulo. Permita pop-ups para este site.', 'error'); return; }
+        janela.document.write(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Rótulo · ${esc(item.nome)}</title>
+            <style>
+                @page { margin: 8mm; }
+                body { font-family: Arial, sans-serif; color: #000; margin: 0; padding: 12px; }
+                .r { width: 100mm; border: 2px solid #000; padding: 4mm; box-sizing: border-box; }
+                h1 { font-size: 15pt; margin: 0 0 1mm; } .sub { font-size: 8.5pt; margin: 0 0 2mm; }
+                .pal { font-size: 13pt; font-weight: 700; text-transform: uppercase; margin: 2mm 0; }
+                .ps { display: flex; flex-wrap: wrap; gap: 2mm; margin: 2mm 0; }
+                .p { width: 21mm; text-align: center; } .p small { font-size: 6.5pt; }
+                .d { width: 12mm; height: 12mm; margin: 3.5mm auto; border: 1.2mm solid #e30613; transform: rotate(45deg); display: flex; align-items: center; justify-content: center; box-sizing: border-box; }
+                .d span { transform: rotate(-45deg); font-size: 5pt; font-weight: 700; line-height: 1.05; text-align: center; width: 13mm; }
+                ul { margin: 1mm 0; padding-left: 4mm; font-size: 8pt; } li { margin: .5mm 0; }
+                .pp { font-size: 7.5pt; margin: 1mm 0; }
+                dl { display: grid; grid-template-columns: 1fr 1fr; gap: 1mm 3mm; margin: 2mm 0 0; font-size: 7.5pt; border-top: 1px solid #000; padding-top: 2mm; }
+                dt { font-weight: 700; } dd { margin: 0; }
+                .fds { font-size: 7.5pt; margin-top: 2mm; font-weight: 700; }
+                .acoes { margin-top: 12px; } @media print { .acoes { display: none; } }
+            </style></head><body>
+            <div class="r">
+                <h1>${esc(item.nome)}</h1>
+                <p class="sub">${esc([item.cas ? `CAS ${item.cas}` : '', item.concentracao_pct != null ? `${num(item.concentracao_pct)}%` : '', item.fabricante].filter(Boolean).join(' · '))}</p>
+                ${item.ghs_palavra ? `<p class="pal">${esc(item.ghs_palavra)}</p>` : ''}
+                ${pictos ? `<div class="ps">${pictos}</div>` : ''}
+                ${frasesH ? `<ul>${frasesH}</ul>` : (item.ghs_perigoso === false ? '<p class="pp">Produto não classificado como perigoso pelo GHS.</p>' : '')}
+                ${item.ghs_frases_p ? `<p class="pp"><b>Precaução:</b> ${esc(item.ghs_frases_p.split(',').join(', '))}</p>` : ''}
+                <dl>
+                    ${linha('Lote de origem', lote?.lote || '')}
+                    ${linha('Validade', lote?.validade_efetiva ? dataBR(lote.validade_efetiva) : '')}
+                    ${linha('Fracionado em', hoje)}
+                    ${linha('Responsável', usuario.nome || '')}
+                    ${linha('Laboratório', 'LEQM')}
+                </dl>
+                <p class="fds">Antes de usar, consulte a FDS (Ficha com Dados de Segurança).</p>
+            </div>
+            <div class="acoes"><button onclick="window.print()">Imprimir</button></div>
+            </body></html>`);
+        janela.document.close();
+        janela.focus();
     }
 
     /** Envia um PDF (FDS ou certificado) para o bucket privado, passando pelo backend. */
@@ -981,7 +1176,8 @@
                                 <td><select class="form-control" data-campo="tipo" aria-label="Tipo de ${esc(l.nome)}">${opcoesTipo(l.tipo)}</select></td>
                                 <td><input type="number" class="form-control" data-campo="capacidade" min="0" step="any" inputmode="decimal"
                                     value="${l.capacidade_inflamaveis_l ?? ''}" placeholder="—" aria-label="Capacidade de inflamáveis em litros"
-                                    ${l.tipo === 'Armário de inflamáveis' ? '' : 'disabled'}></td>
+                                    ${l.tipo === 'Armário de inflamáveis' ? '' : 'disabled'}>
+                                    ${l.volume_inflamaveis_l ? `<span class="ins-sub ${l.acima_capacidade ? 'text-danger' : ''}">${num(l.volume_inflamaveis_l)} L guardados${l.acima_capacidade ? ' · acima da capacidade' : ''}</span>` : ''}</td>
                                 <td class="num tabular">${l.itens}</td>
                                 <td class="end"><span class="ins-acoes-linha ins-acoes-local">
                                     <button type="button" class="link-btn" data-local-acao="salvar">Salvar</button>
@@ -1047,6 +1243,110 @@
     }
 
     // ==========================================
+    // RELATÓRIOS DE CONFORMIDADE E SINÔNIMOS DA LISTA DA PF (só gestores)
+    // ==========================================
+    function abrirRelatorios(origem) {
+        const agora = new Date();
+        const mesPadrao = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}`;
+        const produtos = (E.ref && E.ref.pf && E.ref.pf.produtos) || [];
+        const modal = abrirModal({
+            id: 'ins-modal-relatorios', origem, tamanho: 'modal-lg',
+            eyebrow: 'conformidade', titulo: 'Relatórios',
+            corpo: `
+                <ul class="ins-relatorios">
+                    <li>
+                        <div><strong>Inventário de agentes químicos</strong><p class="help">Para o PGR (NR-01 / NR-09): classificação GHS, frases H, quantidades, locais e FDS.</p></div>
+                        <button type="button" class="btn btn-secondary btn-sm" data-relatorio="pgr">${icone('download', 13)} Baixar</button>
+                    </li>
+                    <li>
+                        <div><strong>Inflamáveis por local</strong><p class="help">NR-20 / NBR 17505: volume guardado em cada local e capacidade dos armários.</p></div>
+                        <button type="button" class="btn btn-secondary btn-sm" data-relatorio="nr20">${icone('download', 13)} Baixar</button>
+                    </li>
+                    <li>
+                        <div><strong>Produtos controlados no mês</strong><p class="help">Entradas, usos, descartes e saldos dos controlados pela PF, Anvisa e Exército. Base para os mapas do SIPROQUIM.</p></div>
+                        <span class="ins-relatorio-mes">
+                            <label class="sr-only" for="ins-rel-mes">Mês</label>
+                            <input type="month" id="ins-rel-mes" class="form-control" value="${mesPadrao}" max="${mesPadrao}">
+                            <button type="button" class="btn btn-secondary btn-sm" data-relatorio="controlados">${icone('download', 13)} Baixar</button>
+                        </span>
+                    </li>
+                </ul>
+                <section class="ins-sinonimos" aria-labelledby="ins-sin-titulo">
+                    <h4 id="ins-sin-titulo">Sinônimos da lista da Polícia Federal</h4>
+                    <p class="help mb-sm">O sistema reconhece os produtos da ${esc((E.ref && E.ref.pf && E.ref.pf.portaria) || 'Portaria MJSP 204/2022')} pelo nome oficial.
+                        Quando o laboratório usa outro nome (ex.: “Diclorometano” para Cloreto de metileno), cadastre aqui; os itens já cadastrados são reconhecidos na hora.</p>
+                    <form id="ins-form-sin" class="ins-local-novo" novalidate>
+                        <div class="input-group">
+                            <label for="ins-sin-nome">Nome usado no laboratório</label>
+                            <input type="text" id="ins-sin-nome" class="form-control" maxlength="200" autocomplete="off" aria-describedby="ins-sin-nome-erro">
+                            <p class="field-error hidden" id="ins-sin-nome-erro" role="alert"></p>
+                        </div>
+                        <div class="input-group">
+                            <label for="ins-sin-codigo">Produto da lista</label>
+                            <select id="ins-sin-codigo" class="form-control">
+                                ${[...new Set(produtos.map(p => p.lista))].map(l => `<optgroup label="Lista ${esc(l)}">${produtos.filter(p => p.lista === l).map(p => `<option value="${p.codigo}">${esc(p.codigo)} · ${esc(p.nome.length > 60 ? `${p.nome.slice(0, 60)}…` : p.nome)}</option>`).join('')}</optgroup>`).join('')}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-secondary" id="ins-sin-add">${icone('plus', 13)} Adicionar</button>
+                    </form>
+                    <div id="ins-sin-lista" aria-live="polite">${window.UI.loading('Carregando sinônimos…')}</div>
+                </section>`,
+        });
+
+        modal.querySelectorAll('[data-relatorio]').forEach(btn => btn.addEventListener('click', () => {
+            const tipo = btn.dataset.relatorio;
+            let caminho = `/insumos/relatorios/${tipo}`;
+            let nome = { pgr: 'inventario_quimicos_pgr.xlsx', nr20: 'inflamaveis_nr20.xlsx' }[tipo];
+            if (tipo === 'controlados') {
+                const [ano, mes] = (modal.querySelector('#ins-rel-mes').value || mesPadrao).split('-');
+                caminho += `?ano=${Number(ano)}&mes=${Number(mes)}`;
+                nome = `controlados_${ano}-${mes}.xlsx`;
+            }
+            comBotao(btn, 'Gerando', async () => {
+                try { await baixarArquivo(caminho, nome, 'Não foi possível gerar o relatório.'); window.UI.showToast('Relatório baixado.', 'success'); }
+                catch (err) { window.UI.showToast(err.message, 'error'); }
+            });
+        }));
+
+        const lista = modal.querySelector('#ins-sin-lista');
+        const render = (sinonimos) => {
+            lista.innerHTML = sinonimos.length ? `
+                <div class="table-container"><table class="data-table">
+                    <thead><tr><th scope="col">Nome no laboratório</th><th scope="col">Produto da lista</th><th scope="col">Lista</th><th scope="col" class="end"><span class="sr-only">Ações</span></th></tr></thead>
+                    <tbody>${sinonimos.map(s => `<tr><td>${esc(s.nome)}</td><td>${esc(s.codigo)} · ${esc(s.produto || '')}</td><td>${esc(s.lista || '')}</td>
+                        <td class="end"><span class="ins-acoes-linha ins-acoes-local"><button type="button" class="link-btn is-reportar" data-sin="${s.id}">Remover</button></span></td></tr>`).join('')}</tbody>
+                </table></div>` : '<p class="help">Nenhum sinônimo cadastrado.</p>';
+        };
+        const recarregar = async () => { render(await req('/insumos/pf/sinonimos')); };
+        recarregar().catch(err => { lista.innerHTML = window.UI.errorState(esc(err.message)); });
+
+        lista.addEventListener('click', (ev) => {
+            const btn = ev.target.closest('[data-sin]');
+            if (!btn) return;
+            comBotao(btn, 'Removendo', async () => {
+                try { await req(`/insumos/pf/sinonimos/${btn.dataset.sin}`, { method: 'DELETE' }); await recarregar(); carregar(); }
+                catch (err) { window.UI.showToast(err.message, 'error'); }
+            });
+        });
+        modal.querySelector('#ins-form-sin').addEventListener('submit', (ev) => {
+            ev.preventDefault();
+            const nome = modal.querySelector('#ins-sin-nome');
+            if (nome.value.trim().length < 2) { erroNoCampo(nome, 'Informe o nome usado no laboratório.'); nome.focus(); return; }
+            erroNoCampo(nome, '');
+            comBotao(modal.querySelector('#ins-sin-add'), 'Adicionando', async () => {
+                try {
+                    const r = await req('/insumos/pf/sinonimos', { method: 'POST', json: { nome: nome.value.trim(), codigo: modal.querySelector('#ins-sin-codigo').value } });
+                    nome.value = '';
+                    await recarregar();
+                    window.UI.showToast(r.insumos_reconhecidos ? `Sinônimo cadastrado. ${r.insumos_reconhecidos} ${r.insumos_reconhecidos === 1 ? 'item foi reconhecido' : 'itens foram reconhecidos'}.` : 'Sinônimo cadastrado.', 'success');
+                    carregar();
+                    nome.focus();
+                } catch (err) { erroNoCampo(nome, err.message); nome.focus(); }
+            });
+        });
+    }
+
+    // ==========================================
     // FORMULÁRIO DO INSUMO
     // Cadastro mínimo para todos; seções técnicas (GHS, FDS, CA, vidraria) e revisão só para gestores.
     // ==========================================
@@ -1109,6 +1409,106 @@
                             <textarea id="ins-f-frases-p" class="form-control" rows="2" maxlength="1000" placeholder="P210, P305+P351+P338…">${esc(i.ghs_frases_p || '')}</textarea>
                         </div>
                     </div>
+                </div>
+            </fieldset>`;
+    }
+
+    const ROTULO_NR20 = { inflamavel: 'Inflamável', combustivel: 'Combustível', gas_inflamavel: 'Gás inflamável', fora: 'Fora da NR-20' };
+
+    /** Mesma regra do backend: PF <= 60 °C inflamável; 60–93 °C combustível (inflamável se usado aquecido); > 93 °C fora. */
+    function nr20Pelo(pf, aquecido, frases) {
+        if (pf !== null && pf !== '' && Number.isFinite(Number(pf))) {
+            const v = Number(pf);
+            if (v <= 60) return 'inflamavel';
+            if (v <= 93) return aquecido ? 'inflamavel' : 'combustivel';
+            return 'fora';
+        }
+        if (frases.some(f => ['H224', 'H225', 'H226'].includes(f))) return 'inflamavel';
+        if (frases.includes('H227')) return aquecido ? 'inflamavel' : 'combustivel';
+        if (frases.some(f => ['H220', 'H221'].includes(f))) return 'gas_inflamavel';
+        return null;
+    }
+
+    function secaoArmazenagem(i, travado) {
+        const grupos = new Set(i.grupos_compatibilidade || []);
+        const automaticos = (i.grupos_efetivos || []).filter(g => !grupos.has(g));
+        const temperaturas = (E.ref && E.ref.temperaturas) || [];
+        return `
+            <fieldset class="ins-secao" data-so="Reagentes" data-tecnico ${travado}>
+                <legend>Inflamáveis <span class="text-muted">· NR-20 / NBR 17505</span></legend>
+                <div class="field-grid">
+                    <div class="input-group">
+                        <label for="ins-f-fulgor">Ponto de fulgor (°C)</label>
+                        <input type="number" id="ins-f-fulgor" class="form-control" step="any" inputmode="decimal" value="${i.ponto_fulgor_c ?? ''}" placeholder="—" aria-describedby="ins-f-nr20">
+                        <p class="help" id="ins-f-nr20" aria-live="polite"></p>
+                    </div>
+                    <div class="input-group ins-checks">
+                        <label class="check-inline"><input type="checkbox" id="ins-f-aquecido" ${i.usado_aquecido ? 'checked' : ''}> Usado ou guardado aquecido (até o ponto de fulgor)</label>
+                    </div>
+                </div>
+            </fieldset>
+            <fieldset class="ins-secao" data-so="Reagentes" data-tecnico ${travado}>
+                <legend>Armazenagem e compatibilidade</legend>
+                <div class="input-group">
+                    <span class="label" id="ins-f-grupos-rotulo">Grupos de compatibilidade</span>
+                    <div class="check-chips" role="group" aria-labelledby="ins-f-grupos-rotulo">
+                        ${((E.ref && E.ref.grupos_compatibilidade) || []).map(g => `<label class="check-chip"><input type="checkbox" name="grupos_compatibilidade" value="${esc(g)}" ${grupos.has(g) ? 'checked' : ''}> ${esc(g)}</label>`).join('')}
+                    </div>
+                    <p class="help">Usados para avisar quando produtos incompatíveis ficam no mesmo local (ex.: inflamável com oxidante, ácido com base).
+                        ${automaticos.length ? `Já detectados pelas frases H, NR-20 ou peróxido: <strong>${esc(automaticos.join(', '))}</strong>.` : ''}</p>
+                </div>
+                <div class="field-grid">
+                    <div class="input-group">
+                        <label for="ins-f-temperatura">Temperatura de armazenagem</label>
+                        <select id="ins-f-temperatura" class="form-control"><option value="">Não informada</option>${temperaturas.map(t => `<option ${t === i.temperatura_armazenagem ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>
+                    </div>
+                    <div class="input-group ins-checks">
+                        <label class="check-inline"><input type="checkbox" id="ins-f-luz" ${i.proteger_luz ? 'checked' : ''}> Proteger da luz</label>
+                        <label class="check-inline"><input type="checkbox" id="ins-f-umidade" ${i.proteger_umidade ? 'checked' : ''}> Proteger da umidade</label>
+                        <label class="check-inline"><input type="checkbox" id="ins-f-inerte" ${i.atmosfera_inerte ? 'checked' : ''}> Atmosfera inerte</label>
+                    </div>
+                    <div class="input-group">${checkSeguranca('ins-f-peroxido', 'Formador de peróxidos', i.formador_peroxido)}
+                        <p class="help">Éteres, THF, dioxano… O frasco aberto precisa de teste periódico.</p></div>
+                    <div class="input-group">
+                        <label for="ins-f-peroxido-dias">Testar a cada (dias)</label>
+                        <input type="number" id="ins-f-peroxido-dias" class="form-control" min="1" max="3650" step="1" inputmode="numeric" value="${i.intervalo_teste_peroxido_dias ?? ''}" placeholder="90">
+                    </div>
+                </div>
+            </fieldset>`;
+    }
+
+    function secaoControlados(i, travado) {
+        const pf = i.pf || {};
+        const produtos = (E.ref && E.ref.pf && E.ref.pf.produtos) || [];
+        const listas = [...new Set(produtos.map(p => p.lista))];
+        const situacao = { controlado: 'acima do limite de concentração da lista', possivel: 'concentração não informada', abaixo_limite: 'abaixo do limite de concentração (não controlado)', informativo: 'Lista VII: só vale para exportação' };
+        const sugestao = pf.sugestao_codigo ? produtos.find(p => p.codigo === pf.sugestao_codigo) : null;
+        const anvisa = (E.ref && E.ref.listas_anvisa) || [];
+        return `
+            <fieldset class="ins-secao" data-so="Reagentes" data-tecnico ${travado}>
+                <legend>Produtos controlados</legend>
+                <p class="help mb-sm">${sugestao
+                    ? `Pelo nome, o sistema reconheceu <strong>${esc(sugestao.nome)}</strong> (Polícia Federal, Lista ${esc(sugestao.lista)}, código ${esc(sugestao.codigo)}): ${esc(situacao[pf.sugestao_situacao] || '')}. Confirme abaixo.`
+                    : 'O nome não corresponde a nenhum produto da lista da Polícia Federal. Se for um nome diferente do oficial, cadastre um sinônimo em Relatórios.'}</p>
+                <div class="field-grid">
+                    <div class="input-group">${checkSeguranca('ins-f-pf', 'Controlado pela Polícia Federal', i.pf_controlado)}</div>
+                    <div class="input-group">
+                        <label for="ins-f-pf-codigo">Produto na lista da PF</label>
+                        <select id="ins-f-pf-codigo" class="form-control">
+                            <option value="">${sugestao ? `Usar o reconhecido (${esc(sugestao.codigo)})` : 'Não se aplica'}</option>
+                            ${listas.map(l => `<optgroup label="Lista ${esc(l)}">${produtos.filter(p => p.lista === l).map(p => `<option value="${p.codigo}" ${p.codigo === i.pf_codigo ? 'selected' : ''}>${esc(p.codigo)} · ${esc(p.nome.length > 70 ? `${p.nome.slice(0, 70)}…` : p.nome)}</option>`).join('')}</optgroup>`).join('')}
+                        </select>
+                    </div>
+                    <div class="input-group span-2">
+                        <label class="check-inline"><input type="checkbox" id="ins-f-pf-isento" ${i.pf_isento ? 'checked' : ''}> Isento do controle (Seção III do Capítulo V da Portaria 204/2022)</label>
+                        <textarea id="ins-f-pf-isencao" class="form-control mt-xs ${i.pf_isento ? '' : 'hidden'}" rows="2" maxlength="1000" placeholder="Qual isenção se aplica e por quê" aria-label="Justificativa da isenção">${esc(i.pf_isencao_justificativa || '')}</textarea>
+                    </div>
+                    <div class="input-group">${checkSeguranca('ins-f-anvisa', 'Controlado pela Anvisa (Portaria 344/98)', i.anvisa_controlado)}</div>
+                    <div class="input-group">
+                        <label for="ins-f-anvisa-lista">Lista da Anvisa</label>
+                        <select id="ins-f-anvisa-lista" class="form-control"><option value="">Não se aplica</option>${anvisa.map(l => `<option ${l === i.anvisa_lista ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>
+                    </div>
+                    <div class="input-group">${checkSeguranca('ins-f-exercito', 'Controlado pelo Exército (Decreto 10.030/2019)', i.exercito_controlado)}</div>
                 </div>
             </fieldset>`;
     }
@@ -1270,6 +1670,8 @@
                         </div>
                     </fieldset>
                     ${secaoGhs(i, travado)}
+                    ${secaoArmazenagem(i, travado)}
+                    ${secaoControlados(i, travado)}
                     <fieldset class="ins-secao" data-so="EPIs" data-tecnico ${travado}>
                         <legend>Certificado de Aprovação <span class="text-muted">· NR-06</span></legend>
                         <div class="field-grid">
@@ -1376,6 +1778,24 @@
             form.querySelectorAll('input[name="ghs_palavra"]').forEach(r => { r.checked = r.value === (s.palavra || ''); });
             window.UI.showToast('Sugestão aplicada. Confira com a seção 2 da FDS.', 'success');
         });
+        // NR-20: enquadramento na hora, pelo ponto de fulgor (ou pelas frases H, se ele faltar)
+        const nr20 = campo('nr20');
+        const pintarNr20 = () => {
+            if (!nr20) return;
+            const r = nr20Pelo(campo('fulgor').value, campo('aquecido').checked, frases);
+            nr20.textContent = r ? `Enquadramento: ${ROTULO_NR20[r]}${campo('fulgor').value === '' ? ' (pelas frases H)' : ''}.` : 'Inflamável: até 60 °C. Combustível: acima de 60 °C e até 93 °C.';
+            nr20.classList.toggle('text-warning', r === 'inflamavel' || r === 'gas_inflamavel');
+        };
+        campo('fulgor')?.addEventListener('input', pintarNr20);
+        campo('aquecido')?.addEventListener('change', pintarNr20);
+        listaFrases?.addEventListener('click', () => setTimeout(pintarNr20));
+        entradaFrase?.addEventListener('change', () => setTimeout(pintarNr20));
+        pintarNr20();
+        campo('pf-isento')?.addEventListener('change', (ev) => {
+            campo('pf-isencao').classList.toggle('hidden', !ev.target.checked);
+            if (ev.target.checked) campo('pf-isencao').focus();
+        });
+
         const perigoso = campo('perigoso');
         const detalheGhs = campo('ghs-detalhe');
         const aplicarPerigo = () => { if (detalheGhs && perigoso) detalheGhs.classList.toggle('hidden', !(perigoso.dataset.tri === 'true')); };
@@ -1492,6 +1912,22 @@
                 vid_classe: texto('vid-classe'),
                 vid_material: texto('vid-material'),
                 vid_volumetrica: campo('vid-volumetrica')?.checked || false,
+                ponto_fulgor_c: numero('fulgor'),
+                usado_aquecido: campo('aquecido')?.checked || false,
+                grupos_compatibilidade: [...form.querySelectorAll('input[name="grupos_compatibilidade"]:checked')].map(c => c.value),
+                temperatura_armazenagem: texto('temperatura'),
+                proteger_luz: campo('luz')?.checked || false,
+                proteger_umidade: campo('umidade')?.checked || false,
+                atmosfera_inerte: campo('inerte')?.checked || false,
+                formador_peroxido: campo('peroxido') ? valorTri(campo('peroxido')) : null,
+                intervalo_teste_peroxido_dias: numero('peroxido-dias'),
+                pf_controlado: campo('pf') ? valorTri(campo('pf')) : null,
+                pf_codigo: texto('pf-codigo'),
+                pf_isento: campo('pf-isento')?.checked || false,
+                pf_isencao_justificativa: campo('pf-isento')?.checked ? texto('pf-isencao') : null,
+                anvisa_controlado: campo('anvisa') ? valorTri(campo('anvisa')) : null,
+                anvisa_lista: texto('anvisa-lista'),
+                exercito_controlado: campo('exercito') ? valorTri(campo('exercito')) : null,
             };
         }
 
@@ -1535,7 +1971,8 @@
 
             comBotao(modal.querySelector('#ins-f-ok'), 'Salvando', async () => {
                 try {
-                    const r = await req(novo ? '/insumos' : `/insumos/${i.id}`, { method: novo ? 'POST' : 'PUT', json: payload });
+                    const r = await comJustificativa((justificativa) =>
+                        req(novo ? '/insumos' : `/insumos/${i.id}`, { method: novo ? 'POST' : 'PUT', json: { ...payload, justificativa } }));
                     delete form.dataset.sujo;
                     modal.fechar();
                     let msg = novo ? `${nome} cadastrado.` : 'Alterações salvas.';
@@ -1546,7 +1983,7 @@
                     await carregar();
                     if (!novo) focarAcao('editar', i.id);
                 } catch (err) {
-                    window.UI.showToast(err.message, 'error');
+                    if (!err.cancelado) window.UI.showToast(err.message, 'error');
                 }
             });
         });
